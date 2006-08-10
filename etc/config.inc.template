@@ -1,0 +1,90 @@
+<?php
+#
+#  /opt/vmps/config.inc.template
+#
+#  Use this to generate a config.inc configuration file, 
+#  used to contralise settings that may change.
+#
+#  2006.05.20/SB : Version 2. Create template for other sites.
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+##########################
+
+## MySQL DB settings for all scripts
+  $dbhost="localhost";
+  $dbname="inventory";
+  $dbuser="inventwrite";
+  $dbpass="PASSWORD1";              # keep this secret!
+
+## Debug 
+  $debug_to_syslog=true;          # Daemons: Debug also to syslog?
+  $logit_to_stdout=false;         # Debugging to the console?
+
+## vmps_external script:  
+  $use_port_default_vlan=true;
+  $detect_hubs=true;
+  $default_vlan=0;                 # Default deny
+
+## vmps_lastseen script:  
+  $lastseen_dryrun=false;           # Test, don't update DB
+  $set_vlan_for_unknowns="vlan=0,"; # Set to NONE: deny unknowns
+  #$set_vlan_for_unknowns="";        # Don't set, use default Vlan. 
+  $lastseen_patch_lookup=true;      # Lookup Patchcable details in Alerts
+
+  ## Swisscom Internal only:
+  $lastseen_infnet=false;           # Lookup Infnet MACs with check_infnet_mac?
+  $lastseen_infnet_vlan='10';       # Exact Number of Infnet Vlan: sec225
+  $lastseen_infnet_restart=true;    # Restart switch port when GWP found?
+  $lastseen_infnet_notify=true;
+
+  $mail_user="root@DOMAIN.ch";      # mail to root? Set your domain
+  #$maildomain="0";                 # set to 0 to disable.
+  $maildomain="DOMAIN.ch";          # 
+
+  $vmps_monitor_restart=FALSE;
+  $os_hostname="vmps1";           # for alerting
+
+
+## report_old_users script:           
+  $report_old_users_days_from=3;
+  $report_old_users_days_back=10;   # Check for Direx users not updated 
+                                    # between -3 and this number of days
+
+## vmps_check & vmps_monitor script:
+  $vmpsd_is_local="1";              # =1 For Version2 or later
+  $vmps_lastseen_is_local="1";      # =1 
+  $server1="";                      # 
+  $server2="";
+  $check_port_restart=true;         # Restart switch port if flagged
+
+## vmps_user script - SWISSCOM ONLY:   
+  $vmps_user_ska=array('INO*');    # Organisations be synced from Direx
+  $vmps_user_direx="direx.corproot.net";
+  $vmps_user_direx_path="/DirExWeb/Scripts/Public/GetXML.aspx";
+  
+
+## purge_unknowns :
+  $unknown_purge=30;               # Delete unknown systems older than XX days
+
+## check_infnet_mac - SWISSCOM ONLY:
+  $check_infnet_mac_target="sms1.swissptt.ch";
+  $check_infnet_mac_url="/ASP/PCexplorer/PCexplorerSel.asp";
+
+## restart_port
+  $snmpwalk="/usr/bin/snmpwalk -v 1 -c PASSWORD2 ";    # SNMP Read community
+  $snmpset ="/usr/bin/snmpset  -v 1 -c PASSWORD3"; # SNMP Write community
+
+## router_mac_ip
+  $core_routers="192.168.245.3 192.168.245.6";
+  $router_mac_ip_ignore_ip="/^(127\.0\.0|192\.168\.|193\.5\.232|193\.5\.237|193\.5\.238)/";
+  $router_mac_ip_ignore_mac="/^(00d0\.0064\.d000)/";
+  $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c PASSWORD4 ";    # SNMP Read
+
+## monitor_allows.sh
+#  $messagecount=50;
+
+## flap_detect
+  $flap_limit=40;
+
+?>
