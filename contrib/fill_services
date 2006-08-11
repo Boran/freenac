@@ -1,0 +1,47 @@
+#!/usr/bin/php -f
+<?php
+include_once "funcs.inc";
+$datos=file_get_contents("services_long.txt");
+$choro=explode("\n",$datos);
+$cosas=count($choro)-1;
+for ($i=0;$i<$cosas;$i++)
+{
+   $descripcion=explode("#",$choro[$i]);
+   $rollo=trim($descripcion[1]);
+   $linea=preg_replace('/\s+/',":::",$descripcion[0]);
+   $linea=explode(":::",$linea);
+   $servicio=trim($linea[0]);
+   $puerto=(int)trim($linea[1]);
+   $protocolo=trim($linea[2]);
+   db_connect();
+   if (strcmp($protocolo,"tcp")==0)
+      $query=sprintf("INSERT INTO ona_servicestcp VALUES('%d','%s','%s');",$puerto,$servicio,$rollo);
+   else if(strcmp($protocolo,"udp")==0)
+      $query=sprintf("INSERT INTO ona_servicesudp VALUES('%d','%s','%s');",$puerto,$servicio,$rollo);   
+   $res=mysql_query($query);
+   if (!$res)
+   { echo mysql_error()."\n"; }
+}
+$datos=file_get_contents("services_nmap.txt");
+$choro=explode("\n",$datos);
+$cosas=count($choro)-1;
+for ($i=0;$i<$cosas;$i++)
+{
+   $descripcion=explode("#",$choro[$i]);
+   $rollo=trim($descripcion[1]);
+   $linea=preg_replace('/\s+/',":::",$descripcion[0]);
+   $linea=explode(":::",$linea);
+   $servicio=trim($linea[0]);
+   $puerto=(int)trim($linea[1]);
+   $protocolo=trim($linea[2]);
+   db_connect();
+   if (strcmp($protocolo,"tcp")==0)
+      $query=sprintf("update ona_servicestcp set service='%s' where port='%d';",$servicio,$puerto);
+   else if(strcmp($protocolo,"udp")==0)
+      $query=sprintf("update ona_servicesudp set service='%s' where port='%d';",$servicio,$puerto);
+   $res=mysql_query($query);
+   if (!$res)
+   { echo mysql_error()."\n"; }
+}
+echo "\nDONE\n";
+?>
