@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# rdiff.run: call rdiff-backup , typically used from cron.
+#            see also the rdiff and rdiff-backup man page.
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+##################
+
+exludefile=/opt/vmps/contrib/rdiff.exclude
+
+ignores='statistics|SourceFiles|MirrorFiles|NewFiles|DeletedFiles|ChangedFiles|IncrementFiles|IncrementFileSize|EndTime|ChangedMirrorSize|MirrorFileSize'
+
+rdiff-backup  --exclude-other-filesystems --exclude-globbing-filelist $exludefile --print-statistics $* 2>&1 | egrep -v $ignores
+

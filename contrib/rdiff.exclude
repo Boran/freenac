@@ -1,0 +1,15 @@
+
+- /sys
+- /proc
+- /media
+- /tmp/**
+- /tmp/ssh**
+- /secure/tmp/**
+
+- /disk2
+- /diskstation
+
+- /var/spool/postfix/proc
+- **mysql.sock
+- **ntp/dev/log
+
