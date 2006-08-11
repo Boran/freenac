@@ -1,0 +1,467 @@
+#!/usr/bin/php -f
+<?php
+/*
+NAME    vmpsd_external
+
+FUNCTION:
+  "external" program called by the vmps daemon "vmpsd". This program
+  decides what to do, in real time, when access is requested by  a
+  Switch for a MAC address. Since its is real time perfomance is important,
+  so some jobs such as document what was last seen, where, or recognising 
+  Infnet PCs, is done in the vmps_lasseen script, which is not real time.
+    o If the MAC is active in the DB authorise it.
+    o If the mac is active on a port where another system has been active withein the last hour, try to use the vlan last seen on the port, nut the vlan assigned to this system. This is to detect hubs and prevent .flapping.. This feature is only allowed if the vlan on the port and assigned to the MAC are in the same vlan group (otherwise the new MAC is denied)
+    o If the MAC is unknown, check to see if a default vlan has been configured for that port and use it, otherwise use the default vlan.
+    o Log decisions to syslog, and key events to DB (visible in the GUI).
+
+  program input:
+        <domain> <switch ip> <port> <mac address>
+  program output
+        ALLOW <vlan name>
+        DENY
+        SHUTDOWN
+        DOMAIN
+
+  Important: this script writes to stdout and is captured by vmpsd.
+             So send debugging output to syslog, not stdout. Or just start
+             directly from the commandline to check for classical
+             PHP syntax problems.
+
+ HISTORY:
+   2006.01.03/SB: live for INO
+   2005.11.21/SB
+
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+#########################################################################
+*/
+
+
+$DRY_RUN=FALSE;                    ## testing for standaone, no network
+#$DRY_RUN=TRUE;                    ## testing for standaone, no network
+
+$debug_flag1=FALSE;
+$debug_flag2=FALSE;
+$debug_flag3=FALSE;
+$debug_flag1=TRUE;
+#$debug_flag2=TRUE;
+#$debug_flag3=TRUE;
+
+include_once "funcs.inc";
+define_syslog_variables();
+openlog("vmpsd_external", LOG_PID , LOG_LOCAL5);
+
+#
+# ------- functions -------------------
+
+/** This functions is called for any errors or
+ *  messages sent to stdout/err. The idea is to catch all
+ *  such messages and send them to syslog, this this is a daemon normally
+ *  detached from the console
+ */
+function callback($buffer)
+{
+  if (strlen($buffer) > 1) {
+    logit('cb: ' . $buffer );
+  }
+  #return(true);
+}
+
+
+// get_port_status($switch, $port, $mac, $new_vlan)
+// Return: 
+// - 1 = DENY.  
+//   0 = ALLOW, use the usual Vlan for this mac
+//   >0= ALLOW, but use this NEW vlan number
+//function get_port_status($switch, $port, $mac, $new_vlan)
+function get_port_status($switch, $port, $mac, $new_vlan, $lastvlan)
+{
+  global $connect;
+
+  if ($new_vlan==0) {
+    return($new_vlan);
+  }
+
+  // Compare 'last' valns and that in the DB for this MAC
+  $new_vlan_group=v_sql_1_select("SELECT vlan_group FROM vlan WHERE id='$new_vlan'");
+  $last_vlan_group=v_sql_1_select("SELECT vlan_group FROM vlan WHERE id='$lastvlan'");
+  if ($last_vlan_group==$new_vlan_group) {
+    $result=$lastvlan;   # Stay with the existing vlan, to preserve connectivity
+    logit("get_port_status: requested $lastvlan, DB says $new_vlan but they are in the same group.");
+  } else {
+    $result=$new_vlan;   # Use the normal vlan for this MAC
+  }
+
+  // Are any other systems authorised on that port in last two hours?
+  // -auth in last 2 hrs (7500 secs)
+  $query="SELECT mac,AuthVlan,AuthLast FROM vmpsauth WHERE "
+     . " TIME_TO_SEC(TIMEDIFF(NOW(),AuthLast))<7500 AND "
+     . " mac!='" .$mac ."' AND "
+     . " AuthVlan!='" .$new_vlan ."' AND "
+     . " AuthPort='" . $port . "' AND AuthSw='" . $switch . "' ORDER BY AuthLast DESC";
+    #logit($query);
+    $res = mysql_query($query, $connect);
+    if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+  if (mysql_num_rows($res)==0) {
+    logit("get_port_status: nothing else conflicting on that port");
+
+  } else {                # systems found, interate though them
+    while ( list($othermac, $othervlan, $AuthLast)=mysql_fetch_array($res, MYSQL_NUM) ) {
+
+      logit("get_port_status: found $othermac, vlan=$othervlan, $AuthLast");
+
+      if (ping_mac($othermac))     {    # Is there another system live on that port?
+        // yes, so find out about it
+        // Lookup vlan name & group, avoid the Mac of the system we are checking
+
+        $othervlangroup=v_sql_1_select("SELECT vlan_group FROM vlan WHERE id='$othervlan'");
+        logit("get_port_status: othervlangroup=$othervlangroup new_vlan_group=$new_vlan_group");
+          if ($othervlangroup==$new_vlan_group) {
+             logit("get_port_status: Allow - VlanGroup $othervlangroup is the same, so suggest $othervlan");
+             $result=$othervlan;        # Yes, use the same Vlan!
+             continue;                  # don't bother checking other systems, jump out of while()
+
+             ## TBD: now actually change associated vlan, in the DB?
+
+          } else {
+             logit("get_port_status: Deny - VlanGroup $othervlangroup not equal requested $new_vlan_group");
+             $result=-1;                # DENY
+          }
+
+      } else {
+        debug1('get_port_status: no conflict since IP is invalid or cannot be pinged. Flap is still a risk..');
+        $result=$new_vlan;   # default OK
+      }
+
+    }
+  }
+
+  save_auth($switch, $port, $mac, $result);        // remember authentication
+  return($result);                                 // sent back results (selected vlan)
+}
+
+
+//  Remember authenicated mac
+function save_auth($switch, $port, $mac, $vlan)
+{
+  if ($vlan>=0) {
+    debug2("get_port_status: update AuthLast");
+    $query="REPLACE vmpsauth set AuthLast=NOW(), AuthVlan='$vlan'"
+      . ", AuthSw='$switch', AuthPort='$port', mac='" . $mac . "'";
+    debug2("get_port_status: $query");
+    v_sql_1_update($query);
+
+    // Troubleshooting:
+    # select name,mac,AuthLast,AuthVlan,AuthSw,AuthPort,r_ip,r_timestamp from systems WHERE AuthLast IS NOT NULL;
+  }
+}
+
+
+// depreciated soon ;-)
+function get_port_status_old($switch, $port, $mac, $new_vlan)
+{
+  global $connect;
+  $result=$new_vlan;   # default OK
+  
+  if ($new_vlan==0) {
+    return($new_vlan);
+  }
+
+  // Lookup vlan name & group, avoid the Mac of the system we are checking
+  // -auth in last 2 hrs (7500 secs)
+  // TBD: what about seen by router in last 30 mins? 
+  $vlanByGroup="(SELECT vlan_group FROM vlan WHERE id=AuthVlan)";
+  $query="SELECT mac,name,vlan,$vlanByGroup FROM systems WHERE "
+     . " TIME_TO_SEC(TIMEDIFF(NOW(),AuthLast))<7500 AND "
+     . " TIME_TO_SEC(TIMEDIFF(NOW(),r_timestamp))<1800 AND "
+     . " mac!='" .$mac ."' AND "
+     . " AuthVlan!='" .$new_vlan ."' AND "
+     . " AuthPort='" . $port . "' AND AuthSw='" . $switch . "' ORDER BY AuthLast";
+    #logit($query);
+    $res = mysql_query($query, $connect);
+    if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+  if (mysql_num_rows($res)==0) {
+    logit("get_port_status: nothing else conflicting on that port");
+
+  } else {
+    while ( list($othermac, $othername, $othervlan, $othervlangroup)=mysql_fetch_array($res, MYSQL_NUM) ) {
+
+      logit("get_port_status: Check conflict (vlan,group) $othermac, $othername, $othervlan, $othervlangroup");
+      if (ping_mac($othermac))     {    # other system live on port
+
+        $query="SELECT vlan_group FROM vlan WHERE id='" . $new_vlan . "'";;
+        //logit("$query");
+        $res = mysql_query($query, $connect);
+        if (!$res) { die('Invalid query: ' . mysql_error()); }
+        if (mysql_num_rows($res)==1) {
+          list($new_vlan_group)=mysql_fetch_array($res, MYSQL_NUM);
+          logit("get_port_status: othervlangroup=$othervlangroup new_vlan_group=$new_vlan_group");
+          if ($othervlangroup==$new_vlan_group) {
+             logit("get_port_status: Allow - VlanGroup $othervlangroup is the same, so suggest $othervlan");
+             $result=$othervlan;        # Yes, use the same Vlan!
+
+          } else {
+             logit("get_port_status: Deny - VlanGroup $othervlangroup not equal requested $new_vlan_group");
+             $result=-1;                # DENY
+          }
+        }
+
+      } else {
+        debug1('get_port_status: Allow - since IP is invalid, or system cannot be pinged. Flap is still a risk..');
+        $result=$new_vlan;   # default OK
+      }
+    }    # while
+  }      # else
+
+  if ($result>=0) {
+   debug2("get_port_status: update AuthLast");
+    $query="UPDATE systems set AuthLast=NOW(), AuthVlan='" . $result . "'"
+      . ", AuthSw='"  .$switch ."', AuthPort='" . $port . "'"
+      . " WHERE mac='" . $mac . "'";
+    #debug2("get_port_status: update AuthLast: $query");
+    v_sql_1_update($query);
+
+    // Troubleshooting:
+    # select name,mac,AuthLast,AuthVlan,AuthSw,AuthPort,r_ip,r_timestamp from systems WHERE AuthLast IS NOT NULL;
+  }
+  return($result);
+}
+
+
+
+////////////////////
+//function decide($port, $switch, $mac)
+function decide($port, $switch, $mac, $lastvlan)
+{
+# $return: 0= DENY, >=0 is Vlan number
+#
+  global $connect, $default_vlan, $lastseen_infnet, $use_port_default_vlan, 
+         $detect_hubs;
+  $result=0;         // Deny
+  $decided=false;
+
+  ## Normalise mac address format,  Add . every 4 digit
+  $mac = preg_replace('/-|\.|\s/', '', $mac);  #remove space, dash, dots
+  $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
+
+  ## Ignore "zero" dummy requests
+  if ( $mac === '0000.0000.0000' ) {
+     logit("decide: DENY, ignore mac $mac" );
+     return($result);
+  }
+
+  ## Look for a system with this mac, AND, that is "active". Ignore inactives.
+  #$vlanByGroup="(SELECT vlan_group FROM vlan WHERE id=vlan)";
+  #$query="SELECT name,description,vlan,status,$vlanByGroup FROM systems WHERE mac='" 
+  $query="SELECT name,description,vlan,status FROM systems WHERE mac='" 
+    . $mac . "' AND status=1";
+  #logit($query);
+  $res = mysql_query($query, $connect);
+  if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+  if (mysql_num_rows($res)==0) {       # Unknown or inactive
+
+    logit("decide: $mac on port $port, switch $switch is unknown");
+    
+    ## a) Check for Infnet: do in lastseen, not in real time here
+    ## b) Check for default Vlan for port
+    if ($use_port_default_vlan==true) {
+      logit("decide: check for port default Vlan");
+      $query="SELECT default_vlan FROM port WHERE switch='" . $switch 
+        . "' AND name='" . $port . "'";
+      #logit($query);
+      $res = mysql_query($query, $connect);
+      if (!$res) { die('Invalid query: ' . mysql_error()); }
+      if (mysql_num_rows($res)==1) {
+         list($port_default_vlan)=mysql_fetch_array($res, MYSQL_NUM);
+         if (strlen($port_default_vlan)>0) {    # make sure its not null
+           $decided=true;
+           $result=$port_default_vlan;
+           reporterr('info', "Allow $mac, use port_default_vlan $result for $switch $port");
+         }
+      }
+    }
+
+    ## c) Check for default Vlan $default_vlan
+    if ($decided==false) {
+      $result=$default_vlan; 
+      logit("decide: use default vlan <$default_vlan>");
+      if ($result > 0) {
+        reporterr('info', "Allow $mac default_vlan $result for $switch $port");
+      }
+    } 
+
+    # Check to see there's no port conflicts
+    if (($result > 0) & ($detect_hubs==true) ) {
+      //$result=get_port_status($switch, $port, $mac, $result);
+      $result=get_port_status($switch, $port, $mac, $result, $lastvlan);
+      logit("decide: use $result");
+    }
+
+
+    // Now add it to the DB: no, too slow, do in 'lastseen'
+
+  // Normal case: one entry exists  //
+  //
+  } else if (mysql_num_rows($res)==1) {
+    list($name, $description, $vlan, $status)=mysql_fetch_array($res, MYSQL_NUM);
+
+    # a) Is this System Enabled? [Too difficult to handle for now]
+    #if ($status==0) {
+    #  logit("decide: $mac is known but Status=Inactive");
+    #  $result=0;
+    #  reporterr('info', "decide: $mac is known but Status=Inactive");
+    #  return($result);
+    #}
+
+    # b) Was the system on this port/vlan in the last two hours? If yes
+    #     authorise now?
+    ## TBD
+
+    # c) Are other systems active on this port?
+    #    Are they on the same Vlan?
+    #    If not, can we assign that Vlan too? (check group)?
+
+    logit("decide: Request for ($switch,$port) $name($mac), $description, vlan=$vlan");
+    if ($detect_hubs==true) {
+      debug1("decide: Check for hubs..");
+      $result=get_port_status($switch, $port, $mac, $vlan, $lastvlan);
+
+     } else {
+      $result=$vlan;
+      debug1("decide: No hub checking, use vlan $result");
+     }
+
+  } else if (mysql_num_rows($res)>1) {
+    logit("decide: Deny, Duplicates for $mac in Database");
+    reporterr('info', "DENY $mac on $switch, $port, DUPLICATE MACs: please remove!");
+    $result=0;
+  }
+
+  logit("decide: $name, $description, vlan result=$result on switch $switch $port");
+  #debug1("decide: $name, $description, vlan result=$result");
+  return($result);
+}
+
+
+
+function dryrun() {
+  global $connect, $debug_flag1, $debug_flag2;
+  $debug_flag1=TRUE;
+  $debug_flag2=TRUE;
+
+  #decide('2/35', '192.168.245.71', '000b.db5b.a300', 'sec230');
+  # Inactive
+  #decide('Fa0/17', '193.5.222.1', '000f.1fb5.0853', 'sec230');
+  # New:
+  #decide('Fa0/17', '193.5.222.1', '080020b0cb95', 'sec230');
+
+  # ACA / Bertsch
+  #$port='Fa0/14'; $switch='193.5.222.1'; $mac='000d.561b.00ec'; $lastvlan='Clients';
+  $port='Fa0/14'; $switch='193.5.222.1'; $mac='0000.0000.9999'; $lastvlan='Clients';
+  $DecidedVlan=decide($port, $switch, $mac, $lastvlan);
+  debug1("DecidedVlan=$DecidedVlan");
+
+      if ($DecidedVlan > 0) {             ## lookup vlan name
+
+        $query="SELECT value FROM vlan WHERE id='" . $DecidedVlan . "'";;
+       $res = mysql_query($query, $connect);
+        if (!$res) { die('Invalid query: ' . mysql_error()); }
+        if (mysql_num_rows($res)==1) {
+          list($VlanName)=mysql_fetch_array($res, MYSQL_NUM);
+          debug1("ALLOW $VlanName - $DecidedVlan");
+        } else {
+          debug1("DENY");
+        }
+      } else {
+        debug1("DENY");
+      }
+
+  echo "DRY RUN FINISHED\n";
+}
+
+
+
+
+#
+# ------ main() : infinite loop ------------------
+
+ob_start("callback");         // see call back function above
+
+logit("Connect to DB" );
+db_connect();
+reporterr3("Connect to DB" );
+
+// Create a temp table for Authentication information
+
+$query=<<<EOF
+  CREATE TEMPORARY TABLE vmpsauth (
+  `mac` varchar(30) NOT NULL default '',
+  `AuthLast` datetime default NULL,
+  `AuthPort` varchar(20) default NULL,
+  `AuthSw` varchar(20) default NULL,
+  vlan_group int(11) default NULL,
+  `AuthVlan` int(11) default NULL,
+  PRIMARY KEY  (`mac`)
+) ENGINE=MyISAM COMMENT='List of VMPS authenticated Computers'
+EOF;
+#    $res = mysql_query($query, $connect);
+#    if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+ob_flush();               # log buffered outputs
+ 
+
+if ($DRY_RUN===TRUE) {    ## Testing only
+  dryrun();
+  exit;
+}
+
+while (true) {
+  $in = fopen("php://stdin", "r");
+  $out = fopen("php://stdout", "w");
+
+  if ($out and $in) {
+    $line=rtrim( fgets($in, 1024) );
+
+    if (strlen($line) > 0) {
+      list($domain, $switch, $port, $lastvlan, $mac)=explode(" ", $line);
+      #logit("GOT: $line\n");
+      #logit("GOT $switch $port $lastvlan $mac\n");
+
+      $DecidedVlan=decide($port, $switch, $mac, $lastvlan);
+      debug1("DecidedVlan=$DecidedVlan");
+
+      if ($DecidedVlan > 0) {             ## lookup vlan name
+
+        $query="SELECT value FROM vlan WHERE id='" . $DecidedVlan . "'";;
+        $res = mysql_query($query, $connect);
+        if (!$res) { die('Invalid query: ' . mysql_error()); }
+        if (mysql_num_rows($res)==1) {
+          list($VlanName)=mysql_fetch_array($res, MYSQL_NUM);
+          debug2("ALLOW $VlanName - $DecidedVlan");
+          fputs($out, "ALLOW $VlanName\n");
+
+        } else {
+          debug2("DENY");
+          fputs($out, "DENY\n");
+        }
+
+      } else {
+        debug2("DENY");
+        fputs($out, "DENY\n");
+      }
+      ob_flush();               # log buffered outputs
+      flush();
+    }                // strlen >0
+  }
+  fclose($in);
+  fclose($out);
+  #sleep(1);                 # wait 1 secs, before retrying
+  ob_flush();               # log buffered outputs
+}
+
+logit("Log /DB close, reconnect");
+mysql_close($connect);
+?>
