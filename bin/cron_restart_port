@@ -1,0 +1,62 @@
+#!/usr/bin/php -f
+<?php
+#
+# /opt/vmps/cron_restart_port
+#
+# Go though the port table and check for the restart flag, and 
+# restart the ports via SNMP (if this option is enabled in config.inc)
+#
+# 03.11.05/Sean: Move to PHP5, restart_port()
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+####################################
+
+$debug_flag1=FALSE;
+#$debug_flag1=TRUE;
+
+require_once 'funcs.inc';
+
+define_syslog_variables();
+openlog("cron_restart_port", LOG_PID, LOG_LOCAL5);
+
+
+#####-- functions
+
+function restart_port($switch, $port) {
+  global $check_port_restart;
+  if ($check_port_restart===TRUE) {
+     $answer=syscall("php restart_port $port $switch");
+     #logit($answer);
+     debug1($answer);
+  }
+}
+
+
+#####-- main() -------
+
+## Connect to DB
+  db_connect();
+
+debug1("cron_restart_port");
+
+$query="SELECT switch,name,location,comment FROM port WHERE restart_now='1'";
+  $res = mysql_query($query);
+  if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+  while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
+    #debug1("restart_port switch $line[0] $line[1]");
+    logit(            "restart_port switch $line[0] $line[1], Office:$line[2], $line[3]");
+    reporterr('info', "restart_port switch $line[0] $line[1], Office:$line[2], $line[3]");
+    restart_port($line[0], $line[1]);
+
+    # Now reset the flag, since its done
+    $query="UPDATE port SET restart_now='0' WHERE switch='"
+      .$line[0] ."' AND name='"  .$line[1] ."'";
+      debug1($query);
+      $res2 = mysql_query($query, $connect);
+      if (!$res2) { die('Invalid query: ' . mysql_error()); }
+  }
+
+mysql_close($connect);
+?>

@@ -1,0 +1,61 @@
+#!/usr/bin/php -f
+<?php
+#
+# /opt/vmps/dump_ports
+#
+# 26.9.05/Sean Boran: first version.
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+####################################
+
+
+$debug_flag1=FALSE;
+
+include_once "funcs.inc";
+include_once "config.inc";
+
+define_syslog_variables();
+openlog("dump_ports", LOG_PID,  LOG_LOCAL5);
+
+
+## Connect to DB
+  $connect=mysql_connect($dbhost, $dbuser, $dbpass)
+     or die("Could not connect : " . mysql_error());
+  mysql_select_db($dbname, $connect) or die("Could not select database");
+
+$msg='';
+
+$query="SELECT (SELECT swgroup FROM switch where switch.ip=systems.switch) as Stockwerk, port, (SELECT name from switch where switch.ip=systems.switch) as switch, switch as ip,  vlan, (SELECT value from vlan where vlan.id=systems.vlan) as Vlan_name from systems ORDER BY switch;";
+if ($debug_flag1) { $query=$query . " LIMIT 10"; }
+
+  debug1($query);
+  $res = mysql_query($query, $connect);
+  if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+  if (mysql_num_rows($res) ==0) {
+    $msg="No port entries found!";
+
+  } else {
+    $msg="Stockwerk;Port;Switch Name; Switch IP;Vlan Number\n";
+
+    while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
+      #debug1($line[0]);
+      if ($line[0]!=NULL) {
+        #echo("$line[0];$line[1];$line[2];$line[3];$line[4]\n");
+        $msg=$msg ."$line[0];$line[1];$line[2];$line[3];$line[4]\n";
+      }
+    }
+
+  }
+
+
+#reporterr('info', 'dump_ports: completed');
+syslog(LOG_INFO, 'completed');
+if ($mail_user!=="") {
+  mail($mail_user, "VMPS /opt/vmps/dump_ports", $msg);
+}
+
+closelog();
+mysql_close($connect);
+?>

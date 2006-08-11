@@ -1,0 +1,39 @@
+#!/usr/bin/php -f
+<?php
+#
+# /opt/vmps/vmps_log
+#
+# Update the vmpslog table
+#
+# <1> Sean Boran, 24.11.04
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+#####################################
+
+$logger="logger -t vmps_log -p local5.info";
+
+## Connect to DB
+  include_once "config.inc";
+  $connect=mysql_connect($dbhost, $dbuser, $dbpass)
+     or die("Could not connect : " . mysql_error());
+  mysql_select_db($dbname, $connect) or die("Could not select database");
+
+$fd = fopen("php://stdin", "r");
+while ( !feof($fd) ) {
+  $line=fgets($fd);
+  if (strlen($line)>0) {
+    $line=trim($line);           # remove whitespace
+    #print "Original:#$line#\n";
+
+    $query="INSERT INTO vmpslog "
+      . "SET what='" . $line . "', "
+      . "priority='info' ";
+    $res = mysql_query($query);
+    if (!$res) { die('Invalid query: ' . mysql_error()); }
+  }
+}
+
+mysql_close($connect);
+
+?>

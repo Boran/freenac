@@ -1,0 +1,105 @@
+#!/usr/bin/php -f
+<?php
+#
+# /opt/vmps/bin/router_mac_ip
+#
+# Get MAC / IP table of active hosts from core routers
+#
+# 2005.12.13/Sean Boran: Change snmpwalk to router_snmpwalk
+# 2005.12.13/Sean Boran: FCS
+#
+# On IOS do "show ip arp"
+#        or "sh ip arp vrf insec"
+# Further reading: 
+#    http://www.cisco.com/public/sw-center/netmgmt/cmtk/mibs.shtml
+#    The "getif" tool for exploring MIBs.
+#
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+#############################################################
+
+
+$debug_flag1=false;
+$debug_flag2=false;
+
+include_once "funcs.inc";               # Load settings & common functions
+$debug_to_syslog=TRUE;
+
+define_syslog_variables();              # not used yet, but anyway..
+openlog("router_mac_ip", LOG_PID, LOG_LOCAL5);
+
+db_connect();
+global $connect, $core_routers, $router_mac_ip_ignore_ip, $router_mac_ip_ignore_mac, $router_snmpwalk;
+
+
+if ( empty($core_routers) ) {   // no results, error?
+   logit("no routers specified in core_routers variable in config.inc");
+   reporterr('info',"no routers specified in core_routers variable in config.inc");
+   exit -1;
+}
+
+foreach (split(' ', $core_routers) as $router) {
+ $count_updates=0;
+ // query interface list and split into an array
+ debug2("$router_snmpwalk $router ipNetToMediaPhysAddress\n");
+ $results=explode("\n", syscall("$router_snmpwalk $router ipNetToMediaPhysAddress"));
+
+
+ if ( count($results) === 0 ) {   // no results, error?
+   logit("No results retrieved from router $router: SNMP errors?");
+   debug2($results[$i]);
+   #reporterr('info',"No results retrieved from router $router: SNMP errors?");
+ }
+
+ // go though each pair and update the SYSTEMS table
+ for ($i = 0; $i < count($results); $i++){
+  debug2($results[$i]);
+
+  if ( preg_match("/ipNetToMediaPhysAddress\.(\d+)\.(.*) = STRING: (.*)/", $results[$i], $matches) ) {
+     $ip=$matches[2];
+     #debug1("$ip - $matches[3] ");
+     $mac=normalise_mac($matches[3]);
+     debug2("$ip - $mac ");
+
+     if ( preg_match("$router_mac_ip_ignore_ip", $ip) ) {
+       debug2("Ignore Non relevant Networks: $ip - $mac ");
+       continue;
+     }
+     if ( preg_match("$router_mac_ip_ignore_mac", $mac) ) {
+       debug2("Ignore Non relevant macs: $mac ");
+       continue;
+     }
+
+     $query="UPDATE systems SET r_timestamp=NOW(), r_ip='" .$ip . "' "
+        . " WHERE mac='" . $mac . "'";
+        #echo("$query\n");
+        $resource = mysql_query($query, $connect);
+        if (!$resource) { die('Invalid query: ' . mysql_error()); }
+
+        #$rowcount=mysql_affected_rows($resource);   # why does this not work?
+        $rowcount=mysql_affected_rows();
+        #debug1(" rows $rowcount ");
+        if ($rowcount==1) {   # entry does not exist, 0 rows
+          debug1("$ip - $mac : updated in systems table");
+          $count_updates++;
+
+        } else if ($rowcount==0) {   # entry does not exist, 0 rows
+          #logit("$query");
+          debug1("$ip - $mac : ignore");
+
+        } else if ($rowcount > 1) {   # entry does not exist, 0 rows
+          #logit("$query");
+          debug1("$ip - $mac : not in systems table - ERROR");
+        }   
+
+  }
+ }
+
+ # Don't write to VMPS table any more, its too noisy/frequent
+ #reporterr('info',"Update $count_updates mac/ip tables from $router");
+ logit("Update $count_updates mac/ip tables from $router");
+}
+
+###
+?>
