@@ -1,0 +1,26 @@
+
+What is it?
+-----------
+
+OpenVMPS is a substitute implementation of Cisco Virtual 
+Membership Policy Server (on Catalyst [65]500 family of switches).
+It is used on Cisco LAN switces to dynamically assign ports
+to VLANs according to Ethernet Address. Because it was
+developed solely on infomation obtained by observing the
+network traffic between switches it is probably not complete
+but it is a working subset of the protocol. More on VMPS you
+can find on www.cisco.com, search for VMPS.
+
+Features
+--------
+
+	- Open Source
+	- Drop-In-Replacement
+	- Extensions (see below)
+
+Extensions
+----------
+
+You can delegate decision of mac to vlan mapping to external program.
+See directory external/ for more info and examples.
+

@@ -1,0 +1,46 @@
+1.2 -> 1.3
+----------
+
+- option -e, use of external program for mac -> vlan mapping (Dori Seliskar)
+- change of default logging level to more sensible SYSTEM|PARSER|VQP|INFO 
+  and some new log messages (Alex Dawson < alex _at_ ee.uwa.edu.au >)
+- finally applied "SIGHUP fix for Solaris" patch from Steven Kehlet
+- start/stop script from Phil A. Hedrick <phil _dot_ hedrick _at_ capgemini _dot_ com>
+  in contrib directory
+
+1.1 -> 1.2
+----------
+
+- netreg extension + bugfixes by David Parsley <parsley _at_ linuxjedi.org>
+- man page by Alex Kirk <alex _at_ schnarff.com>
+- test client tool by Alex Dawson ( alex _at_ ee.uwa.edu.au )
+- vmps-port-policies should work now properly, network byte order cleanup (Dori Seliskar) 
+
+1.0 -> 1.1
+----------
+
+- make it compile & run under OpenBSD
+- on SIGHUP now rereads its database, 
+  contributed by Alex Dawson ( alex _at_ ee.uwa.edu.au )
+
+0.01 -> 1.0
+-----------
+
+- bump version number, so people will stop asking me if this
+  is any good with such low version number ;), after all 1.0 is well
+  deserved, we run it for more than two years now (aug 2003) and
+  till now the network has grown to ~40 switches and ~700 hosts
+  (actually ~800, but some 120 clients are still in todo list for
+   dynamic vlans)
+
+- compilation on Solaris should work now,
+  tested with gcc, gmake, Solaris 9
+
+- should run properly on non i386 arch now, tested on SPARC
+
+- fixed wrong log level command line option handling ( -l )
+
+- fixed wrong parameter handling for bind address ( -a ) 
+
+- fixed fallback vlan bug
+

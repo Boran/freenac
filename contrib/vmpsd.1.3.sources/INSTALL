@@ -1,0 +1,27 @@
+Installing VMPSD
+----------------
+
+Should be simple:
+
+./configure
+make
+make install
+
+After that check vlan.db.example for example database
+and run ./vmpsd --help for options. 
+
+If this doesn't work consider fixing the problem and/or
+send me the report.
+
+CVS version:
+
+aclocal
+autoheader
+automake --gnu --add-missing --copy
+autoconf
+./configure
+make
+make install
+
+dori.seliskar@select-tech.si
+

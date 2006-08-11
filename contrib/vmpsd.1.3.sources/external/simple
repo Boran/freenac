@@ -1,0 +1,28 @@
+#! /bin/bash
+
+# example script for demonstrating use of external programs
+#
+# our simple test database
+#
+# 0000.0000.0001	ALLOW TESTVLAN 	# DB
+# 0000.0000.0002	DENY 		# DB
+# 0000.0000.0003	SHUTDOWN 	# DB
+# 0000.0000.0004	DOMAIN 		# DB
+#
+# test it like this:
+#
+# cd <to vmps base dir> 
+# ./vmpsd -l 0x0807 -d -e external/simple
+#
+# and send requests like this:
+#
+# tools/vqpcli.pl -s localhost -v mydomain -w 10.0.0.1 -i 2/4 -m 0000.0000.0001
+#
+
+while true; do
+
+	read dom clip port mac
+	echo `cat $0 | grep "DB" | grep $mac | sed 's/# DB$//' | awk '{ print $3 " " $4 }'`
+
+done
+
