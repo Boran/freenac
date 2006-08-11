@@ -1,0 +1,116 @@
+#!/usr/bin/php -f
+<?php
+#
+# /opt/vmps/vmps_monitor
+#
+# Check that VMPS processes running and update "oper" table & syslog
+#
+# 20.01.06/sb: Urgent (sms) alerting & daemon restart
+# 12.09.05/sb: Add $vmps_lastseen_is_local, $vmpsd_is_local
+# 20.06.05/SB: Fix DB calls, extra lines.
+# 20.12.04/Sean Boran: First Version
+#
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+##########
+
+#$debug_flag1=TRUE;
+$debug_flag1=FALSE;
+include "config.inc";
+include_once "funcs.inc";
+
+define_syslog_variables();
+openlog("vmps_monitor", LOG_PID , LOG_LOCAL5);
+
+function check($target, $pattern, $label)
+{
+  global $alert_user, $os_hostname, $vmps_monitor_restart;
+  global $mail_user, $connect, $dbhost, $dbname, $dbuser, $dbpass;
+  $ret='';
+
+  # Connect to DB
+  #echo("Connect  to $dbhost, user=$dbuser ,db=$dbname\n");
+  $connect=mysql_connect($dbhost, $dbuser, $dbpass)
+     or die("Could not connect : " . mysql_error());
+  mysql_select_db($dbname, $connect) or die("Could not select $dbname database");
+
+  if ($target==="localhost") {
+    $a=syscall("pgrep $pattern", $ret);
+  } else {
+    $a=syscall("ssh $target pgrep $pattern", $ret);
+  }
+  rtrim($ret);        // trim trailing newline or white space
+  rtrim($a);
+  #debug1("ret=$ret a=$a");
+  if ($ret <> 0) {
+    $pstatus = "PROBLEM, Alert the sysadmin!! : $a";
+    syslog(LOG_INFO, "$pattern dead on $target  $a");
+  }
+  else {
+    # UNIX command executed OK; but lets make sure it contains
+    # a vmps process name
+    if (preg_match("/\d+/", $a, $regs) ) {
+      $pstatus="OK on $target: $pattern process running. pid: $a";
+      debug1("$pstatus");
+
+    } else {
+      $pstatus = "VMPS problem- $pattern dead on $target ";
+      debug1("$pstatus");
+      syslog(LOG_ERR, $pstatus);
+      reporterr('warn', $pstatus);
+
+      ## send an email too!
+      if ( ! empty($mail_user) ) {
+        debug1("Sending email alert to $mail_user");
+        mail($mail_user, "VMPS $pattern dead on $target $a", "");
+      }
+      ## send an URGENT email too!
+      if ( ! empty($alert_user) ) {
+        debug1("Sending email alert to $alert_user");
+        if ($target=="localhost") {
+          mail($alert_user, "VMPS dead on $os_hostname", "");
+        } else {
+          mail($alert_user, "VMPS dead on $target", "");
+        }
+      }
+
+      ## lets try to restart the dead daemon
+      ## This may also be done by 'proctst', the following if often disabled:
+      if ($vmps_monitor_restart===TRUE) {
+        syslog(LOG_ERR, "trying to restart automatically: /etc/init.d/vmps start");
+        reporterr('warn', "trying to restart automatically: /etc/init.d/vmps start");
+        if ($target==="localhost") {
+          $a=syscall("/etc/init.d/vmps start", $ret);
+        } else {
+          $a=syscall("ssh $target /etc/init.d/vmps start", $ret);
+        }
+      }
+
+    }
+  }
+
+  ### Update process monitor timestamp
+  $query = "UPDATE oper SET datetime=now(), comment='" . $pstatus 
+    ."' WHERE value='" . $label . "'";
+  $res = mysql_query($query, $connect);
+  if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+  mysql_close($connect);
+}
+
+if ($vmpsd_is_local=="0") {
+  check ($server1, "vmpsd", "server1");
+  check ($server2, "vmpsd", "server2");
+} else {
+  check ("localhost", "vmpsd", "server1");
+}
+if ($vmps_lastseen_is_local=="0") {
+  check ($server1, "vmps_lastseen", "lastseen1");
+  check ($server2, "vmps_lastseen", "lastseen2");
+} else {
+  check ("localhost", "vmps_lastseen", "lastseen1");
+}
+
+closelog();
+?>

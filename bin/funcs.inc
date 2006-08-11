@@ -181,8 +181,7 @@ function cv_input($str){
 function snmp_restart_port($switch, $port) {
   global $lastseen_infnet_restart;
   if ($lastseen_infnet_restart===TRUE) {
-     #$answer=syscall("/opt/vmps/restart_port $port $switch");
-     $answer=syscall("/opt/vmps/restart_port $switch $port");
+     $answer=syscall("/opt/vmps/bin/restart_port $switch $port");
      debug1($answer);
      logit("restart_port for GWP: $answer");
   }

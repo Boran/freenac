@@ -1,0 +1,465 @@
+#!/usr/bin/php -f
+<?php
+#
+# /opt/vmps/vmps_lastseen
+#
+# FUNCTION:
+# - Update the "last seen" entry for a specific MAC address. 
+# - If the system is new, insert new Users, Ports, Switches, System as appropriate 
+# - and send an email alert.
+# - Automatically recognise and allow GWPs.
+#  This function is called for any errors or
+#  messages sent to stdout/err. The idea is to catch all
+#  such messages and send them to syslog, this this is a daemon normally
+#  detached from the console
+#
+# Note: when debugging, set $debug_flag1=TRUE and run standalone, not
+#       from inittab, otherwise you won't see the debug messages.
+#       If it seems not to be parsing the log, kill it ans init will
+#       restart it.
+#
+# HISTORY:
+# 2006.06.02/SB Better debugging with dryrun. Check feof. If a 00000 mac is
+#               received reset log_msg and other vars.
+#               Move direx_tXX & check_infnet_mac to swisscom.only subdir
+# 2006.02.08/SB add output buffering, see callback(), remove update_ports()
+# 2005.11.15/SB update_ports()
+# 2005.10.11/SB Restart Infnet ports automatically.
+# 2005.09.09/SB All INFNET details to alert, insert new user if needed.
+#      Add includes funcs.inc, direx_tXX. Email notification now done
+#      using notify column on switch tables, rather than email aliases.
+#      Lookup patch details and add to Alert patch_lookup() if $lastseen_patch_lookup.
+#      Lookup NTACCOUNT and add to system details
+#      Move functions debug1() logit() syscall() to funcs.inc
+# 12.8.05/sb see $set_vlan_for_unknowns also in config.inc
+# 22.8.05/sb $lastseen_dryrun
+#            Don't log query its not needed
+# 12.5.05/sb improve logging, email alerting, move DB parameters to config file.
+# 19.4.05/sb Formatting, sleep between retries.
+# 19.01.05   Sean Boran, 19.01.05
+#      Reconnect if log closes, or DB shut. Improve logit messages.
+# 24.11.04   Sean Boran, First Prototype.
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+################################################################################
+
+$debug_flag1=FALSE;
+$debug_flag2=FALSE;
+#$debug_flag1=TRUE;
+#$debug_flag2=TRUE;
+
+## TBD: SCM dependancy
+$check_infnet_mac="/opt/vmps/swisscom.only/check_infnet_mac"; 
+$sms_infnet_mac="/opt/vmps/swisscom.only/sms_infnet_mac"; 
+#include_once "../swisscom.only/direx_tXX";      
+include_once "../swisscom.only/direx";      
+
+include_once "funcs.inc";
+
+global  $lastseen_dryrun;
+if ($debug_flag2===TRUE) {
+  $daemon=false;
+  $lastseen_dryrun=true;
+} else  { 
+  $daemon=true;
+  global  $lastseen_dryrun;
+}
+
+$progname = basename($argv[0]);
+define_syslog_variables();
+openlog("vmps_lastseen", LOG_PID , LOG_LOCAL5);
+$logfile="php://stdin";
+
+
+#
+# ------- functions -------------------
+#
+
+/** This function is called for any errors or
+ *  messages sent to stdout/err. The idea is to catch all
+ *  such messages and send them to syslog, this this is a daemon normally
+ *  detached from the console
+ */
+function callback($buffer)
+{
+  if (strlen($buffer) > 1) {
+    logit('callback:[' . $buffer .']');
+  }
+  #return(true);
+}
+
+/** depreciated Vmps V1
+ */
+function request_vmps_update() {
+  global $connect;
+  $query="UPDATE oper SET datetime=NOW() WHERE value='guiupdate'";
+  $res = mysql_query($query, $connect);
+  if (!$res) { die('Invalid query: ' . mysql_error()); }
+}
+
+
+function patch_lookup($switch, $port) {
+  global $connect;
+
+  ## First find office if possible and lookup users
+  $query="select von_office from patchcable where nach_switch='" . $switch . "' and nach_port='" . $port ."'";
+  $res = mysql_query($query, $connect);
+  if (!$res) { die('Invalid query: ' . mysql_error()); }
+  if (mysql_num_rows($res)==1) {
+    $resultarray=mysql_fetch_array($res, MYSQL_NUM);
+    $office=$resultarray[0];
+    #debug1("patch_lookup office $office");
+
+    ## Now lookup Direx users for that office
+    $query="SELECT GROUP_CONCAT(Surname) as Surname from users WHERE PhysicalDeliveryOfficeName='" . $office . "'";
+    $res = mysql_query($query, $connect);
+    if (!$res) { die('Invalid query: ' . mysql_error()); }
+    if (mysql_num_rows($res)==1) {
+      $resultarray=mysql_fetch_array($res, MYSQL_NUM);
+      $users=$resultarray[0];
+      #debug1("patch_lookup users $users");
+    }
+  }
+
+  ## Lookup all details for that switch/port from patches
+  $query="select CONCAT(von_dose,' ',von_office,' ',von_user,' ',comment) from patchcable where nach_switch='" . $switch . "' and nach_port='" . $port ."'";
+  $res = mysql_query($query, $connect);
+  if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+  if (mysql_num_rows($res) ==0) {
+    $result='unknown';      # no entry
+    debug2("Patch not found");
+  } else {
+    $resultarray=mysql_fetch_array($res, MYSQL_NUM);
+    $result=$users . " " . $resultarray[0];
+    debug2("patch_lookup $result");
+  }
+  return $result;
+}
+
+
+#
+# ----------- main() : infinite loop -----------------------------------
+
+if ($lastseen_dryrun)  {
+  echo "*** DRYRUN: No DB inserts will be done***\n";
+
+} else {
+  ob_start("callback");   # see call back function above
+} 
+
+## Fork and run in background as a daemon
+if ($daemon) {
+  $pid = pcntl_fork();    # fork child & get PID
+  if ($pid == -1) {
+    die("pcntl_fork() failed: $php_errorstr");
+
+  } else if ($child_pid) {
+    #printf("I am the parent, my pid is %d and my child's pid is .%d.\n", 
+    #  posix_getpid(), $child_pid);
+    ob_flush();              // log buffered outputs
+    pcntl_wait($status);     // Protect against Zombie children
+    exit(0);                 // parent exits
+
+  } else {
+    //printf("I am the child, my pid is %d.\n", posix_getpid());
+    ob_flush();              // log buffered outputs
+  }
+  posix_setsid();        // create new session, detach from shells process group
+}
+
+
+## loop to constantly read stdin
+do {
+  db_connect();
+  logit('Started, connect to DB');
+  ob_flush();              // log buffered outputs
+
+  $fd = fopen($logfile, "r");
+  while ( ! feof($fd) ) {
+    $line=fgets($fd);
+    if (strlen($line)==0) {
+      sleep(1);
+      #echo("Empty: $line\n");
+      continue;
+    }
+    #echo("Length, Original: " +(string) strlen($line) +" $line\n");
+    #echo("Original: $line\n");
+
+    ## Nov 26 11:34:29 dnag2 vmpsd: [ID 922485 local6.info] ALLOW: 000f1f44e801 -> secHH230, switch 192.168.245.71 port 2/37
+    ## Pull out the lines that summarise connections
+    $regs=array();
+
+    #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
+    if (ereg("(.*) vmpsd: +(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
+      #echo "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n";
+      debug2("FOUND: {$regs[1]} {$regs[2]} $regs[3]");
+      $success=$regs[2]; 
+      $mac=$regs[3]; 
+      $vlan=$regs[4]; 
+      $switch=$regs[5]; 
+      $port=rtrim($regs[6]); 
+      #$details=rtrim($regs[1] . " " . $regs[3]);
+      $details="$regs[1]";
+      $mac2="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
+      debug2("mac=$mac2 vlan=$vlan switch=$switch port=$port");
+
+      if (($mac2=='0000.0000.0000') || ($mac2=='ffff.fdff.ffff') || ($mac2=='ffff.fcff.ffff') )  {
+        #continue;   // an invalid record, ignore
+        logit("Ignoring address $mac2");
+        $mac2='';
+        $log_entry='';
+        $subject='';
+        $newmac_found=FALSE;
+
+      } else {
+        $log_entry='';
+        $subject='';
+        $newmac_found=FALSE;
+
+        #####################################################
+        ## Search the DB for this MAC & update "LastSeen" ###
+        $query="UPDATE systems SET LastSeen=NOW()"
+        . ", port='" .$port . "' "
+        . ", switch='" .$switch . "' "
+        . ", LastVlan='" .$vlan . "' "
+        ." WHERE mac='" . $mac2 . "'";
+        #logit("$query");
+        $res = mysql_query($query);
+        if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+        debug2("Records affected: " . mysql_affected_rows());
+        if (mysql_affected_rows() ==0) { 
+
+          # Even through no records were affected, it might have been
+          # 'cos the LastSeen record was up to date, so first check to see if
+          # there is an entry for this MAC.
+          $query="SELECT name from systems WHERE mac='" . $mac2 . "' ";
+          #logit("$query");
+          $res = mysql_query($query);
+          if (!$res) { die('Invalid query: ' . mysql_error()); }
+    
+          ## 
+          ##
+          ## 1. Create a new entry for this MAC, disabled by default ##
+          ##
+          if (mysql_num_rows($res) ==0) {   # entry does not exist, 0 rows
+
+            $newmac_vendor=lookup_vendor_mac($mac2);
+
+            if ($lastseen_infnet==TRUE) {         
+
+#                # 1.1 Infnet PC?: See if its known on PC Explorer, can take several secs
+#                $retval='';
+#                $infnet_details=syscall("$check_infnet_mac $mac2", $retval);
+#
+#                #if(preg_match("/Host=(\S+) (.+)$/",$infnet_details, $matches)) {
+#                #Host=uPC2 Vorname=Urs Family=Someone Tel=+41-99-1234566 Org=AA-BB-CC-DD
+#                if(preg_match("/Host=(\S+) Vorname=(.+) Family=(.+) Tel=(\S+) Org=(\S+) NtAccount=(\S+)$/",$infnet_details, $matches)) {
+#
+#                  # Enable PC and set to Infnet VLAN
+#                  #$infnet_name=$matches[1];     
+#                  $infnet_name=strtolower($matches[1]);     
+#                  $infnet_details=$matches[2] ." " .$matches[3] ." " 
+#                                 .$matches[4] ." " .$matches[5];     
+#                  $txx_name= strtoupper($matches[6]);
+
+     
+                # 1.1 Infnet PC?: See if its known on SMS, can take several secs
+                $retval='';
+                $infnet_details=syscall("$sms_infnet_mac $mac2", $retval);
+
+                # Enable PC and set to Infnet VLAN
+                if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$infnet_details, $matches)) {
+                  $infnet_name=$matches[1];     
+                  $txx_name= "KEINE";                          # default
+                  $txx_name   =$matches[2];
+                  $sms_os     =$matches[3];
+                  $infnet_details="";
+                  logit("Infnet PC: name=$infnet_name, NTaccount=$txx_name, $sms_os, $infnet_details");
+     
+                  $query="INSERT INTO systems "
+                  . "SET LastSeen=NOW(), status=1, class=1,"      # active, GWP
+                  .      "description='$txx_name', "   # nt account
+                  .      "name='$infnet_name', "
+                  .      "comment='$infnet_details', "
+                  .      "vlan='$lastseen_infnet_vlan', "
+                  .      "os3='$sms_os', "
+                  .      "port='$port', "
+                  .      "switch='$switch', "
+                  .      "mac='$mac2' ";
+                  #logit("New INFNET System $mac2 on sw/port $switch/$port"); 
+                  $newmac_found=TRUE;                // used further down
+              
+                  $log_entry="New INFNET $mac2 ($newmac_vendor) $infnet_name, $txx_name, $infnet_details, switch ";
+
+                  if ($lastseen_dryrun==FALSE) {
+                    $res = mysql_query($query);
+                    if (!$res) { die('Invalid query: ' . mysql_error()); }
+                    # DB is now 'live'
+                    #sleep(1);    # wait a sec, otherwise it seem to be too fast 
+                    #request_vmps_update();
+
+                    snmp_restart_port($port, $switch);
+                  }
+
+               
+                  ## User now authorised, so now add user to local DB if needed.
+                  #User now authorised, so now add user to local DB if needed.
+                  #
+                  #$txx_name= direx_check_new_user("INO-SSM", "Sean", "Boran");
+                  #$txx_name= direx_check_new_user($matches[5], $matches[2], $matches[3]);
+                  # TBD: optimise now thzat we have the NT user
+                  #      - insert if user not known, use NT account as key
+                  #direx_check_new_user($matches[5], $matches[2], $matches[3]);
+                  # 7.6.06: insert user if needed, then get user details from Direx.
+                  insert_user($txx_name);
+                  #logit("Inserted new user $txx_name");
+                  direx_sync_user($txx_name);
+                  #logit("Symced new user $txx_name");
+
+                  // Document the user's details in the alert
+                  $query="SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where AssocNtAccount='$txx_name'";
+                    $res = mysql_query($query);
+                    if (!$res) { die('Invalid query: ' . mysql_error()); }
+                    list($infnet_details)=mysql_fetch_array($res);
+
+                } else {
+                  $infnet_name='unknown infnet';     
+                  $infnet_details="sms_infnet_mac: error";     
+                }
+            }   # if infnet
+            
+
+            ## 1.2 Add new NON-Infnet system
+
+            if ($newmac_found==FALSE) { # Already added in Infnet Section?
+              $query="INSERT INTO systems "
+                . "SET LastSeen=NOW(), " 
+                .      "status=0, name='unknown',"
+                .      $set_vlan_for_unknowns
+                .      "port='"    .$port   . "', "
+                .      "switch='"  .$switch . "', "
+#                .      "description='keine', "   # nt account
+                .      "description='KEINE', "   # nt account
+                .      "mac='"     . $mac2  . "' ";
+              $log_entry="New unknown $mac2 ($newmac_vendor), switch ";
+              #logit($log_entry);
+
+              if ($lastseen_dryrun==FALSE) {
+                $res = mysql_query($query);
+                if (!$res) { die('Invalid query: ' . mysql_error()); }
+                $newmac_found=TRUE;
+              }
+            }  # if $newmac for non-infnet
+
+          } # new mac
+        }   # no system records
+      }     # mac !=0
+
+
+      ## 2. Has this switch been seen before? If not add to table
+      $query="SELECT name from switch WHERE ip='" . $switch . "' ";
+      #debug1("$query\n");
+      $res = mysql_query($query);
+      if (!$res) { die('Invalid query: ' . mysql_error()); }
+      if ((mysql_num_rows($res) ==0) and ! $lastseen_dryrun) {   # entry does not exist, 0 rows
+        $query="INSERT INTO switch "
+        . "SET ip='" . $switch . "', name='unknown'";
+        #.      "comment='First found: "     . $details    . "' ";
+        #log("New switch: $query"); 
+        logit("New switch entry $switch, please update the description."); 
+        reporterr('info', "New switch entry $switch, please update the description.");
+        $res = mysql_query($query);
+        if (!$res) { die('Invalid query: ' . mysql_error()); }
+      }
+      else {
+        # Remember switch name for better logging
+        $row=mysql_fetch_array($res, MYSQL_NUM);
+        $switch_name=$row[0];
+        ## Give switch name?
+        $log_entry=$log_entry . $row[0];
+      }
+
+
+      ## 3. Has this Port been seen before? If not add to table
+      $query="SELECT location,comment from port WHERE switch='" . $switch  
+        . "' AND name='$port' ";
+      #echo "$query\n";
+      $res = mysql_query($query);
+      if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+      if ((mysql_num_rows($res) ==0) and ! $lastseen_dryrun) {   
+        // ===== entry does not exist, --> NEW PORT!
+
+        # Where is the port? See if this port is in patch table & update 'office'
+        # if not, set office to switch location.
+        $port_loc='';
+        $port_loc_tmp=v_sql_1_select("SELECT von_office from patchcable where nach_switch='$switch' and nach_port='$port'");
+        logit("new port $port location from patch table=$port_loc_tmp");
+        if (strlen($port_loc_tmp)>1) {      # we have a valid office
+          $port_loc=$port_loc_tmp;
+
+        } else {
+          $port_loc_tmp=v_sql_1_select("SELECT location from switch where ip='$switch'");
+          logit("new port $port location from switch=$port_loc_tmp");
+          if (strlen($port_loc_tmp)>1) {      # we have a valid office
+            $port_loc=$port_loc_tmp;
+
+          } else {                            # we really have no idea where it is
+            $port_loc='unknown';
+          }
+        }
+
+        $query="INSERT INTO port SET switch='$switch', name='$port', location='$port_loc' ";
+        logit("New port $port on sw $switch, location=$port_loc."); 
+        reporterr('info', "New port $port on sw $switch, location=$port_loc."); 
+        $res = mysql_query($query);
+        if (!$res) { die('Invalid query: ' . mysql_error()); }
+      }
+      else {
+        # Remember port name for better logging
+        $row=mysql_fetch_array($res, MYSQL_NUM);
+        #$subject="in " . $row[0] . ", " . $row[1] . ", port $port";
+        $subject="in " . $row[0] . ", " . $row[1] . ", port $port $port_loc";
+      }
+
+
+      ## Log details of new system
+      if ($newmac_found===TRUE) {  
+        if ($lastseen_patch_lookup==true) {
+           ## lookup patch details if switch/port in patch list
+           $log_entry=$log_entry . "(Patch: "
+             . patch_lookup($switch, $port) .")";
+        }
+        logit($log_entry); 
+        reporterr('info', $log_entry); 
+
+        if ($lastseen_infnet==FALSE) {
+          notify2($switch_name, $log_entry, "VMPS alert $subject"); 
+
+        } else if ($lastseen_infnet_notify==TRUE) { # Only alert if set
+          notify2($switch_name, $log_entry, "VMPS alert $subject"); 
+        }
+
+      }
+    }                         # if log line
+    ob_flush();               # log buffered outputs
+  }                           # while ( $fd)
+
+  mysql_close($connect);
+  logit("Log /DB close, reconnect"); 
+  debug2("Log /DB close, sleep, end."); 
+  ob_flush();                # log buffered outputs
+
+  usleep(500000);            # wait 0.5 secs (500ms * 100 mic.secs), before retrying
+
+#} while (true);
+} while ($lastseen_dryrun===false);   # If debugging only once
+
+echo "*** DRYRUN: Singe loop finished\n";
+
+ob_end_clean();              # will never really get here..
+
+?>
