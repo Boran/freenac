@@ -17,7 +17,10 @@ logit("===============================================");
 $scan_results=$scan_directory."scan.xml";
 scan($scan_results,$nmap_flags);
 $var=parse_scanfile($scan_results);
-do_inventory($var);
+if ($var['equipments']>0)
+   do_inventory($var);
+else
+   $var['equipments']=0;
 
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 logit("===============================================");
