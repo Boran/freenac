@@ -1,0 +1,67 @@
+#!/bin/sh
+#
+# /etc/init.d/vmps
+#
+### BEGIN INIT INFO
+# Provides:       vmps
+# Required-Start: $network $remote_fs mysql
+# Required-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start the Vmps server
+### END INIT INFO
+
+# 
+
+case "$1" in
+start)
+	[ -f /opt/vmps/bin/vmpsd ] || exit 1
+
+	#[ -f /opt/vmps/bin/vmpsd ] && \
+	#    [ -f /etc/vlan.db ] || exit 1
+
+        #-l  log level
+        #  o   0x0100 -- fatal errors only
+        #  o   0x0200 -- informational messages
+        #  o   0x0400 -- print warnings
+        #  o   0x0800 -- print debug messages; very verbose
+        #  o   0x0001 -- system
+        #  o   0x0002 -- parser
+        #  o   0x0004 -- vqp
+        #  Good: 0x0804 and bit less: 0x0F04
+
+        # Make sure mysql started
+        sleep 5
+
+        /opt/vmps/vmpsd -e /opt/vmps/vmpsd_external  -l 0x0804
+
+        ## Add the '-a A.B.C.D' parameter if the machine has more than
+        ## one interface to specific on which interface to bind vmpsd
+	#/opt/vmps/bin/vmpsd -e /opt/vmps/bin/vmpsd_external  -l 0x0804 -a 192.168.245.40
+
+	# manual tests:
+	#/usr/local/bin/vmpsd -d -f /etc/vlan.db -l 0x0F08 -a 192.168.245.19
+	#/usr/local/bin/vmpsd -f /etc/vlan.db -l 0x0F04 -a 192.168.245.19
+	#/usr/local/bin/vmpsd -f /etc/vlan.db -l 0x0804 -a 192.168.245.19
+	;;
+
+reload)
+        pkill -HUP vmpsd;
+        ;;
+
+restart)
+        $0 stop;
+        $0 start;
+	;;
+
+stop)
+        pkill vmpsd
+	;;
+
+*)
+	echo "Usage: $0 { start | stop }"
+	exit 1
+	;;
+esac
+exit 0
+
