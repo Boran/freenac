@@ -1,0 +1,50 @@
+#!/sbin/sh
+#
+# /etc/init.d/vmps
+#
+# ln -s /etc/init.d/vmps /etc/rc2.d/S99vmps
+
+case "$1" in
+start)
+	[ -f /opt/vmps/vmpsd ] && \
+	    [ -f /etc/vlan.db ] || exit 1
+
+        #-l  log level
+        #  o   0x0100 -- fatal errors only
+        #  o   0x0200 -- informational messages
+        #  o   0x0400 -- print warnings
+        #  o   0x0800 -- print debug messages; very verbose
+        #  o   0x0001 -- system
+        #  o   0x0002 -- parser
+        #  o   0x0004 -- vqp
+
+	/opt/vmps/vmpsd -f /etc/vlan.db -l 0x0F04 -a 192.168.245.19
+	#/usr/local/bin/vmpsd -f /etc/vlan.db -a 192.168.245.19
+	#/usr/local/bin/vmpsd -d -f /etc/vlan.db -l 0x0F04 -a 192.168.245.19
+	#su vmps -c /usr/local/bin/vmpsd -d -f /etc/vlan.db -l 0x0F04 -a 192.168.245.19
+
+	#/usr/local/bin/vmpsd -d -f /etc/vlan.db -l 0x0F08 -a 192.168.245.19
+	#/usr/local/bin/vmpsd -f /etc/vlan.db -l 0x0F07 -a 192.168.245.19
+	#/usr/local/bin/vmpsd -f /etc/vlan.db -l 0x0F04 -a 192.168.245.19
+	#/usr/local/bin/vmpsd -f /etc/vlan.db -l 0x0804 -a 192.168.245.19
+	;;
+
+reload)
+        pkill -HUP vmpsd;
+        ;;
+
+restart)
+        $0 stop;
+        $0 start;
+	;;
+
+stop)
+        pkill vmpsd
+	;;
+
+*)
+	echo "Usage: $0 { start | stop }"
+	exit 1
+	;;
+esac
+exit 0
