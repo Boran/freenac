@@ -1,48 +1,39 @@
 #!/usr/bin/php -f
 <?php
-#
-# /opt/vmps/vmps_lastseen
-#
-# FUNCTION:
-# - Update the "last seen" entry for a specific MAC address. 
-# - If the system is new, insert new Users, Ports, Switches, System as appropriate 
-# - and send an email alert.
-# - Automatically recognise and allow GWPs.
-#  This function is called for any errors or
-#  messages sent to stdout/err. The idea is to catch all
-#  such messages and send them to syslog, this this is a daemon normally
-#  detached from the console
-#
-# Note: when debugging, set $debug_flag1=TRUE and run standalone, not
-#       from inittab, otherwise you won't see the debug messages.
-#       If it seems not to be parsing the log, kill it ans init will
-#       restart it.
-#
-# HISTORY:
-# 2006.06.02/SB Better debugging with dryrun. Check feof. If a 00000 mac is
-#               received reset log_msg and other vars.
-#               Move direx_tXX & check_infnet_mac to swisscom.only subdir
-# 2006.02.08/SB add output buffering, see callback(), remove update_ports()
-# 2005.11.15/SB update_ports()
-# 2005.10.11/SB Restart Infnet ports automatically.
-# 2005.09.09/SB All INFNET details to alert, insert new user if needed.
-#      Add includes funcs.inc, direx_tXX. Email notification now done
-#      using notify column on switch tables, rather than email aliases.
-#      Lookup patch details and add to Alert patch_lookup() if $lastseen_patch_lookup.
-#      Lookup NTACCOUNT and add to system details
-#      Move functions debug1() logit() syscall() to funcs.inc
-# 12.8.05/sb see $set_vlan_for_unknowns also in config.inc
-# 22.8.05/sb $lastseen_dryrun
-#            Don't log query its not needed
-# 12.5.05/sb improve logging, email alerting, move DB parameters to config file.
-# 19.4.05/sb Formatting, sleep between retries.
-# 19.01.05   Sean Boran, 19.01.05
-#      Reconnect if log closes, or DB shut. Improve logit messages.
-# 24.11.04   Sean Boran, First Prototype.
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-################################################################################
+/**
+ * /opt/nac/bin/vmps_lastseen
+ *
+ * Long description for file:
+ * FUNCTION:
+ * - Update the "last seen" entry for a specific MAC address. 
+ * - If the system is new, insert new Users, Ports, Switches, System as appropriate 
+ * - and send an email alert.
+ * - Automatically recognise and allow GWPs.
+ *  This function is called for any errors or
+ *  messages sent to stdout/err. The idea is to catch all
+ *  such messages and send them to syslog, this this is a daemon normally
+ *  detached from the console
+ *
+ * Note: when debugging, set $debug_flag1=TRUE and run standalone, not
+ *       from inittab, otherwise you won't see the debug messages.
+ *       If it seems not to be parsing the log, kill it ans init will
+ *       restart it.
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			CVS: $Id:$
+ * @link				http://www.freenac.net
+ *
+ */
+
 
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;

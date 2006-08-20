@@ -1,19 +1,30 @@
 #!/usr/bin/php -f
 <?php
-#
-# /opt/vmps/purge_unknowns
-#
-# Delete unknown systems older than $unknown_purge days
-# a) First list & log what we delete
-# b) Then actually wipe it!
-# Allow max. 50 entries to be deleted (for now).
-# $unknown_purge is stored in config.inc
-#
-# 15.8.05/Sean Boran: first version.
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-####################################
+/**
+ * /opt/nac/bin/purge_unknowns
+ *
+ * Long description for file:
+ * Delete unknown systems older than $unknown_purge days
+ * a) First list & log what we delete
+ * b) Then actually wipe it!
+ * Allow max. 50 entries to be deleted (for now).
+ * $unknown_purge is stored in config.inc
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			CVS: $Id:$
+ * @link				http://www.freenac.net
+ *
+ */
+
 
 $debug_flag1=FALSE;
 #$debug_flag1=TRUE;

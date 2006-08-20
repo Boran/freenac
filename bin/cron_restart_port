@@ -1,16 +1,27 @@
 #!/usr/bin/php -f
 <?php
-#
-# /opt/vmps/cron_restart_port
-#
-# Go though the port table and check for the restart flag, and 
-# restart the ports via SNMP (if this option is enabled in config.inc)
-#
-# 03.11.05/Sean: Move to PHP5, restart_port()
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-####################################
+/**
+ * /opt/nac/bin/cron_restart_port
+ *
+ * Long description for file:
+ * Go though the port table and check for the restart flag, and 
+ * restart the ports via SNMP (if this option is enabled in config.inc)
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			CVS: $Id:$
+ * @link				http://www.freenac.net
+ *
+ */
+
 
 $debug_flag1=FALSE;
 #$debug_flag1=TRUE;

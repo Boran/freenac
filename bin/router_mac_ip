@@ -1,24 +1,31 @@
 #!/usr/bin/php -f
 <?php
-#
-# /opt/vmps/bin/router_mac_ip
-#
-# Get MAC / IP table of active hosts from core routers
-#
-# 2005.12.13/Sean Boran: Change snmpwalk to router_snmpwalk
-# 2005.12.13/Sean Boran: FCS
-#
-# On IOS do "show ip arp"
-#        or "sh ip arp vrf insec"
-# Further reading: 
-#    http://www.cisco.com/public/sw-center/netmgmt/cmtk/mibs.shtml
-#    The "getif" tool for exploring MIBs.
-#
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-#############################################################
-
+/**
+ * /opt/nac/bin/router_mac
+ *
+ * Long description for file:
+ * Get MAC / IP table of active hosts from core routers
+ *
+ * On IOS do "show ip arp"
+ *        or "sh ip arp vrf insec"
+ * Further reading: 
+ *    http://www.cisco.com/public/sw-center/netmgmt/cmtk/mibs.shtml
+ *    The "getif" tool for exploring MIBs.
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			CVS: $Id:$
+ * @link				http://www.freenac.net
+ *
+ */
 
 $debug_flag1=false;
 $debug_flag2=false;

@@ -1,5 +1,5 @@
 #!/bin/sh  
-# /opt/vmps/monitor_allows_count.sh
+# /opt/nac/bin/monitor_allows_count.sh
 #
 # Performance/load measurement: list the number of times on the day
 # when there were more than 10 authentications in a second, i.e. when we were
@@ -14,7 +14,7 @@
 # To do: make the threshold (10) variable, rewrite this script in PHP,
 #        and read the threshold value from config.inc, the email destination too.
 #
-#  Copyright (C) 2006 Swisscom
+#  Copyright (C) 2006 
 #  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
 #############
 

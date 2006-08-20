@@ -1,20 +1,31 @@
 #!/usr/bin/php -f
 <?php
-#
-# File: restart_port
-#
-# Use SNMP to connect to the Switch, check the port status (up/down), and
-# reset the port (set down, then up).
-#
-# Example:
-#     /opt/vmps/bin/restart_port PORT SWITCH
-#     /opt/vmps/bin/restart_port 2/10 sw0503
-#
-# 2005.11.03/Sean Boran: FCS
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-#############################################################
+/**
+ * /opt/nac/bin/restart_port
+ *
+ * Long description for file:
+ * Use SNMP to connect to the Switch, check the port status (up/down), and
+ * reset the port (set down, then up).
+ *
+ * Example:
+ *     /opt/nac/bin/restart_port PORT SWITCH
+ *     /opt/nac/bin/restart_port 2/10 sw0503
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			CVS: $Id:$
+ * @link				http://www.freenac.net
+ *
+ */
+
 
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;

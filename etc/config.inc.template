@@ -1,15 +1,24 @@
 <?php
-#
-#  /opt/vmps/config.inc.template
-#
-#  Use this to generate a config.inc configuration file, 
-#  used to contralise settings that may change.
-#
-#  2006.05.20/SB : Version 2. Create template for other sites.
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-##########################
+/**
+ * /opt/nac/etc/config.inc.template
+ *
+ * Long description for file:
+ * ...
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			CVS: $Id:$
+ * @link				http://www.freenac.net
+ *
+ */
 
 ## MySQL DB settings for all scripts
   $dbhost="localhost";

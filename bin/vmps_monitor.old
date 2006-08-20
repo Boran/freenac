@@ -1,19 +1,25 @@
 #!/usr/bin/php -f
 <?php
-#
-# /opt/vmps/vmps_monitor
-#
-# Check that VMPS processes running and update "oper" table & syslog
-#
-# 20.01.06/sb: Urgent (sms) alerting & daemon restart
-# 12.09.05/sb: Add $vmps_lastseen_is_local, $vmpsd_is_local
-# 20.06.05/SB: Fix DB calls, extra lines.
-# 20.12.04/Sean Boran: First Version
-#
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-##########
+/**
+ * /opt/nac/bin/vmps_monitor.old
+ *
+ * Long description for file:
+ * Check that VMPS processes running and update "oper" table & syslog
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			CVS: $Id:$
+ * @link				http://www.freenac.net
+ *
+ */
 
 #$debug_flag1=TRUE;
 $debug_flag1=FALSE;

@@ -1,18 +1,25 @@
 <?php
-#
-# /opt/vmps/funcs.inc
-#
-#  VMPS: common PHP functions used by several scripts
-# 
-#  2005.11.03/SB: 
-#     add db_connect(), trim write space on log messages, reporterr3().
-#     ping_mac()
-#  2005.09.30/Sean Boran: 
-#     First version
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-##########################
+/**
+ * /opt/nac/bin/dump_ports
+ *
+ * Long description for file:
+ * common PHP functions used by several scripts
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			CVS: $Id:$
+ * @link				http://www.freenac.net
+ *
+ */
+
 
 include_once "../etc/config.inc";
 

@@ -1,5 +1,5 @@
 #!/bin/sh  
-# /opt/vmps/monitor_lastseen.sh
+# /opt/nac/bin/monitor_lastseen.sh
 #
 # Monitor the VMPS logs and notify the Sysadmin via email of 
 # if there at not at least XX "lastseen" per time interval.

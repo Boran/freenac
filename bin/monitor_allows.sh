@@ -1,5 +1,5 @@
 #!/bin/sh  
-# /opt/vmps/monitor_allows.sh
+# /opt/nac/bin/monitor_allows.sh
 #
 # Monitor the VMPS logs and notify the Sysadmin via email of 
 # if there at not at least XX "ALLOWS" per time interval.
@@ -9,7 +9,7 @@
 #
 # <1> 06.01.06 Sean Boran
 #
-#  Copyright (C) 2006 Swisscom
+#  Copyright (C) 2006 
 #  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
 #############
 

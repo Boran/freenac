@@ -29,13 +29,8 @@ my $debug = "0";
 use strict;
 #<2> use Mail::Sendmail;
 
-####my $EMail = "tgdcuro1\@gd2.swissptt.ch";
-#my $EMail = "0793701449\@sms.swisscom.com";
-#$EMail   .= ",0792923907\@sms.swisscom.com";
-#my $EMail = "sean.boran\@swisscom.com";
-my $EMail = "root\@vptt.ch";
-#my $SMTPServer = "rbemcf10";
-#my $SMTPServer = "mailhost";
+my $EMail = "root\@freenac.net";
+
 
 my $MailDelay = 3*60*60; # delay between sending emails (3 hours)
 my $LoopDelay = 60;      # Determines how frequently cron pid is checked
