@@ -137,6 +137,7 @@ function check_existent($data,$queries) 	//This function will check info concern
          else
          {
             $queries['message'][$queries['messages']]="$ip has changed its MAC since $db_timestamp. New MAC is $mac\n";
+	    logit($queries['message'][$queries['messages']]);
             $queries['messages']++;
             $mac_changed++;
          }
@@ -204,7 +205,7 @@ function check_existent($data,$queries) 	//This function will check info concern
                 $add_prot[$add_counter]=$protocol[$position[$i]];
                 $add_banner[$add_counter]=$banner[$position[$i]];
                 $queries['message'][$queries['messages']]="New port open (".$add_port[$add_counter]."/".$add_prot[$add_counter].") on host $ip.\n";
-	        logit($queries['message'][$queries['messages']]);
+	        debug1($queries['message'][$queries['messages']]);
                 $queries['messages']++;
                 $queries=check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter],$queries);
                 $add_counter++;
@@ -219,7 +220,7 @@ function check_existent($data,$queries) 	//This function will check info concern
                $remove_port[$remove_counter]=$result[$position[$i]];
                $remove_prot[$remove_counter]=$db_protocol[$position[$i]];
                $queries['message'][$queries['messages']]="Port (".$remove_port[$remove_counter]."/".$remove_prot[$remove_counter].") on host $ip no longer open since ".$db_porttstmp[$position[$i]]."\n";
-	       logit($queries['message'][$queries['messages']]);
+	       debug1($queries['message'][$queries['messages']]);
                $queries['messages']++;
                $remove_counter++;
             }
@@ -246,7 +247,7 @@ function check_existent($data,$queries) 	//This function will check info concern
                      if (strcmp($banner[$xml_position[$i]],$db_banner[$db_position[$i]])!=0) //Now let's check if the service has changed
                      {
                         $queries['message'][$queries['messages']]="Service $service (".$port[$xml_position[$i]]."/".$protocol[$i].") on host $ip has changed since ".$db_porttstmp[$db_position[$i]].". Was using ".$db_banner[$db_position[$i]]." but now is using ".$banner[$xml_position[$i]]."\n";
-			logit($queries['message'][$queries['messages']]);
+			debug1($queries['message'][$queries['messages']]);
 		        $queries['messages']++;
 		     }
                   }
@@ -260,7 +261,7 @@ function check_existent($data,$queries) 	//This function will check info concern
                      $add_prot[$add_counter]=$prot_res[$keys_result[$i]];
                      $add_banner[$add_counter]=$string[$keys_result[$i]];
                      $queries['message'][$queries['messages']]="New port open (".$add_port[$add_counter]."/".$add_prot[$add_counter].") on host $ip.\n";
-		     logit($queries['message'][$queries['messages']]);
+		     debug1($queries['message'][$queries['messages']]);
                      $queries['messages']++;
                      $queries=check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter],$queries);
                      $add_counter++;
@@ -294,7 +295,7 @@ function check_existent($data,$queries) 	//This function will check info concern
                      $remove_port[$remove_counter]=$result[$keys_result[$i]];
                      $remove_prot[$remove_counter]=$prot_res[$keys_result[$i]];
                      $queries['message'][$queries['messages']]="Port (".$remove_port[$remove_counter]."/".$remove_prot[$remove_counter].") on host $ip no longer open since ".$tstmp[$keys_result[$i]]."\n";
-		     logit($queries['message'][$queries['messages']]);
+		     debug1($queries['message'][$queries['messages']]);
                      $queries['messages']++;
                      $remove_counter++;
                   }
