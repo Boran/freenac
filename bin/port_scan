@@ -30,22 +30,22 @@ openlog("port_scan", LOG_PID , LOG_LOCAL5);
 
 
 debug1("Doing port_scan to systems... Please wait...\n");
-logit("===============================================");
+logit("========================================");
 logit("port_scan started");
-logit("===============================================");
+logit("========================================");
 
 $scan_results=$scan_directory."scan.xml";   	//Scan file
-scan($scan_results,$nmap_flags);		//Scan network with those flags	
-$var=parse_scanfile($scan_results);		//Parse the xml file
+$list=scan($scan_results,$nmap_flags);		//Scan network with those flags	
+$var=parse_scanfile($scan_results,$list);		//Parse the xml file
 if ($var['equipments']>0)			
    do_inventory($var);				//Check against database	
 else
    $var['equipments']=0;
 
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
-logit("===============================================");
+logit("========================================");
 logit("port_scan finished normally. ".$var['equipments']." hosts scanned");
-logit("===============================================");
+logit("========================================");
 
 function do_something($query)			//Let's do something with our structure
 {
@@ -378,9 +378,12 @@ function add_entry($data,$queries)	//A new host in our network that needs to be 
 function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specified in the file "port_scan.inc" and the location for our XML file
 {
    $scan="nmap ".$nmap_flags." -oX ".$xml_file." ";
-   $hosts=get_ips();		//We need some IPs to scan
+   $list=get_ips();		//We need some IPs to scan
+   for ($i=0;$i<$list['counter'];$i++) //Put those ips in a string
+      $ips.=" ".$list['ip'][$i];
    $scan.=$hosts;		//Now our command line is complete
    syscall($scan);		//Scan
+   return($list);
 }
 
 function check_and_abort($message,$resource)	//This function checks if there is a problem with some important query and aborts. It is also used to abort the script because we want to do it
@@ -390,9 +393,9 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       debug1($message);
       logit($message);
       debug1("port_scan ended abnormally.\n");
-      logit("===============================================");
+      logit("========================================");
       logit("port_scan ended abnormally");
-      logit("===============================================");
+      logit("========================================");
       exit();
    }
    else
@@ -401,9 +404,9 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       debug1($message);
       logit($message);
       debug1("port_scan ended abnormally.\n");
-      logit("===============================================");
+      logit("========================================");
       logit("port_scan ended abnormally");
-      logit("===============================================");
+      logit("========================================");
       exit();
    }
 }
@@ -414,7 +417,7 @@ function get_ips()		//This function will get allowed ips from our database
    $list=array();
    $counter=0;
    $number=0;
-   $query="select r_ip from systems where r_ip!='NULL' and status=1;";
+   $query="select r_ip,mac,name from systems where r_ip!='NULL' and status=1;";
    $res=execute_query($query);
    check_and_abort("No ip addresses to scan found in systems table. Aborting...",$res);
    if ($res) 	//Ok, we got some ips from our systems table, let's see which ones are candidates to be scanned according to the info provided in the fna_netsallowed table
@@ -478,7 +481,9 @@ function get_ips()		//This function will get allowed ips from our database
                         $there++;
                   if (!$there)
                   {
-                     $list[$counter]=$result["r_ip"];
+                     $list['ip'][$counter]=$result["r_ip"];
+		     $list['mac'][$counter]=$result["mac"];
+		     $list['hostname'][$counter]=$result["name"];
                      $counter++;
                   }
                }
@@ -486,14 +491,13 @@ function get_ips()		//This function will get allowed ips from our database
          }
       }
    }
+   $list['counter']=$counter;
    if ($counter==0)
       check_and_abort("No IPs from the systems table matched criteria in the fna_netsallowed. Quitting...\n",0);
-   for ($i=0;$i<$counter;$i++) //Put those ips in a string
-      $ips.=" ".$list[$i];
-   return($ips);  
+   return($list);  
 }
 
-function parse_scanfile($scan_file)
+function parse_scanfile($scan_file,$list)
 {
    $info=array();
    if (file_exists($scan_file))
@@ -507,8 +511,15 @@ function parse_scanfile($scan_file)
          $xml = simplexml_load_string($file_loaded); #Picking info from XML file
          foreach($xml->host as $host) 
          {
-            $ip_info=$host->address[0];
-            if (isset($host->address[1]))
+            $ip_info=$host->address[0];	
+	    $temp=$ip_info->attributes(); //Let's retrieve the attributes
+            if (isset($temp->addr))
+               $info[$i]['ip']=(string)$temp->addr;         //IP address
+            else $info[$i]['ip']="NULL";
+            $index=0;	
+	    while (($info[$i]['ip']!=$list['ip'][$index])&&($index<$list['counter']))
+		$index++;
+            if (isset($host->address[1]))	//MAC address of scanned host
             {
                $mac_info=$host->address[1];
                $temp=$mac_info->attributes();
@@ -517,22 +528,18 @@ function parse_scanfile($scan_file)
                   $info[$i]['mac']=(string)$temp->addr; 
                   $info[$i]['mac']=normalise_mac($info[$i]['mac']);
                }
-               else $info[$i]['mac']="NULL";
+               else $info[$i]['mac']=$list['mac'][$index];
  
             }
-            else $info[$i]['mac']="NULL";
-            if (isset($host->hostnames->hostname))
+            else $info[$i]['mac']=$list['mac'][$index];
+            if (isset($host->hostnames->hostname))	
             {
                $host_info=$host->hostnames->hostname; 
                $temp=$host_info->attributes();
             }
             if (isset($temp->name))
-               $info[$i]['hostname']=(string)$temp->name; 		//Hostname
-            else $info[$i]['hostname']="NULL"; 
-            $temp=$ip_info->attributes(); //Let's retrieve the attributes
-            if (isset($temp->addr)) 
-               $info[$i]['ip']=(string)$temp->addr; 			//IP address
-            else $info[$i]['ip']="NULL";
+               $info[$i]['hostname']=(string)$temp->name; 	//Hostname
+            else $info[$i]['hostname']=$list['hostname'][$index]; 
             if (isset($host->os->osmatch))
             {
                $os_info=$host->os->osmatch;
@@ -556,8 +563,8 @@ function parse_scanfile($scan_file)
                      $info[$i]['port'][$j]['protocol']=(string)$temp->protocol;	#Protocol
                      $info[$i]['port'][$j]['portid']=(string)$temp->portid;	#Service identifier
                      $temp=$port->state->attributes();
-                     $temp2=$port->service->attributes(); //Attributes to get the service running
-                     if (isset($temp2->name))					#Description
+                     $temp2=$port->service->attributes(); //Attributes to get the running service
+                     if (isset($temp2->name))		#Description
                         $name=(string)$temp2->name;
                      else $name="";
                      if (isset($temp2->product))
