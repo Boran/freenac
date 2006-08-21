@@ -22,7 +22,7 @@
  */
 
 
-include_once "./funcs.inc";
+include_once "../funcs.inc";
 include_once "../etc/port_scan.inc";
 
 define_syslog_variables();
@@ -30,9 +30,9 @@ openlog("port_scan", LOG_PID , LOG_LOCAL5);
 
 
 debug1("Doing port_scan to systems... Please wait...\n");
-logit("========================================");
+logit("=====================================");
 logit("port_scan started");
-logit("========================================");
+logit("=====================================");
 
 $scan_results=$scan_directory."scan.xml";   	//Scan file
 $list=scan($scan_results,$nmap_flags);		//Scan network with those flags	
@@ -43,9 +43,9 @@ else
    $var['equipments']=0;
 
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
-logit("========================================");
+logit("=====================================");
 logit("port_scan finished normally. ".$var['equipments']." hosts scanned");
-logit("========================================");
+logit("=====================================");
 
 function do_something($query)			//Let's do something with our structure
 {
@@ -64,7 +64,7 @@ function do_inventory($data_from_xml)
    for ($i=0;$i<$data_from_xml['equipments'];$i++)	//How many hosts scanned
    {
        $ip=$data_from_xml[$i]['ip'];		//Get ip of one host
-       $query=sprintf("select * from fna_hostscanned where ip='%s';",$ip);
+       $query=sprintf("select * from nac_hostscanned where ip='%s';",$ip);
        $res=execute_query($query);
        if ($res)
        {
@@ -86,7 +86,7 @@ function check_existent($data,$queries) 	//This function will check info concern
    $hostname=$data['hostname'];
    $os=$data['os'];   				//OS system this time
    $id=0;
-   $query=sprintf("select * from fna_hostscanned where ip='%s';",$ip);
+   $query=sprintf("select * from nac_hostscanned where ip='%s';",$ip);
    $res=execute_query($query);
    if ($res)
    {
@@ -167,11 +167,11 @@ function check_existent($data,$queries) 	//This function will check info concern
       $changes=$host_changed+$os_changed+$mac_changed;
       if($changes>0)
       {
-         $query=sprintf("update fna_hostscanned set hostname='%s',mac='%s',os='%s',timestamp='%s' where id='%d' and ip='%s';",$hostname,$mac,$os,$timestamp,$id,$ip);
+         $query=sprintf("update nac_hostscanned set hostname='%s',mac='%s',os='%s',timestamp='%s' where id='%d' and ip='%s';",$hostname,$mac,$os,$timestamp,$id,$ip);
          $queries['query'][$queries['number']]=$query;
          $queries['number']++;
       }
-      $query=sprintf("select * from fna_openports where host='%s';",$id);
+      $query=sprintf("select * from nac_openports where host='%s';",$id);
       $res1=execute_query($query);
       if ($res1)				//Let's check info about ports
       {
@@ -304,13 +304,13 @@ function check_existent($data,$queries) 	//This function will check info concern
          }
          for ($i=0;$i<$remove_counter;$i++)	//Ok, let's perform the queries to delete our old closed ports
          {
-            $query=sprintf("delete from fna_openports where host='%s' and port='%s' and protocol='%s';",$id,$remove_port[$i],$remove_prot[$i]);
+            $query=sprintf("delete from nac_openports where host='%s' and port='%s' and protocol='%s';",$id,$remove_port[$i],$remove_prot[$i]);
             $queries['query'][$queries['number']]=$query;
             $queries['number']++;
          }
          for ($i=0;$i<$add_counter;$i++)	//And the queries for the new open ports
          {
-            $query=sprintf("insert into fna_openports values ('%s','%s','%s','%s','%s');",$add_port[$i],$add_prot[$i],$id,$add_banner[$i],$timestamp);
+            $query=sprintf("insert into nac_openports values ('%s','%s','%s','%s','%s');",$add_port[$i],$add_prot[$i],$id,$add_banner[$i],$timestamp);
             $queries['query'][$queries['number']]=$query;
             $queries['number']++;
          }
@@ -321,7 +321,7 @@ function check_existent($data,$queries) 	//This function will check info concern
 
 function check_service($ip,$port,$protocol,$banner,$queries)  //With this function we check if a service is running on the port that it has been assigned to by IANA
 {
-   $query="select service from fna_services".$protocol." where port=".$port.";";
+   $query="select service from nac_services".$protocol." where port=".$port.";";
    $res=execute_query($query);
    if ($res)
    {
@@ -350,13 +350,13 @@ function execute_query($query)
 function add_entry($data,$queries)	//A new host in our network that needs to be added to the database
 {
    $timestamp=date('Y-m-d H:m:s');
-   $query=sprintf("insert into fna_hostscanned (mac,ip,hostname,os,timestamp) values('%s','%s','%s','%s','%s');",$data['mac'],$data['ip'],$data['hostname'],$data['os'],$timestamp);
+   $query=sprintf("insert into nac_hostscanned (mac,ip,hostname,os,timestamp) values('%s','%s','%s','%s','%s');",$data['mac'],$data['ip'],$data['hostname'],$data['os'],$timestamp);
    $res=execute_query($query);
    if ($res)
    {
       $queries['message'][$queries['messages']]="Host ".$data['ip']."(".$data['hostname'].") added to the database\n";
       $queries['messages']++;
-      $query=sprintf("select id from fna_hostscanned where mac='%s' and ip='%s' and hostname='%s' and os='%s' and timestamp='%s';",$data['mac'],$data['ip'],$data['hostname'],$data['os'],$timestamp);
+      $query=sprintf("select id from nac_hostscanned where mac='%s' and ip='%s' and hostname='%s' and os='%s' and timestamp='%s';",$data['mac'],$data['ip'],$data['hostname'],$data['os'],$timestamp);
       $res=execute_query($query);
       if ($res)
       {
@@ -368,7 +368,7 @@ function add_entry($data,$queries)	//A new host in our network that needs to be 
             $port=$data['port'][$i]['portid'];
             $banner=$data['port'][$i]['description'];
             $queries=check_service($data['ip'],$port,$protocol,$banner,$queries);
-            $query=sprintf("insert into fna_openports values ('%s','%s','%s','%s','%s');",$port,$protocol,$id,$banner,$timestamp);
+            $query=sprintf("insert into nac_openports values ('%s','%s','%s','%s','%s');",$port,$protocol,$id,$banner,$timestamp);
             execute_query($query); 
          }
       } 
@@ -397,9 +397,9 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       debug1($message);
       logit($message);
       debug1("port_scan ended abnormally.\n");
-      logit("========================================");
+      logit("=====================================");
       logit("port_scan ended abnormally");
-      logit("========================================");
+      logit("=====================================");
       exit();
    }
    else
@@ -408,9 +408,9 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       debug1($message);
       logit($message);
       debug1("port_scan ended abnormally.\n");
-      logit("========================================");
+      logit("=====================================");
       logit("port_scan ended abnormally");
-      logit("========================================");
+      logit("=====================================");
       exit();
    }
 }
@@ -424,13 +424,13 @@ function get_ips()		//This function will get allowed ips from our database
    $query="select r_ip,mac,name from systems where r_ip!='NULL' and status=1;";
    $res=execute_query($query);
    check_and_abort("No ip addresses to scan found in systems table. Aborting...",$res);
-   if ($res) 	//Ok, we got some ips from our systems table, let's see which ones are candidates to be scanned according to the info provided in the fna_netsallowed table
+   if ($res) 	//Ok, we got some ips from our systems table, let's see which ones are candidates to be scanned according to the info provided in the nac_netsallowed table
    {
-      $query="select network from fna_netsallowed;"; 
+      $query="select network from nac_netsallowed;"; 
       $res1=execute_query($query);
       if ($res1)
       {
-         check_and_abort("Nothing to scan. No networks defined in fna_netsallowed. Aborting...",$res1);
+         check_and_abort("Nothing to scan. No networks defined in nac_netsallowed. Aborting...",$res1);
          while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
          {
             $network[$number]=$result1["network"];
@@ -497,7 +497,7 @@ function get_ips()		//This function will get allowed ips from our database
    }
    $list['counter']=$counter;
    if ($counter==0)
-      check_and_abort("No IPs from the systems table matched criteria in the fna_netsallowed. Quitting...\n",0);
+      check_and_abort("No IPs from the systems table matched criteria in the nac_netsallowed. Quitting...\n",0);
    return($list);  
 }
 
