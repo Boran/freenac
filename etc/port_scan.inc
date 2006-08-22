@@ -1,28 +1,16 @@
 <?php
-/**
- * /opt/nac/etc/port_scan.inc
- *
- * Long description for file:
- * ... 
- *
- * PHP version 5
- *
- * LICENSE: This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as published
- * by the Free Software Foundation.
- *
- * @package			FreeNAC
- * @author			Héctor Ortiz (FreeNAC Core Team)
- * @copyright		2006 FreeNAC
- * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			CVS: $Id:$
- * @link				http://www.freenac.net
- *
- */
-
-$nmap_flags="-A -sS -sU -P0 -R";	#Default, full scan (TCP & UDP, banner grabbing, host resolution
-#$nmap_flags="-A -sS -R";		#No UDP
+#$nmap_flags="-A -sS -sU -P0 -R";	#Default, full scan (TCP & UDP, banner grabbing, host resolution
+$nmap_flags="-A -sS -R";		#No UDP
 $scan_directory="/opt/vmps/scan/";	#Directory where the output from nmap will be placed
 $debug_flag1=TRUE;			#Debugging level 1. Sends messages to standard output
-$debug_to_syslog=FALSE;		        #Set it to TRUE if you want all the messages in syslog	
+$debug_to_syslog=FALSE;		        #Set it to TRUE if you want all the messages in syslog
+$time_threshold=24;			#Hosts which were last seen before this threshold will be scanned
+$what_units_time=-1;			#Units of time
+					#0 for seconds
+					#1 for minutes
+					#2 for hours
+					#3 for days
+					#4 for weeks
+					#5 for months
+					#6 for years	
 ?>
