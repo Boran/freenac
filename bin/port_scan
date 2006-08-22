@@ -30,9 +30,7 @@ openlog("port_scan", LOG_PID , LOG_LOCAL5);
 
 
 debug1("Doing port_scan to systems... Please wait...\n");
-logit("=====================================");
 logit("port_scan started");
-logit("=====================================");
 
 $scan_results=$scan_directory."scan.xml";   	//Scan file
 $list=scan($scan_results,$nmap_flags);		//Scan network with those flags	
@@ -43,9 +41,7 @@ else
    $var['equipments']=0;
 
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
-logit("=====================================");
 logit("port_scan finished normally. ".$var['equipments']." hosts scanned");
-logit("=====================================");
 
 function do_something($query)			//Let's do something with our structure
 {
@@ -397,9 +393,7 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       debug1($message);
       logit($message);
       debug1("port_scan ended abnormally.\n");
-      logit("=====================================");
       logit("port_scan ended abnormally");
-      logit("=====================================");
       exit();
    }
    else
@@ -408,9 +402,7 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       debug1($message);
       logit($message);
       debug1("port_scan ended abnormally.\n");
-      logit("=====================================");
       logit("port_scan ended abnormally");
-      logit("=====================================");
       exit();
    }
 }
