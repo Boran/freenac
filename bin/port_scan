@@ -22,7 +22,7 @@
  */
 
 
-include_once "./funcs.inc";
+include_once "funcs.inc";
 include_once "../etc/port_scan.inc";
 
 define_syslog_variables();

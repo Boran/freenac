@@ -17,9 +17,9 @@ subject="VMPS warning: new ALLOWS"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 tempfile2=/tmp/monitor_allows.$$
 
-messagecount=20;
+messagecount=10;
 
-/opt/vmps/logtail /var/log/messages /var/log/.messages.vmps_allows | egrep "vmpsd: ALLOW" | wc -l | awk '{if ($1 < limit) print "Warning, is Vmps working? Only " $1 " Successful authentications below threshold " limit ", since last check." }' limit=$messagecount > $tempfile2 2>&1
+/opt/vmps/bin/logtail /var/log/messages /var/log/.messages.vmps_allows | egrep "vmpsd: ALLOW" | wc -l | awk '{if ($1 < limit) print "Warning, is Vmps working? Only " $1 " Successful authentications below threshold " limit ", since last check." }' limit=$messagecount > $tempfile2 2>&1
 
 # tail -500 /var/log/messages | egrep "vmpsd: ALLOW" | wc -l | awk '{if ($1 < limit) print "Warning, is Vmps working? " $1 " Successful authentications since last check are below threshold " limit "." }' limit=$messagecount 
 

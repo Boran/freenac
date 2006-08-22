@@ -20,10 +20,10 @@
  * @link				http://www.freenac.net
  *
  */
+include_once "funcs.inc";
 $logger="logger -t vmps_log -p local5.info";
 
 ## Connect to DB
-  include_once "config.inc";
   $connect=mysql_connect($dbhost, $dbuser, $dbpass)
      or die("Could not connect : " . mysql_error());
   mysql_select_db($dbname, $connect) or die("Could not select database");
