@@ -21,7 +21,6 @@
  *
  */
 
-
 include_once "./funcs.inc";
 include_once "../etc/port_scan.inc";
 
@@ -42,6 +41,18 @@ else
 
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 logit("port_scan finished normally. ".$var['equipments']." hosts scanned");
+
+function validate($string)
+{
+   rtrim($string,' ');
+   if (get_magic_quotes_gpc()) {
+      $value=stripslashes($string);
+   }
+   if (!is_numeric($string)) {
+      $string= mysql_real_escape_string($string);
+   }
+   return $string;
+}
 
 function do_something($query)			//Let's do something with our structure
 {
@@ -565,6 +576,7 @@ function parse_scanfile($scan_file,$list)
             if (isset($temp->addr))
                $info[$i]['ip']=(string)$temp->addr;         //IP address
             else $info[$i]['ip']="NULL";
+	    $info[$i]['ip']=validate($info[$i]['ip']);
             $index=0;	
 	    while (($info[$i]['ip']!=$list['ip'][$index])&&($index<$list['counter']))
 		$index++;
@@ -578,7 +590,7 @@ function parse_scanfile($scan_file,$list)
                   $info[$i]['mac']=normalise_mac($info[$i]['mac']);
                }
                else $info[$i]['mac']=$list['mac'][$index];
- 
+	       $info[$i]['mac']=validate($info[$i]['mac']);	 
             }
             else $info[$i]['mac']=$list['mac'][$index];
             if (isset($host->hostnames->hostname))	
@@ -588,7 +600,8 @@ function parse_scanfile($scan_file,$list)
             }
             if (isset($temp->name))
                $info[$i]['hostname']=(string)$temp->name; 	//Hostname
-            else $info[$i]['hostname']=$list['hostname'][$index]; 
+            else $info[$i]['hostname']=$list['hostname'][$index];
+	    $info[$i]['hostname']=validate($info[$i]['hostname']); 
             if (isset($host->os->osmatch))
             {
                $os_info=$host->os->osmatch;
@@ -599,6 +612,7 @@ function parse_scanfile($scan_file,$list)
                   $info[$i]['os']="NULL";
             }
             else $info[$i]['os']="NULL";
+	    $info[$i]['os']=validate($info[$i]['os']);
             if (isset($host->ports))
             {
                $ports_info=$host->ports;
@@ -610,8 +624,10 @@ function parse_scanfile($scan_file,$list)
                   {
                      $temp=$port->attributes();
                      $info[$i]['port'][$j]['protocol']=(string)$temp->protocol;	#Protocol
+		     $info[$i]['port'][$j]['protocol']=validate($info[$i]['port'][$j]['protocol']);
                      $info[$i]['port'][$j]['portid']=(string)$temp->portid;	#Service identifier
-                     $temp=$port->state->attributes();
+                     $info[$i]['port'][$j]['portid']=validate($info[$i]['port'][$j]['portid']);
+		     $temp=$port->state->attributes();
                      $temp2=$port->service->attributes(); //Attributes to get the running service
                      if (isset($temp2->name))		#Description
                         $name=(string)$temp2->name;
@@ -623,6 +639,7 @@ function parse_scanfile($scan_file,$list)
                         $version=(string)$temp2->version;
                      else $version="";
                      $info[$i]['port'][$j]['description']=$name.":".$product." ".$version;
+		     $info[$i]['port'][$j]['description']=validate($info[$i]['port'][$j]['description']);	
                      $j++;
                   }
                }
