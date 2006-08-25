@@ -185,20 +185,96 @@ function check_existent($data,$queries) 	//This function will check info concern
       if ($res1)				//Let's check info about ports
       {
          $db_ports=mysql_num_rows($res1);
-         $row=0;
+         $db_tcp=0;
+         $db_udp=0;
          while ($result=mysql_fetch_array($res1, MYSQL_ASSOC))
          {
-            $db_port[$row]=$result["port"];	//Port open last time
-            $db_protocol[$row]=$result["protocol"];//Protocol of service last time
-            $db_porttstmp[$row]=$result["timestamp"];
-            $db_banner[$row]=$result["banner"]; //Service on that port last time
-            $row++;				//Number of open ports last time
+            if ($result["protocol"]=="tcp")
+            {
+               $db_tmp_port_tcp[$db_tcp]['port']=$result["port"];
+               $db_tmp_port_tcp[$db_tcp]['timestamp']=$result["timestamp"];
+               $db_tmp_port_tcp[$db_tcp]['banner']=$result["banner"];
+               $db_tcp++;
+            }
+            else if ($result["protocol"]=="udp")
+            {
+               $db_tmp_port_udp[$db_udp]['port']=$result["port"];
+               $db_tmp_port_udp[$db_udp]['timestamp']=$result["timestamp"];
+               $db_tmp_port_udp[$db_udp]['banner']=$result["banner"];
+               $db_udp++;
+            }
          }
+         if ((isset($db_tmp_port_tcp))&&(is_array($db_tmp_port_tcp)))
+            sort($db_tmp_port_tcp);
+         if ((isset($db_tmp_port_udp))&&(is_array($db_tmp_port_udp)))
+            sort($db_tmp_port_udp);
+         if (($db_tcp==0)&&($db_udp==0)) //In case we have no info in the db
+         {
+            $db_protocol[0]="tcp";
+            $db_port[0]=0;
+            $db_porttstmp[0]="0000-00-00 00:00:00";
+            $db_banner[0]=":"; 
+         }
+         else
+         {
+            for ($i=0;$i<$db_tcp;$i++)
+            {
+               $db_protocol[$i]="tcp";
+               $db_port[$i]=$db_tmp_port_tcp[$i]['port'];
+               $db_porttstmp[$i]=$db_tmp_port_tcp[$i]['timestamp'];
+               $db_banner[$i]=$db_tmp_port_tcp[$i]['banner'];
+            }
+            for (;$i<($db_tcp+$db_udp);$i++)
+            {
+               $db_protocol[$i]="udp";
+               $db_port[$i]=$db_tmp_port_udp[($i-$db_tcp)]['port'];
+               $db_porttstmp[$i]=$db_tmp_port_udp[($i-$db_tcp)]['timestamp'];
+               $db_banner[$i]=$db_tmp_port_udp[($i-$db_tcp)]['banner'];
+            }
+         }
+         $tcp=0;
+         $udp=0;
          for ($i=0;$i<$ports;$i++)
          {
-            $port[$i]=$data['port'][$i]['portid']; //Port open this time
-            $protocol[$i]=$data['port'][$i]['protocol'];//Protocol of service this time
-            $banner[$i]=$data['port'][$i]['description'];//Service on that port this time
+            if ($data['port'][$i]['protocol']=="tcp")
+            {
+               $tmp_port_tcp[$tcp]['port']=$data['port'][$i]['portid'];
+               $tmp_port_tcp[$tcp]['banner']=$data['port'][$i]['description'];
+               $tcp++;
+            }
+            else if ($data['port'][$i]['protocol']=="udp")
+            {
+               $tmp_port_udp[$udp]['port']=$data['port'][$i]['portid'];
+               $tmp_port_udp[$udp]['banner']=$data['port'][$i]['description']
+;
+               $udp++;
+            }
+         }
+         if ((isset($tmp_port_tcp))&&(is_array($tmp_port_tcp)))
+            sort($tmp_port_tcp);
+         if ((isset($tmp_port_udp))&&(is_array($tmp_port_udp)))
+            sort($tmp_port_udp);
+         if (($tcp==0)&&($udp==0)) //In case our scan didnt detect any open ports
+         {
+            $protocol[$i]="tcp";
+            $port[$i]=0;
+            $banner[$i]=":";
+
+         }
+         else
+         {
+            for ($i=0;$i<$tcp;$i++)
+            {
+               $protocol[$i]="tcp";
+               $port[$i]=$tmp_port_tcp[$i]['port'];
+               $banner[$i]=$tmp_port_tcp[$i]['banner'];
+            }
+            for ($i;$i<($tcp+$udp);$i++)
+            {
+               $protocol[$i]="udp";
+               $port[$i]=$tmp_port_udp[($i-$tcp)]['port'];
+               $banner[$i]=$tmp_port_udp[($i-$tcp)]['banner'];
+            }
          }
          $add_counter=0;	//Let's count the number of new open ports 
          $remove_counter=0;	//Let's count the number of old closed ports
@@ -211,14 +287,17 @@ function check_existent($data,$queries) 	//This function will check info concern
             $index=count($result);		//Number of open ports this time
             for ($i=0;$i<$index;$i++)
             {
-                $add_port[$add_counter]=$result[$position[$i]];
-                $add_prot[$add_counter]=$protocol[$position[$i]];
-                $add_banner[$add_counter]=$banner[$position[$i]];
-                $queries['message'][$queries['messages']]="New port open (".$add_port[$add_counter]."/".$add_prot[$add_counter].") on host $ip.\n";
-	        //debug1($queries['message'][$queries['messages']]);
-                $queries['messages']++;
-                $queries=check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter],$queries);
-                $add_counter++;
+               if ($port[$position[$i]]!=0)
+               {
+                  $add_port[$add_counter]=$result[$position[$i]];
+                  $add_prot[$add_counter]=$protocol[$position[$i]];
+                  $add_banner[$add_counter]=$banner[$position[$i]];
+                  $queries['message'][$queries['messages']]="New port open (".$add_port[$add_counter]."/".$add_prot[$add_counter].") on host $ip.\n";
+	       //debug1($queries['message'][$queries['messages']]);
+                  $queries['messages']++;
+                  $queries=check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter],$queries);
+                  $add_counter++;
+               }
             }
          
             $result="";
@@ -227,12 +306,15 @@ function check_existent($data,$queries) 	//This function will check info concern
             $index=count($result);
             for ($i=0;$i<$index;$i++)
             {
-               $remove_port[$remove_counter]=$result[$position[$i]];
-               $remove_prot[$remove_counter]=$db_protocol[$position[$i]];
-               $queries['message'][$queries['messages']]="Port (".$remove_port[$remove_counter]."/".$remove_prot[$remove_counter].") on host $ip no longer open since ".$db_porttstmp[$position[$i]]."\n";
-	       //debug1($queries['message'][$queries['messages']]);
-               $queries['messages']++;
-               $remove_counter++;
+               if ($db_port[$position[$i]]!=0)
+               {
+                  $remove_port[$remove_counter]=$result[$position[$i]];
+                  $remove_prot[$remove_counter]=$db_protocol[$position[$i]];
+                  $queries['message'][$queries['messages']]="Port (".$remove_port[$remove_counter]."/".$remove_prot[$remove_counter].") on host $ip no longer open since ".$db_porttstmp[$position[$i]]."\n";
+	          //debug1($queries['message'][$queries['messages']]);
+                  $queries['messages']++;
+                  $remove_counter++;
+               }
             }
 	    $xml_result=array_intersect($port,$db_port);  //Now we check the protocol to find out if it is the same service, if not, we add the service to the database
 	    $db_result=array_intersect($db_port,$port);
@@ -244,7 +326,7 @@ function check_existent($data,$queries) 	//This function will check info concern
 	       $j=0;
 	       $result="";
 	       for ($i=0;$i<$index;$i++)
-   	          if (strcmp( $protocol[$xml_position[$i]] , $db_protocol[$db_position[$i]] )!=0)
+   	          if (strcmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
    	          {
                      $result[$j]=$xml_result[$xml_position[$i]]; //This is a new service since we have another port number but with different protocol
 	  	     $prot_res[$j]=$protocol[$xml_position[$i]];
@@ -435,96 +517,156 @@ function check_and_abort($message,$resource)	//This function checks if there is 
    }
 }
 
-function get_ips()		//This function will get allowed ips from our database
+function get_ips()	//This function will get some ips to scan
 {
-   global $what_units_time, $time_threshold;
+   global $what_units_time, $time_threshold, $argc, $argv;
    $timestamp=date('Y-m-d H:i:s');
    $ips="";
    $list=array();
-   $counter=0;
-   $number=0;
-   $query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1;";
-   $res=execute_query($query);
-   check_and_abort("No ip addresses to scan found in systems table. Aborting...",$res);
-   if ($res) 	//Ok, we got some ips from our systems table, let's see which ones are candidates to be scanned according to the info provided in the nac_netsallowed table
+   if ($argc>=2)
    {
-      $query="select network from nac_netsallowed;"; 
-      $res1=execute_query($query);
-      if ($res1)
+      for ($i=1;$i<$argc;$i++)
       {
-         check_and_abort("Nothing to scan. No networks defined in nac_netsallowed. Aborting...",$res1);
-         while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
+         $device=validate($argv[$i]);
+         if ($i==1)
+            $query="select r_ip,mac,name from systems where r_ip='$device'";
+         else
+            $query.=" or r_ip='$device'";
+      }
+      $query.=";";
+      $res=execute_query($query);
+      $counter=0;
+      while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
+      {
+         $devices['ip'][$counter]=$result["r_ip"];
+         $devices['mac'][$counter]=$result["mac"];
+         $devices['hostname'][$counter]=$result["name"];
+         $counter++;
+      }
+      for ($i=1;$i<$argc;$i++)
+      {
+         $there=0;
+         for ($j=0;$j<$counter;$j++)
+            if ($argv[$i]==$devices['ip'][$j])
+               $there++;   
+         if (!$there)
          {
-            $network[$number]=$result1["network"];
-            $number++;
+            $devices['ip'][$counter]=$argv[$i];
+            $devices['mac'][$counter]="NULL";
+            $devices['hostname'][$counter]="NULL";
+            $counter++;
          }
-         while ($result=mysql_fetch_array($res, MYSQL_ASSOC))
+      }
+      $devices['counter']=$counter;
+   }   
+   else if ($argc==1)
+   {
+      $query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1;";
+      $res=execute_query($query);
+      check_and_abort("No ip addresses to scan found in systems table. Aborting...",$res);
+      $counter=0;
+      while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
+      {
+         $devices['ip'][$counter]=$result["r_ip"];
+         $devices['mac'][$counter]=$result["mac"];
+         $devices['hostname'][$counter]=$result["name"];
+         $devices['lastseen'][$counter]=$result["lastseen"];
+         $counter++;
+      }
+      $devices['counter']=$counter;
+   }   
+   //We got some ips, let's see which ones are candidates to be scanned according to the info provided in the nac_netsallowed table
+   $query="select network from nac_netsallowed;"; 
+   $res1=execute_query($query);
+   if ($res1)
+   {
+      $counter=0;
+      $number=0;
+      check_and_abort("Nothing to scan. No networks defined in nac_netsallowed. Aborting...",$res1);
+      while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
+      {
+         $network[$number]=$result1["network"];
+         $number++;
+      }
+      for ($l=0;$l<$devices['counter'];$l++)
+      {
+         $candidate=0;
+         $ip=explode('.',$devices['ip'][$l]);
+         for ($i=0;$i<$number;$i++)
          {
-            $candidate=0;
-            $ip=explode('.',$result["r_ip"]);
-            for ($i=0;$i<$number;$i++)
+            $net=explode('.',$network[$i]);
+            $octets=count($net);  //Let's count the # of octects of the register in the table
+            $candidate=4-$octets;
+            for ($k=0;$k<$octets;$k++)
             {
-               $net=explode('.',$network[$i]);
-	       $octets=count($net);  //Let's count the # of octects in the register in the table
-               $candidate=4-$octets;
-               for ($k=0;$k<$octets;$k++)
+               if ($quotes=substr_count($net[$k],',')) //Check for separate ips within this octet
                {
-                  if ($quotes=substr_count($net[$k],',')) //Check for separate ips within this octet
-                  {
-                     $delimiters=explode(',',$net[$k]);
-  	 	     for ($j=0;$j<=$quotes;$j++)
-	                if (substr_count($delimiters[$j],'-')==1)  //Now check if there is a range in this octet
-                        {
-                           $range=explode('-',$delimiters[$j]);
-                           $lowerbound=$range[0];
-                           $upperbound=$range[1];
-                           if (($ip[$k]>=$lowerbound)&&($ip[$k]<=$upperbound))
-                              $candidate++;
-                        }
-                        else 
-                           if ($ip[$k]==$delimiters[$j]) //Exact match in this octet
-			      $candidate++;
-                  }    
-                  else if (substr_count($net[$k],'-')==1) //A range of ips
-                  {
-                     $range=explode('-',$net[$k]);
-                     $lowerbound=$range[0];
-	             $upperbound=$range[1];
-                     if (($ip[$k]>=$lowerbound)&&($ip[$k]<=$upperbound))
-		        $candidate++;   
-                  }
-                  else if (substr_count($net[$k],'*')==1) //All ips in this octet
-                     $candidate++;
-                  else
-                     if ($ip[$k]==$net[$k]) //Exact match
-                        $candidate++;
-               }
-               $there=0; 
-	       if ($candidate==4) //This is an ip which is a good candidate to be scanned
-               {
-                  $lastseen=$result["lastseen"];
-                  $diff=(int)date_diff($lastseen,$timestamp,$what_units_time);
-                  if ($diff<=$time_threshold)
-                  {
-		     for ($k=0;$k<=$counter;$k++)
-                        if ($result["r_ip"]==$list[$k])
-                           $there++;
-                     if (!$there)
+                  $delimiters=explode(',',$net[$k]);
+                  for ($j=0;$j<=$quotes;$j++)
+	             if (substr_count($delimiters[$j],'-')==1)  //Now check if there is a range in this octet
                      {
-                        $list['ip'][$counter]=$result["r_ip"];
-		        $list['mac'][$counter]=$result["mac"];
-		        $list['hostname'][$counter]=$result["name"];
-                        $counter++;
+                        $range=explode('-',$delimiters[$j]);
+                        $lowerbound=$range[0];
+                        $upperbound=$range[1];
+                        if (($ip[$k]>=$lowerbound)&&($ip[$k]<=$upperbound))
+                           $candidate++;
                      }
+                     else 
+                        if ($ip[$k]==$delimiters[$j]) //Exact match in this octet
+		           $candidate++;
+               }    
+               else if (substr_count($net[$k],'-')==1) //A range of ips
+               {
+                  $range=explode('-',$net[$k]);
+                  $lowerbound=$range[0];
+	          $upperbound=$range[1];
+                  if (($ip[$k]>=$lowerbound)&&($ip[$k]<=$upperbound))
+	             $candidate++;   
+               }
+               else if (substr_count($net[$k],'*')==1) //All ips in this octet
+                  $candidate++;
+               else
+                  if ($ip[$k]==$net[$k]) //Exact match
+                     $candidate++;
+            }
+            $there=0; 
+	    if (($candidate==4)&&($argc==1)) //This is an ip which is a good candidate to be scanned and no parameters present on the command line
+            {
+               $lastseen=$devices['lastseen'][$l];
+               $diff=(int)date_diff($lastseen,$timestamp,$what_units_time);
+               if ($diff<=$time_threshold)
+               {
+	          for ($k=0;$k<=$counter;$k++)
+                     if ($devices['ip'][$l]==$list[$k])
+                        $there++;
+                  if (!$there)
+                  {
+                     $list['ip'][$counter]=$devices['ip'][$l];
+		     $list['mac'][$counter]=$devices['mac'][$l];
+		     $list['hostname'][$counter]=$devices['hostname'][$l];
+                     $counter++;
                   }
+               }
+            }
+            else if (($candidate==4)&&($argc>1))
+            {
+               for ($k=0;$k<=$counter;$k++)
+                  if ($devices['ip'][$l]==$list[$k])
+                     $there++;
+               if (!$there)
+               {
+                  $list['ip'][$counter]=$devices['ip'][$l];
+                  $list['mac'][$counter]=$devices['mac'][$l];
+                  $list['hostname'][$counter]=$devices['hostname'][$l];
+                  $counter++;
                }
             }
          }
       }
-   }
-   $list['counter']=$counter;
-   if ($counter==0)
-      check_and_abort("No IPs from the systems table matched criteria (check nac_netsallowed or your port_scan.inc file). Quitting...\n",0);
+      $list['counter']=$counter;
+      if ($counter==0)
+         check_and_abort("IPs didn't match criteria (check nac_netsallowed or your port_scan.inc file). Quitting...\n",0);
+   }   
    return($list);  
 }
 
