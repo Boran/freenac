@@ -6,7 +6,7 @@
 #    Add debug1()
 #  2006.01.24/Thomas Dagonnier: First prototype
 #
-#  Copyright (C) 2006 Swisscom
+#  Copyright (C) 2006 FreeNAC
 #  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
 ##########################
 
