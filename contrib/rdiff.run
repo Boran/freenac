@@ -3,7 +3,7 @@
 # rdiff.run: call rdiff-backup , typically used from cron.
 #            see also the rdiff and rdiff-backup man page.
 #
-#  Copyright (C) 2006 Swisscom
+#  Copyright (C) 2006 FreeNAC
 #  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
 ##################
 

@@ -41,7 +41,6 @@
   #$set_vlan_for_unknowns="";        # Don't set, use default Vlan. 
   $lastseen_patch_lookup=true;      # Lookup Patchcable details in Alerts
 
-  ## Swisscom Internal only:
   $lastseen_infnet=false;           # Lookup Infnet MACs with check_infnet_mac?
   $lastseen_infnet_vlan='10';       # Exact Number of Infnet Vlan: sec225
   $lastseen_infnet_restart=true;    # Restart switch port when GWP found?
@@ -67,7 +66,6 @@
   $server2="";
   $check_port_restart=true;         # Restart switch port if flagged
 
-## vmps_user script - SWISSCOM ONLY:   
   $vmps_user_ska=array('INO*');    # Organisations be synced from Direx
   $vmps_user_direx="direx.corproot.net";
   $vmps_user_direx_path="/DirExWeb/Scripts/Public/GetXML.aspx";
@@ -76,7 +74,6 @@
 ## purge_unknowns :
   $unknown_purge=30;               # Delete unknown systems older than XX days
 
-## check_infnet_mac - SWISSCOM ONLY:
   $check_infnet_mac_target="sms1.swissptt.ch";
   $check_infnet_mac_url="/ASP/PCexplorer/PCexplorerSel.asp";
 
