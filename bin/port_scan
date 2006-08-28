@@ -108,15 +108,15 @@ function check_existent($data,$queries) 	//This function will check info concern
       $db_os=$result["os"];			//Same OS from last time?
       $db_timestamp=$result["timestamp"];  	//If it changed, since when?
       $host_changed=$os_changed=$mac_changed=0; //To control if we need to update its record in the database
-      if (strcmp($hostname,$db_hostname)!=0)   	//Info about its hostname
+      if (!empty($hostname)&&!empty($db_hostname)&&(strcasecmp($hostname,$db_hostname)!=0))   	//Info about its hostname
       {
-         if ((strcmp($db_hostname,'NULL')==0)&&(strcmp($hostname,'NULL')!=0))
+         if ((strcasecmp($db_hostname,'NULL')==0)&&(strcasecmp($hostname,'NULL')!=0))
          { 
             $queries['message'][$queries['messages']]="Host $ip has its hostname resolved now. $ip is $hostname\n";
             $queries['messages']++;		//And internal counter within the sctructure which counts the number of messages produced
             $host_changed++;
          }
-         else if ((strcmp($db_hostname,'NULL')!=0)&&(strcmp($hostname,'NULL')==0))
+         else if ((strcasecmp($db_hostname,'NULL')!=0)&&(strcasecmp($hostname,'NULL')==0))
          {
             $queries['message'][$queries['messages']]="Unable to resolve $ip this time, old hostname $db_hostname preserved\n";
             $queries['messages']++;
@@ -129,15 +129,15 @@ function check_existent($data,$queries) 	//This function will check info concern
             $host_changed++;
          }
       }
-      if (strcmp($mac,$db_mac)!=0)		//Info about its MAC
+      if (!empty($mac)&&!empty($db_mac)&&(strcasecmp($mac,$db_mac)!=0))		//Info about its MAC
       {
-         if ((strcmp($db_mac,'NULL')==0)&&(strcmp($mac,'NULL')!=0))
+         if ((strcasecmp($db_mac,'NULL')==0)&&(strcasecmp($mac,'NULL')!=0))
          {
             $queries['message'][$queries['messages']]="MAC from $ip determined. MAC is $mac\n";
             $queries['messages']++;
             $mac_changed++;
          }
-         else if ((strcmp($db_mac,'NULL')!=0)&&(strcmp($mac,'NULL')==0))
+         else if ((strcasecmp($db_mac,'NULL')!=0)&&(strcasecmp($mac,'NULL')==0))
          {
             $queries['message'][$queries['messages']]="No new MAC info for $ip this time\n";
             $queries['messages']++;
@@ -151,15 +151,15 @@ function check_existent($data,$queries) 	//This function will check info concern
             $mac_changed++;
          }
       }
-      if (strcmp($os,$db_os)!=0)		//Info about its OS
+      if (!empty($os)&&empty($db_os)&&(strcasecmp($os,$db_os)!=0))		//Info about its OS
       {
-         if ((strcmp($db_os,'NULL')==0)&&(strcmp($os,'NULL')!=0))
+         if ((strcasecmp($db_os,'NULL')==0)&&(strcasecmp($os,'NULL')!=0))
          {
             $queries['message'][$queries['messages']]="OS from $ip now determined. $ip is using $os\n";
             $queries['messages']++;
             $os_changed++;
          }
-         else if ((strcmp($db_os,'NULL')!=0)&&(strcmp($os,'NULL')==0))
+         else if ((strcasecmp($db_os,'NULL')!=0)&&(strcasecmp($os,'NULL')==0))
          {
             $queries['message'][$queries['messages']]="No new MAC info for $ip this time\n";
             $queries['messages']++;
@@ -326,7 +326,7 @@ function check_existent($data,$queries) 	//This function will check info concern
 	       $j=0;
 	       $result="";
 	       for ($i=0;$i<$index;$i++)
-   	          if (strcmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
+   	          if (strcasecmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
    	          {
                      $result[$j]=$xml_result[$xml_position[$i]]; //This is a new service since we have another port number but with different protocol
 	  	     $prot_res[$j]=$protocol[$xml_position[$i]];
@@ -336,7 +336,7 @@ function check_existent($data,$queries) 	//This function will check info concern
                   else
                   {
                      $queries=check_service($ip,$xml_result[$xml_position[$i]],$protocol[$i],$banner[$xml_position[$i]],$queries); //Let's check if the service is running on its default port
-                     if (strcmp($banner[$xml_position[$i]],$db_banner[$db_position[$i]])!=0) //Now let's check if the service has changed
+                     if (strcasecmp($banner[$xml_position[$i]],$db_banner[$db_position[$i]])!=0) //Now let's check if the service has changed
                      {
                         $service=explode(":",$db_banner[$db_position[$i]]);
 			$service=$service[0];
@@ -377,7 +377,7 @@ function check_existent($data,$queries) 	//This function will check info concern
                $j=0;
                $result="";
                for ($i=0;$i<$index;$i++)
-                  if (strcmp( $protocol[$xml_position[$i]] , $db_protocol[$db_position[$i]] )!=0)
+                  if (strcasecmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
                   {
                      $result[$j]=$db_result[$db_position[$i]]; //If protocol is different this time, delete it
                      $prot_res[$j]=$db_protocol[$db_position[$i]];
@@ -432,8 +432,8 @@ function check_service($ip,$port,$protocol,$banner,$queries)  //With this functi
       $result=mysql_fetch_array($res,MYSQL_ASSOC);
       $service=explode(":",$banner); 
       $service=$service[0];	//We are interested only in the name of the service
-      if (!substr_count(strtolower($service),strtolower($result["service"]))&&($service))
-         if (!substr_count(strtolower($result["service"]),strtolower($service))&&($result["service"]))
+      if (!empty($service)&&(!substr_count(strtolower($service),strtolower($result["service"]))))
+         if (!empty($result["service"])&&(!substr_count(strtolower($result["service"]),strtolower($service))))
          {
             $queries['message'][$queries['messages']]="Service $service (".$port."/".$protocol.") on scanned host $ip is using a port which is reserved for ".$result["service"]."\n";   
             $queries['messages']++;
@@ -772,7 +772,7 @@ function parse_scanfile($scan_file,$list)
                foreach($ports_info->port as $port)		//Ports
                {
 	          $temp=$port->state->attributes();
-                  if (strcmp((string)$temp->state,"open")==0)
+                  if (strcasecmp((string)$temp->state,"open")==0)
                   {
                      $temp=$port->attributes();
                      $info[$i]['port'][$j]['protocol']=(string)$temp->protocol;	#Protocol
