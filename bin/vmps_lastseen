@@ -40,12 +40,6 @@ $debug_flag2=FALSE;
 #$debug_flag1=TRUE;
 #$debug_flag2=TRUE;
 
-## TBD: SCM dependancy
-$check_infnet_mac="/opt/vmps/swisscom.only/check_infnet_mac"; 
-$sms_infnet_mac="/opt/vmps/swisscom.only/sms_infnet_mac"; 
-#include_once "../swisscom.only/direx_tXX";      
-include_once "../swisscom.only/direx";      
-
 include_once "funcs.inc";
 
 global  $lastseen_dryrun;
