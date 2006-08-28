@@ -14,7 +14,7 @@
  *
  * @package			FreeNAC
  * @author			Héctor Ortiz (FreeNAC Core Team)
- * @copyright		2006 FreeNAC
+ * @copyright			2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version			CVS: $Id:$
  * @link				http://www.freenac.net
@@ -523,7 +523,20 @@ function get_ips()	//This function will get some ips to scan
    $timestamp=date('Y-m-d H:i:s');
    $ips="";
    $list=array();
-   if ($argc>=2)
+   $counter=0;
+   if (($argc==2)&&($argv[1]=="--scannow"))
+   {
+      $query="select r_ip,mac,name from systems where scannow=1;";
+      $res=execute_query($query);
+      while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
+      {
+         $devices['ip'][$counter]=$result["r_ip"];
+         $devices['mac'][$counter]=$result["mac"];
+         $devices['hostname'][$counter]=$result["name"];
+         $counter++;
+      }
+   }
+   else if ($argc>=2)
    {
       for ($i=1;$i<$argc;$i++)
       {
@@ -535,7 +548,6 @@ function get_ips()	//This function will get some ips to scan
       }
       $query.=";";
       $res=execute_query($query);
-      $counter=0;
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       {
          $devices['ip'][$counter]=$result["r_ip"];
@@ -557,14 +569,12 @@ function get_ips()	//This function will get some ips to scan
             $counter++;
          }
       }
-      $devices['counter']=$counter;
    }   
    else if ($argc==1)
    {
       $query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1;";
       $res=execute_query($query);
       check_and_abort("No ip addresses to scan found in systems table. Aborting...",$res);
-      $counter=0;
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       {
          $devices['ip'][$counter]=$result["r_ip"];
@@ -573,8 +583,8 @@ function get_ips()	//This function will get some ips to scan
          $devices['lastseen'][$counter]=$result["lastseen"];
          $counter++;
       }
-      $devices['counter']=$counter;
    }   
+   $devices['counter']=$counter;
    //We got some ips, let's see which ones are candidates to be scanned according to the info provided in the nac_netsallowed table
    $query="select network from nac_netsallowed;"; 
    $res1=execute_query($query);
