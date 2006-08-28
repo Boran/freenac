@@ -674,8 +674,10 @@ function get_ips()	//This function will get some ips to scan
          }
       }
       $list['counter']=$counter;
-      if ($counter==0)
+      if (($counter==0)&&($argc==1))
          check_and_abort("IPs didn't match criteria (check nac_netsallowed or your port_scan.inc file). Quitting...\n",0);
+      else if (($counter==0)&&($argc>1)&&($argv[1]=="--scannow"))
+         check_and_abort("No systems have the flag \"scannow\" set in the systems table. Quitting...\n",0);
    }   
    return($list);  
 }
