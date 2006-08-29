@@ -1,8 +1,8 @@
 <?php
 
-include('connect.inc');
-include('functions.inc');
-include('print.inc');
+include_once('config.inc');
+include_once('functions.inc');
+include_once('print.inc');
 
 $fields[$i] = array("name", "Hostname","INOSSMsean1"); $i++;
 $fields[$i] = array("description", "NT Account<br>(of the owner)","option"); $i++;

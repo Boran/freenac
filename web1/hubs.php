@@ -13,7 +13,7 @@
 $debug_flag1=false;
 $debug_flag1=true;
 
-include('config.inc');
+include_once('config.inc');
 
 function get_hosts($sw,$port) {
   $sel = "SELECT name,description FROM systems WHERE switch='$sw' AND port='$port';";

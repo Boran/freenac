@@ -16,7 +16,7 @@ $debug_flag1=false;
 
 include('config.inc');
 define_syslog_variables();
-openlog("vmps-web", LOG_PID, LOG_LOCAL5);
+openlog("nac.web1", LOG_PID, LOG_LOCAL5);
 
 
 function print_switch_sel() {

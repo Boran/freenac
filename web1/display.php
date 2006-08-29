@@ -1,6 +1,6 @@
 <?php
 
-include('connect.inc');
+include('config.inc');
 include('functions.inc');
 include('print.inc');
 
