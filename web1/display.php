@@ -5,7 +5,8 @@ include_once('functions.inc');
 include_once('print.inc');
 
 db_connect();
-import_request_variables("gp");
+
+$single_host = mysql_real_escape_string($_GET["single_host"]);
 
 echo print_host($single_host);
 

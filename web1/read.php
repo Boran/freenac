@@ -28,7 +28,13 @@ function display_forms() {
 };
 
 db_connect();
-import_request_variables("gp");
+
+foreach ($fields as $field) {
+	$varname = $field[0];
+	$$varname = $_GET[$varname];
+	$$varname = mysql_real_escape_string($$varname);
+};
+$submit = $_GET['submit'];
 
 if ($submit) {
 	echo '<head><title>VMPS Webquery</title></head><body>';
