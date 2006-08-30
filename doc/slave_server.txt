@@ -1,0 +1,167 @@
+_____________ Install checklist the OpenNAC SLave         ___________
+                        
+slave_server_install.txt                       Last Update: 15.6.06/SB
+______________________________________________________________________
+
+
+1. UNIX preparation
+===================
+see unix_install.txt
+	
+2. Installing Suse packages
+===========================
+see unix_install.txt
+
+
+3. Installing tools needed for Vmps
+===================================
+MYSQL 5:
+  cd /opt/install  
+  tar xvzf mysql-max-5.0.22-linux-i686.tar.gz
+  mv mysql-max-5.0.22-linux-i686 /usr/local
+  cd /usr/local
+  ln -s mysql-max-5.0.22-linux-i686 mysql
+  cd /usr/local/mysql
+  scripts/mysql_install_db               [install empty mysql config tables]
+  mv data /var/lib/mysql
+  ln -s /var/lib/mysql data
+  ln -s /var/lib/mysql /mysqldata
+  #ln -s /tmp/mysql.sock /var/lib/mysql/mysql.sock
+  ln -s /var/lib/mysql/mysql.sock  /tmp/mysql.sock  
+      
+  copy /etc/my.cnf from your MASTER machine and adapt:
+  
+datadir=/var/lib/mysql
+log-error=/var/lib/mysql/mysqld.log
+log-bin=vmps2-bin
+log-warnings
+server-id       = 20                     [adapt if more than one slave]
+report-host=vmps2                        [adapt if more than one slave]
+replicate-do-db= inventory
+replicate-wild-ignore-table= inventory.vmpsauth%
+relay-log=vmps2-relay-bin
+
+  
+  copy /etc/init.d/mysql from your MASTER machine and enable the service:
+    chkconfig mysql on 
+    ln -s /etc/init.d/mysql /usr/sbin/rcmysql
+  
+  groupadd mysql
+  useradd -g mysql mysql
+  chown -R mysql:mysql /mysqldata/* /var/lib/mysql
+  chgrp -R mysql /usr/local/mysql/* 
+
+  Add mysql to path:
+  . /etc/profile.local
+
+
+
+ Try to start mysql:
+    /etc/init.d/mysql start
+
+ If you have errors, check the log:
+    more /mysqldata/mysqld.log
+
+
+ Check that mysql client works, can connect to the DB:
+
+mysql mysql
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 2 to server version: 5.0.21-max-log
+Type 'help;' or '\h' for help. Type '\c' to clear the buffer.
+mysql> 
+
+
+Copy the mysql client library (for PHP) from your master
+  scp /usr/lib/libmysqlclient.so.14 vmps2:/usr/lib
+
+
+Copy /opt/php5 /opt/libxml2 and /opt/vmps from your master
+  ln -s /opt/php5/bin/php /usr/bin/php
+
+
+4. Sync the Database, enable the slave
+======================================
+see slave_mysql_sync.txt
+
+Emp
+
+5. Slave: configure DB:
+=======================
+
+Empty the vmpsauth (local):
+  DELETE FROM vmpsauth;
+
+-- Set passwords for script access
+-- Local PHP server script user, PASSWORD1 is set in config.inc
+grant SELECT,INSERT,UPDATE        ON inventory.*       to inventwrite@localhost IDENTIFIED by 'PASSWORD1';
+SET PASSWORD FOR inventwrite@localhost = OLD_PASSWORD('PASSWORD1');
+
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@localhost;
+grant ALL     ON inventory.vmpsauth to inventwrite@localhost;
+
+
+
+5. VMPS install: vmps daemon:
+=============================
+
+Now we get the vmps daemon going.
+
+  cp /opt/vmps/contrib/init.d/vmps /etc/init.d
+  ln -s /etc/init.d/vmps /usr/sbin/rcvmps
+  chmod 750 /etc/init.d/vmps
+
+  vi /etc/init.d/vmps       [adapt IP address on vmpsd start line]
+   
+Start and watch syslog for events:
+  rcvmps start
+
+Check the syslog:
+  tail -f /var/log/messages | grep vmpsd
+  
+If there are errors, first try to start /opt/vmps/vmpsd_external manually.
+
+If everything looks good, enable VMPS to start after a reboot:
+   chkconfig vmps on
+  
+
+5. Monitoring:
+=============================
+When tests show that evenrything is working, enable CRON entries for process monitoring and restart SQL weekly:
+
+## Vmps secondary:
+0   1    * * 6    /sbin/rcsyslog restart|logger; /etc/init.d/mysql restart|logger; /etc/init.d/vmps restart|logger;
+
+# Monitoring:
+*/20 7-18 * * 1-5 /secure/monitor_processes.pl proctst vmpsd_external mysqld_safe
+
+
+Enable "Proctst" to automatically start a dameon if it dies:
+  Copy from master:
+    scp /secure/proctst* vmps2:/secure
+    scp /etc/proctst.conf vmps2:/etc
+        
+  Configure on slave:
+    vi /etc/proctst.conf   [enable entries for "vmps2"]
+    
+    vi /etc/init.d/proctst   [remove the vmps_lastseen dependancy in the header]
+ 
+    ln -s /secure/proctst /etc/init.d/proctst
+    ln -s /secure/proctst /sbin/rcproctst
+    chkconfig proctst on
+    /etc/init.d/proctst start
+
+    tail nohup.out
+    check sylsog messages
+    Try stopping a daemon such as postfix and make sure its auto started and
+    and email generated.
+
+  
+
+Other notes
+===========================   
+
+If the server is not exclusively used by VMPS with one administrator, you probably want to set a local root password for mysql.
+mysqladmin -u root password 'new-password'
+mysqladmin -u root -h MYHOST password 'new-password'
+

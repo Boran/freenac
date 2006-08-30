@@ -1,0 +1,49 @@
+Network Switch Configuration & Tips for Cat OS
+
+#Initially, Switches must be configured to send a copy of syslog messages, and given the name of the vmps servers, where it can send requests for dynamic port assignment.
+#See also http://www.cisco.com/en/US/products/hw/switches/ps607/products_configuration_guide_chapter09186a008007eba3.html#xtocid164834.
+
+Set VMPS servers 
+set vmps  server 192.168.245.40
+set vmps  server 192.168.245.19 primary
+set vmps  server 192.168.245.18
+
+#Remove a VMPS server & show status
+clear vmps server 192.168.245.19
+show vmps
+
+#Lets make a port dynamic & aks the switch to re-authenticate all dyn ports, i.e. use VMPS
+set port membership 2/36 dynamic
+reconfirm vmps
+
+# To switch a port back to static Vlan (if you had problems)
+set port membership 2/36 static
+
+# To verify port
+show port status 2/36
+
+# to disable/enable port (simulate cable being removed)
+set port disable 2/36
+set port enable 2/36
+#The switch tries to contact a server 3 times by default, before stopping. This value can be programmed on the switch (to a maximum of 10): 
+set vmps server retry 5
+
+#The switch reconfirms by default every 60 minutes, set it to 120:
+set vmps server reconfirminterval 120
+
+#Other useful commands:
+show mac-address-table address 00:04:dd:b6:5c:c2
+
+show arp
+
+show cdp neighbors
+show cdp neighbors Gi4/5
+show cdp neighbors Gi4/5 detail
+
+show cam 00:04:dd:b6:5c:c2
+show cam dynamic 2/32
+show port status 2/32
+
+# Tag a name to a port (to document usage)
+Set port name 2/32 webcam
+

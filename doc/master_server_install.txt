@@ -1,0 +1,255 @@
+
+_____________ Install checklist: OpenNAC Master       _______________
+
+master_server_install.txt                      Last Update: 19.7.06/SB
+______________________________________________________________________
+
+
+
+0. INTRODUCTION
+===============
+This is a "copy & paste" guide for *expert* administrators for setting up an
+OpenNAC master server.
+
+
+
+1. UNIX preparation
+===================
+see unix_install.txt
+	
+2. Installing Suse packages
+===========================
+see unix_install.txt
+
+  
+3. Compiling/ installing Key components
+=======================================
+
+MYSQL 5:
+  cd /opt/install  
+  tar xvzf mysql-max-5.0.18-linux-i686.tar.gz
+  mv mysql-max-5.0.18-linux-i686 /usr/local
+  cd /usr/local
+  ln -s mysql-max-5.0.18-linux-i686 mysql
+  cd /usr/local/mysql
+  scripts/mysql_install_db               [install empty mysql config tables]
+  mv data /var/lib/mysql
+  ln -s /var/lib/mysql data
+  ln -s /var/lib/mysql /mysqldata
+  ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
+      
+  copy /etc/my.cnf from another machine
+    Adapt log-bin and report-host to include hostname:
+    log-bin=vmps1-bin
+    report-host     = vmps1
+  
+  copy /etc/init.d/mysql from another machine 
+    Enable the service:
+    chkconfig mysql on 
+    ln -s /etc/init.d/mysql /usr/sbin/rcmysql
+
+  Add mysql to path:
+  . /etc/profile.local
+  
+  GET DATA:
+  cd /mysqldata
+  mv mysql mysql.orig
+  copy over inventory and mysql directories from a template server 
+  (make sure to use lock tables before copying, e.g.:
+   mysqlhotcopy --allowold --keepold --regexp=".+" /tmp/mydata  )
+  
+  groupadd mysql
+  useradd -g mysql mysql
+  chown -R mysql:mysql *
+  chgrp -R mysql /usr/local/mysql/*
+  
+  START mysql, check that all is OK:
+  rcmysql start  
+  check /mysqldata/mysqld.log for errors.
+  mysql inventory
+  		show tables;
+  		select * from ports;
+
+
+libxml:
+  cd /opt/install
+  tar xvzf libxml2-2.6.22.tar.gz
+  cd libxml2-2.6.22/
+  ./configure --prefix=/opt/libxml2 && make install  
+  
+  Add /opt/libxml2/lib to 
+
+
+FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
+  cd /opt/install
+  wget http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz
+  ./configure --prefix=/opt/freetds  --enable-msdblib
+  make install
+  vi /opt/freetds/etc/freetds.conf and add a definition to a DB to test: 
+   [sms]                                           <-- alias name
+        host = MyServer.mydomain.com               <-- sever name/IP
+        port = 1433
+        tds version = 4.2
+        dump file = /var/log/freetds.log
+        dump file append = yes
+        #debug level = 10
+        debug level = 3
+        
+  Try connectivity:
+        /opt/freetds/bin/tsql -S [alias] -U [user] -P [password]
+
+
+PHP5:
+  cd /opt/install;
+  tar xBf php-5.1.4.tar.bz2
+  cd /opt/install/php-5.1.4/
+  
+  #./configure --with-mysql=/usr/local/mysql --prefix=/opt/php5 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect
+  
+  ## If you need MS-SQL (its best to assume you do - FreeTDS was compiled above)
+  ./configure --with-mysql=/usr/local/mysql --prefix=/opt/php5.1.4 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
+  make install    
+     
+  
+  mv /usr/bin/php /usr/bin/php4
+  ln -s /opt/php5/bin/php /usr/bin/php
+  ln -s /opt/php5.1.4 /opt/php5
+  
+  Note: 
+  ^^^^^
+  If later upgrading or testing new PHP modules, then install into a version specifc directory:
+   ./configure --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.4b --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
+  and create then make /opt/php5 a link to this directory.
+  This allows rollback and less disturbance to running daemons.
+
+
+Database rights
+==================   
+There are some DB users you need to setup.
+
+A. Local daemon use for PHP scripts (set the user/pw in config.inc):
+grant SELECT,INSERT,UPDATE        ON inventory.*       to inventwrite@localhost IDENTIFIED by 'PASSWORD2';
+SET PASSWORD FOR inventwrite@localhost = OLD_PASSWORD('PASSWORD2');
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@localhost;
+grant CREATE TEMPORARY TABLES ON inventory.*        to inventwrite@localhost;
+grant ALL                     ON inventory.vmpsauth to inventwrite@localhost;
+
+
+B. Setup a user for the remote delphi Windows GUI. see the vmps.ini file on the Windows client.
+grant SELECT,INSERT        ON inventory.*       to inventwrite@'%' IDENTIFIED by 'PASSWORD1';
+SET PASSWORD FOR inventwrite@'%' = OLD_PASSWORD('PASSWORD1');
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@'%';
+grant SELECT,INSERT,UPDATE ON inventory.users   to inventwrite@'%' ;
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.patchcable to inventwrite@'%';
+grant SELECT,INSERT,UPDATE ON inventory.port    to inventwrite@'%' ;
+grant SELECT,UPDATE        ON inventory.oper    to inventwrite@'%' ;
+grant SELECT,UPDATE        ON inventory.switch  to inventwrite@'%' ;
+grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
+grant SELECT,INSERT,UPDATE ON inventory.sys_class to inventwrite@'%' ;
+grant SELECT,INSERT,UPDATE ON inventory.sys_os to inventwrite@'%';
+
+C. Root is used by the sysadmin for local configuration. Make sur its only used from localhost.
+
+D. The read-only webgui uses a "readonly" user.
+==> To do
+
+
+
+4. OpenNAC install part #1:
+===========================
+Download and install /opt/vmps
+
+Adapt config.inc
+
+If you need to syncronise the user database with an external source, then try each of the user sync scripts and heck syslog for errors.
+		If they work, enable then in cron:
+		0   3    * * 2   /opt/vmps/vmps_user; /opt/vmps/report_old_users
+		0   7    * * *   /opt/vmps/vmps_user_special;
+
+		At this stage The DB is working and PHP access to the DB. Syslog works too 
+		and you see messages there.
+
+
+5. OpenNAC install part #2:
+===========================
+Now we get the vmps daemon going.
+
+Copy /etc/init.d/vmps from /opt/vmps/contrib
+  cp /opt/vmps/contrib/init.d/vmps /etc/init.d
+  ln -s /etc/init.d/vmps /usr/sbin/rcvmps
+  chmod 750 /etc/init.d/vmps
+  chkconfig vmps on
+  vi /etc/init.d/vmps       [adapt IP address on vmpsd start line]
+   
+  Start and watch syslog for events:
+  rcvmps start
+  
+
+Copy /etc/init.d/vmps_lastseen from /opt/vmps/contrib
+  ln -s /etc/init.d/vmps_lastseen /usr/sbin/rcvmps_lastseen
+  chmod 750 /etc/init.d/vmps_lastseen
+  chkconfig vmps_lastseen on
+  
+  Start and watch syslog for events:
+  rcvmps_lastseen start
+
+
+Test purging of old devices (and watch syslog), then enable in cron:
+0   1   26 * *   /opt/vmps/purge_unknowns  
+
+
+6. OpenNAC install part #3: monitoring
+===========================
+There are several monitoring scripts that need to be individually tested and enabled in root cron:
+
+Create /secure and download following scripts:
+   monitor_processes.pl  saveit    secure.conf  proctst proctst.pl  check_disk       
+   And make a subdir 'tmp'.           
+
+*/3 *     * * *   /secure/check_disk 90 800
+2 6-18    * * 1-5 /usr/local/bin/filewatcher -c /etc/filewatcher.conf
+*/10 6-22 * * *   /secure/monitor_processes.pl vmpsd_external proctst
+30   6-22 * * 1-5 /opt/vmps/monitor_allows.sh
+*/4 *     * * *   /opt/vmps/flap_detect
+
+
+7. OpenNAC install: syslog pruning
+===========================
+Enable syslog pruning and analyis:
+ci -l /etc/logrotate.d/syslog
+cp /opt/vmps/contrib/logrotate.d/syslog /etc/logrotate.d/syslog
+
+
+
+8. OpenNAC install: backups
+===========================
+Scripts for backups up the system in different ways to the second internal disk:
+Test these and enabled in root cron:
+0   3    * * 1-5 /opt/vmps/dump_ports
+0   3    * * *   /opt/vmps/backup_vmpslog | logger
+0   3    * * 1   /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
+0   3    * * 6   rdiff-backup  --exclude /media --exclude /sys --exclude /disk2 --exclude /proc  --exclude /mnt --print-statistics  / /disk2/backups/vmps0.rdiff;
+
+
+8. OpenNAC install: router integration
+===========================   
+Adapt the relevant lins in config.inc, then try route_mac_ip from the command line, possibly enabling the debug flags. Then add an entry to the root cron.
+*/6 *    * * *   /opt/vmps/router_mac_ip
+  
+
+
+Other notes
+===========================   
+Are syslog messages arriving from the Switches in /var/log/messages ?
+   egrep -v `uname -n` /var/log/messages |awk '{print $4}'| sort| uniq -c |sort
+    
+Maybe discuss later:
+/etc/hosts.allow 
+/etc/hosts.deny
+
+If the server is not exclusively used by VMPS with one administrator, you probably want to set a local root password for mysql.
+mysqladmin -u root password 'new-password'
+mysqladmin -u root -h MYHOST password 'new-password'
+
+
+

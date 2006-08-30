@@ -1,0 +1,12 @@
+This filw will eventually tell how how to setup a blank DB, For now it contains a few specifc notes.
+
+"Keine User"
+------------
+There needs to be a 'keine' user, that all unknown machines are assigned to:
+  insert into users set AssocNtAccount='keine';
+  update systems set description='keine' where description='';
+
+Other DB fixes:
+  grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
+  ALTER TABLE `inventory`.`sys_os` ADD PRIMARY KEY(`id`);
+

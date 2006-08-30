@@ -1,0 +1,12 @@
+
+The vmpsd is from OpenVMPS, the sources are in the subdirectory vmpsd.1.3.sources
+
+We don't make any changes to it, but use and external plugin to start vmpsd_external, which is our program.
+
+However, to get vmpsd running you need:
+	/etc/init.d/vmps
+	/opt/vmps/vmpsd             (the OpenVMPS binary)
+	/opt/vmps/vmpsd_external
+	/usr/local/etc/vlan.db      (empty dummy file, needed to start vmpsd)
+
+Sean Boran, 22.2.06

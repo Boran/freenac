@@ -1,0 +1,110 @@
+This is the README file for the port_scan module from OpenNAC
+
+Description:
+------------
+This module is provided in order to give the network administrator further knowledge about 
+the systems that are part of a network, providing information about changes that
+computers connected to the network have suffered.
+
+How does it work?
+-----------------
+It grabs some allowed IPs from the OpenNAC database, and passes them to nmap, which is going
+to perform a scan. The results of this scan are saved to an XML file which is then parsed
+and these results are used to populate some tables which form part of the OpenNAC inventory
+system. The module logs to syslog if there are discrepancies between the current scan
+and information stored in the database. If there are differences it is going to log what has
+changed in the hosts scanned and make the necessary corrections to the database.
+
+Dependences:
+------------
+OpenNAC
+Nmap 4.11 or later
+
+How to install:
+---------------
+Install OpenNAC
+Then in MySQL add the next tables to the inventory database if they are not already there
+
+create table nac_netsallowed (
+    id int unsigned not null unique auto_increment,
+    network varchar(30),
+    primary key (id));
+
+create table nac_openports (
+   port int unsigned not null, 
+   protocol enum('tcp','udp') not null,
+   host int unsigned not null,
+   banner varchar(128), 
+   timestamp datetime);
+
+create table nac_hostscanned (
+   id int unsigned not null unique auto_increment, 
+   mac varchar(15) not null default 'NULL',
+   ip varchar(15),
+   hostname varchar(80),
+   os varchar(80),
+   timestamp datetime default null,
+   PRIMARY KEY(id,mac,ip)); 
+
+create table nac_servicestcp ( 
+   port int unsigned unique not null, 
+   service varchar(30), 
+   description varchar(128), 
+   primary key(port));
+
+create table nac_servicesudp ( 
+   port int unsigned unique not null, 
+   service varchar(30), 
+   description varchar(128), 
+   primary key(port));
+
+And then you grant rights to these tables with
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.nac_openports to inventwrite@'%';
+grant SELECT,INSERT,UPDATE ON inventory.nac_hostscanned to inventwrite@'%';
+grant SELECT ON inventory.nac_servicestcp to inventwrite@'%';
+grant SELECT ON inventory.nac_servicesudp to inventwrite@'%';
+
+***Important: You need to specify first in ona_netsallowed the networks that you want to scan.
+The script is going to grab IPs from the systems table and will compare it against the networks
+defined in the ona_netsallowed table. Only those computers which fall within the criteria 
+specified in the ona_netsallowed table will become a strong candidate to be scanned.
+You can specify something like '192,195.35-38,89-95.33.*'
+Going from left to right, this will scan any host whose first octet is 192 or 19
+5, with the
+second octet in the ip range 35-38 or 89-95 and whose subnet is 33.
+You can also specify something like '192.168.*'
+One register per criterion you want to take into account.
+The final decision on what to scan is made through the LastSeen time threshold specified in the port_scan.inc file. With this, you can say to scan only the hosts that were seen on the network within the lapse of 1 day, 1 month, 30 minutes, whatever. 
+
+Then run the fill_services script in order to populate the services tables
+/opt/vmps/contrib/fill_services
+
+And create the following directory
+mkdir /opt/vmps/scan
+
+Then in the command line you do
+cron -e
+and add the next line
+0 0 * * Sat    nice /opt/vmps/bin/port_scan
+This will run it every Sat at midnight
+
+Files and directories required:
+-------------------------------
+/opt/vmps/bin/port_scan
+/opt/vmps/etc/port_scan.inc
+/opt/vmps/funcs.inc
+/opt/vmps/scan/
+/opt/vmps/doc/README.port_scan
+/opt/vmps/contrib/fill_services
+/opt/vmps/contrib/services_long.txt
+/opt/vmps/contrib/services_nmap.txt
+
+How to run it:
+-------------
+If you want to run it by hand just type:
+/opt/vmps/bin/port_scan &
+
+Bugs:
+-----
+Please report them in our Development forum:
+http://www.opennac.net/phpBB2

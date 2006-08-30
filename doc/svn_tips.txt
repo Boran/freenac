@@ -1,0 +1,55 @@
+________ Tips on Working with Subversion _________
+Checkout a working copy:
+svn co https://svn.sourceforge.net/svnroot/opennac/trunk/contrib
+svn co https://svn.sourceforge.net/svnroot/opennac/trunk/bin 
+svn co https://svn.sourceforge.net/svnroot/opennac/trunk/etc
+svn co https://svn.sourceforge.net/svnroot/opennac/trunk/web1
+svn co https://svn.sourceforge.net/svnroot/opennac/trunk/web2
+svn co https://svn.sourceforge.net/svnroot/opennac/doc
+
+Check for changes:	
+svn update contrib bin etc doc
+		svn help update
+	
+Make changes:
+svn add <filename|directory>
+svn delete <filename|directory>
+svn copy <filename|directory>
+svn move <filename|directory>
+		svn help [ add | delete | copy | move ]
+
+Examine your changes:
+svn status doc bin etc contrib
+svn status <filename|directory>
+svn diff
+svn diff > <patchfile>
+svn revert <filename>
+		svn help [ blame | status | diff | revert ]
+		svn [ blame | praise ]
+
+Commit your changes:
+svn commit --username YOUR_SF_USER –m “your message“ contrib
+svn commit --username YOUR_SF_USER –m “your message“ doc
+svn commit --username YOUR_SF_USER –m “your message“ bin
+svn commit --username YOUR_SF_USER –m “your message“ etc
+svn help commit
+
+--------- Subversion client settings ----------
+For servers behind a proxy, edit ~/.subversion/servers and set
+the proxy values:
+  [groups]
+  group1 = *svn.sourceforge.net
+  [group1]
+  http-proxy-host = proxy1.MYDOMAIN.COM 
+  http-proxy-port = 80
+  
+Limit what files are checking into SVN, edit ~/.subversion/config
+  [miscellany]
+  global-ignores = *.o *.lo *.la #*# .*.rej *.rej .*~ *~ .#* .DS_Store *,v RCS config.inc
+Specifically, we don't want RCS files, or the productive config.inc
+(with passwords) checked in
+
+
+----------- TO DO -----------
+[sb] I have a problem with contrib/init.d
+[sb] How to move doc back into trunk with breaking things?
