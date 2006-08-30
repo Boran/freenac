@@ -28,6 +28,7 @@ function display_forms() {
 };
 
 db_connect();
+import_request_variables("gp");
 
 if ($submit) {
 	echo '<head><title>VMPS Webquery</title></head><body>';
