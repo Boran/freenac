@@ -692,12 +692,16 @@ function get_ips()	//This function will get some ips to scan
       {
          $temp_1=$devices['ip'];
          $temp_2=$list['ip'];
-         $notscanned=array_diff($temp_1,$temp_2);
-         foreach($notscanned as $rejected_ip)
-         {
-            debug1($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
-            logit($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
-         }
+         if ((isset($temp_1))&&(is_array($temp_1)))
+            if ((isset($temp_2))&&(is_array($temp_2)))
+            {
+               $notscanned=array_diff($temp_1,$temp_2);
+               foreach($notscanned as $rejected_ip)
+               {
+                  debug1($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
+                  logit($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
+               }
+            }
       }
       $list['counter']=$counter;
       if (($counter==0)&&(!$flagscannow))
