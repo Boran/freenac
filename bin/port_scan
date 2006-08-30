@@ -662,7 +662,7 @@ function get_ips()	//This function will get some ips to scan
                if ($diff<=$time_threshold)
                {
 	          for ($k=0;$k<=$counter;$k++)
-                     if ($devices['ip'][$l]==$list[$k])
+                     if ($devices['ip'][$l]==$list['ip'][$k])
                         $there++;
                   if (!$there)
                   {
@@ -673,15 +673,10 @@ function get_ips()	//This function will get some ips to scan
                   }
                }
             }
-            else if (($candidate!=4)&&($argc>1))
-            {
-               debug1($devices['ip'][$l]." doesn't meet criteria specified in netsallowed\n");
-               logit($devices['ip'][$l]." doesn't meet criteria specified in netsallowed\n");
-            }
             else if (($candidate==4)&&($argc>1))
             {
                for ($k=0;$k<=$counter;$k++)
-                  if ($devices['ip'][$l]==$list[$k])
+                  if ($devices['ip'][$l]==$list['ip'][$k])
                      $there++;
                if (!$there)
                {
@@ -691,6 +686,17 @@ function get_ips()	//This function will get some ips to scan
                   $counter++;
                }
             }
+         }
+      }
+      if (($argc==2)&&($flagscannow))
+      {
+         $temp_1=$devices['ip'];
+         $temp_2=$list['ip'];
+         $notscanned=array_diff($temp_1,$temp_2);
+         foreach($notscanned as $rejected_ip)
+         {
+            debug1($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
+            logit($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
          }
       }
       $list['counter']=$counter;
