@@ -550,6 +550,7 @@ function get_ips()	//This function will get some ips to scan
          $devices['mac'][$counter]=$result["mac"];
          $devices['hostname'][$counter]=$result["name"];
          $counter++;
+         logit('Nmap scan-now of ' . $result["r_ip"] . ' started');
       }
    }
    else if ($argc>=2)
