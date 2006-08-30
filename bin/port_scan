@@ -16,7 +16,7 @@
  * @author			Héctor Ortiz (FreeNAC Core Team)
  * @copyright			2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			CVS: $Id:$
+ *. @version			CVS: $Id:$
  * @link				http://www.freenac.net
  *
  */
@@ -28,6 +28,8 @@ define_syslog_variables();
 openlog("port_scan", LOG_PID , LOG_LOCAL5);
 
 $output=TRUE;
+$queries['number']=0;
+$queries['messages']=0;
 $flagscannow=0;
 for ($i=0;$i<$argc;$i++)
    if ($argv[$i]=="--scannow")
@@ -44,15 +46,17 @@ if ($var['equipments']>0)
    do_inventory($var);				//Check against database	
 else
    $var['equipments']=0;
-
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 
 function message($string)
 {
-   global $output,$debug_flag1;
+   global $output,$debug_flag1,$output_to_syslog;
    if (($output===TRUE)&&($debug_flag1===FALSE))
-      echo $string;
+      if ($output_to_syslog===TRUE)
+         logit($string);   
+      else
+         echo $string;
 }
 
 function validate($string)
@@ -77,10 +81,24 @@ function do_something($query)			//Let's do something with our structure
         debug1($query['message'][$i]);   	//And display the messages
 }
 
+function update_queries($mesg,$what)
+{
+   global $queries; //Here we hold messages and queries
+   if ($what=='q')
+   {
+      $queries['query'][$queries['number']]=$mesg; //This is a query
+      $queries['number']++;	//Counts queries
+   }
+   else if ($what=='m')
+   {
+      $queries['message'][$queries['messages']]=$mesg; //This is a message
+      $queries['messages']++;	//Counts messages
+   }
+}
+
 function do_inventory($data_from_xml)
 {
-   $queries['number']=0;
-   $queries['messages']=0;
+   global $queries;
    for ($i=0;$i<$data_from_xml['equipments'];$i++)	//How many hosts scanned
    {
        $ip=$data_from_xml[$i]['ip'];		//Get ip of one host
@@ -89,15 +107,15 @@ function do_inventory($data_from_xml)
        if ($res)
        {
           if (mysql_num_rows($res) ==0)
-             $queries=add_entry($data_from_xml[$i],$queries);//Host not found in database 
+             add_entry($data_from_xml[$i]);//Host not found in database 
           else
-             $queries=check_existent($data_from_xml[$i],$queries); //Host in database, let's see if something has changed
+             check_existent($data_from_xml[$i]); //Host in database, let's see if something has changed
        }
    }
    do_something($queries); 			//Do something with the structure
 }
 
-function check_existent($data,$queries) 	//This function will check info concerning one host scanned against its info in the database
+function check_existent($data) 	//This function will check info concerning one host scanned against its info in the database
 {
    $timestamp=date('Y-m-d H:i:s');
    if ((!isset($data))||(!is_array($data)))
@@ -114,31 +132,28 @@ function check_existent($data,$queries) 	//This function will check info concern
    {
       $result=mysql_fetch_array($res, MYSQL_ASSOC);
       $db_ports=mysql_num_rows($res);
-      $id=$result["id"];   			//Host's id in the database
-      $db_mac=strtolower($result["mac"]);
-      $db_ip=$result["ip"];			//Same IP from last time?
-      $db_hostname=strtolower($result["hostname"]);		//Same hostname from last time?
-      $db_os=$result["os"];			//Same OS from last time?
-      $db_timestamp=$result["timestamp"];  	//If it changed, since when?
+      $id=$result['id'];   			//Host's id in the database
+      $db_mac=strtolower($result['mac']);
+      $db_ip=$result['ip'];			//Same IP from last time?
+      $db_hostname=strtolower($result['hostname']);		//Same hostname from last time?
+      $db_os=$result['os'];			//Same OS from last time?
+      $db_timestamp=$result['timestamp'];  	//If it changed, since when?
       $host_changed=$os_changed=$mac_changed=0; //To control if we need to update its record in the database
       if (!empty($hostname)&&!empty($db_hostname)&&(strcasecmp($hostname,$db_hostname)!=0))   	//Info about its hostname
       {
          if ((strcasecmp($db_hostname,'NULL')==0)&&(strcasecmp($hostname,'NULL')!=0))
          { 
-            $queries['message'][$queries['messages']]="Host $ip has its hostname resolved now. $ip is $hostname\n";
-            $queries['messages']++;		//And internal counter within the sctructure which counts the number of messages produced
+            update_queries("Host $ip has its hostname resolved now. $ip is $hostname\n",'m');
             $host_changed++;
          }
          else if ((strcasecmp($db_hostname,'NULL')!=0)&&(strcasecmp($hostname,'NULL')==0))
          {
-            $queries['message'][$queries['messages']]="Unable to resolve $ip this time, old hostname $db_hostname preserved\n";
-            $queries['messages']++;
+            update_queries("Unable to resolve $ip this time, old hostname $db_hostname preserved\n",'m');
             $mac=$db_mac;
          }
          else
          { 
-            $queries['message'][$queries['messages']]="Old hostname $db_hostname no longer valid. Renamed to $hostname\n";
-            $queries['messages']++;
+            update_queries("Old hostname $db_hostname no longer valid. Renamed to $hostname\n",'m');
             $host_changed++;
          }
       }
@@ -146,22 +161,18 @@ function check_existent($data,$queries) 	//This function will check info concern
       {
          if ((strcasecmp($db_mac,'NULL')==0)&&(strcasecmp($mac,'NULL')!=0))
          {
-            $queries['message'][$queries['messages']]="MAC from $ip determined. MAC is $mac\n";
-            $queries['messages']++;
+            update_queries("MAC from $ip determined. MAC is $mac\n",'m');
             $mac_changed++;
          }
          else if ((strcasecmp($db_mac,'NULL')!=0)&&(strcasecmp($mac,'NULL')==0))
          {
-            $queries['message'][$queries['messages']]="No new MAC info for $ip this time\n";
-            $queries['messages']++;
+            update_queries("No new MAC info for $ip this time\n",'m');
             $mac=$db_mac;
          }
          else
          {
-            $queries['message'][$queries['messages']]="$ip has changed its MAC since $db_timestamp. New MAC is $mac\n";
-	    message($queries['message'][$queries['messages']]);
-            debug1($queries['message'][$queries['messages']]);
-            $queries['messages']++;
+            update_queries("$ip has changed its MAC since $db_timestamp. New MAC is $mac\n",'m');
+            //debug1($queries['message'][$queries['messages']]);
             $mac_changed++;
          }
       }
@@ -169,22 +180,18 @@ function check_existent($data,$queries) 	//This function will check info concern
       {
          if ((strcasecmp($db_os,'NULL')==0)&&(strcasecmp($os,'NULL')!=0))
          {
-            $queries['message'][$queries['messages']]="OS from $ip now determined. $ip is using $os\n";
-            $queries['messages']++;
+            update_queries("OS from $ip now determined. $ip is using $os\n",'m');
             $os_changed++;
          }
          else if ((strcasecmp($db_os,'NULL')!=0)&&(strcasecmp($os,'NULL')==0))
          {
-            $queries['message'][$queries['messages']]="No new MAC info for $ip this time\n";
-            $queries['messages']++;
+            update_queries("No new MAC info for $ip this time\n",'m');
             $os=$db_os;
          }
          else
          {
-            $queries['message'][$queries['messages']]="$ip has changed its OS since $db_timestamp. Now is using $os\n";
-	    message($queries['message'][$queries['messages']]);
-            debug1($queries['message'][$queries['messages']]);  //It is not very often that a host changes its OS
-            $queries['messages']++;
+            update_queries("$ip has changed its OS since $db_timestamp. Now is using $os\n",'m');
+            //debug1($queries['message'][$queries['messages']]);  //It is not very often that a host changes its OS
             $os_changed++;
          }
       }
@@ -192,8 +199,7 @@ function check_existent($data,$queries) 	//This function will check info concern
       if($changes>0)
       {
          $query=sprintf("update nac_hostscanned set hostname='%s',mac='%s',os='%s',timestamp='%s' where id='%d' and ip='%s';",$hostname,$mac,$os,$timestamp,$id,$ip);
-         $queries['query'][$queries['number']]=$query;
-         $queries['number']++;
+         update_queries($query,'q');
       }
       $query=sprintf("select * from nac_openports where host='%s';",$id);
       $res1=execute_query($query);
@@ -204,18 +210,18 @@ function check_existent($data,$queries) 	//This function will check info concern
          $db_udp=0;
          while ($result=mysql_fetch_array($res1, MYSQL_ASSOC))
          {
-            if ($result["protocol"]=="tcp")
+            if ($result['protocol']=='tcp')
             {
-               $db_tmp_port_tcp[$db_tcp]['port']=$result["port"];
-               $db_tmp_port_tcp[$db_tcp]['timestamp']=$result["timestamp"];
-               $db_tmp_port_tcp[$db_tcp]['banner']=$result["banner"];
+               $db_tmp_port_tcp[$db_tcp]['port']=$result['port'];
+               $db_tmp_port_tcp[$db_tcp]['timestamp']=$result['timestamp'];
+               $db_tmp_port_tcp[$db_tcp]['banner']=$result['banner'];
                $db_tcp++;
             }
-            else if ($result["protocol"]=="udp")
+            else if ($result['protocol']=='udp')
             {
-               $db_tmp_port_udp[$db_udp]['port']=$result["port"];
-               $db_tmp_port_udp[$db_udp]['timestamp']=$result["timestamp"];
-               $db_tmp_port_udp[$db_udp]['banner']=$result["banner"];
+               $db_tmp_port_udp[$db_udp]['port']=$result['port'];
+               $db_tmp_port_udp[$db_udp]['timestamp']=$result['timestamp'];
+               $db_tmp_port_udp[$db_udp]['banner']=$result['banner'];
                $db_udp++;
             }
          }
@@ -225,23 +231,23 @@ function check_existent($data,$queries) 	//This function will check info concern
             sort($db_tmp_port_udp);
          if (($db_tcp==0)&&($db_udp==0)) //In case we have no info in the db
          {
-            $db_protocol[0]="tcp";
+            $db_protocol[0]='tcp';
             $db_port[0]=0;
-            $db_porttstmp[0]="0000-00-00 00:00:00";
-            $db_banner[0]=":"; 
+            $db_porttstmp[0]='0000-00-00 00:00:00';
+            $db_banner[0]=':'; 
          }
          else
          {
             for ($i=0;$i<$db_tcp;$i++)
             {
-               $db_protocol[$i]="tcp";
+               $db_protocol[$i]='tcp';
                $db_port[$i]=$db_tmp_port_tcp[$i]['port'];
                $db_porttstmp[$i]=$db_tmp_port_tcp[$i]['timestamp'];
                $db_banner[$i]=$db_tmp_port_tcp[$i]['banner'];
             }
             for (;$i<($db_tcp+$db_udp);$i++)
             {
-               $db_protocol[$i]="udp";
+               $db_protocol[$i]='udp';
                $db_port[$i]=$db_tmp_port_udp[($i-$db_tcp)]['port'];
                $db_porttstmp[$i]=$db_tmp_port_udp[($i-$db_tcp)]['timestamp'];
                $db_banner[$i]=$db_tmp_port_udp[($i-$db_tcp)]['banner'];
@@ -251,13 +257,13 @@ function check_existent($data,$queries) 	//This function will check info concern
          $udp=0;
          for ($i=0;$i<$ports;$i++)
          {
-            if ($data['port'][$i]['protocol']=="tcp")
+            if ($data['port'][$i]['protocol']=='tcp')
             {
                $tmp_port_tcp[$tcp]['port']=$data['port'][$i]['portid'];
                $tmp_port_tcp[$tcp]['banner']=$data['port'][$i]['description'];
                $tcp++;
             }
-            else if ($data['port'][$i]['protocol']=="udp")
+            else if ($data['port'][$i]['protocol']=='udp')
             {
                $tmp_port_udp[$udp]['port']=$data['port'][$i]['portid'];
                $tmp_port_udp[$udp]['banner']=$data['port'][$i]['description']
@@ -271,22 +277,22 @@ function check_existent($data,$queries) 	//This function will check info concern
             sort($tmp_port_udp);
          if (($tcp==0)&&($udp==0)) //In case our scan didnt detect any open ports
          {
-            $protocol[$i]="tcp";
+            $protocol[$i]='tcp';
             $port[$i]=0;
-            $banner[$i]=":";
+            $banner[$i]=':';
 
          }
          else
          {
             for ($i=0;$i<$tcp;$i++)
             {
-               $protocol[$i]="tcp";
+               $protocol[$i]='tcp';
                $port[$i]=$tmp_port_tcp[$i]['port'];
                $banner[$i]=$tmp_port_tcp[$i]['banner'];
             }
             for ($i;$i<($tcp+$udp);$i++)
             {
-               $protocol[$i]="udp";
+               $protocol[$i]='udp';
                $port[$i]=$tmp_port_udp[($i-$tcp)]['port'];
                $banner[$i]=$tmp_port_udp[($i-$tcp)]['banner'];
             }
@@ -294,7 +300,7 @@ function check_existent($data,$queries) 	//This function will check info concern
          $add_counter=0;	//Let's count the number of new open ports 
          $remove_counter=0;	//Let's count the number of old closed ports
 	 $update_counter=0;	//Number of ports which version service has changed
-         $result="";
+         $result='';
          if (is_array($port)&&is_array($db_port))
          {
   	    $result=array_diff($port,$db_port);	//New open ports discovered that are to be added to the database
@@ -307,15 +313,14 @@ function check_existent($data,$queries) 	//This function will check info concern
                   $add_port[$add_counter]=$result[$position[$i]];
                   $add_prot[$add_counter]=$protocol[$position[$i]];
                   $add_banner[$add_counter]=$banner[$position[$i]];
-                  $queries['message'][$queries['messages']]="New port open (".$add_port[$add_counter]."/".$add_prot[$add_counter].") on host $ip.\n";
-	          debug1($queries['message'][$queries['messages']]);
-                  $queries['messages']++;
-                  $queries=check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter],$queries);
+                  update_queries('New port open ('.$add_port[$add_counter].'/'.$add_prot[$add_counter].") on host $ip.\n",'m');
+	          //debug1($queries['message'][$queries['messages']]);
+                  check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter]);
                   $add_counter++;
                }
             }
          
-            $result="";
+            $result='';
             $result=array_diff($db_port,$port);	//Old open ports which are not open in this new scan, therefore should be discarded from the database
             $position=array_keys($result);
             $index=count($result);
@@ -325,9 +330,8 @@ function check_existent($data,$queries) 	//This function will check info concern
                {
                   $remove_port[$remove_counter]=$result[$position[$i]];
                   $remove_prot[$remove_counter]=$db_protocol[$position[$i]];
-                  $queries['message'][$queries['messages']]="Port (".$remove_port[$remove_counter]."/".$remove_prot[$remove_counter].") on host $ip no longer open since ".$db_porttstmp[$position[$i]]."\n";
-	          debug1($queries['message'][$queries['messages']]);
-                  $queries['messages']++;
+                  update_queries('Port ('.$remove_port[$remove_counter].'/'.$remove_prot[$remove_counter].") on host $ip no longer open since ".$db_porttstmp[$position[$i]]."\n",'m');
+	          //debug1($queries['message'][$queries['messages']]);
                   $remove_counter++;
                }
             }
@@ -339,7 +343,7 @@ function check_existent($data,$queries) 	//This function will check info concern
 	       $db_position=array_keys($db_result);
 	       $index=count($xml_position);
 	       $j=0;
-	       $result="";
+	       $result='';
 	       for ($i=0;$i<$index;$i++)
    	          if (strcasecmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
    	          {
@@ -350,17 +354,16 @@ function check_existent($data,$queries) 	//This function will check info concern
    	          }  
                   else
                   {
-                     $queries=check_service($ip,$xml_result[$xml_position[$i]],$protocol[$i],$banner[$xml_position[$i]],$queries); //Let's check if the service is running on its default port
+                     check_service($ip,$xml_result[$xml_position[$i]],$protocol[$i],$banner[$xml_position[$i]]); //Let's check if the service is running on its default port
                      if (strcasecmp($banner[$xml_position[$i]],$db_banner[$db_position[$i]])!=0) //Now let's check if the service has changed
                      {
-                        $service=explode(":",$db_banner[$db_position[$i]]);
+                        $service=explode(':',$db_banner[$db_position[$i]]);
 			$service=$service[0];
 			$update_port[$update_counter]=$port[$xml_position[$i]];
 			$update_prot[$update_counter]=$protocol[$i];
 			$update_banner[$update_counter]=$banner[$xml_position[$i]];
- 			$queries['message'][$queries['messages']]="Service $service(".$port[$xml_position[$i]]."/".$protocol[$i].") on host $ip has changed since ".$db_porttstmp[$db_position[$i]].". Was using ".$db_banner[$db_position[$i]]." but now is using ".$banner[$xml_position[$i]]."\n";
-			debug1($queries['message'][$queries['messages']]);
-		        $queries['messages']++;
+ 			update_queries("Service $service(".$port[$xml_position[$i]].'/'.$protocol[$i].") on host $ip has changed since ".$db_porttstmp[$db_position[$i]].'. Was using '.$db_banner[$db_position[$i]].' but now is using '.$banner[$xml_position[$i]]."\n",'m');
+			//debug1($queries['message'][$queries['messages']]);
 			$update_counter++;
 		     }
                   }
@@ -373,10 +376,9 @@ function check_existent($data,$queries) 	//This function will check info concern
                      $add_port[$add_counter]=$result[$keys_result[$i]];
                      $add_prot[$add_counter]=$prot_res[$keys_result[$i]];
                      $add_banner[$add_counter]=$string[$keys_result[$i]];
-                     $queries['message'][$queries['messages']]="New port open (".$add_port[$add_counter]."/".$add_prot[$add_counter].") on host $ip.\n";
-		     debug1($queries['message'][$queries['messages']]);
-                     $queries['messages']++;
-                     $queries=check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter],$queries);
+                     update_queries('New port open ('.$add_port[$add_counter].'/'.$add_prot[$add_counter].") on host $ip.\n",'m');
+		     //debug1($queries['message'][$queries['messages']]);
+                     check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter]);
                      $add_counter++;
                   }
                }
@@ -390,7 +392,7 @@ function check_existent($data,$queries) 	//This function will check info concern
                $db_position=array_keys($db_result);
                $index=count($db_position);
                $j=0;
-               $result="";
+               $result='';
                for ($i=0;$i<$index;$i++)
                   if (strcasecmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
                   {
@@ -407,9 +409,8 @@ function check_existent($data,$queries) 	//This function will check info concern
                   {
                      $remove_port[$remove_counter]=$result[$keys_result[$i]];
                      $remove_prot[$remove_counter]=$prot_res[$keys_result[$i]];
-                     $queries['message'][$queries['messages']]="Port (".$remove_port[$remove_counter]."/".$remove_prot[$remove_counter].") on host $ip no longer open since ".$tstmp[$keys_result[$i]]."\n";
-		     debug1($queries['message'][$queries['messages']]);
-                     $queries['messages']++;
+                     update_queries('Port ('.$remove_port[$remove_counter].'/'.$remove_prot[$remove_counter].") on host $ip no longer open since ".$tstmp[$keys_result[$i]]."\n",'m');
+		     //debug1($queries['message'][$queries['messages']]);
                      $remove_counter++;
                   }
                }
@@ -418,43 +419,37 @@ function check_existent($data,$queries) 	//This function will check info concern
          for ($i=0;$i<$remove_counter;$i++)	//Ok, let's perform the queries to delete our old closed ports
          {
             $query=sprintf("delete from nac_openports where host='%s' and port='%s' and protocol='%s';",$id,$remove_port[$i],$remove_prot[$i]);
-            $queries['query'][$queries['number']]=$query;
-            $queries['number']++;
+            update_queries($query,'q');
          }
          for ($i=0;$i<$add_counter;$i++)	//And the queries for the new open ports
          {
             $query=sprintf("insert into nac_openports values ('%s','%s','%s','%s','%s');",$add_port[$i],$add_prot[$i],$id,$add_banner[$i],$timestamp);
-            $queries['query'][$queries['number']]=$query;
-            $queries['number']++;
+            update_queries($query,'q');
          }
 	 for ($i=0;$i<$update_counter;$i++)
 	 {
             $query=sprintf("update nac_openports set banner='%s',timestamp='%s' where host='%d' and port='%s' and protocol='%s';",$update_banner[$i],$timestamp,$id,$update_port[$i],$update_prot[$i]);
-	    $queries['query'][$queries['number']]=$query;
-            $queries['number']++;
+	    update_queries($query,'q');
 	 }
       }
    }
-   return($queries);   
 }
 
-function check_service($ip,$port,$protocol,$banner,$queries)  //With this function we check if a service is running on the port that it has been assigned to by IANA
+function check_service($ip,$port,$protocol,$banner)  //With this function we check if a service is running on the port that it has been assigned to by IANA
 {
-   $query="select service from nac_services".$protocol." where port=".$port.";";
+   $query="select service from nac_services$protocol where port=$port;";
    $res=execute_query($query);
    if ($res)
    {
       $result=mysql_fetch_array($res,MYSQL_ASSOC);
-      $service=explode(":",$banner); 
+      $service=explode(':',$banner); 
       $service=$service[0];	//We are interested only in the name of the service
-      if (!empty($service)&&(!substr_count(strtolower($service),strtolower($result["service"]))))
-         if (!empty($result["service"])&&(!substr_count(strtolower($result["service"]),strtolower($service))))
+      if (!empty($service)&&(!substr_count(strtolower($service),strtolower($result['service']))))
+         if (!empty($result['service'])&&(!substr_count(strtolower($result['service']),strtolower($service))))
          {
-            $queries['message'][$queries['messages']]="Service $service (".$port."/".$protocol.") on scanned host $ip is using a port which is reserved for ".$result["service"]."\n";   
-            $queries['messages']++;
+            update_queries("Service $service ($port/$protocol) on scanned host $ip is using a port which is reserved for ".$result['service']."\n",'m');   
          }
    }
-   return($queries);
 }
 
 function execute_query($query)	
@@ -466,7 +461,7 @@ function execute_query($query)
    return $res;
 }
 
-function add_entry($data,$queries)	//A new host in our network that needs to be added to the database
+function add_entry($data)	//A new host in our network that needs to be added to the database
 {
    if ((!isset($data))||(!is_array($data)))
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
@@ -475,8 +470,7 @@ function add_entry($data,$queries)	//A new host in our network that needs to be 
    $res=execute_query($query);
    if ($res)
    {
-      $queries['message'][$queries['messages']]="Host ".$data['ip']."(".$data['hostname'].") added to the database\n";
-      $queries['messages']++;
+      update_queries("Host ".$data['ip']."(".$data['hostname'].") added to the database\n",'m');
       $query=sprintf("select id from nac_hostscanned where mac='%s' and ip='%s' and hostname='%s' and os='%s' and timestamp='%s';",$data['mac'],$data['ip'],$data['hostname'],$data['os'],$timestamp);
       $res=execute_query($query);
       if ($res)
@@ -488,7 +482,7 @@ function add_entry($data,$queries)	//A new host in our network that needs to be 
             $protocol=$data['port'][$i]['protocol'];
             $port=$data['port'][$i]['portid'];
             $banner=$data['port'][$i]['description'];
-            $queries=check_service($data['ip'],$port,$protocol,$banner,$queries);
+            check_service($data['ip'],$port,$protocol,$banner);
             $query=sprintf("insert into nac_openports values ('%s','%s','%s','%s','%s');",$port,$protocol,$id,$banner,$timestamp);
             execute_query($query); 
          }
@@ -535,7 +529,7 @@ function check_and_abort($message,$resource)	//This function checks if there is 
 
 function get_ips()	//This function will get some ips to scan
 {
-   global $what_units_time, $time_threshold, $argc, $argv,$flagscannow;
+   global $what_units_time, $time_threshold, $argc, $argv,$flagscannow,$queries;
    $timestamp=date('Y-m-d H:i:s');
    $ips="";
    $list=array();
@@ -546,11 +540,13 @@ function get_ips()	//This function will get some ips to scan
       $res=execute_query($query);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       {
-         $devices['ip'][$counter]=$result["r_ip"];
-         $devices['mac'][$counter]=$result["mac"];
-         $devices['hostname'][$counter]=$result["name"];
+         $devices['ip'][$counter]=$result['r_ip'];
+         $devices['mac'][$counter]=$result['mac'];
+         $devices['hostname'][$counter]=$result['name'];
          $counter++;
-         logit('Nmap scan-now of ' . $result["r_ip"] . ' started');
+         $query="update systems set scannow=0 where r_ip='".$result['r_ip']."';";
+         update_queries($query,'q');
+         logit('Nmap scan-now of ' . $result['r_ip'] . ' started');
       }
    }
    else if ($argc>=2)
@@ -565,13 +561,13 @@ function get_ips()	//This function will get some ips to scan
          else
             $query.=" or r_ip='$device'";
       }
-      $query.=";";
+      $query.=';';
       $res=execute_query($query);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       {
-         $devices['ip'][$counter]=$result["r_ip"];
-         $devices['mac'][$counter]=$result["mac"];
-         $devices['hostname'][$counter]=$result["name"];
+         $devices['ip'][$counter]=$result['r_ip'];
+         $devices['mac'][$counter]=$result['mac'];
+         $devices['hostname'][$counter]=$result['name'];
          $counter++;
       }
       for ($i=1;$i<$argc;$i++)
@@ -583,8 +579,8 @@ function get_ips()	//This function will get some ips to scan
          if (!$there)
          {
             $devices['ip'][$counter]=$argv[$i];
-            $devices['mac'][$counter]="NULL";
-            $devices['hostname'][$counter]="NULL";
+            $devices['mac'][$counter]='NULL';
+            $devices['hostname'][$counter]='NULL';
             $counter++;
          }
       }
@@ -596,16 +592,16 @@ function get_ips()	//This function will get some ips to scan
       check_and_abort("No ip addresses to scan found in systems table. Aborting...",$res);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       {
-         $devices['ip'][$counter]=$result["r_ip"];
-         $devices['mac'][$counter]=$result["mac"];
-         $devices['hostname'][$counter]=$result["name"];
-         $devices['lastseen'][$counter]=$result["lastseen"];
+         $devices['ip'][$counter]=$result['r_ip'];
+         $devices['mac'][$counter]=$result['mac'];
+         $devices['hostname'][$counter]=$result['name'];
+         $devices['lastseen'][$counter]=$result['lastseen'];
          $counter++;
       }
    }   
    $devices['counter']=$counter;
    //We got some ips, let's see which ones are candidates to be scanned according to the info provided in the nac_netsallowed table
-   $query="select network from nac_netsallowed;"; 
+   $query='select network from nac_netsallowed;'; 
    $res1=execute_query($query);
    if ($res1)
    {
@@ -614,7 +610,7 @@ function get_ips()	//This function will get some ips to scan
       check_and_abort("Nothing to scan. No networks defined in nac_netsallowed. Aborting...",$res1);
       while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
       {
-         $network[$number]=$result1["network"];
+         $network[$number]=$result1['network'];
          $number++;
       }
       for ($l=0;$l<$devices['counter'];$l++)
@@ -677,6 +673,11 @@ function get_ips()	//This function will get some ips to scan
                   }
                }
             }
+            else if (($candidate!=4)&&($argc>1))
+            {
+               debug1($devices['ip'][$l]." doesn't meet criteria specified in netsallowed\n");
+               logit($devices['ip'][$l]." doesn't meet criteria specified in netsallowed\n");
+            }
             else if (($candidate==4)&&($argc>1))
             {
                for ($k=0;$k<=$counter;$k++)
@@ -696,19 +697,19 @@ function get_ips()	//This function will get some ips to scan
       if (($counter==0)&&(!$flagscannow))
          check_and_abort("IPs didn't match criteria (check nac_netsallowed or your port_scan.inc file). Quitting...\n",0);
       else if (($counter==0)&&($flagscannow))
-         check_and_abort("No systems have the flag \"scannow\" in the systems table",0);
+         check_and_abort("No systems have the flag \"scannow\" in the systems table\n",0);
    }   
    return($list);  
 }
 
 function date_diff($date1, $date2,$what) //Time difference between the timestamp from the database and the one generated by the script
 {
-   $temp=explode(" ",$date1);
-   $time_info_1=explode(":",$temp[1]);
-   $date_info_1=explode("-",$temp[0]);
-   $temp=explode(" ",$date2);
-   $time_info_2=explode(":",$temp[1]);
-   $date_info_2=explode("-",$temp[0]);
+   $temp=explode(' ',$date1);
+   $time_info_1=explode(':',$temp[1]);
+   $date_info_1=explode('-',$temp[0]);
+   $temp=explode(' ',$date2);
+   $time_info_2=explode(':',$temp[1]);
+   $date_info_2=explode('-',$temp[0]);
    $time1=mktime((int)$time_info_1[0],(int)$time_info_1[1],(int)$time_info_1[2],(int)$date_info_1[1],(int)$date_info_1[2],(int)$date_info_1[0]);
    $time2=mktime((int)$time_info_2[0],(int)$time_info_2[1],(int)$time_info_2[2],(int)$date_info_2[1],(int)$date_info_2[2],(int)$date_info_2[0]);
    $time=$time2-$time1;
@@ -726,7 +727,7 @@ function date_diff($date1, $date2,$what) //Time difference between the timestamp
 	 $time/=4;
       else if ($i==6)		//Years
          $time/=12;
-   }
+}
    return $time; //This time is not very accurate, it is just an approximation
 }
 
