@@ -27,6 +27,7 @@ function display_forms() {
 	return($html);
 };
 
+db_connect();
 
 if ($submit) {
 	echo '<head><title>VMPS Webquery</title></head><body>';
