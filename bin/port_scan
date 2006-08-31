@@ -5,6 +5,19 @@
  *
  * Long description for file:
  * Learn open ports from equipments allowed
+ * Currently it has 3 modes of operation:
+ * Normal: Without parameters
+ *    Will get ips from devices allowed in the network and will scan them
+ * Scannow: With the parameter "--scannow"
+ *    Will get ips which have the scannow value set to 1 no matter if
+ *    they are allowed in the network or not
+ * Manual: 
+ *    Every parameter passed through the command line will be taken
+ *    as an ip to be scanned. No to be used in combination with the 
+ *    "--scannow" parameter
+ *
+ * Important: You have to define first networks to scan in the 
+ *    nac_netsallowed table
  *
  * PHP version 5
  *
@@ -40,6 +53,28 @@ message("Doing port_scan to sytems... Please wait...\n");
 debug1("port_scan started");
 
 $scan_results=$scan_directory."/scan.xml";   	//Scan file
+debug1("Scan file: $scan_results");		//Parameters from port_scan.inc
+debug1("Nmap flags: $nmap_flags");
+if (($what_units_time<0)||($what_units_time>6)||($what_units_time==2))
+   $string="$time_threshold hours";
+else if ($what_units_time==0)
+   $string="$time_threshold seconds";
+else if ($what_units_time==1)
+   $string="$time_threshold minutes";
+else if ($what_units_time==3)
+   $string="$time_threshold days";
+else if ($what_units_time==4)
+   $string="$time_threshold weeks";
+else if ($what_units_time==5)
+   $string="$time_threshold months";
+else if ($what_units_time==6)
+   $string="$time_threshold years";
+debug1("Last_seen threshold: $string");
+if ($argc==1)				//Running mode
+   debug1("Running mode: Normal");
+else if ($flagscannow)
+   debug1("Running mode: Scannow");
+else debug1("Running mode: Manual"); 
 $list=scan($scan_results,$nmap_flags);		//Scan network with those flags	
 $var=parse_scanfile($scan_results,$list);		//Parse the xml file
 if ($var['equipments']>0)			
@@ -172,7 +207,6 @@ function check_existent($data) 	//This function will check info concerning one h
          else
          {
             update_queries("$ip has changed its MAC since $db_timestamp. New MAC is $mac\n",'m');
-            //debug1($queries['message'][$queries['messages']]);
             $mac_changed++;
          }
       }
@@ -185,13 +219,13 @@ function check_existent($data) 	//This function will check info concerning one h
          }
          else if ((strcasecmp($db_os,'NULL')!=0)&&(strcasecmp($os,'NULL')==0))
          {
-            update_queries("No new MAC info for $ip this time\n",'m');
+            //update_queries("No OS info yet for $ip this time\n",'m');
             $os=$db_os;
          }
          else
          {
-            update_queries("$ip has changed its OS since $db_timestamp. Now is using $os\n",'m');
-            //debug1($queries['message'][$queries['messages']]);  //It is not very often that a host changes its OS
+            if (strcasecmp($db_os,'Unreachable')!=0)
+               update_queries("$ip has changed its OS since $db_timestamp. Now is using $os\n",'m');
             $os_changed++;
          }
       }
@@ -314,7 +348,6 @@ function check_existent($data) 	//This function will check info concerning one h
                   $add_prot[$add_counter]=$protocol[$position[$i]];
                   $add_banner[$add_counter]=$banner[$position[$i]];
                   update_queries('New port open ('.$add_port[$add_counter].'/'.$add_prot[$add_counter].") on host $ip.\n",'m');
-	          //debug1($queries['message'][$queries['messages']]);
                   check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter]);
                   $add_counter++;
                }
@@ -331,7 +364,6 @@ function check_existent($data) 	//This function will check info concerning one h
                   $remove_port[$remove_counter]=$result[$position[$i]];
                   $remove_prot[$remove_counter]=$db_protocol[$position[$i]];
                   update_queries('Port ('.$remove_port[$remove_counter].'/'.$remove_prot[$remove_counter].") on host $ip no longer open since ".$db_porttstmp[$position[$i]]."\n",'m');
-	          //debug1($queries['message'][$queries['messages']]);
                   $remove_counter++;
                }
             }
@@ -363,7 +395,6 @@ function check_existent($data) 	//This function will check info concerning one h
 			$update_prot[$update_counter]=$protocol[$i];
 			$update_banner[$update_counter]=$banner[$xml_position[$i]];
  			update_queries("Service $service(".$port[$xml_position[$i]].'/'.$protocol[$i].") on host $ip has changed since ".$db_porttstmp[$db_position[$i]].'. Was using '.$db_banner[$db_position[$i]].' but now is using '.$banner[$xml_position[$i]]."\n",'m');
-			//debug1($queries['message'][$queries['messages']]);
 			$update_counter++;
 		     }
                   }
@@ -377,7 +408,6 @@ function check_existent($data) 	//This function will check info concerning one h
                      $add_prot[$add_counter]=$prot_res[$keys_result[$i]];
                      $add_banner[$add_counter]=$string[$keys_result[$i]];
                      update_queries('New port open ('.$add_port[$add_counter].'/'.$add_prot[$add_counter].") on host $ip.\n",'m');
-		     //debug1($queries['message'][$queries['messages']]);
                      check_service($ip,$add_port[$add_counter],$add_prot[$add_counter],$add_banner[$add_counter]);
                      $add_counter++;
                   }
@@ -410,7 +440,6 @@ function check_existent($data) 	//This function will check info concerning one h
                      $remove_port[$remove_counter]=$result[$keys_result[$i]];
                      $remove_prot[$remove_counter]=$prot_res[$keys_result[$i]];
                      update_queries('Port ('.$remove_port[$remove_counter].'/'.$remove_prot[$remove_counter].") on host $ip no longer open since ".$tstmp[$keys_result[$i]]."\n",'m');
-		     //debug1($queries['message'][$queries['messages']]);
                      $remove_counter++;
                   }
                }
@@ -431,6 +460,12 @@ function check_existent($data) 	//This function will check info concerning one h
             $query=sprintf("update nac_openports set banner='%s',timestamp='%s' where host='%d' and port='%s' and protocol='%s';",$update_banner[$i],$timestamp,$id,$update_port[$i],$update_prot[$i]);
 	    update_queries($query,'q');
 	 }
+         if ($add_counter)
+            update_queries("Number of new ports open on host $ip: $add_counter",'m');
+         if ($remove_counter)
+            update_queries("Number of old ports closed on host $ip: $remove_counter",'m');
+         if ($update_counter)
+            update_queries("Number of updated services on host $ip: $update_counter",'m');
       }
    }
 }
@@ -486,7 +521,9 @@ function add_entry($data)	//A new host in our network that needs to be added to 
             $query=sprintf("insert into nac_openports values ('%s','%s','%s','%s','%s');",$port,$protocol,$id,$banner,$timestamp);
             execute_query($query); 
          }
-      } 
+      }
+      update_queries($data['ports']." ports open on host ".$data['ip']."(".$data[
+'hostname'].")",'m'); 
    }
    return($queries);
 }
@@ -501,6 +538,7 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
       debug1("Scanning host ".$list['ip'][$i]);
       $hosts.=" ".$list['ip'][$i];
    }
+   debug1("Total number of hosts to scan: ".$list['counter']);
    $scan.=$hosts;		//Now our command line is complete
    syscall($scan);		//Scan
    return($list);
@@ -545,7 +583,7 @@ function get_ips()	//This function will get some ips to scan
          $devices['hostname'][$counter]=$result['name'];
          $counter++;
          $query="update systems set scannow=0 where r_ip='".$result['r_ip']."';";
-         update_queries($query,'q');
+         execute_query($query);
          logit('Nmap scan-now of ' . $result['r_ip'] . ' started');
       }
    }
@@ -608,11 +646,14 @@ function get_ips()	//This function will get some ips to scan
       $counter=0;
       $number=0;
       check_and_abort("Nothing to scan. No networks defined in nac_netsallowed. Aborting...",$res1);
+      debug1("Networks defined in nac_netsallowed");
       while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
       {
          $network[$number]=$result1['network'];
+         debug1($result1['network']);
          $number++;
       }
+      debug1("Number of networks defined in nac_netsallowed: $number");
       for ($l=0;$l<$devices['counter'];$l++)
       {
          $candidate=0;
@@ -743,6 +784,8 @@ function date_diff($date1, $date2,$what) //Time difference between the timestamp
 
 function parse_scanfile($scan_file,$list)
 {
+   global $flagscannow;
+   $timestamp=date('Y-m-d H:i:s');
    $info=array();
    if (file_exists($scan_file))
    {
@@ -753,6 +796,32 @@ function parse_scanfile($scan_file,$list)
       {
          $i=0;
          $xml = simplexml_load_string($file_loaded); #Picking info from XML file
+         if (!isset($xml->host))
+         {
+            for ($i=0;$i<$list['counter'];$i++)
+            {
+               debug1($list['ip'][$i]." is down\n");
+               logit($list['ip'][$i]." is down\n");
+            }
+            if ($flagscannow) //Lets set os=Unreachable to those devices which are present in the nac_hostscanned table
+            {
+               for ($i=0;$i<$list['counter'];$i++) //Grabs devices' ids
+               {
+                  if ($i==0)
+                     $query="select id from nac_hostscanned where ip='".$list['ip'][$i]."'";
+                  else
+                     $query.=" or ip='".$list['ip'][$i]."'";
+               }
+               $query.=";";
+               $res=execute_query($query);
+               while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
+               {
+                  $query="update nac_hostscanned set os='Unreachable', timestamp='$timestamp' where id=".$result['id'].";";
+                  execute_query($query);
+               }
+            }
+            check_and_abort("No host was up. Quitting...\n",0);
+         }
          foreach($xml->host as $host) 
          {
             $ip_info=$host->address[0];
@@ -836,6 +905,38 @@ function parse_scanfile($scan_file,$list)
    }
    else check_and_abort("File $scan_file not found\n",0);
    $info['equipments']=$i;
+   if (($flagscannow)||($debug_flag1))
+   {
+      $temp="";
+      for ($j=0;$j<$i;$j++)
+      {
+         $temp[$j]=$info[$j]['ip'];
+         debug1($temp[$j]." is up");
+      }
+      if (isset($temp)&&is_array($temp))
+         if (isset($list)&&is_array($list))
+            $hosts_down=array_diff($list['ip'],$temp);
+      foreach($hosts_down as $down)
+      {
+         debug1($down." is down\n");
+         logit($down." is down\n");
+      }
+      for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
+      {
+         if ($i==0)
+            $query="select id from nac_hostscanned where ip='".$list['ip'][$i]."'";
+         else
+            $query.=" or ip='".$list['ip'][$i]."'";
+      }
+      $query.=";";
+      $res=execute_query($query);
+      while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
+      {
+         $query="update nac_hostscanned set os='Unreachable', timestamp='$timestamp' where id=".$result['id'].";";
+         execute_query($query);
+      }
+   }
+   debug1("Total number of hosts up: ".$info['equipments']);
    return($info);
 }
 ?>
