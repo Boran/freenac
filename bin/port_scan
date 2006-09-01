@@ -34,13 +34,17 @@
  *
  */
 
+check_prerequisites();
 include_once "./funcs.inc";
 include_once "../etc/port_scan.inc";
+$output=TRUE;
+message("Doing port_scan to sytems... Please wait...\n");
+debug1("port_scan started");
+check_requirements();
 
+//If we get up to this point, life is good
 define_syslog_variables();
 openlog("port_scan", LOG_PID , LOG_LOCAL5);
-
-$output=TRUE;
 $queries['number']=0;
 $queries['messages']=0;
 $flagscannow=0;
@@ -49,8 +53,6 @@ for ($i=0;$i<$argc;$i++)
       $flagscannow++;
 if ($flagscannow)
    $output=FALSE;
-message("Doing port_scan to sytems... Please wait...\n");   
-debug1("port_scan started");
 
 $scan_results=$scan_directory."/scan.xml";   	//Scan file
 debug1("Scan file: $scan_results");		//Parameters from port_scan.inc
@@ -83,6 +85,92 @@ else
    $var['equipments']=0;
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
+
+function check_requirements()  //Checks for required functions and tables structure
+{
+   global $scan_directory, $time_threshold, $what_units_time,$nmap_flags;
+   $functions=get_defined_functions();
+   $functions=$functions['user'];
+   if (!in_array('debug1',$functions))
+   {
+      echo "Function debug1 not defined in funcs.inc\n";
+      exit();
+   }
+   if (!in_array('logit',$functions))
+   {
+      echo "Function logit not defined in funcs.inc\n";
+      exit();
+   }
+   if (!in_array('db_connect',$functions))
+      check_and_abort("Function db_connect not defined in funcs.inc\n",0);
+   if (!in_array('syscall',$functions))
+      check_and_abort("Function syscall not defined in funcs.inc\n",0);
+   if (!in_array('normalise_mac',$functions))
+      check_and_abort("Function normalise_mac not defined in funcs.inc\n",0);
+   if (!isset($scan_directory))
+      check_and_abort("Var \$scan_directory not defined in port_scan.inc\n",0);
+   if (!is_dir($scan_directory))
+        check_and_abort("Required directory $scan_directory doesn't exist\n",0);
+   if (!isset($time_threshold))
+      check_and_abort("Var \$time_threshold not defined in port_scan.inc\n",0);
+   if (!isset($what_units_time))
+     check_and_abort("Var \$what_units_time not defined in port_scan.inc\n",0);
+   $query="describe systems;";
+   $res=execute_query($query);
+   check_and_abort("Please make sure you have properly installed FreeNAC\n",$res);
+   $query="describe nac_hostscanned;";
+   $res=execute_query($query);
+   check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
+   $query="describe nac_hostscanned;";
+   $res=execute_query($query);
+   check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
+   $query="describe nac_openports;";
+   $res=execute_query($query);
+   check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
+   $query="describe nac_netsallowed;";
+   $res=execute_query($query);
+   check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
+   $query="describe nac_servicestcp;";
+   $res=execute_query($query);
+   check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
+   $query="describe nac_servicesudp;";
+   $res=execute_query($query);
+   check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
+   $tmp=syscall("nmap | grep http");
+   $tmp=explode(" ",$tmp);
+   $nmap_string=$tmp[0];
+   $nmap_version=$tmp[1];
+   if (isset($nmap_string)&&(strcasecmp($nmap_string,"nmap")!=0))
+      check_and_abort("Nmap seems not to be installed in your system\n",0);
+   if (isset($nmap_version)&&($nmap_version<4.11))
+      check_and_abort("You need a newer version of nmap\n",0);
+   if (!isset($nmap_flags))
+     check_and_abort("Var \$nmap_flags not defined in port_scan.inc\n",0);
+   $libxml=syscall("php -i | grep libXML | grep -i version");
+   $libxml=explode("</td>",$libxml);
+   $libxml_string=explode("\">",$libxml[0]);
+   $libxml_string=$libxml_string[1];
+   $libxml_version=explode("\">",$libxml[1]);
+   $libxml_version=$libxml_version[1];
+   if (isset($libxml_string)&&(strripos($libxml_string,"libxml")===FALSE))
+      check_and_abort("libXML seems not to be installed in your system\n",0);
+   if ($libxml_version<2.6)
+      check_and_abort("You need a newer version of libXML\n",0);
+}
+
+function check_prerequisites() //Check for required file structure
+{
+   if (!file_exists("../funcs.inc"))
+   {
+      echo "Required file funcs.inc doesn't exist\n";
+      exit();
+   }
+   if (!file_exists("../etc/port_scan.inc"))
+   {
+      echo "Required file ../etc/port_scan.inc doesn't exist";
+      exit();
+   }
+}
 
 function message($string)
 {
@@ -565,6 +653,21 @@ function check_and_abort($message,$resource)	//This function checks if there is 
    }
 }
 
+function valid_ip($ip)
+{
+   if (ereg("^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$",$ip,$res))
+   {
+      for($i=1;$i<5;$i++)
+        if($res[$i]>255)
+          return FALSE;
+   }
+   else 
+   {
+      return FALSE;
+   }
+   return TRUE;
+}
+
 function get_ips()	//This function will get some ips to scan
 {
    global $what_units_time, $time_threshold, $argc, $argv,$flagscannow,$queries;
@@ -574,13 +677,23 @@ function get_ips()	//This function will get some ips to scan
    $counter=0;
    if (($argc==2)&&($argv[1]=="--scannow"))
    {
-      $query="select r_ip,mac,name from systems where scannow=1;";
+      $query="select r_ip,mac,name from systems where scannow=1 and r_ip!='NULL';";
       $res=execute_query($query);
+      check_and_abort("No systems have the flag \"scannow\" in the systems table\n",$res); 
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       {
-         $devices['ip'][$counter]=$result['r_ip'];
-         $devices['mac'][$counter]=$result['mac'];
-         $devices['hostname'][$counter]=$result['name'];
+         if (empty($result['r_ip']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['ip'][$counter]=$result['r_ip'];
+         if (empty($result['mac']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['mac'][$counter]=$result['mac'];
+         if (empty($result['name']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['hostname'][$counter]=$result['name'];
          $counter++;
          $query="update systems set scannow=0 where r_ip='".$result['r_ip']."';";
          execute_query($query);
@@ -592,20 +705,33 @@ function get_ips()	//This function will get some ips to scan
       if ($flagscannow)
          check_and_abort("The flag \"--scannow\" is not compatible with the parameters specified\n",0);
       for ($i=1;$i<$argc;$i++)
+      if (!valid_ip($argv[$i]))
+         check_and_abort("One or more IPs from the command line are not well defined as IPv4",0);
+      for ($i=1;$i<$argc;$i++)
       {
          $device=validate($argv[$i]);
          if ($i==1)
-            $query="select r_ip,mac,name from systems where r_ip='$device'";
+            $query="select r_ip,mac,name from systems where r_ip!='NULL' and r_ip='$device'";
          else
             $query.=" or r_ip='$device'";
       }
       $query.=';';
       $res=execute_query($query);
+      check_and_abort("IPs specified are not part of the systems table\n",$res);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       {
-         $devices['ip'][$counter]=$result['r_ip'];
-         $devices['mac'][$counter]=$result['mac'];
-         $devices['hostname'][$counter]=$result['name'];
+         if (empty($result['r_ip']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['ip'][$counter]=$result['r_ip'];
+         if (empty($result['mac']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['mac'][$counter]=$result['mac'];
+         if (empty($result['name']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['hostname'][$counter]=$result['name'];
          $counter++;
       }
       for ($i=1;$i<$argc;$i++)
@@ -616,27 +742,48 @@ function get_ips()	//This function will get some ips to scan
                $there++;   
          if (!$there)
          {
-            $devices['ip'][$counter]=$argv[$i];
-            $devices['mac'][$counter]='NULL';
-            $devices['hostname'][$counter]='NULL';
+            if (empty($result['r_ip']))
+               check_and_abort("Illegal value found in systems table.\n",0);
+            else
+               $devices['ip'][$counter]=$result['r_ip'];
+            if (empty($result['mac']))
+               check_and_abort("Illegal value found in systems table.\n",0);
+            else
+               $devices['mac'][$counter]=$result['mac'];
+            if (empty($result['name']))
+               check_and_abort("Illegal value found in systems table.\n",0);
+            else
+               $devices['hostname'][$counter]=$result['name'];
             $counter++;
          }
       }
    }   
    else if ($argc==1)
    {
-      $query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1;";
+      $query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1 and lastseen!='NULL';";
       $res=execute_query($query);
-      check_and_abort("No ip addresses to scan found in systems table. Aborting...",$res);
+      check_and_abort("No ip addresses to scan found in systems table.\n",$res);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       {
-         $devices['ip'][$counter]=$result['r_ip'];
-         $devices['mac'][$counter]=$result['mac'];
-         $devices['hostname'][$counter]=$result['name'];
-         $devices['lastseen'][$counter]=$result['lastseen'];
+         if (empty($result['r_ip']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['ip'][$counter]=$result['r_ip'];
+         if (empty($result['mac']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['mac'][$counter]=$result['mac'];
+         if (empty($result['name']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['hostname'][$counter]=$result['name'];
+         if (empty($result['lastseen']))
+            check_and_abort("Illegal value found in systems table.\n",0);
+         else
+            $devices['lastseen'][$counter]=$result['lastseen'];
          $counter++;
       }
-   }   
+   } 
    $devices['counter']=$counter;
    //We got some ips, let's see which ones are candidates to be scanned according to the info provided in the nac_netsallowed table
    $query='select network from nac_netsallowed;'; 
@@ -645,7 +792,7 @@ function get_ips()	//This function will get some ips to scan
    {
       $counter=0;
       $number=0;
-      check_and_abort("Nothing to scan. No networks defined in nac_netsallowed. Aborting...",$res1);
+      check_and_abort("Nothing to scan. No networks defined in nac_netsallowed.\n",$res1);
       debug1("Networks defined in nac_netsallowed");
       while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
       {
@@ -695,7 +842,7 @@ function get_ips()	//This function will get some ips to scan
                   if ($ip[$k]==$net[$k]) //Exact match
                      $candidate++;
             }
-            $there=0; 
+            $there=0;
 	    if (($candidate==4)&&($argc==1)) //This is an ip which is a good candidate to be scanned and no parameters present on the command line
             {
                $lastseen=$devices['lastseen'][$l];
@@ -746,9 +893,7 @@ function get_ips()	//This function will get some ips to scan
       }
       $list['counter']=$counter;
       if (($counter==0)&&(!$flagscannow))
-         check_and_abort("IPs didn't match criteria (check nac_netsallowed or your port_scan.inc file). Quitting...\n",0);
-      else if (($counter==0)&&($flagscannow))
-         check_and_abort("No systems have the flag \"scannow\" in the systems table\n",0);
+         check_and_abort("IPs didn't match criteria (check nac_netsallowed or your port_scan.inc file).\n",0);
    }   
    return($list);  
 }
@@ -820,7 +965,7 @@ function parse_scanfile($scan_file,$list)
                   execute_query($query);
                }
             }
-            check_and_abort("No host was up. Quitting...\n",0);
+            check_and_abort("No host was up.\n",0);
          }
          foreach($xml->host as $host) 
          {
