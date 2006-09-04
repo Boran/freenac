@@ -1,8 +1,11 @@
 <?php
+$which_nmap="/usr/local/bin/nmap";      #Location of your nmap binary file
+                                        #You have to put here whatever output
+                                        #you get from 'which nmap' in the
+                                        #command line
 #$nmap_flags="-A -sS -sU -P0 -R";	#Default, full scan (TCP & UDP, banner grabbing, host resolution
-$nmap_flags="-A -sS -R";		#No UDP
+$nmap_flags="-A -sS -R";		#No UDP and pings to check if a host is alive
 $scan_directory="/opt/vmps/scan/";	#Directory where the output from nmap will be placed
-#$debug_flag1=TRUE;			#Debugging level 1. Sends messages to standard output
 $debug_flag1=FALSE;			#Debugging level 1. Sends messages to standard output
 $debug_to_syslog=FALSE;		        #Set it to TRUE if you want all the messages in syslog
 $time_threshold=24;			#Hosts which were last seen before this threshold will be scanned

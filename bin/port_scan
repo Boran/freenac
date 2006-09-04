@@ -88,7 +88,7 @@ debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 
 function check_requirements()  //Checks for required functions and tables structure
 {
-   global $scan_directory, $time_threshold, $what_units_time,$nmap_flags;
+   global $scan_directory, $time_threshold, $what_units_time,$nmap_flags,$which_nmap;
    $functions=get_defined_functions();
    $functions=$functions['user'];
    if (!in_array('debug1',$functions))
@@ -107,6 +107,8 @@ function check_requirements()  //Checks for required functions and tables struct
       check_and_abort("Function syscall not defined in funcs.inc\n",0);
    if (!in_array('normalise_mac',$functions))
       check_and_abort("Function normalise_mac not defined in funcs.inc\n",0);
+   if (!isset($which_nmap))
+      check_and_abort("Var \$which_nmap not defined in port_scan.inc\n",0);
    if (!isset($scan_directory))
       check_and_abort("Var \$scan_directory not defined in port_scan.inc\n",0);
    if (!is_dir($scan_directory))
@@ -136,17 +138,17 @@ function check_requirements()  //Checks for required functions and tables struct
    $query="describe nac_servicesudp;";
    $res=execute_query($query);
    check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
-   $tmp=syscall("nmap | grep http");
+   $tmp=syscall($which_nmap." --version | grep nmap");
    $tmp=explode(" ",$tmp);
    $nmap_string=$tmp[0];
-   $nmap_version=$tmp[1];
+   $nmap_version=$tmp[2];
    if (isset($nmap_string)&&(strcasecmp($nmap_string,"nmap")!=0))
       check_and_abort("Nmap seems not to be installed in your system\n",0);
    if (isset($nmap_version)&&($nmap_version<4.11))
       check_and_abort("You need a newer version of nmap\n",0);
    if (!isset($nmap_flags))
      check_and_abort("Var \$nmap_flags not defined in port_scan.inc\n",0);
-   $libxml=syscall("php -i | grep libXML | grep -i version");
+   $libxml=syscall("/usr/bin/php -i | grep libXML | grep -i version");
    $libxml=explode("</td>",$libxml);
    $libxml_string=explode("\">",$libxml[0]);
    $libxml_string=$libxml_string[1];
@@ -618,7 +620,9 @@ function add_entry($data)	//A new host in our network that needs to be added to 
 
 function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specified in the file "port_scan.inc" and the location for our XML file
 {
-   $scan="nmap ".$nmap_flags." -oX ".$xml_file." ";
+   global $which_nmap;
+   syscall("touch ".$xml_file);	//Just to avoid an error while running from cron
+   $scan=$which_nmap." ".$nmap_flags." -oX ".$xml_file." ";
    $list=get_ips();		//We need some IPs to scan
    for ($i=0;$i<$list['counter'];$i++) //Put those ips in a string
    {
