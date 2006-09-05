@@ -34,7 +34,6 @@
  *
  */
 
-check_prerequisites();
 include_once "./funcs.inc";
 include_once "../etc/port_scan.inc";
 $output=TRUE;
@@ -158,20 +157,6 @@ function check_requirements()  //Checks for required functions and tables struct
       check_and_abort("libXML seems not to be installed in your system\n",0);
    if ($libxml_version<2.6)
       check_and_abort("You need a newer version of libXML\n",0);
-}
-
-function check_prerequisites() //Check for required file structure
-{
-   if (!file_exists("../funcs.inc"))
-   {
-      echo "Required file funcs.inc doesn't exist\n";
-      exit();
-   }
-   if (!file_exists("../etc/port_scan.inc"))
-   {
-      echo "Required file ../etc/port_scan.inc doesn't exist";
-      exit();
-   }
 }
 
 function message($string)
@@ -300,7 +285,7 @@ function check_existent($data) 	//This function will check info concerning one h
             $mac_changed++;
          }
       }
-      if (!empty($os)&&empty($db_os)&&(strcasecmp($os,$db_os)!=0))		//Info about its OS
+      if (!empty($os)&&!empty($db_os)&&(strcasecmp($os,$db_os)!=0))		//Info about its OS
       {
          if ((strcasecmp($db_os,'NULL')==0)&&(strcasecmp($os,'NULL')!=0))
          {
@@ -467,7 +452,7 @@ function check_existent($data) 	//This function will check info concerning one h
 	       $j=0;
 	       $result='';
 	       for ($i=0;$i<$index;$i++)
-   	          if (strcasecmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
+   	          if (!empty($protocol[$xml_position[$i]])&&!empty($db_protocol[$db_position[$i]])&&strcasecmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
    	          {
                      $result[$j]=$xml_result[$xml_position[$i]]; //This is a new service since we have another port number but with different protocol
 	  	     $prot_res[$j]=$protocol[$xml_position[$i]];
@@ -477,7 +462,7 @@ function check_existent($data) 	//This function will check info concerning one h
                   else
                   {
                      check_service($ip,$xml_result[$xml_position[$i]],$protocol[$i],$banner[$xml_position[$i]]); //Let's check if the service is running on its default port
-                     if (strcasecmp($banner[$xml_position[$i]],$db_banner[$db_position[$i]])!=0) //Now let's check if the service has changed
+                     if (!empty($banner[$xml_position[$i]])&&!empty($db_banner[$db_position[$i]])&&strcasecmp($banner[$xml_position[$i]],$db_banner[$db_position[$i]])!=0) //Now let's check if the service has changed
                      {
                         $service=explode(':',$db_banner[$db_position[$i]]);
 			$service=$service[0];
@@ -514,7 +499,7 @@ function check_existent($data) 	//This function will check info concerning one h
                $j=0;
                $result='';
                for ($i=0;$i<$index;$i++)
-                  if (strcasecmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
+                  if (!empty($protocol[$xml_position[$i]])&&!empty($db_protocol[$db_position[$i]])&&strcasecmp($protocol[$xml_position[$i]],$db_protocol[$db_position[$i]] )!=0)
                   {
                      $result[$j]=$db_result[$db_position[$i]]; //If protocol is different this time, delete it
                      $prot_res[$j]=$db_protocol[$db_position[$i]];
@@ -569,8 +554,8 @@ function check_service($ip,$port,$protocol,$banner)  //With this function we che
       $result=mysql_fetch_array($res,MYSQL_ASSOC);
       $service=explode(':',$banner); 
       $service=$service[0];	//We are interested only in the name of the service
-      if (!empty($service)&&(!substr_count(strtolower($service),strtolower($result['service']))))
-         if (!empty($result['service'])&&(!substr_count(strtolower($result['service']),strtolower($service))))
+      if (!empty($service)&&!empty($result['service'])&&(!substr_count(strtolower($service),strtolower($result['service']))))
+         if (!empty($result['service'])&&!empty($service)&&(!substr_count(strtolower($result['service']),strtolower($service))))
          {
             update_queries("Service $service ($port/$protocol) on scanned host $ip is using a port which is reserved for ".$result['service']."\n",'m');   
          }
@@ -816,11 +801,11 @@ function get_ips()	//This function will get some ips to scan
             $candidate=4-$octets;
             for ($k=0;$k<$octets;$k++)
             {
-               if ($quotes=substr_count($net[$k],',')) //Check for separate ips within this octet
+               if (!empty($net[$k])&&$quotes=substr_count($net[$k],',')) //Check for separate ips within this octet
                {
                   $delimiters=explode(',',$net[$k]);
                   for ($j=0;$j<=$quotes;$j++)
-	             if (substr_count($delimiters[$j],'-')==1)  //Now check if there is a range in this octet
+	             if (!empty($delimeters[$j])&&(substr_count($delimiters[$j],'-')==1))  //Now check if there is a range in this octet
                      {
                         $range=explode('-',$delimiters[$j]);
                         $lowerbound=$range[0];
@@ -832,7 +817,7 @@ function get_ips()	//This function will get some ips to scan
                         if ($ip[$k]==$delimiters[$j]) //Exact match in this octet
 		           $candidate++;
                }    
-               else if (substr_count($net[$k],'-')==1) //A range of ips
+               else if (!empty($net[$k])&&(substr_count($net[$k],'-')==1)) //A range of ips
                {
                   $range=explode('-',$net[$k]);
                   $lowerbound=$range[0];
@@ -840,7 +825,7 @@ function get_ips()	//This function will get some ips to scan
                   if (($ip[$k]>=$lowerbound)&&($ip[$k]<=$upperbound))
 	             $candidate++;   
                }
-               else if (substr_count($net[$k],'*')==1) //All ips in this octet
+               else if (!empty($net[$k])&&(substr_count($net[$k],'*')==1)) //All ips in this octet
                   $candidate++;
                else
                   if ($ip[$k]==$net[$k]) //Exact match
@@ -1022,7 +1007,7 @@ function parse_scanfile($scan_file,$list)
                foreach($ports_info->port as $port)		//Ports
                {
 	          $temp=$port->state->attributes();
-                  if (strcasecmp((string)$temp->state,"open")==0)
+                  if (!empty($temp)&&strcasecmp((string)$temp->state,"open")==0)
                   {
                      $temp=$port->attributes();
                      $info[$i]['port'][$j]['protocol']=(string)$temp->protocol;	#Protocol
