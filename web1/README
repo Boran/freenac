@@ -1,9 +1,33 @@
-OpenNAC Web Interface
+NAC Web Interface
 
-Version 0.1, 29.05.06/sb
+Version 0.1, 05.09.06/sb
+
+
+To install get the latest sources:
+  svn xxxx
+
+Install apache.
+
+Then configure apache:
+- create /etc/apache2/conf.d/vmps.conf
+  Alias /vmps /opt/vmps/web1
+        <Directory /opt/vmps/web1/>
+          Options none
+          Order deny,allow
+          #allow from 127.0.0.1
+          #allow from 10.85.
+          allow from all
+        </Directory>
+
+- restart apache
+    rcpache restart
+
+- point the webbrowser at http://SERVER/vmps
+
 
 To do:
 - describe installtion
 - dependancies
 - usage
+- access control on the Apache server (IP address or Username), if needed
 
