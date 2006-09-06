@@ -30,4 +30,4 @@ To do:
 - dependancies
 - usage
 - access control on the Apache server (IP address or Username), if needed
-
+- fix graph generator
