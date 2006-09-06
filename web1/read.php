@@ -63,7 +63,7 @@ if ($submit) {
 // if there is an actual query, display the host
 	if ($notnull) {
 		$where .= '(1 = 1)';
-		echo display_host_table($where);
+		echo print_host_table($where);
 		echo "\n<p><hr><p>\n";
     } else {
 		echo "<i>You cannot display the entire database. Please limit your query.</i>\n";
