@@ -36,9 +36,12 @@ foreach ($fields as $field) {
 };
 $submit = $_GET['submit'];
 
+
+// if the user submitted something, process and display
 if ($submit) {
 	echo '<head><title>VMPS Webquery</title></head><body>';
 
+// make the query
 	foreach ($fields as $field) {
 		$fieldname = $field[0];
 		$fieldvalue = validate_input($$fieldname);
@@ -56,54 +59,17 @@ if ($submit) {
 		};
 	};
 
+
+// if there is an actual query, display the host
 	if ($notnull) {
 		$where .= '(1 = 1)';
-		$query = "SELECT * FROM systems WHERE $where ;";
-		//echo $query.'<br>';
-		$mysql_res = mysql_query($query);
-		if (mysql_num_rows($mysql_res) > 0) {
-			echo "<table cellspacing=0 cellpadding=5 border=1>\n";
-			echo "<tr><th>OS<td>Nmap<td>ePO<th>Hostname<th>Owner<th>Inventar<th>MAC<th>Last IP<th>VLAN<th>Standard<br>location<th colspan=2>LastSeen\n";
-			while ($row = mysql_fetch_array($mysql_res,MYSQL_ASSOC)) {
-				echo '<tr bgcolor="'.get_vlan_color($row['vlan']).'">';
-				echo '<td align=center><img src="os/'.$row['os'].'.gif" border=0>';
-// extra details
-				$mac = $row['mac'];
-				echo '<td align=center>';
-				if (get_nmap_id($mac)) { echo 'X'; };
-
-				echo '<td align=center>';
-				if (mysql_num_rows(mysql_query("SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'")) > 0) { echo 'X'; };
-				
-// name => print details link
-				echo '<td><b><a href="display.php?single_host='.$row['mac'].'">';
-				echo $row['name'].'</a></b>';
-// owner => email link
-				echo '<td>';
-				  if ($row['description']) {
-					echo '<a href="mailto:'.get_user_email($row['description']).'" ';
-					echo 'title="'.user_tooltip($row['description']).'" ';
-					//echo '>'.$row['description']."</a>\n";
-					echo '>'.get_user_name($row['description'])."</a>\n";
-				  } else {
-					echo '<i>Unknown</i>';
-				  };
-				echo '<td>'.$row['inventar'];
-				echo '<td>'.$row['mac'];
-				echo '<td>'.$row['r_ip'];
-				echo '<td>'.get_vlan_descr($row['vlan']); // get_vlan_short(get_vlan_descr
-					if (! $row['building']) { $row['building'] = 'Ber-Omu93' ; };
-				echo '<td>'.$row['building'].' '.$row['office'];
-				echo '<td>'.get_location($row['switch'],$row['port']).'<td>'.$row['LastSeen'].'</font>';
-				echo "\n";
-			};
-			echo "</table>\n";
-		} else {
-			echo '<i>No record found</i>';
-		};
+		echo display_host_table($where);
+		echo "\n<p><hr><p>\n";
+    } else {
+		echo "<i>You cannot display the entire database. Please limit your query.</i>\n";
 	};
-	echo "\n<p><hr><p>\n";
-  };
+};
+
 
 //echo display_forms();
 
@@ -115,7 +81,7 @@ if ($submit) {
 		if ($field[2] == 'option') {
 			$html .= "<select name=\"$fieldname\">";
 			$funcname = 'display_'.$fieldname.'_select';
-			$html .= $funcname();
+			$html .= $funcname($$fieldname);
 			$html .= "</select>\n";
 		} else {
 			$html .= '<input type="text" name ="'.$field[0].'" value="'.$$fieldname.'">';
@@ -127,31 +93,7 @@ if ($submit) {
 
 echo $html;
 
-
-
-/*
-foreach ($fields as $field) {
-	$allnull = TRUE;
-	$fieldname = $field[0]
-	if ($$fieldname != '' {
-		$searchfields[$i] = $fieldname;
-		$allnull = FALSE;
-	};
-};
-
-if ((! $submit) || ($allnull)) {
-	echo display_forms();
-} else {
-	echo 'Search for ';
-	foreach ($searchfields as $field) {
-		$fieldname = $field[0];
-		$value = $$fieldname;
-		echo "<li>$fieldname = $value";
-	};
-};
-*/
-
-//echo '<script language="JavaScript" type="text/javascript" src="wz_tooltip.js"></script>';
-echo '</body></html>'
+vmps_footer(); 
+echo '</body></html>';
 
 ?>

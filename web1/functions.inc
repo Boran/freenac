@@ -116,7 +116,7 @@ function validate_webinput($string)
   return $string;
 }
 
-function display_os_select() {
+function display_os_select($selected) {
   global $connect;
   db_connect();
 
@@ -126,14 +126,16 @@ function display_os_select() {
   $html .= '<option value="">(any)</option>';
   while ($os = mysql_fetch_array($res)) {
     if ($os['value'] != '') {
-      $html .= "<option value=\"". $os['id']. '">';
+      $html .= "<option ";
+	  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+      $html .= "value=\"". $os['id']. '">';
       $html .= $os['value']. '</option>';
     };
   };
   return($html);
 };
 
-function display_description_select() {
+function display_description_select($selected) {
   global $connect;
   db_connect();
 
@@ -142,9 +144,10 @@ function display_description_select() {
 
   $html .= '<option value="">(any)</option>';
   while ($user = mysql_fetch_array($res)) {
-
     if ($user['Surname'] != '') {
-      $html .= "<option value=\"". $user['AssocNtAccount']. '">';
+      $html .= "<option ";
+	  if (($selected == $user['AssocNtAccount']) && $selected != '') { $html .= "selected "; };
+	  $html .= "value=\"". $user['AssocNtAccount']. '">';
       $html .= $user['Surname']. ' '. $user['GivenName'].', ';
       $html .= $user['Department']. '</option>';
     };
@@ -257,6 +260,51 @@ function get_switch_name($switch_ip) {
         };
 };
 
+function display_host_table($where) {
+		$query = "SELECT * FROM systems WHERE $where ;";
+//		echo $query.'<br>';
+		$mysql_res = mysql_query($query);
+		if (mysql_num_rows($mysql_res) > 0) {
+			$html .= "<table cellspacing=0 cellpadding=5 border=1>\n";
+			$html .= "<tr><th>OS<td>Nmap<td>ePO<th>Hostname<th>Owner<th>Inventar<th>MAC<th>Last IP<th>VLAN<th>Standard<br>location<th colspan=2>LastSeen\n";
+			while ($row = mysql_fetch_array($mysql_res,MYSQL_ASSOC)) {
+				$html .= '<tr bgcolor="'.get_vlan_color($row['vlan']).'">';
+				$html .= '<td align=center><img src="os/'.$row['os'].'.gif" border=0>';
+// extra details
+				$mac = $row['mac'];
+				$html .= '<td align=center>';
+				if (get_nmap_id($mac)) { $html .= 'X'; };
 
+				$html .= '<td align=center>';
+				if (mysql_num_rows(mysql_query("SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'")) > 0) { $html .= 'X'; };
+				
+// name => print details link
+				$html .= '<td><b><a href="display.php?single_host='.$row['mac'].'">';
+				$html .= $row['name'].'</a></b>';
+// owner => email link
+				$html .= '<td>';
+				  if ($row['description']) {
+					$html .= '<a href="mailto:'.get_user_email($row['description']).'" ';
+					$html .= 'title="'.user_tooltip($row['description']).'" ';
+					//$html .= '>'.$row['description']."</a>\n";
+					$html .= '>'.get_user_name($row['description'])."</a>\n";
+				  } else {
+					$html .= '<i>Unknown</i>';
+				  };
+				$html .= '<td>'.$row['inventar'];
+				$html .= '<td>'.$row['mac'];
+				$html .= '<td>'.$row['r_ip'];
+				$html .= '<td>'.get_vlan_descr($row['vlan']); // get_vlan_short(get_vlan_descr
+					if (! $row['building']) { $row['building'] = 'Ber-Omu93' ; };
+				$html .= '<td>'.$row['building'].' '.$row['office'];
+				$html .= '<td>'.get_location($row['switch'],$row['port']).'<td>'.$row['LastSeen'].'</font>';
+				$html .= "\n";
+			};
+			$html .= "</table>\n";
+		} else {
+			$html .= '<i>No record found</i>';
+		};
+	return($html);
+};
 
 ?>
