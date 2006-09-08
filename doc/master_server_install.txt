@@ -219,7 +219,7 @@ D. The read-only webgui uses a "readonly" user.
 
 
 
-4. OpenNAC install part #1:
+4. FreeNAC install part #1:
 ===========================
 Download and install /opt/nac
 
@@ -238,8 +238,8 @@ If you need to syncronise the user database with an external source, then try ea
 ===========================
 Now we get the vmps daemon going.
 
-Copy /etc/init.d/vmps from /opt/vmps/contrib
-  cp /opt/vmps/contrib/init.d/vmps /etc/init.d
+Copy /etc/init.d/vmps from /opt/nac/contrib/startup_init.d
+  cp /opt/nac/contrib/startup_init.d/vmps /etc/init.d
   ln -s /etc/init.d/vmps /usr/sbin/rcvmps
   chmod 750 /etc/init.d/vmps
   chkconfig vmps on
@@ -249,7 +249,8 @@ Copy /etc/init.d/vmps from /opt/vmps/contrib
   rcvmps start
   
 
-Copy /etc/init.d/vmps_lastseen from /opt/vmps/contrib
+Copy /etc/init.d/vmps_lastseen from /opt/nac/contrib/startup_init.d
+  cp /opt/nac/contrib/startup_init.d/vmps_lastseen /etc/init.d/
   ln -s /etc/init.d/vmps_lastseen /usr/sbin/rcvmps_lastseen
   chmod 750 /etc/init.d/vmps_lastseen
   chkconfig vmps_lastseen on
@@ -259,10 +260,10 @@ Copy /etc/init.d/vmps_lastseen from /opt/vmps/contrib
 
 
 Test purging of old devices (and watch syslog), then enable in cron:
-0   1   26 * *   /opt/vmps/purge_unknowns  
+0   1   26 * *   /opt/nac/bin/purge_unknowns  
 
 
-6. OpenNAC install part #3: monitoring
+6. FreeNAC install part #3: monitoring
 ===========================
 There are several monitoring scripts that need to be individually tested and enabled in root cron:
 
@@ -273,11 +274,11 @@ Create /secure and download following scripts:
 */3 *     * * *   /secure/check_disk 90 800
 2 6-18    * * 1-5 /usr/local/bin/filewatcher -c /etc/filewatcher.conf
 */10 6-22 * * *   /secure/monitor_processes.pl vmpsd_external proctst
-30   6-22 * * 1-5 /opt/vmps/monitor_allows.sh
-*/4 *     * * *   /opt/vmps/flap_detect
+30   6-22 * * 1-5 /opt/nac/bin/monitor_allows.sh
+*/4 *     * * *   /opt/nac/bin/flap_detect
 
 
-7. OpenNAC install: syslog pruning
+7. FreeNAC install: syslog pruning
 ===========================
 Enable syslog pruning and analyis:
 ci -l /etc/logrotate.d/syslog
@@ -285,20 +286,20 @@ cp /opt/vmps/contrib/logrotate.d/syslog /etc/logrotate.d/syslog
 
 
 
-8. OpenNAC install: backups
+8. FreeNAC install: backups
 ===========================
 Scripts for backups up the system in different ways to the second internal disk:
 Test these and enabled in root cron:
-0   3    * * 1-5 /opt/vmps/dump_ports
+0   3    * * 1-5 /opt/nac/bin/dump_ports
 0   3    * * *   /opt/vmps/backup_vmpslog | logger
 0   3    * * 1   /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
 0   3    * * 6   rdiff-backup  --exclude /media --exclude /sys --exclude /disk2 --exclude /proc  --exclude /mnt --print-statistics  / /disk2/backups/vmps0.rdiff;
 
 
-8. OpenNAC install: router integration
+8. FreeNAC install: router integration
 ===========================   
 Adapt the relevant lins in config.inc, then try route_mac_ip from the command line, possibly enabling the debug flags. Then add an entry to the root cron.
-*/6 *    * * *   /opt/vmps/router_mac_ip
+*/6 *    * * *   /opt/nac/bin/router_mac_ip
   
 
 
