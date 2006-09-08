@@ -17,7 +17,7 @@ include('functions.inc');
 ## DB connection
   $dbhost = 'localhost';
   $dbuser = 'readonly';    # 
-  $dbpass = 'PASSWORD1'
+  $dbpass = 'PASSWORD1';
   $dbname = 'inventory';
 
 ## vmpsdot.php
