@@ -63,7 +63,8 @@ if (($unknown_purge) && ($unknown_purge>10)) {
 
 ## Delete unknown system older than 2 Months
 ## a) First list & log what we delete
-$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
+#$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
+$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name LIKE '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
 
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }

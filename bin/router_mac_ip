@@ -36,8 +36,15 @@ $debug_to_syslog=TRUE;
 define_syslog_variables();              # not used yet, but anyway..
 openlog("router_mac_ip", LOG_PID, LOG_LOCAL5);
 
+// allow performance measurements
+   $mtime = microtime();
+   $mtime = explode(" ",$mtime);
+   $mtime = $mtime[1] + $mtime[0];
+   $starttime = $mtime;
+
 db_connect();
 global $connect, $core_routers, $router_mac_ip_ignore_ip, $router_mac_ip_ignore_mac, $router_snmpwalk;
+global $router_mac_ip_update_from_dns;
 
 
 if ( empty($core_routers) ) {   // no results, error?
@@ -45,6 +52,25 @@ if ( empty($core_routers) ) {   // no results, error?
    reporterr('info',"no routers specified in core_routers variable in config.inc");
    exit -1;
 }
+
+
+// Get the mac addresses of all unknown devices
+// for use the autoupdating of DNS names, see below
+if ( $router_mac_ip_update_from_dns ) {   // feature enabled?
+
+  #$sql="SELECT mac FROM systems WHERE name='unknown'";
+  $sql="SELECT mac FROM systems WHERE name LIKE '%unknown%'";
+  $result=mysql_query($sql,$connect);
+  if (!$result) { die('Invalid query: '.mysql_error()); }
+  $i=0;
+  $uk_mac=array();
+  while($row=mysql_fetch_row($result)){
+        $uk_mac[$i]=$row[0];
+        $i++;
+  }
+  debug1("router_mac_ip_update_from_dns: $i unknowns noted\n");
+}
+
 
 foreach (split(' ', $core_routers) as $router) {
  $count_updates=0;
@@ -87,26 +113,51 @@ foreach (split(' ', $core_routers) as $router) {
         #$rowcount=mysql_affected_rows($resource);   # why does this not work?
         $rowcount=mysql_affected_rows();
         #debug1(" rows $rowcount ");
-        if ($rowcount==1) {   # entry does not exist, 0 rows
+        if ($rowcount==1) {          # it worked
           debug1("$ip - $mac : updated in systems table");
           $count_updates++;
+
+          // if this mac has no associated name, try to get the fqdn for it
+          if ( $router_mac_ip_update_from_dns ) {   // feature enabled?
+            if (in_array($mac,$uk_mac)) {
+              $fqdn=gethostbyaddr($ip);
+              debug1("got $fqdn $ip $mac");
+              if($fqdn!=$ip) { // We got the host name, now update it
+                // strip domain name
+                list($hostname_only) = split('[.]', $fqdn);
+                $sql='UPDATE systems SET name=\''.$hostname_only.'\' WHERE mac=\''.$mac.'\'';
+                logit($sql);
+                logit("Changed name of $mac to its DNS name $hostname_only");
+                if (!mysql_query($sql,$connect)) { die('Invalid query: '.mysql_error()); }
+              }
+            }
+          }
 
         } else if ($rowcount==0) {   # entry does not exist, 0 rows
           #logit("$query");
           debug1("$ip - $mac : ignore");
 
-        } else if ($rowcount > 1) {   # entry does not exist, 0 rows
+        } else if ($rowcount > 1) {   # problem: duplicates
           #logit("$query");
-          debug1("$ip - $mac : not in systems table - ERROR");
+          debug1("$ip - $mac : duplicates in systems table - ERROR");
         }   
 
   }
  }
 
  # Don't write to VMPS table any more, its too noisy/frequent
- #reporterr('info',"Update $count_updates mac/ip tables from $router");
+ #reporterr('info',"Update $count_updates mac/ip tables from router $router");
  logit("Update $count_updates mac/ip tables from $router");
 }
+
+  // measure performance
+   $mtime = microtime();
+   $mtime = explode(" ",$mtime);
+   $mtime = $mtime[1] + $mtime[0];
+   $endtime = $mtime;
+   $totaltime = ($endtime - $starttime);
+   debug1("Time taken= ".$totaltime." seconds\n");
+   #logit("Time taken= ".$totaltime." seconds\n");
 
 ###
 ?>
