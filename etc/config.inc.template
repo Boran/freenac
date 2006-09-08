@@ -91,6 +91,8 @@
   $router_mac_ip_ignore_ip="/^(127\.0\.0|192\.168\.|193\.5\.232|193\.5\.237|193\.5\.238)/";
   $router_mac_ip_ignore_mac="/^(00d0\.0064\.d000)/";
   $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c PASSWORD4 ";    # SNMP Read
+  $router_mac_ip_update_from_dns=false;     # Auto-update system names from DNS for 'unknowns'?
+
 
 ## monitor_allows.sh
 #  $messagecount=50;
