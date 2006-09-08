@@ -168,7 +168,7 @@ Edit your httpd.conf to load the PHP module
   LoadModule php5_module modules/libphp5.so
 The path on the right hand
 side of the LoadModule statement must point to the path of the PHP
-module on your system.  The make install from above may have already
+module on your system.  Then "make install" from above may have already
 added this for you, but be sure to check.
 Also, tell Apache to parse certain extensions as PHP in httpd.conf
   AddType application/x-httpd-php .php .phtml
@@ -225,13 +225,8 @@ Download and install /opt/nac
 
 Adapt config.inc
 
-If you need to syncronise the user database with an external source, then try each of the user sync scripts and check syslog for errors.
-		If they work, enable then in cron:
-		0   3    * * 2   /opt/vmps/vmps_user; /opt/vmps/report_old_users
-		0   7    * * *   /opt/vmps/vmps_user_special;
-
-		At this stage The DB is working and PHP access to the DB. Syslog works too 
-		and you see messages there.
+At this stage The DB is working and PHP access to the DB. Syslog works too 
+and you see messages there.
 
 
 5. FreeNAC install part #2:
@@ -291,7 +286,6 @@ cp /opt/vmps/contrib/logrotate.d/syslog /etc/logrotate.d/syslog
 Scripts for backups up the system in different ways to the second internal disk:
 Test these and enabled in root cron:
 0   3    * * 1-5 /opt/nac/bin/dump_ports
-0   3    * * *   /opt/vmps/backup_vmpslog | logger
 0   3    * * 1   /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
 0   3    * * 6   rdiff-backup  --exclude /media --exclude /sys --exclude /disk2 --exclude /proc  --exclude /mnt --print-statistics  / /disk2/backups/vmps0.rdiff;
 
