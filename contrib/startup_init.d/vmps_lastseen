@@ -18,12 +18,12 @@
 
 
 mode=$1    # start or stop
-CMD='tail -f /var/log/messages |/opt/vmps/bin/vmps_lastseen'
+CMD='tail -f /var/log/messages |/opt/nac/bin/vmps_lastseen'
 
 case "$mode" in
   'start')
     # Start daemon
-    nohup tail -f /var/log/messages | /opt/vmps/bin/vmps_lastseen &
+    nohup tail -f /var/log/messages | /opt/nac/bin/vmps_lastseen &
     #echo $CMD
     #$CMD
     ;;
@@ -31,7 +31,7 @@ case "$mode" in
   'stop')
     #pkill ".*vmps_lastseen.**"
     #pkill -f "$CMD"
-    pkill -f "tail -f /var/log/messages | /opt/vmps/bin/vmps_lastseen"
+    pkill -f "tail -f /var/log/messages | /opt/nac/bin/vmps_lastseen"
     ;;
 
   'restart')
