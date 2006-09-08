@@ -147,16 +147,6 @@ function check_requirements()  //Checks for required functions and tables struct
       check_and_abort("You need a newer version of nmap\n",0);
    if (!isset($nmap_flags))
      check_and_abort("Var \$nmap_flags not defined in port_scan.inc\n",0);
-   $libxml=syscall("/usr/bin/php -i | grep libXML | grep -i version");
-   $libxml=explode("</td>",$libxml);
-   $libxml_string=explode("\">",$libxml[0]);
-   $libxml_string=$libxml_string[1];
-   $libxml_version=explode("\">",$libxml[1]);
-   $libxml_version=$libxml_version[1];
-   if (isset($libxml_string)&&(strripos($libxml_string,"libxml")===FALSE))
-      check_and_abort("libXML seems not to be installed in your system\n",0);
-   if ($libxml_version<2.6)
-      check_and_abort("You need a newer version of libXML\n",0);
 }
 
 function message($string)
