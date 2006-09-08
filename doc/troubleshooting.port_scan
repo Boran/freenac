@@ -1,0 +1,265 @@
+Troubleshooting port_scan
+
+Before all, make sure you have read and followed the file README.portscan file
+and that you have a port_scan.inc file with the settings you want.
+
+Check you have the following table structure in the nac system.
+
+mysql> describe nac_hostscanned;
++-----------+------------------+------+-----+---------+----------------+
+| Field     | Type             | Null | Key | Default | Extra          |
++-----------+------------------+------+-----+---------+----------------+
+| id        | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
+| mac       | varchar(15)      | NO   | PRI | NULL    |                |
+| ip        | varchar(15)      | NO   | PRI | NULL    |                |
+| hostname  | varchar(80)      | YES  |     | NULL    |                |
+| os        | varchar(80)      | YES  |     | NULL    |                |
+| timestamp | datetime         | YES  |     | NULL    |                |
++-----------+------------------+------+-----+---------+----------------+
+6 rows in set (0.00 sec)
+
+mysql> describe nac_openports;
++-----------+-------------------+------+-----+---------+-------+
+| Field     | Type              | Null | Key | Default | Extra |
++-----------+-------------------+------+-----+---------+-------+
+| port      | int(10) unsigned  | NO   |     | NULL    |       |
+| protocol  | enum('tcp','udp') | NO   |     | NULL    |       |
+| host      | int(10) unsigned  | NO   |     | NULL    |       |
+| banner    | varchar(128)      | YES  |     | NULL    |       |
+| timestamp | datetime          | YES  |     | NULL    |       |
++-----------+-------------------+------+-----+---------+-------+
+5 rows in set (0.00 sec)
+
+mysql> describe nac_netsallowed;
++---------+------------------+------+-----+---------+----------------+
+| Field   | Type             | Null | Key | Default | Extra          |
++---------+------------------+------+-----+---------+----------------+
+| id      | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
+| network | varchar(30)      | YES  |     | NULL    |                |
++---------+------------------+------+-----+---------+----------------+
+2 rows in set (0.00 sec)
+
+
+mysql> describe nac_servicestcp;
++-------------+------------------+------+-----+---------+-------+
+| Field       | Type             | Null | Key | Default | Extra |
++-------------+------------------+------+-----+---------+-------+
+| port        | int(10) unsigned | NO   | PRI | NULL    |       |
+| service     | varchar(30)      | YES  |     | NULL    |       |
+| description | varchar(128)     | YES  |     | NULL    |       |
++-------------+------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+mysql> describe nac_servicesudp;
++-------------+------------------+------+-----+---------+-------+
+| Field       | Type             | Null | Key | Default | Extra |
++-------------+------------------+------+-----+---------+-------+
+| port        | int(10) unsigned | NO   | PRI | NULL    |       |
+| service     | varchar(30)      | YES  |     | NULL    |       |
+| description | varchar(128)     | YES  |     | NULL    |       |
++-------------+------------------+------+-----+---------+-------+
+3 rows in set (0.00 sec)
+
+And make sure you have run the fill script
+/opt/vmps/contrib/fill_services
+This step is required in order to display information about the service running on a determined port.
+
+And also make sure you have the following directory
+mkdir /opt/vmps/scan
+
+And the file 
+/opt/vmps/etc/port_scan.inc
+properly configured.
+
+And also check that you have nmap installed. The version we recommend to install is nmap 4.11 or later. Also, you must point the var $which_nmap from port_scan.inc to the nmap binary file. If you don't know where to point it to, in the command line type:
+stns122:/opt/vmps/bin # which nmap
+/usr/local/bin/nmap
+The return string is the value you have to enter for $which_nmap.
+
+There is a very helpful flag in port_scan.inc which you would want to turn on while troubleshooting. Such flag is the $debug_flag1 and this will cause port_scan to be verbose.
+You can redirect debug to syslog if you want, by setting both $debug_flag1 and $debug_to_syslog to TRUE. Hopefully, debug mode will give you enough information to troubleshoot any problem by yourself.
+
+Troubleshooting Normal mode
+
+The way that Normal mode works, is by grabbing allowed IP addresses from the systems table, and then comparing them against the nac_netsallowed to see which networks will be allowed to be scanned and the final decision is based on the lastseen threshold that you set in port_scan.inc
+Port_scan displays information about systems scanned and if those systems have suffered changes regarding their operating system, mac address and hostname. The hostname displayed will be the one resolved by your DNS, so make sure it is working properly.
+In normal mode, port_scan will go through all devices in the systems table which are allowed and will scan them, so in this mode, when problems are present, first check if there are systems allowed in your systems table, you can do that by:
+
+mysql> select r_ip, status from systems where status=1;
++-----------------+--------+
+| r_ip            | status |
++-----------------+--------+
+| 192.168.202.239 |      1 |
++-----------------+--------+
+1 row in set (0.00 sec)
+
+Also, make sure you have defined networks in the nac_netsallowed table:
+
+mysql> select * from nac_netsallowed;
++----+---------------+
+| id | network       |
++----+---------------+
+|  1 | 192.167.202.* |
+|  2 | 192.168.202.* |
++----+---------------+
+2 rows in set (0.00 sec)
+
+This table has been created because perhaps in your enterprise network you have several networks which are firewalled and can't be scanned, so trying to scan them would be a waste of time and resources, so in nac_netsallowed you set networks you know you can reach and scan.
+
+The last bit to check while in normal mode is the port_scan.inc file. There, you can find some variables which also affect the decision about which hosts to scan. The vars you have to look at are $time_threshold and $what_units_time. With $time_threshold you define that hosts which were last seen before this amount of time will be scanned. $what_units_time the units of time you are referring to.
+Probably you have a host allowed in your network which has not connected for 6 months, so trying to scan a host which has not been active in your network for too long might not be a good idea. The default time threshold is 24 hours, but you can set it to any value you want.
+
+Once you have checked all this, you just run it and that's it.
+stns122:/opt/vmps/bin # ./port_scan
+Doing port_scan to sytems... Please wait...
+Scanning host 192.168.202.239
+port_scan finished normally. 1 hosts scanned
+
+New registers have to have been created in the nac_hostscanned and nac_openports for the hosts scanned which were not already present in the database.
+
+mysql> select * from nac_hostscanned where ip='192.168.202.239';
++----+----------------+-----------------+------------------------+----------------------+---------------------+
+| id | mac            | ip              | hostname               | os                   | timestamp           |
++----+----------------+-----------------+------------------------+----------------------+---------------------+
+| 17 | 0013.d3d2.0c02 | 192.168.202.239 | stns239.safeguard.test | Linux 2.4.0 - 2.5.20 | 2006-09-04 06:34:45 |
++----+----------------+-----------------+------------------------+----------------------+---------------------+
+1 row in set (0.00 sec)
+
+mysql> select * from nac_openports where host=17;
++------+----------+------+--------------------------+---------------------+
+| port | protocol | host | banner                   | timestamp           |
++------+----------+------+--------------------------+---------------------+
+|   22 | tcp      |   17 | ssh:OpenSSH 4.1          | 2006-09-04 06:34:45 |
+|   80 | tcp      |   17 | http:Apache httpd 2.0.54 | 2006-09-04 06:34:45 |
+|  111 | tcp      |   17 | rpcbind: 2               | 2006-09-04 06:34:45 |
++------+----------+------+--------------------------+---------------------+
+3 rows in set (0.00 sec)
+
+And for those that were already present, if they suffered any changes, those changes would be done in the database.
+
+Troubleshooting Manual mode
+
+While in manual mode, you need to feed the IP addresses to scan through the command line. The addresses you enter has to be in your systems table, but it doesn't have to have necessarily the status flag set to 1. Then, the IP will be checked against the nac_netsallowed table and scanned. So, for this mode, make sure all the IP addresses you pass as parameters to the script will be IPv4 compatible.
+In this mode, the time threshold is not taken into account.
+
+First make sure the IP address you want to scan is in your systems table:
+
+mysql> select r_ip from systems where r_ip='192.168.202.239';
++-----------------+
+| r_ip            |
++-----------------+
+| 192.168.202.239 |
++-----------------+
+1 row in set (0.01 sec)
+
+Then you call the script from the command line an passing the IP as argument.
+
+stns122:/opt/vmps/bin # ./port_scan 192.168.202.239
+Doing port_scan to sytems... Please wait...
+Scanning host 192.168.202.239
+port_scan finished normally. 1 hosts scanned
+
+And that's it. The script performs changes to the nac_hostscanned and nac_openports tables if changes in the hosts scanned have been suffered.
+
+Troubleshooting Scannow mode
+
+Here is a successful run in the "scannow" mode and the steps done by hand in order to achieve the final result. Since by default the scannow mode is very quiet, it won't tell you what has gone wrong unless you have the $debug_flag1=TRUE in port_scan.inc. This run was made with $debug_flag1=FALSE.
+
+First, you have to make sure you have devices with the scannow flag set to 1.
+
+mysql> select r_ip, scannow from systems where scannow=1;
+Empty set (0.00 sec)
+
+mysql> update systems set scannow=1 where r_ip='192.168.202.239';
+Query OK, 1 row affected (0.01 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select r_ip, scannow from systems where r_ip='192.168.202.239';
++-----------------+---------+
+| r_ip            | scannow |
++-----------------+---------+
+| 192.168.202.239 |       1 |
++-----------------+---------+
+1 row in set (0.00 sec)
+
+A look to our tables to see if it is there or not (this is only informative)
+
+mysql> select * from nac_hostscanned where ip='192.168.202.239';
+Empty set (0.00 sec)
+
+mysql> select * from nac_openports;
++------+----------+------+---------------------------------------------------+---------------------+
+| port | protocol | host | banner                                            | timestamp           |
++------+----------+------+---------------------------------------------------+---------------------+
+|   22 | tcp      |   10 | ssh:OpenSSH 4.1                                   | 2006-08-30 08:10:21 |
+|  631 | tcp      |   10 | ipp:CUPS 1.1                                      | 2006-08-30 08:01:44 |
+| 3306 | tcp      |   10 | mysql:                                            | 2006-08-30 08:01:44 |
+|  912 | tcp      |    6 | vmware-auth:VMware GSX Authentication Daemon 1.10 | 2006-08-30 06:22:14 |
+| 1506 | tcp      |    6 | utcd:                                             | 2006-08-28 05:55:14 |
+|  902 | tcp      |    6 | vmware-auth:VMware GSX Authentication Daemon 1.10 | 2006-08-30 06:22:14 |
+|  443 | tcp      |    6 | https:                                            | 2006-08-28 05:55:14 |
+|  139 | tcp      |    6 | netbios-ssn:                                      | 2006-08-28 05:55:14 |
+|   80 | tcp      |    6 | http:                                             | 2006-08-28 05:55:14 |
+|  135 | tcp      |    6 | msrpc:Microsoft Windows RPC                       | 2006-08-28 05:55:14 |
++------+----------+------+---------------------------------------------------+---------------------+
+10 rows in set (0.00 sec)
+
+Then, check if you have specified a valid network to scan for in the nac_netsallowed table.
+
+mysql> select * from nac_netsallowed;
++----+---------------+
+| id | network       |
++----+---------------+
+|  1 | 192.167.202.* |
+|  2 | 192.168.202.* |
++----+---------------+
+2 rows in set (0.00 sec)
+
+As you see, one of the networks defined in this table is 192.168.202.* and this gives us permission to scan our host 192.168.202.239.
+Next, run port_scan in scannow mode
+
+Wed Aug 30 10:12:33 CEST 2006
+stns122:/opt/vmps/bin # ./port_scan --scannow
+stns122:/opt/vmps/bin #  
+
+Since it doesn't display anything to stdout, you check its functioning in syslog.
+In syslog you should see something like that
+
+Aug 30 10:12:36 stns122 port_scan[10187]: Nmap scan-now of 192.168.202.239 started
+
+If the host is not up, you'll see a message in syslog like this one:
+
+Aug 31 12:51:39 stns122 port_scan[22905]: 192.168.202.239 is down
+
+port_scan is supposed to reset the scannow flag in the systems table of all the hosts scanned. You check that doing.
+
+mysql> select r_ip, scannow from systems where r_ip='192.168.202.239';
++-----------------+---------+
+| r_ip            | scannow |
++-----------------+---------+
+| 192.168.202.239 |       0 |
++-----------------+---------+
+1 row in set (0.00 sec)
+
+And then check if the host scanned was added to our tables.
+
+mysql> select * from nac_hostscanned where ip='192.168.202.239';
++----+----------------+-----------------+------------------------+----------------------+---------------------+
+| id | mac            | ip              | hostname               | os                   | timestamp           |
++----+----------------+-----------------+------------------------+----------------------+---------------------+
+| 13 | 0013.d3d2.0c02 | 192.168.202.239 | stns239.safeguard.test | Linux 2.4.0 - 2.5.20 | 2006-08-30 10:12:58 |
++----+----------------+-----------------+------------------------+----------------------+---------------------+
+1 row in set (0.00 sec)
+
+mysql> select * from nac_openports where host=13;
++------+----------+------+--------------------------+---------------------+
+| port | protocol | host | banner                   | timestamp           |
++------+----------+------+--------------------------+---------------------+
+|   22 | tcp      |   13 | ssh:OpenSSH 4.1          | 2006-08-30 10:12:58 |
+|   80 | tcp      |   13 | http:Apache httpd 2.0.54 | 2006-08-30 10:12:58 |
+|  111 | tcp      |   13 | rpcbind: 2               | 2006-08-30 10:12:58 |
++------+----------+------+--------------------------+---------------------+
+3 rows in set (0.00 sec)
+
+And voilá, it worked! If you have problems and this guide wasn't helpful, drop us a line in our support forum:
+http://www.freenac.net/phpBB2/viewforum.php?f=4

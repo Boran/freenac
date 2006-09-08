@@ -1,5 +1,5 @@
 
-_____________ Install checklist: OpenNAC Master       _______________
+_____________ Install checklist: FreeNAC Master       _______________
 
 master_server_install.txt                      Last Update: 19.7.06/SB
 ______________________________________________________________________
@@ -9,7 +9,7 @@ ______________________________________________________________________
 0. INTRODUCTION
 ===============
 This is a "copy & paste" guide for *expert* administrators for setting up an
-OpenNAC master server.
+FreeNAC master server.
 
 
 
@@ -24,6 +24,14 @@ see unix_install.txt
   
 3. Compiling/ installing Key components
 =======================================
+
+Apache 2.2.2:
+cd /opt/install
+tar xvzf http-2.2.2.tar.gz
+cd http-2.2.2
+./configure --prefix=/usr/local/apache2 --enable-so
+make install
+ln -s /usr/local/apache2 /usr/local/apache
 
 MYSQL 5:
   cd /opt/install  
@@ -70,6 +78,50 @@ MYSQL 5:
   		show tables;
   		select * from ports;
 
+If installing MYSQL from sources:
+  cd /opt/install
+  tar xvzf mysql-5.0.22.tar.gz
+  cd /opt/install/mysql-5.0.22
+  groupadd mysql
+  useradd -g mysql mysql
+  mkdir /mysqldata
+  ./configure --prefix=/usr/local/mysql-5.0.22 --localstatedir=/mysqldata --with-unix-socket-path=/tmp/mysql.sock
+  make install
+  cp support-files/my-large.cnf /etc/my.cnf
+  cp support-files/mysql.server /etc/init.d/mysql
+  chmod 744 /etc/init.d/mysql
+  ln -s /etc/init.d/mysql /usr/sbin/rcmysql
+  cd /usr/local/mysql
+  bin/mysql_install_db --user=mysql
+  ln -s /mysqldata /var/lib/mysql
+  chown -R root  .
+  chown -R mysql /mysqldata /var/lib/mysql
+  chgrp -R mysql .
+
+
+Modify /etc/my.cnf
+  report-host     = mysql
+
+Enable the service:
+  chkconfig mysql on 
+  ln -s /etc/init.d/mysql /usr/sbin/rcmysql
+
+Add mysql to path in /etc/profile
+
+GET DATA:
+  cd /mysqldata
+  mv mysql mysql.orig
+  copy over inventory and mysql directories from a template server 
+  (make sure to use lock tables before copying, e.g.:
+   mysqlhotcopy --allowold --keepold --regexp=".+" /tmp/mydata  )
+  
+ 
+START mysql, check that all is OK:
+  rcmysql start  
+  check /mysqldata/localhost.err for errors.
+  mysql inventory
+  		show tables;
+  		select * from ports;
 
 libxml:
   cd /opt/install
@@ -104,11 +156,23 @@ PHP5:
   tar xBf php-5.1.4.tar.bz2
   cd /opt/install/php-5.1.4/
   
-  #./configure --with-mysql=/usr/local/mysql --prefix=/opt/php5 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php5 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect
   
   ## If you need MS-SQL (its best to assume you do - FreeTDS was compiled above)
-  ./configure --with-mysql=/usr/local/mysql --prefix=/opt/php5.1.4 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php5.1.4 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
   make install    
+  cp php.ini-dist /usr/local/lib/php.ini
+  ln -s /opt/php5/bin/php /usr/bin/php
+
+Edit your httpd.conf to load the PHP module
+  LoadModule php5_module modules/libphp5.so
+The path on the right hand
+side of the LoadModule statement must point to the path of the PHP
+module on your system.  The make install from above may have already
+added this for you, but be sure to check.
+Also, tell Apache to parse certain extensions as PHP in httpd.conf
+  AddType application/x-httpd-php .php .phtml
+  AddType application/x-httpd-php-source .phps
      
   
   mv /usr/bin/php /usr/bin/php4
@@ -118,7 +182,7 @@ PHP5:
   Note: 
   ^^^^^
   If later upgrading or testing new PHP modules, then install into a version specifc directory:
-   ./configure --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.4b --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
+   ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.4b --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
   and create then make /opt/php5 a link to this directory.
   This allows rollback and less disturbance to running daemons.
 
@@ -157,11 +221,11 @@ D. The read-only webgui uses a "readonly" user.
 
 4. OpenNAC install part #1:
 ===========================
-Download and install /opt/vmps
+Download and install /opt/nac
 
 Adapt config.inc
 
-If you need to syncronise the user database with an external source, then try each of the user sync scripts and heck syslog for errors.
+If you need to syncronise the user database with an external source, then try each of the user sync scripts and check syslog for errors.
 		If they work, enable then in cron:
 		0   3    * * 2   /opt/vmps/vmps_user; /opt/vmps/report_old_users
 		0   7    * * *   /opt/vmps/vmps_user_special;
@@ -170,7 +234,7 @@ If you need to syncronise the user database with an external source, then try ea
 		and you see messages there.
 
 
-5. OpenNAC install part #2:
+5. FreeNAC install part #2:
 ===========================
 Now we get the vmps daemon going.
 

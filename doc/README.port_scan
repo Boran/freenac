@@ -20,6 +20,29 @@ Dependences:
 OpenNAC
 Nmap 4.11 or later
 
+Modes of operation:
+-------------------
+This script has 3 modes of operation:
+1.- When it is called with no arguments, it grabs IPs from the systems table and will compare them against the networks defined in the nac_netsallowed table.
+The final decision on what to scan is made through the LastSeen time threshold s
+pecified in the port_scan.inc file. With this, you can say to scan only the host
+s that were seen on the network within the lapse of 1 day, 1 month, 30 minutes,
+whatever.
+2.- When it is called with the "--scannow" parameter, it grabs IPs from the systems table, no matter it they are allowed or not, as long as in the systems table the flag "scannow" has the value "1". Then it checks these IPs against what you specified in the nac_netsallowed table.
+3.- IPs from the command line. You can call the script with something like
+port_scan x1.y1.z1.w1 ... xn.yn.zn.wn
+In this way, the script will get the IPs from the command line and only those IPs which fall within the criteria specified in the nac_netsallowed table will be scanned.
+
+About the nac_netsallowed table:
+--------------------------------
+Only those computers which fall within the criteria specified in the nac_netsallowed table will become a strong candidate to be scanned.
+You can specify something like '192,195.35-38,89-95.33.*' in the nac_netsallowed
+ table.
+Going from left to right, this will scan any host whose first octet is 192 or 19
+5, with the second octet in the ip range 35-38 or 89-95 and whose subnet is 33.
+You can also specify something like '192.168.*'
+One register per criterion you want to take into account.
+
 How to install:
 ---------------
 Install OpenNAC
@@ -58,6 +81,13 @@ create table nac_servicesudp (
    description varchar(128), 
    primary key(port));
 
+Check if the scannow field exists in the systems table. If not, then
+alter table systems add column scannow tinyint(4) default 0;
+
+And with the GUI you can set the flag for the devices you want to scan now.
+If you prefer doing it by hand, then
+update systems set scannow=1 where ...;
+ 
 And then you grant rights to these tables with
 grant SELECT,INSERT,UPDATE,DELETE ON inventory.nac_openports to inventwrite@'%';
 grant SELECT,INSERT,UPDATE ON inventory.nac_hostscanned to inventwrite@'%';
@@ -65,21 +95,15 @@ grant SELECT ON inventory.nac_servicestcp to inventwrite@'%';
 grant SELECT ON inventory.nac_servicesudp to inventwrite@'%';
 
 ***Important: You need to specify first in ona_netsallowed the networks that you want to scan.
-The script is going to grab IPs from the systems table and will compare it against the networks
-defined in the ona_netsallowed table. Only those computers which fall within the criteria 
-specified in the ona_netsallowed table will become a strong candidate to be scanned.
-You can specify something like '192,195.35-38,89-95.33.*'
-Going from left to right, this will scan any host whose first octet is 192 or 19
-5, with the
-second octet in the ip range 35-38 or 89-95 and whose subnet is 33.
-You can also specify something like '192.168.*'
-One register per criterion you want to take into account.
-The final decision on what to scan is made through the LastSeen time threshold specified in the port_scan.inc file. With this, you can say to scan only the hosts that were seen on the network within the lapse of 1 day, 1 month, 30 minutes, whatever. 
 
 Then run the fill_services script in order to populate the services tables
 /opt/vmps/contrib/fill_services
 
-And create the following directory
+Rename port_scan.inc.template to port_scan.inc
+mv /opt/vmps/etc/port_scan.inc.template /opt/vmps/etc/port_scan.inc
+and modify the configuration settings according to your needs.
+
+Next, create the following directory
 mkdir /opt/vmps/scan
 
 Then in the command line you do
@@ -87,6 +111,7 @@ cron -e
 and add the next line
 0 0 * * Sat    nice /opt/vmps/bin/port_scan
 This will run it every Sat at midnight
+
 
 Files and directories required:
 -------------------------------
@@ -107,4 +132,4 @@ If you want to run it by hand just type:
 Bugs:
 -----
 Please report them in our Development forum:
-http://www.opennac.net/phpBB2
+http://www.opennac.net/phpBB2/
