@@ -26,4 +26,7 @@ include('functions.inc');
 ## hubs.php
   $hubs_querydays=60;      # Show devices seen in last XX days
 
+## statgraph.php
+  $jpgraph_path = '/usr/share/php5/jpgraph';            # path to jpgraph library
+
 ?>
