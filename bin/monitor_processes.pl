@@ -24,6 +24,7 @@
 #		The list is given on the command line, but also
 #		has defaults set below.
  
+# Who do we sent email alerts to?
 $user = 'root';
 
 # --- security precautions ---
