@@ -28,11 +28,7 @@ $sel['vlan']['graph'] = "SELECT v.value as datax, count(*) as count FROM systems
 $sel['dat']['table'] = "SELECT DATversion, count(*) as count FROM EpoComputerProperties GROUP BY DATversion";
 $sel['dat']['graph'] = "SELECT DATversion as datax, count(*) as count FROM EpoComputerProperties GROUP BY DATversion";
 
-function strip_datversion($long_version) {
-	$list=explode('.',$long_version);
-	$short_version = $list[2];
-	return($short_version);
-};
+
 
 function print_dat_stats($query) {
 	$readme_url='http://vil.nai.com/vil/DATReadme.aspx';

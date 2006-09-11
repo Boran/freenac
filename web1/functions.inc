@@ -260,6 +260,53 @@ function get_switch_name($switch_ip) {
         };
 };
 
+function strip_datversion($long_version) {
+	$list=explode('.',$long_version);
+	$short_version = $list[2];
+	return($short_version);
+};
+
+function get_datversions() {
+	$query = "SELECT DISTINCT(DATVersion) FROM EpoComputerProperties ORDER BY DATVersion DESC;";
+	$res = mysql_query($query);
+	while ($row = mysql_fetch_array($res)) {
+		$short_version = strip_datversion($row[0]);
+		if ($short_version > 0) {
+			$datversions[$i] = $short_version;
+			$i++;
+		};
+	};
+	return($datversions);
+};
+
+
+function get_latestdat() {
+	$query = "SELECT MAX(DATVersion) FROM EpoComputerProperties;";
+	$res = mysql_query($query);
+	$row = mysql_fetch_array($res);
+	$short_version = strip_datversion($row[0]);
+	return($short_version);
+};
+
+function display_dat_select() {
+  global $connect;
+  db_connect();
+
+  $datversions = get_datversions();
+  $latestdat = get_latestdat();
+
+  $html .= '<option value="">(any)</option>';
+
+  foreach ($datversions as $key => $mversion) {
+	  if ($key == 1) { $html .= '<option value="outdated">(Older than '.$latestdat.')</option>'; };
+      $html .= "<option ";
+	  if (($selected == $mversion) && $selected != '') { $html .= "selected "; };
+      $html .= "value=\"". $mversion. '">';
+      $html .= $mversion. '</option>';
+  };
+  return($html);
+
+};
 
 
 ?>
