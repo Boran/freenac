@@ -83,7 +83,10 @@ function print_host($mac) {
 		$out .= '<tr><td>SMB<td>\\\\'.$epo['DomainName'].'<td>\\'.$epo['ComputerName'];
 		$out .= '<tr><td>IP<td>'.$epo['IPHostName'].'<td>'.$epo['IPAddress'];
 		$out .= '<tr><td>OS<td>'.$epo['OSType'].' ('.$epo['OSVersion']. ')<td>'.$epo['OSServicePackVer'].'';
-		$out .= '<tr><td>LastUpdate<td>'.$epo['LastUpdate'];
+		$out .= '<tr><td colspan=3 bgcolor="#EEEEEE"><b>McAfee Updates</b>';
+		$out .= '<tr align=center><td>Part<td>Version<td>Last update';
+		$out .= '<tr><td>Agent<td>'.$epo['AgentVersion'].'<td>'.$epo['LastUpdate'];
+		$out .= '<tr><td>DAT File<td>'.$epo['DATVersion'].'<td>'.$epo['LastDATUpdate'];
 	};
 // 2.3 SCAN
 	if ($scan) {
