@@ -15,9 +15,9 @@
 
 case "$1" in
 start)
-	[ -f /opt/vmps/bin/vmpsd ] || exit 1
+	[ -f /opt/nac/bin/vmpsd ] || exit 1
 
-	#[ -f /opt/vmps/bin/vmpsd ] && \
+	#[ -f /opt/nac/bin/vmpsd ] && \
 	#    [ -f /etc/vlan.db ] || exit 1
 
         #-l  log level
@@ -33,11 +33,11 @@ start)
         # Make sure mysql started
         sleep 5
 
-        /opt/vmps/vmpsd -e /opt/vmps/vmpsd_external  -l 0x0804
+        /opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0804
 
         ## Add the '-a A.B.C.D' parameter if the machine has more than
         ## one interface to specific on which interface to bind vmpsd
-	#/opt/vmps/bin/vmpsd -e /opt/vmps/bin/vmpsd_external  -l 0x0804 -a 192.168.245.40
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0804 -a 192.168.245.40
 
 	# manual tests:
 	#/usr/local/bin/vmpsd -d -f /etc/vlan.db -l 0x0F08 -a 192.168.245.19

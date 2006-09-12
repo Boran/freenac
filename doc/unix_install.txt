@@ -1,5 +1,5 @@
 
-_____________ *Linux* Install checklist the OpenNac __________________
+_____________ *Linux* Install checklist the FreeNac __________________
               (Suse 9.3)                     Last Update: 13.6.06/SB
 unix_install.txt
 ____________________________________________________________________
@@ -8,7 +8,7 @@ ____________________________________________________________________
 
 0. INTRODUCTION
 ===============
-This is a "copy & paste" guide for *expert* administrators for setting up the UNIX/LINUX part of an OpenNAC master or slave server.
+This is a "copy & paste" guide for *expert* administrators for setting up the UNIX/LINUX part of an FreeNAC master or slave server.
 
 
 1. Installing Suse packages

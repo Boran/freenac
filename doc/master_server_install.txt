@@ -254,6 +254,8 @@ Copy /etc/init.d/vmps_lastseen from /opt/nac/contrib/startup_init.d
   rcvmps_lastseen start
 
 
+touch /etc/vlan.db
+
 Test purging of old devices (and watch syslog), then enable in cron:
 0   1   26 * *   /opt/nac/bin/purge_unknowns  
 
@@ -262,12 +264,11 @@ Test purging of old devices (and watch syslog), then enable in cron:
 ===========================
 There are several monitoring scripts that need to be individually tested and enabled in root cron:
 
-Create /secure and download following scripts:
-   monitor_processes.pl  saveit    secure.conf  proctst proctst.pl  check_disk       
+Create /secure and copy from /opt/nac/bin the following scripts:
+   monitor_processes.pl    secure.conf  proctst proctst.pl  check_disk       
    And make a subdir 'tmp'.           
 
 */3 *     * * *   /secure/check_disk 90 800
-2 6-18    * * 1-5 /usr/local/bin/filewatcher -c /etc/filewatcher.conf
 */10 6-22 * * *   /secure/monitor_processes.pl vmpsd_external proctst
 30   6-22 * * 1-5 /opt/nac/bin/monitor_allows.sh
 */4 *     * * *   /opt/nac/bin/flap_detect
@@ -306,9 +307,34 @@ Maybe discuss later:
 /etc/hosts.allow 
 /etc/hosts.deny
 
-If the server is not exclusively used by VMPS with one administrator, you probably want to set a local root password for mysql.
+If the server is not exclusively used by FreeNAC with one administrator, you probably want to set a local root password for mysql.
 mysqladmin -u root password 'new-password'
 mysqladmin -u root -h MYHOST password 'new-password'
 
+This is the sample crontab used in the VM which will be available shortly
+#Installation done based on /opt/nac/doc/master_server_install.txt
 
+#NAC control
+* * * * *              /opt/nac/bin/cron_restart_port
+*/5 8-18 * * 1-5       /opt/nac/bin/port_scan scannow
+*/6 * * * *            /opt/nac/bin/router_mac_ip
+0 1 * * 1              /opt/nac/bin/purge_unknowns
 
+#Active scanning: once on weekend, once during the day
+0 1 * * 6             /opt/nac/bin/port_scan
+0 11 * * 1             /opt/nac/bin/port_scan
+
+#Log pruning
+0 6 * * 1-5            /usr/sbin/logrotate /etc/logrotate.conf | logger
+0   1   26 * *         /opt/nac/bin/purge_unknowns
+
+#Monitoring
+30   6-22 * * 1-5      /opt/nac/bin/monitor_allows.sh
+*/4 *     * * *        /opt/nac/bin/flap_detect
+7-18 * * * 1-5         /secure/monitor_processes.pl proctst vmpsd_external
+*/3 *     * * *        /secure/check_disk 90 800
+*/4 * * * *            /opt/nac/bin/flap_detect
+
+#Backups
+0 1 * * 1              /opt/nac/bin/dump_ports
+0 3 * * 1-5            /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
