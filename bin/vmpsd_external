@@ -429,13 +429,11 @@ if ($DRY_RUN===TRUE) {    ## Testing only
   exit;
 }
 
-while (true) {
-  $in = fopen("php://stdin", "r");
-  $out = fopen("php://stdout", "w");
+$in = fopen("php://stdin", "r");
+$out = fopen("php://stdout", "w");
 
-  if ($out and $in) {
+while ($in && $out) {         // keep waiting on stdin
     $line=rtrim( fgets($in, 1024) );
-
     if (strlen($line) > 0) {
       list($domain, $switch, $port, $lastvlan, $mac)=explode(" ", $line);
       #logit("GOT: $line\n");
@@ -466,12 +464,12 @@ while (true) {
       ob_flush();               # log buffered outputs
       flush();
     }                // strlen >0
-  }
-  fclose($in);
-  fclose($out);
   #sleep(1);                 # wait 1 secs, before retrying
   ob_flush();               # log buffered outputs
 }
+
+fclose($in);
+fclose($out);
 
 logit("Log /DB close, reconnect");
 mysql_close($connect);
