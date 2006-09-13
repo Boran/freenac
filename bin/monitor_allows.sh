@@ -13,13 +13,13 @@
 #  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
 #############
 
-subject="VMPS warning: new ALLOWS"
+subject="FreeNAC warning: new ALLOWS"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 tempfile2=/tmp/monitor_allows.$$
 
 messagecount=10;
 
-/opt/vmps/bin/logtail /var/log/messages /var/log/.messages.vmps_allows | egrep "vmpsd: ALLOW" | wc -l | awk '{if ($1 < limit) print "Warning, is Vmps working? Only " $1 " Successful authentications below threshold " limit ", since last check." }' limit=$messagecount > $tempfile2 2>&1
+/opt/nac/bin/logtail /var/log/messages /var/log/.messages.vmps_allows | egrep "vmpsd: ALLOW" | wc -l | awk '{if ($1 < limit) print "Warning, is Vmps working? Only " $1 " Successful authentications below threshold " limit ", since last check." }' limit=$messagecount > $tempfile2 2>&1
 
 # tail -500 /var/log/messages | egrep "vmpsd: ALLOW" | wc -l | awk '{if ($1 < limit) print "Warning, is Vmps working? " $1 " Successful authentications since last check are below threshold " limit "." }' limit=$messagecount 
 
@@ -27,7 +27,7 @@ messagecount=10;
 if [ -s $tempfile2 ] ; then
 
   # Log events to vmpslog table, so GUI can see it.
-  cat $tempfile2| /opt/vmps/bin/vmps_log
+  cat $tempfile2| /opt/nac/bin/vmps_log
 
   echo " " >> $tempfile2
   echo "This email was generated from the root cron on `uname -n` by $0" >> $tempfile2
