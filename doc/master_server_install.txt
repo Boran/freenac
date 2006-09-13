@@ -111,11 +111,10 @@ Add mysql to path in /etc/profile
 GET DATA:
   cd /mysqldata
   mv mysql mysql.orig
-  copy over inventory and mysql directories from a template server 
-  (make sure to use lock tables before copying, e.g.:
-   mysqlhotcopy --allowold --keepold --regexp=".+" /tmp/mydata  )
-  
- 
+  copy over the FreeNAC sample inventory database (which is /opt/nac/contrib/inventory_sample.tar.gz) and untar it to the /mysqldata directory 
+  cp /opt/nac/contrib/inventory_sample.tar.gz .
+  untar xvzf inventory_sample.tar.gz
+That must create the sample tables required for FreeNAC to work  
 START mysql, check that all is OK:
   rcmysql start  
   check /mysqldata/localhost.err for errors.
@@ -311,7 +310,7 @@ If the server is not exclusively used by FreeNAC with one administrator, you pro
 mysqladmin -u root password 'new-password'
 mysqladmin -u root -h MYHOST password 'new-password'
 
-This is the sample crontab used in the VM which will be available shortly
+This is the sample crontab used in the VM
 #Installation done based on /opt/nac/doc/master_server_install.txt
 
 #NAC control
