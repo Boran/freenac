@@ -5,11 +5,12 @@ master_server_install.txt                      Last Update: 19.7.06/SB
 ______________________________________________________________________
 
 
-
 0. INTRODUCTION
 ===============
 This is a "copy & paste" guide for *expert* administrators for setting up an
 FreeNAC master server.
+Untar this file under /opt
+It will create /opt/nac
 
 
 
@@ -33,7 +34,7 @@ cd http-2.2.2
 make install
 ln -s /usr/local/apache2 /usr/local/apache
 
-MYSQL 5:
+MYSQL 5 (From binaries):
   cd /opt/install  
   tar xvzf mysql-max-5.0.18-linux-i686.tar.gz
   mv mysql-max-5.0.18-linux-i686 /usr/local
@@ -58,27 +59,13 @@ MYSQL 5:
 
   Add mysql to path:
   . /etc/profile.local
-  
-  GET DATA:
-  cd /mysqldata
-  mv mysql mysql.orig
-  copy over inventory and mysql directories from a template server 
-  (make sure to use lock tables before copying, e.g.:
-   mysqlhotcopy --allowold --keepold --regexp=".+" /tmp/mydata  )
-  
+    
   groupadd mysql
   useradd -g mysql mysql
   chown -R mysql:mysql *
   chgrp -R mysql /usr/local/mysql/*
   
-  START mysql, check that all is OK:
-  rcmysql start  
-  check /mysqldata/mysqld.log for errors.
-  mysql inventory
-  		show tables;
-  		select * from ports;
-
-If installing MYSQL from sources:
+MYSQL 5 (from sources):
   cd /opt/install
   tar xvzf mysql-5.0.22.tar.gz
   cd /opt/install/mysql-5.0.22
@@ -111,7 +98,7 @@ Add mysql to path in /etc/profile
 GET DATA:
   cd /mysqldata
   mv mysql mysql.orig
-  copy over the FreeNAC sample inventory database (which is /opt/nac/contrib/inventory_sample.tar.gz) and untar it to the /mysqldata directory 
+  copy over the FreeNAC sample inventory database (which is in /opt/nac/contrib/inventory_sample.tar.gz) and untar it to the /mysqldata directory 
   cp /opt/nac/contrib/inventory_sample.tar.gz .
   untar xvzf inventory_sample.tar.gz
 That must create the sample tables required for FreeNAC to work  
@@ -220,9 +207,10 @@ D. The read-only webgui uses a "readonly" user.
 
 4. FreeNAC install part #1:
 ===========================
-Download and install /opt/nac
+Rename config.inc.template
+mv /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc
 
-Adapt config.inc
+Adapt /opt/nac/etc/config.inc
 
 At this stage The DB is working and PHP access to the DB. Syslog works too 
 and you see messages there.
@@ -315,7 +303,7 @@ This is the sample crontab used in the VM
 
 #NAC control
 * * * * *              /opt/nac/bin/cron_restart_port
-*/5 8-18 * * 1-5       /opt/nac/bin/port_scan scannow
+*/5 8-18 * * 1-5       /opt/nac/bin/port_scan --scannow
 */6 * * * *            /opt/nac/bin/router_mac_ip
 0 1 * * 1              /opt/nac/bin/purge_unknowns
 
