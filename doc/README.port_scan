@@ -94,40 +94,40 @@ grant SELECT,INSERT,UPDATE ON inventory.nac_hostscanned to inventwrite@'%';
 grant SELECT ON inventory.nac_servicestcp to inventwrite@'%';
 grant SELECT ON inventory.nac_servicesudp to inventwrite@'%';
 
-***Important: You need to specify first in ona_netsallowed the networks that you want to scan.
+***Important: You need to specify first in nac_netsallowed the networks that you want to scan.
 
 Then run the fill_services script in order to populate the services tables
-/opt/vmps/contrib/fill_services
+/opt/nac/contrib/fill_services
 
 Rename port_scan.inc.template to port_scan.inc
-mv /opt/vmps/etc/port_scan.inc.template /opt/vmps/etc/port_scan.inc
-and modify the configuration settings according to your needs.
+cp /opt/nac/etc/port_scan.inc.template /opt/nac/etc/port_scan.inc
+and modify the configuration settings according to your needsDA, especially the nmap path.
 
 Next, create the following directory
-mkdir /opt/vmps/scan
+mkdir /opt/nac/scan
 
 Then in the command line you do
 cron -e
 and add the next line
-0 0 * * Sat    nice /opt/vmps/bin/port_scan
+0 0 * * Sat    nice /opt/nac/bin/port_scan
 This will run it every Sat at midnight
 
 
 Files and directories required:
 -------------------------------
-/opt/vmps/bin/port_scan
-/opt/vmps/etc/port_scan.inc
-/opt/vmps/funcs.inc
-/opt/vmps/scan/
-/opt/vmps/doc/README.port_scan
-/opt/vmps/contrib/fill_services
-/opt/vmps/contrib/services_long.txt
-/opt/vmps/contrib/services_nmap.txt
+/opt/nac/bin/port_scan
+/opt/nac/etc/port_scan.inc
+/opt/nac/funcs.inc
+/opt/nac/scan/
+/opt/nac/doc/README.port_scan
+/opt/nac/contrib/fill_services
+/opt/nac/contrib/services_long.txt
+/opt/nac/contrib/services_nmap.txt
 
 How to run it:
 -------------
 If you want to run it by hand just type:
-/opt/vmps/bin/port_scan &
+/opt/nac/bin/port_scan &
 
 Bugs:
 -----
