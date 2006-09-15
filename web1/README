@@ -1,15 +1,18 @@
-NAC Web Interface
-
-Version 0.1, 05.09.06/sb
+NAC Web1 Interface
 
 
-To install get the latest sources:
-  svn xxxx
-
-Install apache.
-
-Then configure apache:
-- create /etc/apache2/conf.d/vmps.conf
+_____________________ NAC Web1 GUI: Installation notes _____________________
+// Web programs
+	Download the software to /opt/nac/web1 
+  They are probably there already from a tarball of SVN.
+  	
+// Install "dot" tool
+  yast -i graphviz 
+  
+// Install Apache (via Yast)
+			chkconfig apache2 on
+			rcapache2 start
+// Then configure apache, by creating /etc/apache2/conf.d/vmps.conf:
   Alias /vmps /opt/vmps/web1
         <Directory /opt/vmps/web1/>
           Options none
@@ -18,16 +21,34 @@ Then configure apache:
           #allow from 10.85.
           allow from all
         </Directory>
+        
+	[Restrict access to certain networks, if needed, as above]       
+// restart apache
+    rcpache restart        
+  
+// MySQL: grant read-only access for the Web GUI
+// (change PASSWORD1 as needed)
+  grant SELECT on inventory.* to readonly@localhost IDENTIFIED by 'PASSWORD1';
+  SET PASSWORD FOR readonly@localhost = OLD_PASSWORD('PASSWORD1');
+  
+	
+	Adapt configuration file:
+		vi /opt/nac/web1/config.inc    (Enter PASSWORD1 as above)
+		(if this file does not exist, copy the config.inc.template)
 
-- restart apache
-    rcpache restart
+
+_____ USAGE ___________
 
 - point the webbrowser at http://SERVER/vmps
 
 
+_______ TROUBLE SHOOTING __________
+  check syslog
+  enable "$debug_flag1" in various script, check syslog again.
+  
+
 To do:
-- describe installtion
 - dependancies
-- usage
 - access control on the Apache server (IP address or Username), if needed
 - fix graph generator
+
