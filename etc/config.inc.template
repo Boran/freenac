@@ -43,12 +43,15 @@
 
   ## Microsoft SMS lookups: 
   $lastseen_infnet=false;           # Lookup Infnet MACs with check_infnet_mac?
-  $lastseen_infnet_vlan='10';       # Exact Number of Infnet Vlan: sec225
-  $lastseen_infnet_restart=true;    # Restart switch port when GWP found?
+  $lastseen_infnet_vlan='10';       # Exact Number of Infnet Vlan
+  $lastseen_infnet_restart=true;    # Restart switch port when PC found?
   $lastseen_infnet_notify=true;
   $check_infnet_mac="";
   $sms_infnet_mac="";
   #include_once " ";
+  $check_infnet_mac_target="sms1.test.com";
+  $check_infnet_mac_url="/ASP/PCexplorer/PCexplorerSel.asp";
+
 
   $mail_user="root@DOMAIN.ch";      # mail to root? Set your domain
   #$maildomain="0";                 # set to 0 to disable.
@@ -71,16 +74,14 @@
   $server2="";
   $check_port_restart=true;         # Restart switch port if flagged
 
-  $vmps_user_ska=array('INO*');    # Organisations be synced from Direx
-  $vmps_user_direx="direx.corproot.net";
-  $vmps_user_direx_path="/DirExWeb/Scripts/Public/GetXML.aspx";
+## vmps_user script:
+  $vmps_user_ska=array('XXX*');    # Organisations be synced from Direx
+  $vmps_user_direx="direx.test.com";
+  $vmps_user_direx_path="/my/url/GetXML.aspx";
   
 
 ## purge_unknowns :
   $unknown_purge=30;               # Delete unknown systems older than XX days
-
-  $check_infnet_mac_target="sms1.swissptt.ch";
-  $check_infnet_mac_url="/ASP/PCexplorer/PCexplorerSel.asp";
 
 ## restart_port
   $snmpwalk="/usr/bin/snmpwalk -v 1 -c PASSWORD2 ";    # SNMP Read community
