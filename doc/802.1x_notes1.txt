@@ -1,0 +1,55 @@
+802.1x on Wired LAN
+-------------------
+IEEE 802.1X offers a framework for authenticating and controlling user traffic to a protected network, as well as dynamically varying encryption keys. 802.1X ties a protocol called EAP (Extensible Authentication Protocol) to both the wired and wireless LAN media and supports multiple authentication methods, such as token cards, Kerberos, one-time passwords, certificates, and public key authentication. For details on EAP specifically, refer to IETF’s RFC 2284.
+
+802.1X doesn’t provide the actual authentication mechanisms. When utilizing 802.1X, you need to choose an EAP type, such as Transport Layer Security (EAP-TLS) or EAP Tunnelled Transport Layer Security (EAP-TTLS) or LEAP (Cisco) or PEAP, which defines how the authentication takes place. 
+
+Works for some OSs (XP, Linux) “out of the box”, some need special client software.
+
+This standard, originally designed for Wireless networks, is gaining grown in the wired works. Authentication is user rather than host based and has many variations. The key variant that would interest us is authentication with the Active Directory, so that the same user credentials are used to allow a machine to connect to the network, as to connect to the domain.
+
+Advantages: User based authentication is better than machine based, since that is what we really want to identify. Standard supported in most equipment, can hook into radius and domain authentication databases.
+
+Disadvantages 802.1x: 
+•	Few Operating Systems have 802.1x built in, often additional software needs to be added. 
+•	Different drivers and cards interact in different ways, with PEAP for example. 
+•	If Switches send (re)authentication requests to fast, the Domain account could be blocked. 
+•	Vlan assignment is not part of the standard (but available as an add-on from Cisco). 
+•	Does not help with machine inventory. How do you integrate servers, printers and users who manage several machines and virtual machines?
+•	Only works with newer Switches (>2005)
+
+
+
+Cisco Network Admission Control (NAC)
+-------------------------------------
+The computer/user is authenticated using 802.1x implementation, the computer security settings (incl. Antivirus) are checked against a policy server. After, Vlan and layer3 access-control-list on routers is set depending on the result.
+http://www.cisco.com/application/pdf/en/us/guest/netsol/ns466/c654/cdccont_0900aecd800fdd7b.pdf 
+“To implement NAC you combine a number of existing protocols and Cisco products with some new products and features, including the following
+•Cisco Trust Agent (CTA) and plug-ins 
+•Cisco IOS Network Access Device (NAD) 
+•Extensible Authentication Protocol (EAP). 
+•Cisco Secure Access Control Server (ACS)/Remote Authentication Dial-In User Service (RADIUS) 
+•Posture validation/remediation server
+
+CTA communicates with other software on the client computer over a published Application Program Interface (API) and answers posture queries from the NAD. The resident software includes a Posture Plug-In (PP) that interfaces with the CTA. The PP is an agent included with third-party software that reports on the policy and state of the software.
+
+In the first implementation of NAC, called Phase One, the NAD is a Layer 3 Cisco IOS software device that queries client machines seeking network access using EAPoUDP. “
+
+
+
+Cisco Identity-Based Networking Services (IBNS)
+-----------------------------------------------
+Extensions to standard 802.1x.
+Once authentication is completed via 802.1x, a user can be automatically assigned to a specific VLAN, so that the user will always lands on “his/her vlan”, no matter where they physically connect.
+
+
+
+Cisco URT: host or user based authentication + VLAN assignment
+----------
+Cisco Secure User Registration Tool (URT) is a VLAN assignment service that functions as a VMPS, providing traditional host-based (MAC address) VLAN assignments, as well as user identity-based VLAN assignments. URT also provides monitoring of user access and management of the database.
+
+URT’s main capability is to assign users to VLANs. This allows you to develop VLAN-based services and ensure that users always get the expected services. As users move from machine to machine in your network, URT can identify the user based on user name and make the appropriate VLAN assignment. However, URT does not support user-based assignment on all computers. In some cases, such as UNIX, this is because a single machine can support multiple simultaneous users, whereas the associated switch port can be in only one VLAN at a time. In other cases, there is not an appropriate network login that can be captured by the URT client.
+
+Analysis: An interesting and flexible tool from Cisco that is also scalable and comes with a management GUI. It is proprietary however, and will probably be eclipsed by 802.1x (although 802.1x does not support port/MAC security). Apparently it is quite expensive (special appliances) - and may not be as stable as it should be.
+
+
