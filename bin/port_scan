@@ -142,7 +142,8 @@ function check_requirements()  //Checks for required functions and tables struct
    $nmap_version=$tmp[2];
    if (isset($nmap_string)&&(strcasecmp($nmap_string,"nmap")!=0))
       check_and_abort("Nmap seems not to be installed in your system\n",0);
-   if (isset($nmap_version)&&($nmap_version<4.11))
+   #if (isset($nmap_version)&&($nmap_version<4.11))
+   if (isset($nmap_version)&&($nmap_version<4.10))
       check_and_abort("You need a newer version of nmap\n",0);
    if (!isset($nmap_flags))
      check_and_abort("Var \$nmap_flags not defined in port_scan.inc\n",0);

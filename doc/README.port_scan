@@ -103,8 +103,11 @@ Rename port_scan.inc.template to port_scan.inc
 cp /opt/nac/etc/port_scan.inc.template /opt/nac/etc/port_scan.inc
 and modify the configuration settings according to your needsDA, especially the nmap path.
 
+You'll need nmap v4 or later, if you don't have it, download from www.insecure.org, or your local package source.
+
 Next, create the following directory
 mkdir /opt/nac/scan
+
 
 Then in the command line you do
 cron -e
