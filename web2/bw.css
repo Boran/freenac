@@ -1,0 +1,43 @@
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: x-small;
+	color: #3399CC;
+}
+.right {
+	text-align: right;
+}
+form {
+	margin: 0px;
+	padding: 0px;
+}
+.center {
+	text-align: center;
+}
+hr {
+	color: #3399CC;
+	background-color: #3399CC;
+	height: 1px;
+}
+.light {
+	background-color: #E3F2F9;
+}
+.dark {
+	background-color: #A7D7ED;
+}
+a {
+	color: #1F5E7C;
+}
+table {
+	border: 1px solid #3399CC;
+}
+.bw {
+	background-attachment: scroll;
+	background-image: url(images/logo_small.png);
+	background-repeat: no-repeat;
+	background-position: 0px 0px;
+	vertical-align: middle;
+}
+textarea,input,select {
+	border: 1px solid #3399CC;
+	font-size: x-small;
+}
