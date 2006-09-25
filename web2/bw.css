@@ -1,7 +1,7 @@
 body {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: x-small;
-	color: #3399CC;
+	color: #0000FF;
 }
 .right {
 	text-align: right;
@@ -14,21 +14,21 @@ form {
 	text-align: center;
 }
 hr {
-	color: #3399CC;
-	background-color: #3399CC;
+	color: #0000FF;
+	background-color: #0000FF;
 	height: 1px;
 }
 .light {
-	background-color: #E3F2F9;
+	background-color: #EBEBFA;
 }
 .dark {
-	background-color: #A7D7ED;
+	background-color: #A6A6FF;
 }
 a {
-	color: #1F5E7C;
+	color: #071594;
 }
 table {
-	border: 1px solid #3399CC;
+	border: 1px solid #0000FF;
 }
 .bw {
 	background-attachment: scroll;
@@ -38,6 +38,6 @@ table {
 	vertical-align: middle;
 }
 textarea,input,select {
-	border: 1px solid #3399CC;
+	border: 1px solid #0000FF;
 	font-size: x-small;
 }
