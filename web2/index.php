@@ -203,7 +203,7 @@ else {
 			<td width="99" class="center">MAC</td>
 			<td width="23" class="center">S</td>
 			<td width="39" class="center">Vlan</td>
-			<td width="62" class="center">tgdXXXX</td>
+			<td width="62" class="center">Username</td>
 			<td width="55" class="center">Port</td>
 			<td width="66" class="center">Switch</td>
 		  </tr>
