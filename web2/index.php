@@ -196,8 +196,8 @@ else {
 			ORDER BY sys.LastSeen;';
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// echo table head
-	echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET"><table width="500" border="0">
-		  <tr>
+	echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET"><table width="500" border="0">':
+	echo'<tr>
 			<td width="124" class="center">Name</td>
 			<td width="99" class="center">MAC</td>
 			<td width="23" class="center">S</td>
