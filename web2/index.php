@@ -14,7 +14,7 @@
  *
  * @package		FreeNAC
  * @author		Patrick Bizeau
- * @copyright	2006 OpenNac
+ * @copyright	2006 FreeNAC
  * @license		http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version		CVS: $Id:$
  * @link		http://www.freenac.net
@@ -38,7 +38,7 @@ $entityname='MyCompany';
 ///////////////////////////////////////////
 
 //session setup
-//session_name('OpenNAC');
+//session_name('FreeNAC');
 //session_start();
 
 // validate webinput
@@ -240,14 +240,14 @@ function print_header(){
 		<html xmlns="http://www.w3.org/1999/xhtml">
 		<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>OpenNAC @'.$entityname.'</title>
+		<title>FreeNAC @'.$entityname.'</title>
 		<link href="bw.css" rel="stylesheet" type="text/css" />
 		</head>
 
 		<body>
 		<table class="bw" width="500" border="0">
 		  <tr>
-			<td height="50" class="right">OpenNAC @'.$entityname.' </td>
+			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
 		  </tr>
 		  <tr>
 			<td class="center"><a href="'.$SERVER['PHP_SELF'].'index.php">List Unknowns</a></td>
