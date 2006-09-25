@@ -19,7 +19,7 @@ hr {
 	height: 1px;
 }
 .light {
-	background-color: #EBEBFA;
+	background-color: #E0E0F8;
 }
 .dark {
 	background-color: #A6A6FF;
@@ -41,4 +41,3 @@ textarea,input,select {
 	border: 1px solid #0000FF;
 	font-size: x-small;
 }
- 
