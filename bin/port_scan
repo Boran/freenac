@@ -150,6 +150,7 @@ function message($string)
 {
    global $output,$debug_flag1,$output_to_syslog;
    if (($output===TRUE)&&($debug_flag1===FALSE))
+   {
       if ($output_to_syslog===TRUE)
       {
          logit($string);
@@ -157,6 +158,7 @@ function message($string)
       }   
       else
          echo $string;
+   }
 }
 
 function validate($string)
