@@ -76,7 +76,6 @@ if ($_REQUEST['action']=='edit'){
 	else {
 		$row=mysql_fetch_array($result);
 		echo '<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
-		echo '<input type="hidden" name="action" value="update">';
 		echo '<table width="500" border="0">'."\n";
 		// Name
 		echo '<tr><td width="87">Name:</td><td width="400">'."\n";
@@ -142,7 +141,7 @@ if ($_REQUEST['action']=='edit'){
 		echo '<tr><td>&nbsp;</td><td>'."\n";
 		echo '<input type="submit" name="submit" value="Submit" />'."\n";
 		echo '</td></tr>'."\n";
-		echo '</table></form>';
+		echo '</table><input type="hidden" name="action" value="update"></form>';
 	}
 	
 }
