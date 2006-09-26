@@ -154,15 +154,15 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 			&& ($_REQUEST['status']==0 || $_REQUEST['status']==1) 
 			&& is_numeric($_REQUEST['vlan'])) {
 	print_r($_REQUEST);
-	//Array ( [name] => unknown [mac] => 00e0.00f5.c585 [status] => inactive [vlan] => active [comment] => s [action] => Submit )
 	// make sure we got a matching mac in systems, a vlan with this number and a useraccount
-	$sql='SELECT sys.mac, vl.id, users.assocntaccount FROM systems sys, vlan vl, users WHERE sys.mac=\''.$_REQUEST['mac'].'\' AND vl.id='.$_REQUEST['vlan'].' AND users.assocntaccount=\''.$_REQUEST['assocntaccount'].'\';';
+	$sql='SELECT sys.mac, sys.port, sys.switch, vl.id, users.assocntaccount FROM systems sys, vlan vl, users WHERE sys.mac=\''.$_REQUEST['mac'].'\' AND vl.id='.$_REQUEST['vlan'].' AND users.assocntaccount=\''.$_REQUEST['assocntaccount'].'\';';
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	if (mysql_num_rows($result)!=1){
 		echo 'MAC, VLAN or User missmatch.';
 	}
 	// Got it, prepare statment and insert changes into DB
 	else {
+		$row=mysql_fetch_array($result);
 		$sql='UPDATE systems SET ';
 		// got name?
 		$sql.=($_REQUEST['name']!=''?'name=\''.$_REQUEST['name'].'\', ':'');
@@ -183,7 +183,9 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		//$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 		if (mysql_affected_rows($result)==1){ // Update OK
 			// log what we have done
-			// somelog($somemessg, $somprio);
+			$sql='INSERT INTO history (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'Updated system: '.$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$REQUEST['comment'].', '.$REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$REQUEST['vlan'].'\');';
+			$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
+			// Update successfull
 			echo '<br />Update successfull.';
 		}
 		else { // Update failed
@@ -229,7 +231,7 @@ else {
 
 
 
-// we're done. and as all tags needs to be closed, print the footer now!
+// we're done. and as all tags need to be closed, print the footer now!
 echo print_footer();
 
 ///////////////////////////////////////////
