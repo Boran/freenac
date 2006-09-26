@@ -63,7 +63,7 @@ echo print_header();
 if ($_REQUEST['action']=='edit'){
 	// check that what we got is a mac in the system
 	if (strlen($_REQUEST['mac'])==14){
-		$sql=' SELECT sys.name, sys.mac, sys.status, sys.vlan, sys.lastvlan, sys.description as user, sys.port, sys.lastseen, swi.location, swi.name as switch, sys.r_ip as lastip, sys.r_timestamp as lastipseen, sys.comment, eth.vendor 
+		$sql=' SELECT sys.name, sys.mac, sys.status, sys.vlan, sys.lastvlan, sys.description as user, sys.office, sys.port, sys.lastseen, swi.location, swi.name as switch, sys.r_ip as lastip, sys.r_timestamp as lastipseen, sys.comment, eth.vendor 
 			FROM systems as sys LEFT JOIN switch as swi ON sys.switch=swi.ip LEFT JOIN ethernet as eth ON (SUBSTR(sys.mac,1,4)=SUBSTR(eth.mac,1,4) AND SUBSTR(sys.mac,6,2)=SUBSTR(eth.mac,5,2))  
 			WHERE sys.mac=\''.$_REQUEST['mac'].'\';';
 		$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
@@ -118,6 +118,10 @@ if ($_REQUEST['action']=='edit'){
 			}
 		}
 		echo '</select></td></tr>'."\n";
+		// Office
+		echo '<tr><td>Office:</td><td>'."\n";
+		echo '<input name="office" type="text" value="'.stripslashes($row['office']).'"/>'."\n";
+		echo '</td></tr>'."\n";
 		// Switch
 		echo '<tr><td>Switch:</td><td>'."\n";
 		echo $row['switch'].' -- '.$row['port'].' -- '.$row['location']."\n";
