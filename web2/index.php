@@ -89,8 +89,8 @@ if ($_REQUEST['action']=='edit'){
 		// Status
 		echo '<tr><td>Status:</td><td>'."\n";
 		echo '<select name="status">';
-        echo '<option value="1" '.($row['status']=='active'?'selected="selected"':'').'>active</option>'."\n";
-		echo '<option value="0" '.($row['status']!='active'?'selected="selected"':'').'>inactive</option>'."\n";
+        echo '<option value="1" '.($row['status']==1?'selected="selected"':'').'>active</option>'."\n";
+		echo '<option value="0" '.($row['status']!=0?'selected="selected"':'').'>inactive</option>'."\n";
 		echo '</select></td></tr>'."\n";
 		// VLAN
 		echo '<tr><td>VLAN:</td><td>'."\n";
