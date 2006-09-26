@@ -171,7 +171,7 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		// ntaccount
 		$sql.=($_REQUEST['assocntacccount']!=''?', description=\''.$_REQUEST['assocntacccount'].'\' ':'');
 		// got comment?
-		$sql.=($_REQUEST['comment']!=', comment=\''.$_REQUEST['comment'].'\''?'':'');
+		$sql.=($_REQUEST['comment']!=''?', comment=\''.$_REQUEST['comment'].'\'':'');
 		// set what we know for sure (changedate, changeuser,...)
 		$sql.=', changedate=\'NOW()\', changeuser=\'WEBGUI\'';
 		// where?
