@@ -185,11 +185,29 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		mysql_query($sql) or die('Query failed: ' . mysql_error());
 		// Update successfull
 		echo '<br />Update successfull.<br />';
-
+		// Ask the user if he want's to restart the associated port
+		echo '<br />To restart Port '.$row['port'].' on Switch '.$row['switch'].' click <a href="'.$_SERVER['PHP_SELF'].'?action=restartport&switch='.$row['switch'].'&port='.$row['port'].'">here</a>.'; 
 	}
-
-
 }
+// mark switchport for restart
+else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQUEST['port']!=''){
+	// make sure this switchport exists
+	$sql='SELECT p.switch, p.port, p.location, p.comment FROM port p WHERE p.switch=\''.$_REQUEST['switch'].'\' AND p.port=\''.$_REQUEST['port'].'\';';
+	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
+	if (mysql_num_rows($result)!=1){
+		echo 'Switch/Port missmatch.';
+	}
+	// Got it, mark port for restart
+	$sql='UPDATE port SET (restart_now=1) WHERE p.switch=\''.$_REQUEST['switch'].'\' AND p.port=\''.$_REQUEST['port'].'\';';
+	mysql_query($sql) or die('Query failed: ' . mysql_error());
+	// Mark OK
+	// log what we have done
+	$sql='INSERT INTO vmpslog (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'restart_port switch '.$_REQUEST['switch'].' '.$_REQUEST['port'].', Office:'.$row['location'].', '.$row['comment'].';';
+	mysql_query($sql) or die('Query failed: ' . mysql_error());
+	// Port marked for restart
+	echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
+}
+
 // no special action, so display all today's unknowns
 else {
 	// get all the unknown systems
