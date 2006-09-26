@@ -180,11 +180,11 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		$sql.=' WHERE mac=\''.$_REQUEST['mac'].'\';';
 		echo $sql;
 		// update the given data set
-		$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
+		mysql_query($sql) or die('Query failed: ' . mysql_error());
 		if (mysql_affected_rows()==1){ // Update OK
 			// log what we have done
 			$sql='INSERT INTO history (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'Updated system: '.$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$REQUEST['comment'].', '.$REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$REQUEST['vlan'].'\');';
-			$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
+			mysql_query($sql) or die('Query failed: ' . mysql_error());
 			// Update successfull
 			echo '<br />Update successfull.';
 		}
