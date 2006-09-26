@@ -170,6 +170,8 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		$sql.='status='.$_REQUEST['status'].', vlan='.$_REQUEST['vlan'];
 		// ntaccount
 		$sql.=($_REQUEST['assocntacccount']!=''?', description=\''.$_REQUEST['assocntacccount'].'\' ':'');
+		// got office?
+		$sql.=($_REQUEST['office']!=''?', office=\''.$_REQUEST['office'].'\'':'');
 		// got comment?
 		$sql.=($_REQUEST['comment']!=''?', comment=\''.$_REQUEST['comment'].'\'':'');
 		// set what we know for sure (changedate, changeuser,...)
