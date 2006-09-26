@@ -202,8 +202,8 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 	mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// Mark OK
 	// log what we have done
-	//$sql='INSERT INTO vmpslog (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'restart_port switch '.$_REQUEST['switch'].' '.$_REQUEST['port'].', Office:'.$row['location'].', '.$row['comment'].'\';';
-	//mysql_query($sql) or die('Query failed: ' . mysql_error());
+	// $sql='INSERT INTO vmpslog (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'restart_port switch '.$_REQUEST['switch'].' '.$_REQUEST['port'].', Office:'.$row['location'].', '.$row['comment'].'\';';
+	// mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// Port marked for restart
 	echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
 }
