@@ -109,7 +109,7 @@ if ($_REQUEST['action']=='edit'){
 		echo '</td></tr>'."\n";
 		// User
 		echo '<tr><td>User:</td><td>'."\n";
-		echo '<select name="assocntacccount">';
+		echo '<select name="assocntaccount">';
 		$sql='SELECT assocntaccount, surname, givenname FROM users ORDER BY surname'; // Get details for all users
 		$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
 		if (mysql_num_rows($res)>0){
@@ -153,7 +153,6 @@ if ($_REQUEST['action']=='edit'){
 else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14 
 			&& ($_REQUEST['status']==0 || $_REQUEST['status']==1) 
 			&& is_numeric($_REQUEST['vlan'])) {
-	print_r($_REQUEST);
 	// make sure we got a matching mac in systems, a vlan with this number and a useraccount
 	$sql='SELECT sys.mac, sys.port, sys.switch, vl.id, users.assocntaccount FROM systems sys, vlan vl, users WHERE sys.mac=\''.$_REQUEST['mac'].'\' AND vl.id='.$_REQUEST['vlan'].' AND users.assocntaccount=\''.$_REQUEST['assocntaccount'].'\';';
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
@@ -169,7 +168,7 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		// status, vlan
 		$sql.='status='.$_REQUEST['status'].', vlan='.$_REQUEST['vlan'];
 		// ntaccount
-		$sql.=($_REQUEST['assocntacccount']!=''?', description=\''.$_REQUEST['assocntacccount'].'\' ':'');
+		$sql.=($_REQUEST['assocntaccount']!=''?', description=\''.$_REQUEST['assocntaccount'].'\' ':'');
 		// got office?
 		$sql.=($_REQUEST['office']!=''?', office=\''.$_REQUEST['office'].'\'':'');
 		// got comment?
@@ -185,7 +184,7 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		$sql='INSERT INTO history (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'Updated system: '.$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
 		mysql_query($sql) or die('Query failed: ' . mysql_error());
 		// Update successfull
-		echo '<br />Update successfull.';
+		echo '<br />Update successfull.<br />';
 
 	}
 
