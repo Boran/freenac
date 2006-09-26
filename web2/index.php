@@ -192,13 +192,13 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 // mark switchport for restart
 else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQUEST['port']!=''){
 	// make sure this switchport exists
-	$sql='SELECT p.switch, p.name as port, p.location, p.comment FROM port p WHERE p.switch=\''.$_REQUEST['switch'].'\' AND p.port=\''.$_REQUEST['port'].'\';';
+	$sql='SELECT p.switch, p.name as port, p.location, p.comment FROM port p WHERE p.switch=\''.$_REQUEST['switch'].'\' AND p.name=\''.$_REQUEST['port'].'\';';
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	if (mysql_num_rows($result)!=1){
 		echo 'Switch/Port missmatch.';
 	}
 	// Got it, mark port for restart
-	$sql='UPDATE port SET (restart_now=1) WHERE p.switch=\''.$_REQUEST['switch'].'\' AND p.port=\''.$_REQUEST['port'].'\';';
+	$sql='UPDATE port SET (restart_now=1) WHERE p.switch=\''.$_REQUEST['switch'].'\' AND p.name=\''.$_REQUEST['port'].'\';';
 	mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// Mark OK
 	// log what we have done
