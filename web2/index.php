@@ -181,17 +181,14 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		echo $sql;
 		// update the given data set
 		mysql_query($sql) or die('Query failed: ' . mysql_error());
-		if (mysql_affected_rows()!=0){ // Update OK
-			// log what we have done
-			$sql='INSERT INTO history (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'Updated system: '.$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
-			echo $sql;
-			mysql_query($sql) or die('Query failed: ' . mysql_error());
-			// Update successfull
-			echo '<br />Update successfull.';
-		}
-		else { // Update failed
-			echo '<br />Update failed.';
-		}
+		// Update OK
+		// log what we have done
+		$sql='INSERT INTO history (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'Updated system: '.$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
+		echo $sql;
+		mysql_query($sql) or die('Query failed: ' . mysql_error());
+		// Update successfull
+		echo '<br />Update successfull.';
+
 	}
 
 
