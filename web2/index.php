@@ -198,7 +198,7 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 		echo 'Switch/Port missmatch.';
 	}
 	// Got it, mark port for restart
-	$sql='UPDATE port SET (restart_now=1) WHERE p.switch=\''.$_REQUEST['switch'].'\' AND p.name=\''.$_REQUEST['port'].'\';';
+	$sql='UPDATE port SET restart_now=1 WHERE switch=\''.$_REQUEST['switch'].'\' AND name=\''.$_REQUEST['port'].'\';';
 	mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// Mark OK
 	// log what we have done
