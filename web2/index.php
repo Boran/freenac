@@ -38,7 +38,7 @@ $entityname='MyCompany';
 ///////////////////////////////////////////
 
 //session setup
-session_name('FreeNAC');
+//session_name('FreeNAC');
 session_start();
 
 // if not already set, set the $_SESSION vars
