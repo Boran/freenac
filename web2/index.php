@@ -282,7 +282,7 @@ else {
 	else {
 		// if it is a search print the search area
 		if ($_REQUEST['action']='search'){
-			echo <form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
+			echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
 			echo '<tr>
 				<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
 				<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
@@ -354,6 +354,7 @@ function print_footer(){
 // Print the lookup results
 //
 function print_resultset($res){
+	global $_SERVER['PHP_SELF'];
 	$ret='';
 	while ($row=mysql_fetch_array($res)){
 		$ret.=($i%2==0)?'<tr class="light">':'<tr class="dark">';
