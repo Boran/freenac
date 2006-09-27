@@ -1,14 +1,14 @@
-
-MySQL database
-____________________________________________
+s
+_________ MySQL database_________________________________
 The MySQL table schemas is shown at XX
 
 The systems table the the main VMPS table, all other tables are lookups or for logging. 
 
 The documentation of all patch cables is an independent table that can be searched for patches in a particular office, connected to a specific switch/port, or belonging to a specific user.
 
-Server programs
-______________________________________________
+
+
+_________  Server programs ____________________________________
 
 The server-side programs are written in PHP and currently run on Solaris & Linux, using SSH and Syslog / Email / a MySQL table for notification. They are normally installed in /opt/nac.
 
@@ -16,11 +16,14 @@ vmps_logcheck.sh  (cron, runs on syslog server)
 ----------------
 Monitor the VMPS syslog logs and notify the Sysadmin via email of unusual events. This also uses the binary program “logtail”.
 
-monitor_vmps_flap.sh (cron, runs on syslog server)
---------------------
-Monitor the VMPS logs and notify the Sysadmin via email of too frequent authentications on a port, which is an indication for “port flapping”. This happens, for example, when a hub with 2 PCs is attached to a port and each PC is authenticated on a different Van (or a real PC + a VM with different authentication). This script should be rewritten in PHP and improved with DB lookups.
 
-vmps_lastseen (daemon, runs master VMPS server)
+flap_detect (cron, runs on master)
+--------------------
+Monitor the VMPS syslog logs and notify the Sysadmin via email of too frequent authentications on a port, which is an indication for “port flapping”. This happens, for example, when a hub with 2 PCs is attached to a port and each PC is authenticated on a different Van (or a real PC + a VM with different authentication). This script should be rewritten in PHP and improved with DB lookups.
+
+
+
+vmps_lastseen (daemon, runs master server)
 -------------
 Parse the syslog logs for ‘vmpsd’ entries and:
 1.	Update the “last seen” fields for the relevant Mac, if the system is known
@@ -41,39 +44,56 @@ This feature is only allowed if the Vlan on the port and assigned to the MAC are
     - And, do a “port check” as noted above (check for active port/hub & vlan group).
 4. Log decisions to syslog, and key events to DB (visible in the GUI).
 
-Cron_restart_port: (cron, runs on DB)
+
+vqpcli.pl: (debugging)
+---------
+OpenVMPS tool for generating VMPS requests, for testing. See also troubleshooting.txt.
+
+
+
+Cron_restart_port: (cron, runs on Master)
 ------------------
 Go though the port table and check for the restart flag, and restart the ports via SNMP (if this option is enabled in config.inc)
 
-monitor_processes.pl (cron, runs on VMPS server)
+
+router_mac: (cron, runs on Master)
+----------
+Get MAC / IP table of active hosts from core routers, update the IP address in the system table for the corresponding mac. If device name is 'unknown' optionally lookup dns and update the device name. See also config.inc.
+
+ 
+monitor_processes.pl (cron, runs on slave/master server)
 --------------------
 Run from root cron to alert via email if the VMPS process dies.
 
 
+monitor_mysql_slave: (cron, runs on slave server)
+-------------------
+Verify that MySQL replication is working.
+
+port_scan: see README.port_scan
+
+proctst:   (daemon, runs on slave/master)
+-------
+restart key processes if they die.
+
 User management:
 -----------------
-1.	Purge_unknowns: (cron, runs on DB)
+.	purge_unknowns: (cron, runs on master)
 	Clean old entries in the systems table, which are two months or older and still have the name “unknown”.
-2.	Vmps_user: (cron, runs on DB)
-	Update User table from Direx, add new users and update LastSeen for existing users.
-3.	vmps_user_special (cron, runs on DB)
-	Update “Manual User list” from Direx (those outside GG), add new users and update LastSeen for existing users.
-4.	report_old_users: (cron, runs on DB)
-	List users no longer in Direx, but still is the VMPS user table.
-5.	direx_tXX: lookup a specific user from Direx.
-
 
 Port management
 ---------------
-6.	vmps_get_port: Search for details on a specific port, given the switch IP and port no. on the command line, from the "port" table.
-7.	dump_ports: Write a list of ports & valns to an email for disaster recovery.
-8.	Restart_port: Stop and restart a switch port via SNMP.
+.	vmps_get_port: Search for details on a specific port, given the switch IP and port no. on the command line, from the "port" table.
+.	dump_ports: Write a list of ports & valns to an email for disaster recovery.
+.	Restart_port: Stop and restart a switch port via SNMP.
+
 
 Helper scripts:
 ---------------
-9.	Global configuration file: config.inc
-10.	vmps_log (on DB): Log administrative messages to the MySQL vmpslog table, visible to the GUI.
-11.	check_infnet_mac: Lookup the details of an Infnet PC from SCIS’s “PC explorer” website, given its MAC address.
-12.	Backup_vmpslog: Do backups of the DB to a separate machine (BW only).
-13.	Funcs.inc: common functions used by other scripts.
+.	Global configuration file: config.inc
+.	vmps_log (on DB): Log administrative messages to the MySQL vmpslog table, visible to the GUI.
+.	Backup_vmpslog: Do backups of the DB to a separate machine (site specific)
+.	Funcs.inc: common functions used by other scripts.
+. monitor_allows.sh:
+. monitor_allows_count.sh:
 
