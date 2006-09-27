@@ -23,7 +23,7 @@
 
 
 
-## MySQL DB settings for all scripts
+// MySQL DB settings for all scripts
   $dbhost="localhost";
   $dbname="inventory";
   $dbuser="inventwrite";
@@ -31,6 +31,9 @@
 
 // Variable setup
 $entityname='MyCompany';
+
+// unknown machines in the database
+$unknown='unknown';
 
 
 ///////////////////////////////////////////
@@ -43,7 +46,7 @@ session_start();
 
 // if not already set, set the $_SESSION vars
 if (!isset($_SESSION['name'])){
-	$_SESSION['name']='%unknown%';
+	$_SESSION['name']=$unknown;
 	$_SESSION['mac']='';
 	$_SESSION['username']='';
 }
@@ -61,6 +64,26 @@ $dblink=mysql_connect($dbhost, $dbuser, $dbpass)
 mysql_select_db($dbname,$dblink) 
 	or die('Could not select database '.$dbname);
 
+// handle search requests
+if ($_REQUEST['action']='search'){
+	// clear 
+	if ($_REQUEST['submit']=='Clear'){
+		$_SESSION['name']=$unknown;
+		$_SESSION['mac']='';
+		$_SESSION['username']='';
+	}
+	if ($_REQUEST['submit']=='Submit'){
+		if ($_REQUEST['name']!=''){
+			$_SESSION['name']=$_REQUEST['name'];
+		}
+		if ($_REQUEST['mac']!=''){
+			$_SESSION['mac']=$_REQUEST['mac'];
+		}
+		if ($_REQUEST['username']!=''){
+			$_SESSION['username']=$_REQUEST['username'];
+		}
+	}
+}
 
 // print the page header; so the user knows there's (much) more to come
 echo print_header();
