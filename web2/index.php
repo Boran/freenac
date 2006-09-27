@@ -33,7 +33,7 @@
 $entityname='MyCompany';
 
 // unknown machines in the database
-$unknown='unknown';
+$unknown='%unknown%';
 
 
 ///////////////////////////////////////////
@@ -263,7 +263,7 @@ else {
 	$sql.=' ORDER BY sys.LastSeen;';
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// echo table head
-	echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET"><table width="500" border="0">';
+	echo '<table width="500" border="0">';
 	echo'<tr>
 			<td width="124" class="center">Name</td>
 			<td width="99" class="center">MAC</td>
@@ -282,7 +282,7 @@ else {
 	else {
 		// if it is a search print the search area
 		if ($_REQUEST['action']='search'){
-			//echo '<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
+			echo <form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
 			echo '<tr>
 				<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
 				<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
@@ -297,7 +297,7 @@ else {
 		$i=0;
 		echo print_resultset($result);
 	}
-	echo '</table></form>';
+	echo '</table>';
 }
 
 
