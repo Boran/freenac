@@ -38,7 +38,7 @@ $entityname='MyCompany';
 ///////////////////////////////////////////
 
 //session setup
-//session_name('FreeNAC');
+session_name('FreeNAC');
 session_start();
 
 // if not already set, set the $_SESSION vars
@@ -224,13 +224,13 @@ else {
 	if ($_REQUEST['action']='search'){
 		$sql.=' WHERE (1=1)';
 		if ($_SESSION['name']!=''){
-			$sql.=' AND sys.name=\''.$_SESSION['name'].'\'';
+			$sql.=' AND sys.name LIKE \''.$_SESSION['name'].'\'';
 		}
 		if ($_SESSION['mac']!=''){
-			$sql.=' AND sys.mac=\''.$_SESSION['mac'].'\'';
+			$sql.=' AND sys.mac LIKE \''.$_SESSION['mac'].'\'';
 		}
 		if ($_SESSION['username']!=''){
-			$sql.=' AND sys.username=\''.$_SESSION['username'].'\'';
+			$sql.=' AND sys.username LIKE \''.$_SESSION['username'].'\'';
 		}
 	}
 	// ... if not get today's unknowns
