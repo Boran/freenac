@@ -38,8 +38,15 @@ $entityname='MyCompany';
 ///////////////////////////////////////////
 
 //session setup
-//session_name('FreeNAC');
-//session_start();
+session_name('FreeNAC');
+session_start();
+
+// if not already set, set the $_SESSION vars
+if (!isset($_SESSION['name'])){
+	$_SESSION['name']='%unknown%';
+	$_SESSION['mac']='';
+	$_SESSION['username']='';
+}
 
 // validate webinput
 $_GET=array_map('validate_webinput',$_GET);
@@ -145,7 +152,7 @@ if ($_REQUEST['action']=='edit'){
 		echo '<tr><td>&nbsp;</td><td>'."\n";
 		echo '<input type="submit" name="submit" value="Submit" />'."\n";
 		echo '</td></tr>'."\n";
-		echo '</table><input type="hidden" name="action" value="update"></form>';
+		echo '</table><input type="hidden" name="action" value="update" /></form>';
 	}
 	
 }
@@ -208,13 +215,29 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 	echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
 }
 
-// no special action, so display all today's unknowns
+// display a list a systems
 else {
-	// get all the unknown systems
+	// get the systems
 	$sql='SELECT sys.name, sys.mac, stat.value as status, sys.vlan, vlan.value as vlanname, sys.description as user, sys.port, swi.name as switch
-			FROM systems as sys LEFT JOIN status as stat ON sys.status=stat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN switch as swi ON sys.switch=swi.ip
-			WHERE sys.name=\'unknown\' AND sys.LastSeen > (NOW() - INTERVAL 1 DAY)
-			ORDER BY sys.LastSeen;';
+			FROM systems as sys LEFT JOIN status as stat ON sys.status=stat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN switch as swi ON sys.switch=swi.ip';
+	// if its a search adjust the where...
+	if ($_REQUEST['action']='search'){
+		$sql.=' WHERE (1=1)';
+		if ($_SESSION['name']!=''){
+			$sql.=' AND sys.name=\''.$_SESSION['name'].'\'';
+		}
+		if ($_SESSION['mac']!=''){
+			$sql.=' AND sys.mac=\''.$_SESSION['mac'].'\'';
+		}
+		if ($_SESSION['username']!=''){
+			$sql.=' AND sys.username=\''.$_SESSION['username'].'\'';
+		}
+	}
+	// ... if not get today's unknowns
+	else{
+		$sql.=' WHERE sys.name=\'unknown\' AND sys.LastSeen > (NOW() - INTERVAL 1 DAY)';
+	}
+	$sql.=' ORDER BY sys.LastSeen;';
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// echo table head
 	echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET"><table width="500" border="0">';
@@ -234,6 +257,19 @@ else {
 	}
 	// Found something
 	else {
+		// if it is a search print the search area
+		if ($_REQUEST['action']='search'){
+			//echo '<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
+			echo '<tr>
+				<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
+				<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
+				<td colspan="2" class="center">&nbsp;</td>
+				<td class="center"><input name="username" type="text" size="14" value="'.$_SESSION['username'].'" /></td>
+				<td colspan="2" class="right"><input type="submit" name="submit" value="Clear" />
+				<input type="submit" name="submit" value="Submit" /></td>
+			</tr>
+			<input type="hidden" name="action" value="search" /></form>';
+		}
 		// Iterate trough the result set
 		$i=0;
 		echo print_resultset($result);
