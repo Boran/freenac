@@ -249,12 +249,12 @@ else {
 		if ($_SESSION['username']!=''){
 			$sql.=' AND sys.description LIKE \''.$_SESSION['username'].'\'';
 		}
-		$sql.=' ORDER BY sys.name DESC;';
+		$sql.=' ORDER BY sys.name ASC;';
 	}
 	// ... if not get today's unknowns
 	else{
 		$sql.=' WHERE sys.name=\'unknown\' AND sys.LastSeen > (NOW() - INTERVAL 1 DAY)';
-		$sql.=' ORDER BY sys.LastSeen DESC;';
+		$sql.=' ORDER BY sys.LastSeen ASC;';
 	}
 	
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
