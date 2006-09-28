@@ -329,7 +329,7 @@ function print_header(){
 			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
 		  </tr>
 		  <tr>
-			<td class="center"><a href="'.$SERVER['PHP_SELF'].'index.php">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'index.php?action=search">Search</a></td>
+			<td class="center"><a href="'.$SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a></td>
 		  </tr>
 		</table>
 		';
