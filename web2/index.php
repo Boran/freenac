@@ -65,7 +65,7 @@ mysql_select_db($dbname,$dblink)
 	or die('Could not select database '.$dbname);
 
 // handle search requests
-if ($_REQUEST['action']='search'){
+if ($_REQUEST['action']=='search'){
 	// clear 
 	if ($_REQUEST['submit']=='Clear'){
 		$_SESSION['name']=$unknown;
@@ -281,15 +281,15 @@ else {
 	// Found something
 	else {
 		// if it is a search print the search area
-		if ($_REQUEST['action']='search'){
+		if ($_REQUEST['action']=='search'){
 			echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
 			echo '<tr>
 				<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
 				<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
 				<td colspan="2" class="center">&nbsp;</td>
 				<td class="center"><input name="username" type="text" size="14" value="'.$_SESSION['username'].'" /></td>
-				<td colspan="2" class="right"><input type="submit" name="submit" value="Clear" />
-				<input type="submit" name="submit" value="Submit" /></td>
+				<td colspan="2" class="right"><input type="submit" name="submit" value="Submit" />
+				<input type="submit" name="submit" value="Clear" /></td>
 			</tr>
 			<input type="hidden" name="action" value="search" /></form>';
 		}
@@ -329,7 +329,7 @@ function print_header(){
 			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
 		  </tr>
 		  <tr>
-			<td class="center"><a href="'.$SERVER['PHP_SELF'].'index.php">List Unknowns</a></td>
+			<td class="center"><a href="'.$SERVER['PHP_SELF'].'index.php">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'index.php?action=search">Search</a></td>
 		  </tr>
 		</table>
 		';
@@ -354,7 +354,7 @@ function print_footer(){
 // Print the lookup results
 //
 function print_resultset($res){
-	global $_SERVER['PHP_SELF'];
+	global $_SERVER;
 	$ret='';
 	while ($row=mysql_fetch_array($res)){
 		$ret.=($i%2==0)?'<tr class="light">':'<tr class="dark">';
