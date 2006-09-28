@@ -213,8 +213,8 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		// log what we have done
 		$sql='INSERT INTO history (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'Updated system: '.$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
 		mysql_query($sql) or die('Query failed: ' . mysql_error());
-		// Update successfull
-		echo '<br />Update successfull.<br />';
+		// Update successful
+		echo '<br />Update successful.<br />';
 		// Ask the user if he want's to restart the associated port
 		echo '<br />To restart Port '.$row['port'].' on Switch '.$row['switch'].' click <a href="'.$_SERVER['PHP_SELF'].'?action=restartport&switch='.$row['switch'].'&port='.$row['port'].'">here</a>.'; 
 	}
@@ -244,7 +244,7 @@ else {
 	$sql='SELECT sys.name, sys.mac, stat.value as status, sys.vlan, vlan.value as vlanname, sys.description as user, sys.port, swi.name as switch
 			FROM systems as sys LEFT JOIN status as stat ON sys.status=stat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN switch as swi ON sys.switch=swi.ip';
 	// if its a search adjust the where...
-	if ($_REQUEST['action']='search'){
+	if ($_REQUEST['action']=='search'){
 		$sql.=' WHERE (1=1)';
 		if ($_SESSION['name']!=''){
 			$sql.=' AND sys.name LIKE \''.$_SESSION['name'].'\'';
@@ -253,7 +253,7 @@ else {
 			$sql.=' AND sys.mac LIKE \''.$_SESSION['mac'].'\'';
 		}
 		if ($_SESSION['username']!=''){
-			$sql.=' AND sys.username LIKE \''.$_SESSION['username'].'\'';
+			$sql.=' AND sys.description LIKE \''.$_SESSION['username'].'\'';
 		}
 	}
 	// ... if not get today's unknowns
@@ -274,25 +274,25 @@ else {
 			<td width="66" class="center">Switch</td>
 		  </tr>
 	';
+	// if it is a search print the search area
+	if ($_REQUEST['action']=='search'){
+		echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
+		echo '<tr>
+			<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
+			<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
+			<td colspan="2" class="center">&nbsp;</td>
+			<td class="center"><input name="username" type="text" size="14" value="'.$_SESSION['username'].'" /></td>
+			<td colspan="2" class="right"><input type="submit" name="submit" value="Submit" />
+			<input type="submit" name="submit" value="Clear" /></td>
+		</tr>
+		<input type="hidden" name="action" value="search" /></form>';
+	}
 	// Nothing found.
 	if (mysql_num_rows($result)<1){
 		echo ' <td colspan="7">No entries found.</td></td>';
 	}
 	// Found something
 	else {
-		// if it is a search print the search area
-		if ($_REQUEST['action']=='search'){
-			echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
-			echo '<tr>
-				<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
-				<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
-				<td colspan="2" class="center">&nbsp;</td>
-				<td class="center"><input name="username" type="text" size="14" value="'.$_SESSION['username'].'" /></td>
-				<td colspan="2" class="right"><input type="submit" name="submit" value="Submit" />
-				<input type="submit" name="submit" value="Clear" /></td>
-			</tr>
-			<input type="hidden" name="action" value="search" /></form>';
-		}
 		// Iterate trough the result set
 		$i=0;
 		echo print_resultset($result);
