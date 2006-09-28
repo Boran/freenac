@@ -73,15 +73,15 @@ if ($_REQUEST['action']=='search'){
 		$_SESSION['username']='';
 	}
 	if ($_REQUEST['submit']=='Submit'){
-		if ($_REQUEST['name']!=''){
+		//if ($_REQUEST['name']!=''){
 			$_SESSION['name']=$_REQUEST['name'];
-		}
-		if ($_REQUEST['mac']!=''){
+		//}
+		//if ($_REQUEST['mac']!=''){
 			$_SESSION['mac']=$_REQUEST['mac'];
-		}
+		//}
 		if ($_REQUEST['username']!=''){
 			$_SESSION['username']=$_REQUEST['username'];
-		}
+		//}
 	}
 }
 
