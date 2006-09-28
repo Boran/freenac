@@ -1,0 +1,124 @@
+________ CHANGE Version 2.1 ___________
+
+---- Changes since From snapshot 20.05.2006 (we call it Version 2.0) to V2.1:
+---- Tarball freenac_2.1.rc1.tar.gz created. Comprises revision 155 from repository ho/14.9.06
+
+
+  contrib/init.d: Fix startup order, add 5 sec delay in vmps to ensure mysql OK.
+
+  Move rdiff.exclude rdiff.run to contrib, enable from cron.
+
+  funcs.inc: new insert_user()
+    Add mysql_real_escape_string to reporterr
+
+  router_mac_ip, config.inc: 
+    Add new router_mac_ip_update_from_dns feature.
+ 
+  monitor_mysql_slave: 
+    New script to be run on MySQL slaves. 
+    See http://www.opennac.net/phpBB2/viewtopic.php?p=12#12
+
+  vmps_lastseen: 
+    When new ports found set the 'office' field to the patch location 
+    (if available) or then switch location.
+    Better debugging with dryrun. Check feof. If a 00000 mac is
+    received reset log_msg and other vars.
+    Move direx_tXX & check_infnet_mac to swisscom.only subdir
+    replace direx_tXX with direx (direx_sync_user() function)
+    Username in Uppercase: set keine->KEINE
+
+  vmps_lastseen & sms_infnet_mac: [status: INO: OK, BW: OK ACA:OK ]
+    Rather than using a HTTP request to PCexplorer, now do an MS-SQL request
+    to the SMS DB. This also requires installing /opt/freetds and a new PHP
+    that is linked against the TDS libraries.
+    Add Operating system in SMS DB to new os3 field in systems table,
+    when infnet systems found. 
+
+  vmps_lastseen: 
+    Move swisscom includes/SMS variables to config.inc
+
+  Move to swisscom.only subdir: 
+    check_infnet_mac: Better debugging use funcs.inc, remove debug1()
+    direx_tXX: Use simplexml  [depreciated]
+    direx: Use simplexml  [for direx_sync_user(), new]
+    report_old_users: update cron.
+    vmps_users: , handle umlauts for all fields, update cron.
+    vmps_users_special: update cron. 
+      handle Umlauts & Accents correctly
+    Also move relevant /opt/vmps/RCS files to /opt/vmps/swisscom.only/RCS
+
+  syslog: logrotate_syslog_conf
+  monitor_allows_count.sh
+    Report to syslog, not email (to reduce daily flood)
+
+  purge_unknowns: 
+   search for *unknown* and not just 'unknown' systems
+
+  DB: 
+  There needs to be a 'keine' user, that all unknown machines are assigned to:
+    insert into users set AssocNtAccount='KEINE';
+    update systems set description='KEINE' where description='';
+
+  DB: 
+    grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
+    ALTER TABLE `inventory`.`sys_os` ADD PRIMARY KEY(`id`);
+    ALTER TABLE `inventory`.`sys_class` ADD PRIMARY KEY(`id`);
+    ALTER TABLE `inventory`.`systems` DROP PRIMARY KEY;
+    ALTER TABLE `inventory`.`systems` ADD PRIMARY KEY(`mac`);
+    alter table systems add column os3 varchar(30);
+    alter table systems add column os4 varchar(30);
+
+    Username in Uppercase:
+    update inventory.systems set description=UPPER(description);
+    update inventory.users set AssocNtAccount=UPPER(AssocNtAccount);
+
+  DB: 
+    Create additioanl classification via lookup table sys_class2: and populate manually.
+      create table sys_class2 SELECT * from sys_class;
+      grant UPDATE,INSERT ON inventory.sys_class2   to inventwrite@'%' 
+    +----+----------------+
+    | id | value          |
+    +----+----------------+
+    |  0 | unknown        |
+    |  1 | Typ I      |
+    |  2 |  Typ II     |
+    |  3 |  Typ III    |
+    | 10 | NON-GWP Typ I  |
+    | 20 | NON-GWP Typ II |
+    +----+----------------+
+    Add new field to systems table:
+      alter table systems add column class2 int(11) default 0;
+      alter table systems drop column AuthLast;
+      alter table systems drop column AuthPort;
+      alter table systems drop column AuthSw;
+      alter table systems drop column AuthVlan;
+      alter table systems add column scannow tinyint(4) default 0;
+
+  DB: 
+    create table vstatus select * from status;
+    No longer needed old 'status' table: but upgrade Delphi GUI first.
+      drop table status;
+
+
+  UNIX: 
+    ln -s /opt/vmps /opt/nac
+    ln -s /opt/nac21 /opt/nac
+
+  Subversion: 
+    Move all scripts to bin/etc/contrib subdirectories, under SVN
+    control. Move svn doc directory to trunk.
+
+  Delphi vmps.exe GUI v1.2.0.97
+    Edit tab: add nmap, epo, SMS fields. Organised bottom part into new tab.
+    Edit tab: add new classification 
+    Enable Admin->Encrypt user before connecting
+    Fix Overview->By User list, so it includes Surname/Forename.
+    Overview: drop green colour for Secure
+    Edit tab: add Inventory details, Inventory query button
+    Rewrite 'Overview' to use an advanced Query, making it faster.
+    vmps.xml: add parameters for link to static inventory:
+        <settings StaticInv="1" />
+        <mssql-inv server="SERVER\INSTANCE" auth="PASSWORD" database="inventory" />  	
+
+
+----- /Baseline: Snapshot 20.05.2006

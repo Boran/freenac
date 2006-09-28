@@ -83,28 +83,26 @@ else
    $var['equipments']=0;
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
+if ($flagscannow)
+   reporterr('info',"port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 
 function check_requirements()  //Checks for required functions and tables structure
 {
    global $scan_directory, $time_threshold, $what_units_time,$nmap_flags,$which_nmap;
    $functions=get_defined_functions();
-   $functions=$functions['user'];
+   $functions=$functions['user']; //A little bit of paranoia :)
    if (!in_array('debug1',$functions))
-   {
-      echo "Function debug1 not defined in funcs.inc\n";
-      exit();
-   }
+      check_and_abort("Function debug1 not defined in funcs.inc\n",0);
    if (!in_array('logit',$functions))
-   {
-      echo "Function logit not defined in funcs.inc\n";
-      exit();
-   }
+      check_and_abort("Function logit not defined in funcs.inc\n",0);
    if (!in_array('db_connect',$functions))
       check_and_abort("Function db_connect not defined in funcs.inc\n",0);
    if (!in_array('syscall',$functions))
       check_and_abort("Function syscall not defined in funcs.inc\n",0);
    if (!in_array('normalise_mac',$functions))
       check_and_abort("Function normalise_mac not defined in funcs.inc\n",0);
+   if (!in_array('reporterr',$functions))
+      check_and_abort("Function reporterr not defined in funcs.inc\n",0);
    if (!isset($which_nmap))
       check_and_abort("Var \$which_nmap not defined in port_scan.inc\n",0);
    if (!isset($scan_directory))
@@ -152,10 +150,15 @@ function message($string)
 {
    global $output,$debug_flag1,$output_to_syslog;
    if (($output===TRUE)&&($debug_flag1===FALSE))
+   {
       if ($output_to_syslog===TRUE)
-         logit($string);   
+      {
+         logit($string);
+         reporterr('info',$string);
+      }   
       else
          echo $string;
+   }
 }
 
 function validate($string)
@@ -618,6 +621,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       message("port_scan ended abnormally.\n");
       debug1($message);
       debug1("port_scan ended abnormally.\n");
+      reporterr('err',$message);
+      reporterr('err',"port_scan ended abnormally.");
       exit();
    }
    else
@@ -627,6 +632,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       message("port_scan ended abnormally.\n");
       debug1($message);
       debug1("port_scan ended abnormally.\n");
+      reporterr('err',$message);
+      reporterr('err',"port_scan ended abnormally.");
       exit();
    }
 }
@@ -676,6 +683,7 @@ function get_ips()	//This function will get some ips to scan
          $query="update systems set scannow=0 where r_ip='".$result['r_ip']."';";
          execute_query($query);
          logit('Nmap scan-now of ' . $result['r_ip'] . ' started');
+         reporterr('info','Nmap scan-now of ' . $result['r_ip'] . ' started');
       }
    }
    else if ($argc>=2)
@@ -866,6 +874,7 @@ function get_ips()	//This function will get some ips to scan
                {
                   debug1($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
                   logit($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
+		  reporterr('info',$rejected_ip." doesn't meet criteria specified in netsallowed table\n");
                }
             }
       }
@@ -925,6 +934,7 @@ function parse_scanfile($scan_file,$list)
             {
                debug1($list['ip'][$i]." is down\n");
                logit($list['ip'][$i]." is down\n");
+               reporterr('info',$list['ip'][$i]." is down\n");
             }
             if ($flagscannow) //Lets set os=Unreachable to those devices which are present in the nac_hostscanned table
             {
@@ -1043,6 +1053,7 @@ function parse_scanfile($scan_file,$list)
       {
          debug1($down." is down\n");
          logit($down." is down\n");
+         reporterr('info',$down." is down\n");
       }
       for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
       {

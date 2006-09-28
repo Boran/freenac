@@ -17,3 +17,7 @@ Configuration in vmps.xml:
     c) Fill in the Username and Password, and click on Generate
     d) Copy the value of the 'generated key' filed to the 'auth' field in vmps.xml
     e) Restart the GUI, and press "Connect"
+
+
+CHANGES:
+v1.2.0.100: fix 'scannow' button, remove error message when writing patchtable.

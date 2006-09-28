@@ -1,0 +1,21 @@
+___ README.web2 ______
+
+To do:
+- installation
+- configuration
+- usage
+
+
+
+vi /etc/apache2/conf.d/vmps.conf
+
+Alias /web2 /opt/nac/web2
+Alias /freenac /opt/nac/web2
+        <Directory /opt/nac/web2/>
+          Options none
+          Order deny,allow
+          #allow from 127.0.0.1
+          #allow from 10.85.
+          allow from all
+        </Directory>
+

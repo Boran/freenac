@@ -1,6 +1,9 @@
 #!/bin/sh
 #
 # /etc/init.d/vmps
+# Suse Linux:
+#   ln -s /etc/init.d/vmps /sbin/rcvmps
+#   chkconfig vmps_lastseen on
 #
 ### BEGIN INIT INFO
 # Provides:       vmps
