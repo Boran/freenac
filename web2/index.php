@@ -26,11 +26,11 @@
 // MySQL DB settings for all scripts
   $dbhost="localhost";
   $dbname="inventory";
-  $dbuser="inventwrite";
-  $dbpass="invent99";              # keep this secret!
+  $dbuser="inventwrite";			# this user needs write access to the DB
+  $dbpass="invent99";			    # keep this secret!
 
 // Variable setup
-$entityname='MyCompany';
+$entityname='MyCompany';			# name of your company
 
 // unknown machines in the database
 $unknown='%unknown%';
