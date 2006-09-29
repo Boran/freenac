@@ -34,7 +34,7 @@ _________Configure_________
 	$dbhost="localhost";
 	$dbname="inventory";
 	$dbuser="inventwrite";		# this user needs write access to the DB
-	$dbpass="inventpass";             # keep this secret!
+	$dbpass="inventpass";           # keep this secret!
 
 	// Variable setup
 	$entityname='MyCompany';	# name of your company
