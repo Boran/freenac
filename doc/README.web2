@@ -2,7 +2,7 @@ NAC Web2 Interface README
 
 _________Prerequisites_________
 
-- Working installation of Apache with PHP4 or higher (with support for sessions)
+- Working installation of Apache with PHP4 or higher (with support for sessions) as described in the file "master_server_install.txt".
 - Working FreeNAC installation
 
 
