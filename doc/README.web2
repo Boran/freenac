@@ -1,21 +1,46 @@
-___ README.web2 ______
+NAC Web2 Interface README
 
-To do:
-- installation
-- configuration
-- usage
+_________Prerequisites_________
+
+- Working installation of Apache with PHP4 or higher (with support for sessions)
+- Working FreeNAC installation
 
 
+_________Install_________
 
-vi /etc/apache2/conf.d/vmps.conf
+- Get the latest version from Sourceforge and download it to /opt/nac/web2 (stable) or /opt/nacX.Y/web2 (unstable).
 
-Alias /web2 /opt/nac/web2
-Alias /freenac /opt/nac/web2
-        <Directory /opt/nac/web2/>
-          Options none
-          Order deny,allow
-          #allow from 127.0.0.1
-          #allow from 10.85.
-          allow from all
-        </Directory>
 
+_________Configure_________
+
+- Configure apache by creating /etc/apache2/conf.d/nac.conf
+
+	vi /etc/apache2/conf.d/nac.conf
+	>
+	> Alias /web2 /opt/nac/web2
+        > <Directory /opt/nac/web2/>
+        >   Options none
+        >   Order deny,allow
+        >   #allow from 127.0.0.1
+        >   #allow from 10.85.
+        >   allow from all
+        > </Directory>
+	>
+	[Restrict access to certain networks as shown above]
+
+- Edit /opt/nac/web2/index.php and adjust the following variables to fit your installation
+
+	// MySQL DB settings for all scripts
+	$dbhost="localhost";
+	$dbname="inventory";
+	$dbuser="inventwrite";		# this user needs write access to the DB
+	$dbpass="invent99";             # keep this secret!
+
+	// Variable setup
+	$entityname='MyCompany';	# name of your company
+
+
+_________Usage_________
+
+- Point your favorite web browser to http://YOURSERVER/web2
+- N-joy!
