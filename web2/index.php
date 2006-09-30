@@ -22,23 +22,12 @@
  */
 
 
-
-// MySQL DB settings for all scripts
-  $dbhost="localhost";
-  $dbname="inventory";
-  $dbuser="inventwrite";			# this user needs write access to the DB
-  $dbpass="inventpass";			    # keep this secret!
-
-// Variable setup
-$entityname='MyCompany';			# name of your company
-
-// unknown machines in the database
-$unknown='%unknown%';
-
-
 ///////////////////////////////////////////
 //     DO NOT EDIT BELOW THIS LINE       //
 ///////////////////////////////////////////
+
+// include configuration
+include_once('web2.conf.inc');
 
 //session setup
 session_name('FreeNAC');
@@ -80,7 +69,7 @@ if ($_REQUEST['action']=='search'){
 }
 
 // print the page header; so the user knows there's (much) more to come
-echo print_header();
+echo print_header($entityname);
 
 // let's find out what we're supposed to do
 // edit the properties of a given system
@@ -225,9 +214,6 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 	$sql='UPDATE port SET restart_now=1 WHERE switch=\''.$_REQUEST['switch'].'\' AND name=\''.$_REQUEST['port'].'\';';
 	mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// Mark OK
-	// log what we have done
-	// $sql='INSERT INTO vmpslog (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'restart_port switch '.$_REQUEST['switch'].' '.$_REQUEST['port'].', Office:'.$row['location'].', '.$row['comment'].'\';';
-	// mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// Port marked for restart
 	echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
 }
@@ -291,7 +277,7 @@ else {
 	else {
 		// Iterate trough the result set
 		$i=0;
-		echo print_resultset($result);
+		echo print_resultset($result,$_SERVER);
 	}
 	echo '</table>';
 }
@@ -308,8 +294,7 @@ echo print_footer();
 //
 // Print page header (if not already done)
 //
-function print_header(){
-	global $entityname;
+function print_header($entityname){
 	if (!defined(HEADER)){
 		$ret='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 		<html xmlns="http://www.w3.org/1999/xhtml">
@@ -349,12 +334,11 @@ function print_footer(){
 //
 // Print the lookup results
 //
-function print_resultset($res){
-	global $_SERVER;
+function print_resultset($res,$server){
 	$ret='';
 	while ($row=mysql_fetch_array($res)){
 		$ret.=($i%2==0)?'<tr class="light">':'<tr class="dark">';
-		$ret.='<td><a href="'.$SERVER['PHP_SELF'].'?action=edit&mac='.$row['mac'].'">'.stripslashes($row['name']).'</a></td>'."\n";
+		$ret.='<td><a href="'.$server['PHP_SELF'].'?action=edit&mac='.$row['mac'].'">'.stripslashes($row['name']).'</a></td>'."\n";
 		$ret.='<td class="center">'.$row['mac'].'</td>'."\n";
 		$ret.='<td class="center">'.ucfirst($row['status']{0}).'</td>'."\n";
 		$ret.='<td class="center" title="'.$row['vlanname'].'">'.$row['vlan'].'</td>'."\n";
