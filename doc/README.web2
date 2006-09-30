@@ -28,7 +28,7 @@ _________Configure_________
 	>
 	[Restrict access to certain networks as shown above]
 
-- Edit /opt/nac/web2/index.php and adjust the following variables to fit your installation
+- Copy /opt/nac/web2/web2.conf.inc.template to web2.conf.inc and adjust the following variables to fit your installation
 
 	// MySQL DB settings for all scripts
 	$dbhost="localhost";
