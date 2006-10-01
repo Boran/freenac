@@ -1,0 +1,366 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+    
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    
+  <meta name="Author" content="Peter J. Welcher">
+    
+  <meta name="GENERATOR" content="Mozilla/4.75 [en] (WinNT; U) [Netscape]">
+  <title>Switching: Dynamic VLAN's, VQP, and VMPS</title>
+</head>
+  <body>
+  
+<h1> </h1>
+<h1><img src="newcnclogo.jpg" alt="CNC Logo" height="78" width="306">
+</h1>
+  
+<h1> Switching: Dynamic VLAN's, VQP, and VMPS</h1>
+  
+<h2> Peter J. Welcher</h2>
+  
+<h1>  
+<hr width="100%"></h1>
+  
+<h2> Introduction</h2>
+ This article continues the series on LAN switching and Cisco Catalyst switches. 
+This month we'll talk about dynamic VLAN's, and explain what VQP and VMPS 
+are, as well as how they work and how to configure them. 
+<p>Prior articles in the series: </p>
+<ul>
+ <li> Switching: VLAN's (<a href="http://www.netcraftsmen.net/welcher/papers/switchvlan.html">
+http://www.netcraftsmen.net/welcher/papers/switchvlan.html</a>
+)</li>
+  <li> Switching: Trunks and Dynamic Trunking Protocol (DTP) (<a href="http://www.netcraftsmen.net/welcher/papers/switchvtp.html">
+http://www.netcraftsmen.net/welcher/papers/switchvtp.html</a>
+)</li>
+ 
+</ul>
+  
+<h2> What are VQP and VMPS</h2>
+ We talked in a prior article about configuring ports to belong to a VLAN. 
+This is the static approach to VLAN's, where a port is always a member of
+a specific VLAN. You can also configure a port to dynamically determine what
+VLAN to belong to. Initially (and fundamentally) this process is tied to
+the MAC address of the end station on the port. Cisco is in the process of
+making this much more administrator-friendly (and useful!) by tying it into
+directory servers -- more on that later. 
+<p>There is a process whereby a switch with a dynamic port can query a server
+with end station information to find out what VLAN the port should be in.
+The query is done via VQP, VLAN Query Protocol. The query goes to a VMPS,
+VLAN Membership Policy Server. The VMPS was initially a Catalyst 5xxx, but
+this is in the process of changing to where the server is perhaps a workstation
+running URT, User Response Tool, and eventually to perhaps a Windows 2000
+Active Directory Server. </p>
+<p>The following are capable of being VMPS servers right now: supervisor software
+release 2.3 or later on Catalyst 5000 and 2926G series switches. Many of
+the Cisco switches are capable of being VQP-using clients with dynamic VLAN's. 
+</p>
+<p>You can have several end stations on a dynamic port (using a hub), but 
+they must all belong to the same dynamic VLAN. If there are more than 20 (29xx
+XL) to 50 (Catalyst 5xxx) end stations on a single port, the dynamic port
+will be shut down by the switch. </p>
+<h2> Configuring VMPS</h2>
+ Configuring VMPS is fairly simple, with only one minor surprise. (Troubleshooting 
+it, however, may be a bit more complex). 
+<h3> Catalyst Set-Based Configuration</h3>
+ References: 
+<ul>
+ <li> CCO&nbsp;&nbsp;&nbsp;&nbsp; <a href="http://www.cisco.com/univercd/cc/td/doc/product/lan/cat5000/rel_5_1/config/vmps.htm">
+http://www.cisco.com/univercd/cc/td/doc/product/lan/cat5000/rel_5_1/config/vmps.htm</a>
+  </li>
+ 
+</ul>
+ The basic command to start off with is 
+<blockquote><tt>set vmps tftpserver <i>ip-address</i> [<i>filename</i>]</tt></blockquote>
+ This tells the future VMPS server what TFTP server to get information from, 
+and optionally what filename the information will be under. The default filename
+is <tt>vmps-config-database.1</tt>. 
+  <p>You then do a </p>
+  <blockquote><tt>set vmps state enable</tt></blockquote>
+ (the alternative being disable), upon which the wannabe VMPS server will 
+attempt to download the configuration database specified with the tftpserver 
+command. If the TFTP download succeeds, then VMPS will become enabled. If
+the transfer fails, you'll get an error message and VMPS will remain disabled.
+The download/enable process also takes place when you reboot the switch. 
+    <p>You can force a download of new VMPS server information to a server 
+with the command </p>
+    <blockquote><tt>download vmps</tt></blockquote>
+ This also can be used to retry after a download fails. 
+      <p>To set up a set-based switch as a VQP client, you need to tell it
+who its VMPS server is. This is done with the command </p>
+      <blockquote><tt>set vmps server <i>server-ip-address </i>[primary]</tt></blockquote>
+ You can do this up to three times, one primary and two backup VMPS servers. 
+When the primary is down, it's status will be checked every five (5) minutes. 
+When it is back up, queries will again be sent to the primary first. 
+        <p>For there to be any point to having a client, you need to use
+dynamic VLAN's. A port is made dynamic with the command </p>
+        <blockquote><tt>set port membership <i>mod_num/port_num</i> dynamic</tt></blockquote>
+ and the status will show up in the <tt>show port</tt> command output. Use 
+the command 
+          <blockquote><tt>reconfirm vmps</tt></blockquote>
+ occasionally as enabled (privileged) user, if you wish to have the switch 
+reconfirm all dynamic port VLAN assignments. 
+            <p>The design intent appears to be for there to be a VMPS server
+for local switches, say switches sharing a VTP domain. The point here is:
+you probably do not want to have to reach your VMPS server through a router,
+and if you do, it is the one Layer 3 switching hop to the server farm on
+a campus (more on this if I write a switched campus design article). </p>
+            <p>Other related commands: <br>
+&nbsp; 
+            <table border="1" width="100%">
+ <tbody>
+                <tr>
+ <td><tt>clear vmps server</tt></td>
+  <td>This command deletes a VMPS server from the list of servers in the client
+switch.</td>
+ </tr>
+  <tr>
+ <td><tt>clear vmps statistics</tt></td>
+  <td>This resets the VMPS statistics to zero.&nbsp;</td>
+ </tr>
+  <tr>
+ <td><tt>show vmps</tt></td>
+  <td>This command produces a summary of VMPS configuration and status information, 
+including whether VMPS is enabled or disabled, which station the VMPS server 
+might be, what the TFTPserver address is, and what the VMPS database filename 
+is.&nbsp;</td>
+ </tr>
+  <tr>
+ <td><tt>show vmps mac</tt></td>
+  <td>This command (on the VMPS server) shows the MAC to VLAN mapping table 
+(the database). It also shows the last requestor, which tells you which switch
+and switch port last had the end station in question attached to it, also
+whether the request succeeded or was denied.&nbsp;</td>
+ </tr>
+  <tr>
+ <td><tt>show vmps statistics</tt></td>
+  <td>This command displays VMPS-related statistics. It can be useful for 
+troubleshooting, since it shows you VQP requests, denied requests, and also
+the MAC address of the end station associated with the last failed request.</td>
+ </tr>
+  <tr>
+ <td><tt>show vmps vlan <i>vlan-name</i></tt></td>
+  <td>On the VMPS server, this shows all MAC addresses for a VLAN in the VMPS
+configuration database.&nbsp;</td>
+ </tr>
+  <tr>
+ <td><tt>show vmps vlanports <i>vlan-name</i></tt></td>
+  <td>On a Catalyst 5xxx switch, shows the ports associated with the specified 
+VLAN name.&nbsp;</td>
+ </tr>
+ 
+              </tbody>
+            </table>
+  </p>
+            <h3> Troubleshooting VMPS</h3>
+  
+            <h4> Ways that VMPS can fail to start up:</h4>
+  
+            <ul>
+ <li> Failure to configure TFTP server address</li>
+ 
+            </ul>
+ There's an error message to this effect, that shows up when you try to configure
+VMPS to be enabled. Do put the TFTP server address in! 
+            <ul>
+ <li> Unable to contact TFTP server</li>
+ 
+            </ul>
+ When you enable VMPS, the switch might not be able to contact the TFTP server.
+Make sure the TFTP server is functioning (that is, it is up and running and
+that TFTP on it is working), then check routing and connectivity between
+the client switch and the TFTP server. 
+            <ul>
+ <li> The configuration file isn't found on the TFTP server.</li>
+ 
+            </ul>
+ Check case and spelling of the name on both ends, switch and TFTP server. 
+            <ul>
+ <li> Enable failure due to inadequate resources.</li>
+ 
+            </ul>
+ You're out of RAM on your switch, dude! 
+            <h4> Ways VMPS/VQP and dynamic VLAN's can fail:</h4>
+  
+            <ul>
+ <li> Client needs to see the attached endstation.</li>
+ 
+            </ul>
+ Check for link light, and check that the endstation is transmitting. (If 
+it is not transmitting, the switch cannot learn its MAC address). 
+            <ul>
+ <li> Client to server query.</li>
+ 
+            </ul>
+ The client and server need to be able to send IP UDP packets between each 
+other. Test with ping. Since you're probably not doing this through a router, 
+traceroute should be irrelevant. 
+            <ul>
+ <li> Client needs to get a positive reply back.</li>
+ 
+            </ul>
+ If the client does not get a reply back, or if the reply that does come back
+is a denied response, then (see below) the client is placed in a default VLAN
+or the port is disabled. If you don't know this, you'll think there are link
+or switch port problems instead! 
+            <h3> IOS-Based Configuration (2900 XL Series)</h3>
+ References: 
+            <ul>
+ <li> CCO&nbsp;&nbsp;&nbsp; <a href="http://www.cisco.com/univercd/cc/td/doc/product/lan/c2900xl/29_35sa6/eescg/mascvmps.htm">
+http://www.cisco.com/univercd/cc/td/doc/product/lan/c2900xl/29_35sa6/eescg/mascvmps.htm</a>
+              </li>
+ 
+            </ul>
+ The IOS-based XL switches are currently VQP but not VMPS capable (nor does 
+it appear VMPS functionality will be added to them, they're primarily edge 
+switches). 
+            <p>To specify VMPS server, use the configuration command </p>
+            <ul>
+              <tt>vmps server <i>ipaddress</i> [primary]</tt>
+            </ul>
+ To check the effect of this, try 
+            <blockquote><tt>show vmps</tt></blockquote>
+ To make an interface (port) dynamic instead of static, configure 
+              <blockquote><tt>interface fastethernet 0/1</tt> <br>
+                <tt>switchport mode access</tt> <br>
+                <tt>switchport access vlan dynamic</tt></blockquote>
+ You can check this with 
+                <blockquote><tt>show interface <i>interface</i> switchport</tt></blockquote>
+ To have the switch re-check the dynamic port VLAN assignments, use the EXEC
+mode command 
+                  <blockquote><tt>vmps reconfirm</tt></blockquote>
+ The default reconfirm interval is 60 minutes. The default number of retries 
+on a VQP query are 3. You can configure these with 
+                    <blockquote><tt>vmps reconfirm <i>minutes</i></tt> <br>
+                      <tt>vmps retry <i>number-of-retries</i></tt></blockquote>
+  
+                      <h3> VMPS Configuration Database</h3>
+ Here is a sample of the VMPS configuration database file that a VMPS server 
+might download from a TFTP server. Note that the syntax is not well documented. 
+The file must start with the VMPS domain name, which must match the VTP domain
+(including case). Do NOT capitalize "<tt>vmps</tt>", the file contents are
+case-sensitive (and in at least some of the Cisco documentation I've seen,
+the Marketing Communications rewrite capitalized "<tt>vmps</tt>" as the name
+of the protocol/acronym). 
+                      <p>The second line of the sample below specifies security
+mode, which can be either <tt>open</tt> or <tt>secure</tt>. In secure mode,
+an unknown MAC address causes the port to be shut down. In open mode, unknown
+MAC addresses are assigned to fallback (default) "unsecure" VLAN, specified 
+with the <tt>vmps fallback</tt> line. The default mode is open. You can also
+specify whether requests with no VTP/VMPS domain are allowed or denied. By
+the way, when unknown MAC addresses or denied situations occur, the switch
+can send a SNMP trap to your SNMP trap receiver (management station). This
+might be useful for tracking use of unauthorized PC's in a campus environment
+(provided that's something you care to manage). </p>
+                      <blockquote><tt>vmps domain mydomain</tt> <br>
+                        <tt>vmps mode open</tt> <br>
+                        <tt>! vmps mode { open | secure }</tt> <br>
+                        <tt>vmps fallback default</tt> <br>
+                        <tt>vmps no-domain-req deny</tt> <br>
+                        <tt>! vmps no-domain-req { allow | deny }</tt></blockquote>
+ This section of the configuration database file is followed by the list of
+MAC addresses and VLAN names: 
+                        <blockquote><tt>vmps-mac-addrs</tt> <br>
+                          <tt>!</tt> <br>
+                          <tt>address 0012.2233.4455 vlan-name Engineering</tt>
+ <br>
+                          <tt>address 0012.3344.abcd vlan-name Engineering</tt>
+ <br>
+                          <tt>address aaaa.bbbb.cccc vlan-name Accounting</tt>
+ <br>
+                          <tt>address aaaa.bbbb.1111 vlan-name --NONE--</tt>
+ <br>
+                          <tt>address aaaa.bbbb.2222 vlan-name SecureAccounting</tt></blockquote>
+ Note that "--NONE--" is a way of excluding an untrusted MAC address: the 
+VMPS server will send a denied response to any queries. 
+                          <p>You can apparently specify what devices are
+allowed on what ports (I haven't tried this). Note that quotes are used when
+the name contains a space. </p>
+                          <blockquote><tt>! vmps-port-group &lt;group-name&gt;</tt>
+ <br>
+                            <tt>! device &lt;device-id&gt; { port &lt;port-name&gt;
+| all-ports }</tt> <br>
+                            <tt>!</tt> <br>
+                            <tt>vmps-port-group WiringCloset1</tt> <br>
+                            <tt>&nbsp;device 172.16.1.1 port Fa1/3</tt> <br>
+                            <tt>&nbsp;device 172.16.1.2 port Fa1/4</tt> <br>
+                            <tt>vmps-port-group "Executive Suite"</tt> <br>
+                            <tt>&nbsp;device 172.16.10.1 port Fa0/1</tt> <br>
+                            <tt>&nbsp;device 172.16.10.1 port Fa0/2</tt> <br>
+                            <tt>&nbsp;device 172.16.10.10 all-ports</tt></blockquote>
+ You can then create groups of VLAN (names) and then policies as to which 
+VLAN's are allowed on which ports (using the above port-groups): 
+                            <blockquote><tt>! vmps-vlan-group &lt;group-name&gt;</tt>
+ <br>
+                              <tt>! vlan-name &lt;vlan-name&gt;</tt> <br>
+                              <tt>!</tt> <br>
+                              <tt>vmps-vlan-group Engineering</tt> <br>
+                              <tt>vlan-name hardware</tt> <br>
+                              <tt>vlan-name software</tt> <br>
+                              <tt>!</tt> <br>
+                              <tt>!vmps-port-policies {vlan-name &lt;vlan_name&gt;
+| vlan-group &lt;group-name&gt; }</tt> <br>
+                              <tt>! { port-group &lt;group-name&gt; | device
+&lt;device-id&gt; port &lt;port-name&gt; }</tt> <br>
+                              <tt>!</tt> <br>
+                              <tt>vmps-port-policies vlan-group Engineering</tt>
+ <br>
+                              <tt>&nbsp;port-group WiringCloset1</tt> <br>
+                              <tt>vmps-port-policies vlan-name Accounting</tt>
+ <br>
+                              <tt>&nbsp;device 172.16.10.1 port Fa0/3</tt>
+ <br>
+                              <tt>vmps-port-policies vlan-name Management</tt>
+ <br>
+                              <tt>&nbsp;device 172.16.10.1 port Fa0/10</tt>
+ <br>
+                              <tt>&nbsp;port-group "Executive Suite"</tt></blockquote>
+  
+                              <h2> CiscoWorks 2000 and VMPS</h2>
+ The User Tracking tool allows CW2000 to learn which users are on which ports
+in which VLAN's. This can be handy for troubleshooting, since not just MAC
+addresses but IP addresses can be picked up by the software (from ARP caches). 
+                              <p>You can use the tool to then change multiple
+switch ports to dynamic status. You can also use it to save the MAC address
+information to TFTP server, and you can even trigger the VMPS server to download
+fresh MAC address table information. </p>
+                              <p>Oh, and you can use CiscoView (and SNMP)
+to configure the VMPS servers and clients.&nbsp; We do a demo of all this
+in the CEMS CiscoWorks 2000 course. </p>
+                              <h2> Wrap-Up</h2>
+ The question all of this leaves me with is, "how do you troubleshoot it when
+it breaks". That is, dynamic VLAN's are nifty. Having multiple VMPS servers
+means you probably won't have an entire campus down at one time. Nonetheless,
+VQP adds one more thing that can go wrong. Troubleshooting it has so far
+not been bad for me, but you do have to be careful with typos and do have
+to make sure you have a good scheme for managing and communicating with your
+switches (probably on VLAN 1). 
+                              <p>I'm planning more switching topics for the
+next month or two. We may also sneak in a little design: you need to think
+about end-to-end VLAN's versus the "Layer 2 / Layer 3" hierarchical approach.
+See you in a month! </p>
+                              <p> </p>
+                              <hr width="100%"> 
+                              <p><font color="#000000">Dr. Peter J. Welcher
+(CCIE #1773, CCSI #94014) is    a Senior Consultant with Chesapeake NetCraftsmen.
+NetCraftsmen is a high-end consulting  firm  and Cisco Premier Partner dedicated
+to quality consulting and knowledge transfer. NetCraftsmen has nine CCIE's,
+ with expertise including large network high-availability routing/switching
+and design, VoIP, QoS,  MPLS, network management, security, IP multicast,
+and other areas. See <a href="http://www.netcraftsmen.net">     http://www.netcraftsmen.net</a>
+        for more information about NetCraftsmen. Pete's links start   at
+ <a href="http://www.netcraftsmen.net/welcher">http://www.netcraftsmen.net/welcher</a>
+       . New articles will be posted under the Articles link. Questions,
+suggestions for articles, etc. can be sent to <a href="mailto:pjw@netcraftsmen.net">
+      pjw@netcraftsmen.net</a>
+       .</font>&nbsp;</p>
+                              <p> </p>
+                              <p> </p>
+                              <hr width="100%"> <br>
+                              <font size="-2">10/10/99</font> <br>
+                              <font size="-2">Copyright 1999, Peter J. Welcher</font>
+ <br>
+&nbsp; 
+                              </body>
+                              </html>
