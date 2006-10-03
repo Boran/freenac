@@ -1,3 +1,22 @@
+prefix = /usr/local
+exec_prefix = ${prefix}
+sysconfdir = ${prefix}/etc
+localstatedir = ${prefix}/var
+sbindir = ${exec_prefix}/sbin
+logdir = ${localstatedir}/log/radius
+raddbdir = ${sysconfdir}/raddb
+radacctdir = ${logdir}/radacct
+confdir = ${raddbdir}
+run_dir = ${localstatedir}/run/radiusd
+log_file = ${logdir}/radius.log
+libdir = ${exec_prefix}/lib
+pidfile = ${run_dir}/radiusd.pid
+user = radiusd
+group = radiusd
+max_request_time = 30
+delete_blocked_requests = no
+cleanup_delay = 5
+max_requests = 1024
 bind_address = *
 port = 0
 hostname_lookups = no
@@ -13,7 +32,6 @@ lower_user = no
 lower_pass = no
 nospace_user = no
 nospace_pass = no
-
 
 security {
         max_attributes = 200
