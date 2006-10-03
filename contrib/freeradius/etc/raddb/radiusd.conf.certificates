@@ -1,0 +1,63 @@
+prefix = /usr
+exec_prefix = ${prefix}
+sysconfdir = /etc
+localstatedir = /var
+sbindir = ${exec_prefix}/sbin
+logdir = ${localstatedir}/log/radius
+raddbdir = ${sysconfdir}/raddb
+radacctdir = ${logdir}/radacct
+confdir = ${raddbdir}
+run_dir = ${localstatedir}/run/radiusd
+log_file = ${logdir}/radius.log
+libdir = /usr/lib/freeradius
+pidfile = ${run_dir}/radiusd.pid
+user = radiusd
+group = radiusd
+max_request_time = 30
+delete_blocked_requests = no
+cleanup_delay = 5
+max_requests = 1024
+bind_address = *
+port = 0
+hostname_lookups = no
+allow_core_dumps = no
+regular_expressions     = yes
+extended_expressions    = yes
+log_stripped_names = no
+log_auth = yes
+log_auth_badpass = yes
+log_auth_goodpass = yes
+usercollide = no
+lower_user = no
+lower_pass = no
+nospace_user = no
+nospace_pass = no
+
+security {
+        max_attributes = 200
+        reject_delay = 1
+        status_server = no
+}
+
+proxy_requests = no
+$INCLUDE ${confdir}/clients.conf
+snmp    = no
+
+modules {
+        $INCLUDE  ${confdir}/eap.conf
+
+	#Uncomment this if you want FreeRadius to give back the VLAN ID to the switch (dynamic assigning)
+        #files {
+        #        usersfile = ${confdir}/users
+        #}
+}
+
+authorize {
+	#Uncomment the next line if you want FreeRadius to give back the VLAN ID to the switch (dynamic assigning)
+        #files
+        eap
+}
+
+authenticate {
+        eap
+}
