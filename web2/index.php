@@ -187,7 +187,7 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		// got comment?
 		$sql.=($_REQUEST['comment']!=''?', comment=\''.$_REQUEST['comment'].'\'':'');
 		// set what we know for sure (changedate, changeuser,...)
-		$sql.=', changedate=\'NOW()\', changeuser=\'WEBGUI\'';
+		$sql.=', changedate=NOW(), changeuser=\'WEBGUI\'';
 		// where?
 		$sql.=' WHERE mac=\''.$_REQUEST['mac'].'\';';
 		// update the given data set
