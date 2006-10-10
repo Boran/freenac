@@ -22,23 +22,12 @@
  */
 
 
-
-// MySQL DB settings for all scripts
-  $dbhost="localhost";
-  $dbname="inventory";
-  $dbuser="inventwrite";			# this user needs write access to the DB
-  $dbpass="inventpass";			    # keep this secret!
-
-// Variable setup
-$entityname='MyCompany';			# name of your company
-
-// unknown machines in the database
-$unknown='%unknown%';
-
-
 ///////////////////////////////////////////
 //     DO NOT EDIT BELOW THIS LINE       //
 ///////////////////////////////////////////
+
+// include configuration
+include_once('web2.conf.inc');
 
 //session setup
 session_name('FreeNAC');
@@ -65,7 +54,7 @@ mysql_select_db($dbname,$dblink)
 	or die('Could not select database '.$dbname);
 
 // handle search requests
-if ($_REQUEST['action']='search'){
+if ($_REQUEST['action']=='search'){
 	// clear 
 	if ($_REQUEST['submit']=='Clear'){
 		$_SESSION['name']=$unknown;
@@ -73,20 +62,14 @@ if ($_REQUEST['action']='search'){
 		$_SESSION['username']='';
 	}
 	if ($_REQUEST['submit']=='Submit'){
-		if ($_REQUEST['name']!=''){
-			$_SESSION['name']=$_REQUEST['name'];
-		}
-		if ($_REQUEST['mac']!=''){
-			$_SESSION['mac']=$_REQUEST['mac'];
-		}
-		if ($_REQUEST['username']!=''){
-			$_SESSION['username']=$_REQUEST['username'];
-		}
+		$_SESSION['name']=$_REQUEST['name'];
+		$_SESSION['mac']=$_REQUEST['mac'];
+		$_SESSION['username']=$_REQUEST['username'];
 	}
 }
 
 // print the page header; so the user knows there's (much) more to come
-echo print_header();
+echo print_header($entityname);
 
 // let's find out what we're supposed to do
 // edit the properties of a given system
@@ -213,8 +196,8 @@ else if ($_REQUEST['action']=='update' && strlen($_REQUEST['mac'])==14
 		// log what we have done
 		$sql='INSERT INTO history (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'Updated system: '.$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
 		mysql_query($sql) or die('Query failed: ' . mysql_error());
-		// Update successfull
-		echo '<br />Update successfull.<br />';
+		// Update successful
+		echo '<br />Update successful.<br />';
 		// Ask the user if he want's to restart the associated port
 		echo '<br />To restart Port '.$row['port'].' on Switch '.$row['switch'].' click <a href="'.$_SERVER['PHP_SELF'].'?action=restartport&switch='.$row['switch'].'&port='.$row['port'].'">here</a>.'; 
 	}
@@ -228,14 +211,13 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 		echo 'Switch/Port missmatch.';
 	}
 	// Got it, mark port for restart
-	$sql='UPDATE port SET restart_now=1 WHERE switch=\''.$_REQUEST['switch'].'\' AND name=\''.$_REQUEST['port'].'\';';
-	mysql_query($sql) or die('Query failed: ' . mysql_error());
-	// Mark OK
-	// log what we have done
-	// $sql='INSERT INTO vmpslog (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'restart_port switch '.$_REQUEST['switch'].' '.$_REQUEST['port'].', Office:'.$row['location'].', '.$row['comment'].'\';';
-	// mysql_query($sql) or die('Query failed: ' . mysql_error());
-	// Port marked for restart
-	echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
+	else {
+		$sql='UPDATE port SET restart_now=1 WHERE switch=\''.$_REQUEST['switch'].'\' AND name=\''.$_REQUEST['port'].'\';';
+		mysql_query($sql) or die('Query failed: ' . mysql_error());
+		// Mark OK
+		// Port marked for restart
+		echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
+	}
 }
 
 // display a list a systems
@@ -244,7 +226,7 @@ else {
 	$sql='SELECT sys.name, sys.mac, stat.value as status, sys.vlan, vlan.value as vlanname, sys.description as user, sys.port, swi.name as switch
 			FROM systems as sys LEFT JOIN status as stat ON sys.status=stat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN switch as swi ON sys.switch=swi.ip';
 	// if its a search adjust the where...
-	if ($_REQUEST['action']='search'){
+	if ($_REQUEST['action']=='search'){
 		$sql.=' WHERE (1=1)';
 		if ($_SESSION['name']!=''){
 			$sql.=' AND sys.name LIKE \''.$_SESSION['name'].'\'';
@@ -253,14 +235,16 @@ else {
 			$sql.=' AND sys.mac LIKE \''.$_SESSION['mac'].'\'';
 		}
 		if ($_SESSION['username']!=''){
-			$sql.=' AND sys.username LIKE \''.$_SESSION['username'].'\'';
+			$sql.=' AND sys.description LIKE \''.$_SESSION['username'].'\'';
 		}
+		$sql.=' ORDER BY sys.name ASC;';
 	}
 	// ... if not get today's unknowns
 	else{
 		$sql.=' WHERE sys.name=\'unknown\' AND sys.LastSeen > (NOW() - INTERVAL 1 DAY)';
+		$sql.=' ORDER BY sys.LastSeen ASC;';
 	}
-	$sql.=' ORDER BY sys.LastSeen;';
+	
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// echo table head
 	echo '<table width="500" border="0">';
@@ -274,28 +258,28 @@ else {
 			<td width="66" class="center">Switch</td>
 		  </tr>
 	';
+	// if it is a search print the search area
+	if ($_REQUEST['action']=='search'){
+		echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
+		echo '<tr>
+			<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
+			<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
+			<td colspan="2" class="center">&nbsp;</td>
+			<td class="center"><input name="username" type="text" size="14" value="'.$_SESSION['username'].'" /></td>
+			<td colspan="2" class="right"><input type="submit" name="submit" value="Submit" />
+			<input type="submit" name="submit" value="Clear" /></td>
+		</tr>
+		<input type="hidden" name="action" value="search" /></form>';
+	}
 	// Nothing found.
 	if (mysql_num_rows($result)<1){
 		echo ' <td colspan="7">No entries found.</td></td>';
 	}
 	// Found something
 	else {
-		// if it is a search print the search area
-		if ($_REQUEST['action']='search'){
-			echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
-			echo '<tr>
-				<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
-				<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
-				<td colspan="2" class="center">&nbsp;</td>
-				<td class="center"><input name="username" type="text" size="14" value="'.$_SESSION['username'].'" /></td>
-				<td colspan="2" class="right"><input type="submit" name="submit" value="Clear" />
-				<input type="submit" name="submit" value="Submit" /></td>
-			</tr>
-			<input type="hidden" name="action" value="search" /></form>';
-		}
 		// Iterate trough the result set
 		$i=0;
-		echo print_resultset($result);
+		echo print_resultset($result,$_SERVER);
 	}
 	echo '</table>';
 }
@@ -312,8 +296,7 @@ echo print_footer();
 //
 // Print page header (if not already done)
 //
-function print_header(){
-	global $entityname;
+function print_header($entityname){
 	if (!defined(HEADER)){
 		$ret='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 		<html xmlns="http://www.w3.org/1999/xhtml">
@@ -329,7 +312,7 @@ function print_header(){
 			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
 		  </tr>
 		  <tr>
-			<td class="center"><a href="'.$SERVER['PHP_SELF'].'index.php">List Unknowns</a></td>
+			<td class="center"><a href="'.$SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a></td>
 		  </tr>
 		</table>
 		';
@@ -353,12 +336,11 @@ function print_footer(){
 //
 // Print the lookup results
 //
-function print_resultset($res){
-	global $_SERVER['PHP_SELF'];
+function print_resultset($res,$server){
 	$ret='';
 	while ($row=mysql_fetch_array($res)){
 		$ret.=($i%2==0)?'<tr class="light">':'<tr class="dark">';
-		$ret.='<td><a href="'.$SERVER['PHP_SELF'].'?action=edit&mac='.$row['mac'].'">'.stripslashes($row['name']).'</a></td>'."\n";
+		$ret.='<td><a href="'.$server['PHP_SELF'].'?action=edit&mac='.$row['mac'].'">'.stripslashes($row['name']).'</a></td>'."\n";
 		$ret.='<td class="center">'.$row['mac'].'</td>'."\n";
 		$ret.='<td class="center">'.ucfirst($row['status']{0}).'</td>'."\n";
 		$ret.='<td class="center" title="'.$row['vlanname'].'">'.$row['vlan'].'</td>'."\n";
