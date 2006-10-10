@@ -211,11 +211,13 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 		echo 'Switch/Port missmatch.';
 	}
 	// Got it, mark port for restart
-	$sql='UPDATE port SET restart_now=1 WHERE switch=\''.$_REQUEST['switch'].'\' AND name=\''.$_REQUEST['port'].'\';';
-	mysql_query($sql) or die('Query failed: ' . mysql_error());
-	// Mark OK
-	// Port marked for restart
-	echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
+	else {
+		$sql='UPDATE port SET restart_now=1 WHERE switch=\''.$_REQUEST['switch'].'\' AND name=\''.$_REQUEST['port'].'\';';
+		mysql_query($sql) or die('Query failed: ' . mysql_error());
+		// Mark OK
+		// Port marked for restart
+		echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
+	}
 }
 
 // display a list a systems
