@@ -29,4 +29,8 @@ include('functions.inc');
 ## statgraph.php
   $jpgraph_path = '/usr/share/php5/jpgraph';            # path to jpgraph library
 
+
+#  ## vmpsdot.php
+    $dotcmd = 'digraph';                                  # graphviz executable (cf `man dot` for choices)
+
 ?>

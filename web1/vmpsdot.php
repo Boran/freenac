@@ -120,7 +120,7 @@ while ($host = mysql_fetch_array($hosts)) {
 };
 
 
-$dot = "digraph simple_hierarchy {\n\n";
+$dot = "$dotcmd simple_hierarchy {\n\n";
 $dot .= $dotports."\n";
 $dot .= $dotdose."\n";
 $dot .= $dotpatch."\n";

@@ -10,8 +10,10 @@ _____________________ NAC Web1 GUI: Installation notes _____________________
   mkdir tmp
   chown wwwrun tmp
   	
-// Install "dot" tool
+// Install "dot" tool ang jpgraph php library for graphics
+// TODO : Sean, please test on suse
   yast -i graphviz 
+  yast -i jpgraph
   
 // Install Apache (via Yast)
 	chkconfig apache2 on
