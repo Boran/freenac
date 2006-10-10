@@ -1,0 +1,21 @@
+
+Lets say there is an access point on port 22, first set it to static and assign a trunk with the 
+appropriate vlans:
+
+set port membership 2/22 static
+  Port 2/22 vlan assignment set to static.
+  Spantree port fast start option set to default for ports 2/22.
+
+set trunk 2/22 on
+clear trunk 2/22
+  Port(s)  2/22 trunk mode set to auto.
+  Port(s)  2/22 trunk type set to dot1q.
+
+sw0503> (enable) set trunk 2/22 11-12,15
+Vlan(s) 11-12,15 already allowed on the trunk
+Please use the 'clear trunk' command to remove vlans from allowed list.
+
+...2006 Oct 03 15:40:29 MET +02:00 %SYS-4-P2_WARN: 1/Tag 1 on packet from 00:13:c3:4c:87:34 port 2/22, but port's native vlan is 30
+
+
+
