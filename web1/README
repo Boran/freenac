@@ -9,11 +9,18 @@ _____________________ NAC Web1 GUI: Installation notes _____________________
   cd /opt/nac2.1
   mkdir tmp
   chown wwwrun tmp
+  // note : on certain suse version, the apache user is daemon
   	
-// Install "dot" tool ang jpgraph php library for graphics
-// TODO : Sean, please test on suse
+// Install libraries for graphics : you need
+// - graphviz for the switch view
   yast -i graphviz 
-  yast -i jpgraph
+
+// - jpgraph for statistics
+  cd /usr/local/share
+  wget http://members.chello.se/jpgraph/jpgdownloads/jpgraph-X.X.XX.tar.gz 
+  tar zxvf jpgraph-X.X.XX.tar.gz
+  ln -s jpgraph-X.X.XX jpgraph
+// in that case, you'll need to set $jpgraph_path = '/usr/local/share/jpgraph/src' in the config file
   
 // Install Apache (via Yast)
 	chkconfig apache2 on
