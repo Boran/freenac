@@ -224,7 +224,7 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 else {
 	// get the systems
 	$sql='SELECT sys.name, sys.mac, stat.value as status, sys.vlan, vlan.value as vlanname, sys.description as user, sys.port, swi.name as switch
-			FROM systems as sys LEFT JOIN status as stat ON sys.status=stat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN switch as swi ON sys.switch=swi.ip';
+			FROM systems as sys LEFT JOIN vstatus as stat ON sys.status=stat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN switch as swi ON sys.switch=swi.ip';
 	// if its a search adjust the where...
 	if ($_REQUEST['action']=='search'){
 		$sql.=' WHERE (1=1)';
