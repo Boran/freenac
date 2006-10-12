@@ -1,6 +1,6 @@
 <?php
 #
-# VMPS: hubs.php
+# hubs.php
 #
 #  2006.05.25/Sean Boran: Remove need for register_globals
 #    Add debug1()
@@ -28,7 +28,7 @@ function get_hosts($sw,$port) {
 
 // ----------- main () -------------------
 db_connect();
-echo '<head><title>VMPS Hub finder</title></head><body>';
+echo '<head><title>Hub finder</title></head><body>';
 vmps_header();
 
 echo("The following ports may have a hub, i.e.  with more than one end-device see in the last $hubs_querydays days:<br>");

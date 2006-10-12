@@ -1,6 +1,6 @@
 <?php
 #
-# VMPS: vmps.php
+# vmps.php
 #
 #  2006.05.25/Sean Boran: Production
 #    Remove need for register_globals
@@ -56,7 +56,7 @@ function print_dot_sel() {
 	
 
 //-------------- main () -------------------
-echo '<head><title>VMPS: query devices per switch</title></head><body>';
+echo '<head><title>NAC: query devices per switch</title></head><body>';
 vmps_header();
 db_connect();
 

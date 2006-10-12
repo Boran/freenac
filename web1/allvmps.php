@@ -11,7 +11,7 @@
 
 include('config.inc');
 
-echo '<head><title>VMPS - all switches</title></head><body>';
+echo '<head><title>NAC - all switches</title></head><body>';
 vmps_header();
 db_connect();
 

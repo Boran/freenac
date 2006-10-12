@@ -13,7 +13,6 @@
 function db_connect()
 {
   global $connect, $dbhost, $dbuser, $dbpass, $dbname;
-
   $connect=mysql_connect($dbhost, $dbuser, $dbpass)
      or die("Could not connect to mysql: " . mysql_error());
   mysql_select_db($dbname, $connect) or die("Could not select database")
@@ -23,12 +22,12 @@ function db_connect()
 
 function vmps_header()
 {
-  echo '<p ALIGN=CENTER><a href="./index.html">VMPS Menu</a></p>';
+  echo '<p ALIGN=CENTER><a href="./index.html">NAC Menu</a></p>';
 }
 
 function vmps_footer()
 {
-  echo '<p ALIGN=CENTER><a href="./index.html">VMPS Menu</a></p>';
+  echo '<p ALIGN=CENTER><a href="./index.html">NAC Menu</a></p>';
 }
 
 
