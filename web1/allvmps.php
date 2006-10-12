@@ -20,7 +20,7 @@ echo "List all ports used on all switches in the last $vmpsdot_querydays days, a
 echo "<br>";
 
 $sel = "SELECT * FROM switch";
-$res = mysql_query($sel);
+$res = mysql_query($sel) or die('Query failed: ' . mysql_error());
 
 echo '<table cellspacing=0 cellpadding=5 border=1>';
 while ($swi = mysql_fetch_array($res)) {
