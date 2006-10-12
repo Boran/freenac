@@ -1,0 +1,41 @@
+Network Switch Configuration & Tips for Cisco IOS
+
+# Initially, Switches must be configured to send a copy of syslog messages, and given the name of the vmps servers, where it can send requests for dynamic port assignment.
+# See also http://www.cisco.com/en/US/products/hw/switches/ps607/products_configuration_guide_chapter09186a008007eba3.html#xtocid164834.
+
+
+# Configuring VMPS :
+  conf t 
+  no vmps server 192.168.245.41
+  vmps server 192.168.245.40
+  vmps reconfirm 120
+  end
+
+  show vmps
+
+# Re-authenticate all current connections
+  vmps reconfirm
+
+# Re-authenticate all current connection, by emptying the MAC table. Note that the previous “vmps reconfirm” will not re-allow systems that were previously denied. For that we need to clear the MAC table:
+  clear mac-address-table dynamic
+
+# Enable VMPS on port fa0/2:
+  conf t
+  int fa0/2
+  switchport access vlan dynamic
+
+#(Re-)enable static Vlan 8 on port fa0/2:
+  conf t
+  int fa0/2
+  switchport access vlan 8
+
+  # The switch tries to contact a server 3 times by default, before stopping. This value can be programmed on the switch (to a maximum of 10):
+  vmps retry 5
+
+  # The switch reconfirms by default every 60 minutes, make 2hr:
+  vmps reconfirm 120
+
+#Other commands
+  show vmps stat
+  clear vmps statistics
+

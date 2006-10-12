@@ -6,4 +6,15 @@ To install please see master_server_install.txt
 
 Check our website http://www.freenac.net for news about our project
 
+Currently we're using VMPS for authentication:
+---------------------------------------------
+VMPS (Dynamic Membership with VLAN Management Policy Server) allows authentication on the network connectivity layer. When a PC is connected to a switch, the switch sends the MAC address to a VMPS server, who replies saying access is allowed or denied and into which VLAN the PC is to be connected. 
+
+This project is a practical implementation of “layer 2” authentication, with a view to improving network security by 
+a)	Making it more difficult to unknown PCs to connect to the network.
+b)	Making it more difficult for PCs to switch between networks of different security levels
+c)	Enabling precise inventory of systems connected to the network.
+
+
+
 Thanks and enjoy!

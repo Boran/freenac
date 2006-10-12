@@ -1,0 +1,99 @@
+s
+_________ MySQL database_________________________________
+The MySQL table schemas is shown at XX
+
+The systems table the the main VMPS table, all other tables are lookups or for logging. 
+
+The documentation of all patch cables is an independent table that can be searched for patches in a particular office, connected to a specific switch/port, or belonging to a specific user.
+
+
+
+_________  Server programs ____________________________________
+
+The server-side programs are written in PHP and currently run on Solaris & Linux, using SSH and Syslog / Email / a MySQL table for notification. They are normally installed in /opt/nac.
+
+vmps_logcheck.sh  (cron, runs on syslog server)
+----------------
+Monitor the VMPS syslog logs and notify the Sysadmin via email of unusual events. This also uses the binary program “logtail”.
+
+
+flap_detect (cron, runs on master)
+--------------------
+Monitor the VMPS syslog logs and notify the Sysadmin via email of too frequent authentications on a port, which is an indication for “port flapping”. This happens, for example, when a hub with 2 PCs is attached to a port and each PC is authenticated on a different Van (or a real PC + a VM with different authentication). This script should be rewritten in PHP and improved with DB lookups.
+
+
+
+vmps_lastseen (daemon, runs master server)
+-------------
+Parse the syslog logs for ‘vmpsd’ entries and:
+1.	Update the “last seen” fields for the relevant Mac, if the system is known
+2.	Or add a new entry with status “inactive”, if none yet exists in the systems table
+3.	And add new switches to the switch table and new ports to the port table.
+4.	And if the MAC found is a GWP (looked up from MS-SMS), it is automatically added to a pre-defined vlan, a “port check” done (see below), authorised and the port restarted.
+
+vmpsd_external: 
+---------------
+"external" program called by the original OpenVMPS daemon "vmpsd". This program decides what to do, in real time, when access is requested by a Switch for a MAC address. Since operates in ‘real time’, performance is important; so some jobs such as documenting what was last seen, where, or recognising Infnet PCs, is done in the vmps_lastseen script (which is not real time).
+1. If the MAC is active in the DB authorise it, and,
+2. “Port check”: If the MAC is active on a port where another system has been active within the last hour, try to use the Vlan last seen on the port, not the normal Vlan assigned to this system. 
+This is to detect hubs and prevent “flapping”, see the Appendix XX for a detailed diagram. 
+This feature is only allowed if the Vlan on the port and assigned to the MAC are in the same Vlan group (otherwise the new MAC is denied).
+3. Otherwise, if the MAC is unknown
+    - check to see if a “port default vlan” has been configured for that port and use it
+    - else use the default vlan (which might be simply ‘0’ meaning DENY)
+    - And, do a “port check” as noted above (check for active port/hub & vlan group).
+4. Log decisions to syslog, and key events to DB (visible in the GUI).
+
+
+vqpcli.pl: (debugging)
+---------
+OpenVMPS tool for generating VMPS requests, for testing. See also troubleshooting.txt.
+
+
+
+Cron_restart_port: (cron, runs on Master)
+------------------
+Go though the port table and check for the restart flag, and restart the ports via SNMP (if this option is enabled in config.inc)
+
+
+router_mac: (cron, runs on Master)
+----------
+Get MAC / IP table of active hosts from core routers, update the IP address in the system table for the corresponding mac. If device name is 'unknown' optionally lookup dns and update the device name. See also config.inc.
+
+ 
+monitor_processes.pl (cron, runs on slave/master server)
+--------------------
+Run from root cron to alert via email if the VMPS process dies.
+
+
+monitor_mysql_slave: (cron, runs on slave server)
+-------------------
+Verify that MySQL replication is working.
+
+port_scan: see README.port_scan
+
+proctst:   (daemon, runs on slave/master)
+-------
+restart key processes if they die.
+
+User management:
+-----------------
+.	purge_unknowns: (cron, runs on master)
+	Clean old entries in the systems table, which are two months or older and still have the name “unknown”.
+
+Port management
+---------------
+.	vmps_get_port: Search for details on a specific port, given the switch IP and port no. on the command line, from the "port" table.
+.	dump_ports: Write a list of ports & valns to an email for disaster recovery.
+.	Restart_port: Stop and restart a switch port via SNMP.
+
+
+Helper scripts:
+---------------
+.	Global configuration file: config.inc
+.	vmps_log (on DB): Log administrative messages to the MySQL vmpslog table, visible to the GUI.
+.	Backup_vmpslog: Do backups of the DB to a separate machine (site specific)
+.	Funcs.inc: common functions used by other scripts.
+. monitor_allows.sh:
+. monitor_allows_count.sh:
+

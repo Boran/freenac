@@ -68,7 +68,11 @@ Network
 To see of VMPS requests are really coming from switches:  
   tcpdump -n port 1589                   [sniff vmps requests]
   
-  
+
+Switches
+========
+See cisco_switch.txt.
+
   
 Database  
 ========
@@ -128,11 +132,30 @@ Listen only on localhost:
   
 Sending test VMPS requests yourself
 ===================================
-[-s=server -v=VTP domaine, -w=Switch -i=Port -m=Mac -c=Last Vlan]
+The tool vqpcli.pl can be used to send test VMPS requests to a designated server, and thus test the server answer if did receive a real quest from a switch.
 
+  vqpcli.pl -v domain1 -s 192.168.245.19 -w 10.0.0.1 -i 2/4 -m 0010.0000.0000
+    Vlan: defaultvlan
+    MAC Address: 001000000000
+    Status: ALLOW
+  Explanation: 
+  - send a request from the ctcs VTP domain, to the VMPS server 192.168.245.19  and request authorisation for mac 0010.a49f.30e3 on port 2/4 of switch 10.0.0.1  .
+  - the VMPS server allows access and attributes the “defaultvlan”
+
+vqpcli.pl  [-s=server -v=VTP domain, -w=Switch -i=Port -m=Mac -c=Last Vlan]
 ./vqpcli.pl -s 192.168.245.40 -v VTP_DOM -w 193.5.222.1 -i 'Fa0/17' -m '0800.20b0.cb95' -c VLAN1
 
 ./vqpcli.pl -s 127.0.0.1  -v VTP_DOM -w 193.5.222.1 -i 'Fa0/17' -m '0800.20b0.cb95' -c VLAN1
 
 ./vqpcli.pl -s 192.168.245.40 -v ctcs -w 192.168.245.71 -i '2/22' -m '0000.0000.9999' -c sec230
 
+
+
+The switch to VMPS server traffic can be sniffed
+================================================
+on the server, for example on Solaris:  
+  snoop –d qfe0 port 1589
+  switch1 -> server3       UDP D=1589 S=1026 LEN=1480
+  server3 -> switch1  UDP D=1026 S=1589 LEN=38
+on Linux
+  tcpdump -i eth1 port 1589
