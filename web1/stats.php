@@ -46,11 +46,11 @@ function print_dat_stats($query) {
 			echo "<td>".$row['count'];
 			echo "\n";
 		} else {
-			$unkown = $unknown + $row['count'];
+			$unknown = $unknown + $row['count'];
 		};
 		$total = $total + $row['count'];
 	};
-	echo "<tr><td>Unknown<td>$unkown";
+	echo "<tr><td>Unknown<td>$unknown";
 	echo "</table>\n<b>Total = $total\n";
 };
 
