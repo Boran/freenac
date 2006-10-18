@@ -138,14 +138,16 @@ FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
 
 
 PHP5:
+Install first the graphics support needed by the web1
+  yast -i gd-devel freetype2-devel
   cd /opt/install;
-  tar xBf php-5.1.4.tar.bz2
-  cd /opt/install/php-5.1.4/
+  tar xBf php-5.1.6.tar.bz2
+  cd /opt/install/php-5.1.6/
   
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php5 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php5 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-gd --with-zlib-dir --with-ttf --with-freetype-dir
   
   ## If you need MS-SQL (its best to assume you do - FreeTDS was compiled above)
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php5.1.4 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php5 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-sybase=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir
   make install    
   cp php.ini-dist /usr/local/lib/php.ini
   ln -s /opt/php5/bin/php /usr/bin/php
