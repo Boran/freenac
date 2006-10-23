@@ -27,14 +27,14 @@ void vmps_log(const int level, const char *fmt, ...)
 			log_opened = 1;
 		}
 		vsnprintf(str, 256, fmt, ap);
-		syslog(LOG_INFO, str);
+		syslog(LOG_INFO, "%s", str);
 
 		if ( debug ) { 
-			fprintf(stderr,str);
-			fprintf(stderr,"\n");
+			fprintf(stderr,"%s\n", str);
 		}
 			 
 		va_end(ap);
 
 	}
 }
+
