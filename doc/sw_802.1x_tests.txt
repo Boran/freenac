@@ -1,4 +1,6 @@
 
+Setup on an access point on port 2/22
+--------------------------------------
 Lets say there is an access point on port 22, first set it to static and assign a trunk with the 
 appropriate vlans:
 
@@ -15,7 +17,89 @@ sw0503> (enable) set trunk 2/22 11-12,15
 Vlan(s) 11-12,15 already allowed on the trunk
 Please use the 'clear trunk' command to remove vlans from allowed list.
 
-...2006 Oct 03 15:40:29 MET +02:00 %SYS-4-P2_WARN: 1/Tag 1 on packet from 00:13:c3:4c:87:34 port 2/22, but port's native vlan is 30
+
+Setting up 802.1x on port 0/2
+-----------------------------
+
+logging  192.168.245.40
+
+interface FastEthernet0/2
+  switchport mode access
+  dot1x port-control auto
+  #dot1x default  
+  #dot1x reauthentication  
+  #dot1x timeout reauth-period 7200
+  #dot1x guest-vlan 524
+  #dot1x auth-fail vlan 522
+
+dot1x system-auth-control
+radius-server host 192.168.245.40 auth-port 1812 acct-port 1813 key 0 inoap
+radius-server retransmit 3
+
+aaa authentication dot1x default group NAC 
+aaa authentication dot1x NAC_auth group NAC
+aaa authorization network default group NAC
+
+aaa group server radius NAC
+  server 192.168.245.41
+  
+  
+#aaa authorization network default group radius
+#aaa authentication dot1x default group radius
+##aaa authentication dot1x group group radius
 
 
+testing
+--------
+#sh dot1x
 
+Sysauthcontrol                    = Enabled
+Supplicant Allowed In Guest Vlan  = Disabled
+Dot1x Protocol Version            = 1
+
+sw0519#sh dot1x interface fastEthernet 0/2
+
+Supplicant MAC <Not Applicable>
+AuthSM State          = CONNECTING
+BendSM State          = IDLE
+Posture               = N/A
+   ReAuthPeriod      = 3600 Seconds (Locally Configured)
+   ReAuthAction      = Reauthenticate
+   TimeToNextReauth  = N/A
+PortStatus            = UNAUTHORIZED
+MaxReq                = 2
+MaxAuthReq            = 2
+HostMode              = Single
+Port Control          = Auto
+ControlDirection      = Both
+QuietPeriod           = 60 Seconds
+Re-authentication     = Enabled
+ReAuthPeriod          = 3600 Seconds
+ServerTimeout         = 30 Seconds
+SuppTimeout           = 30 Seconds
+TxPeriod              = 30 Seconds
+Guest-Vlan            = 0
+AuthFail-Vlan         = 0
+AuthFail-Max-Attempts = 3
+
+
+ 
+Notes
+------
+dot1x
+  auth-fail          Configure Authentication Fail values for this port
+  control-direction  set the control-direction value
+  default            Configure Dot1x with default values for this port
+  guest-vlan         Configure Guest-vlan on this interface
+  host-mode          Set the Host mode for 802.1x on this interface
+  max-reauth-req     Max No. of Retries to supplicant
+  max-req            Max No. of Retries to Radius
+  port-control       set the port-control value
+  reauthentication   Enable or Disable Reauthentication for this port
+  timeout            Various Timeouts
+
+check: dot1x auth-fail vlan
+
+References:
+----------
+http://www.cisco.com/en/US/products/hw/switches/ps5213/products_configuration_guide_chapter09186a00801cdf84.html

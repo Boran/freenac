@@ -8,15 +8,27 @@ ______________________________________________________________________
 0. INTRODUCTION
 ===============
 This is a "copy & paste" guide for *expert* administrators for setting up an
-FreeNAC master server.
-Untar this file under /opt
-It will create /opt/nac
+FreeNAC master server. The instructions assume that one build all needed components
+from source. Depending on your distribution this may not be necessary, but this way
+one can be sure that all the needed options are enabled, and its resproduceable.
+The reference Linux distribution is Suse Linux.
 
+The software versions below were the latest when we last used these instructions,
+obviously the newest versions are to be used when doing this, so adapt
+the versions numbers below accordingly.
+Note also that a virtaul machine is available on FreeNAC.net, if this all sounds a
+complicated.
+
+0. Download Freenac
+===================
+Start by downloading the lastest stable release nac tarball from FreeNac.net,
+copying to /opt, and extracting it into /opt/nac
 
 
 1. UNIX preparation
 ===================
 see unix_install.txt
+	
 	
 2. Installing Suse packages
 ===========================
@@ -25,7 +37,6 @@ see unix_install.txt
   
 3. Compiling/ installing Key components
 =======================================
-
 Download : you'll need to download the following files 
 
 http://mirror.switch.ch/ftp/mirror/apache/dist/httpd/httpd-2.2.2.tar.gz
@@ -36,13 +47,13 @@ http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds
 http://ch2.php.net/get/php-5.1.6.tar.bz2/from/this/mirror
 
 
-Apache 2.2.2:
-cd /opt/install
-tar xvzf http-2.2.2.tar.gz
-cd http-2.2.2
-./configure --prefix=/usr/local/apache2 --enable-so
-make install
-ln -s /usr/local/apache2 /usr/local/apache
+Apache 2.2.2 (from source):
+  cd /opt/install
+  tar xvzf http-2.2.2.tar.gz
+  cd http-2.2.2
+  ./configure --prefix=/usr/local/apache2 --enable-so
+  make install
+  ln -s /usr/local/apache2 /usr/local/apache
 
 MYSQL 5 (From binaries):
   cd /opt/install  
@@ -50,87 +61,81 @@ MYSQL 5 (From binaries):
   mv mysql-max-5.0.18-linux-i686 /usr/local
   cd /usr/local
   ln -s mysql-max-5.0.18-linux-i686 mysql
-  cd /usr/local/mysql
-  scripts/mysql_install_db               [install empty mysql config tables]
-  mv data /var/lib/mysql
-  ln -s /var/lib/mysql data
-  ln -s /var/lib/mysql /mysqldata
-  ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
-      
-  copy /etc/my.cnf from another machine
-    Adapt log-bin and report-host to include hostname:
-    log-bin=vmps1-bin
-    report-host     = vmps1
-  
-  copy /etc/init.d/mysql from another machine 
-    Enable the service:
-    chkconfig mysql on 
-    ln -s /etc/init.d/mysql /usr/sbin/rcmysql
 
-  Add mysql to path:
-  . /etc/profile.local
-    
-  groupadd mysql
-  useradd -g mysql mysql
-  chown -R mysql:mysql *
-  chgrp -R mysql /usr/local/mysql/*
+
   
 MYSQL 5 (from sources):
   cd /opt/install
   tar xvzf mysql-5.0.22.tar.gz
   cd /opt/install/mysql-5.0.22
   groupadd mysql
-  useradd -g mysql mysql
-  mkdir /mysqldata
+
   ./configure --prefix=/usr/local/mysql-5.0.22 --localstatedir=/mysqldata --with-unix-socket-path=/tmp/mysql.sock
   make install
-  cp support-files/my-large.cnf /etc/my.cnf
-  cp support-files/mysql.server /etc/init.d/mysql
-  chmod 744 /etc/init.d/mysql
-  ln -s /etc/init.d/mysql /usr/sbin/rcmysql
+  cd /usr/local
+  ln -s mysql-5.0.22 mysql
+  
+  
+MYSQL: create directories, links, users, setting permissions 
+  Create a mysql user:  
+    groupadd mysql
+    useradd -g mysql mysql 
+  
   cd /usr/local/mysql
   bin/mysql_install_db --user=mysql
-  ln -s /mysqldata /var/lib/mysql
-  chown -R root  .
-  chown -R mysql /mysqldata /var/lib/mysql
-  chgrp -R mysql .
-
-
-Modify /etc/my.cnf
-  report-host     = mysql
-
-Enable the service:
-  chkconfig mysql on 
-  ln -s /etc/init.d/mysql /usr/sbin/rcmysql
-
-Add mysql to path in /etc/profile
-
-You may also want to change the mysql "root" password (see at the end of this
-doc)
-
-GET DATA:
-  cd /mysqldata
-  mv mysql mysql.orig
-  copy over the FreeNAC sample inventory database (which is in /opt/nac/contrib/inventory_sample.tar.gz) and untar it to the /mysqldata directory 
-  Be carefull, it will replace existing tables in the inventory database.
-  cp /opt/nac/contrib/inventory_sample.tar.gz .
-  tar xvzf inventory_sample.tar.gz
-That must create the sample tables required for FreeNAC to work
+  mv data /var/lib/mysql  
+  ln -s /var/lib/mysql data
+  ln -s /var/lib/mysql /mysqldata
+  ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
+      
+  copy /etc/my.cnf /opt/nac/contrib/etc/my.cnf
+    Adapt log-bin and report-host to include hostname:
+    log-bin=vmps1-bin
+    report-host= vmps1
   
-START mysql, check that all is OK:
-  rcmysql start  
-  check /mysqldata/localhost.err for errors.
-  mysql inventory
+  copy /etc/init.d/mysql from /opt/nac/contrib/startup_init.d 
+    Enable the service:
+    chkconfig mysql on 
+    ln -s /etc/init.d/mysql /usr/sbin/rcmysql
+
+  Add mysql to path:
+  vi /etc/profile.local
+  . /etc/profile.local
+  
+  Set permissions:
+    chown -R root  .
+    chown -R mysql /mysqldata /var/lib/mysql
+    chgrp -R mysql .    
+ 
+
+  You may also want to change the mysql "root" password 
+  (see the end of thisdoc).
+
+
+MYSQL: Install an initial set of empty FreeNAC tables for the 
+  'inventory' database, backing up the existing tables first:
+    cd /mysqldata
+    mv mysql mysql.$$
+    mv inventory inventory.$$  
+    cp /opt/nac/contrib/inventory_sample.tar.gz .
+    tar xvzf inventory_sample.tar.gz
+  
+  START mysql, check that all is OK:
+    rcmysql start  
+    check /mysqldata/localhost.err for errors.
+  Login to sql and look at a few tables:
+    mysql inventory
   		show tables;
   		select * from ports;
 
-libxml:
+
+libxml (from source):
   cd /opt/install
   tar xvzf libxml2-2.6.22.tar.gz
   cd libxml2-2.6.22/
   ./configure --prefix=/opt/libxml2 && make install  
   
-  Add /opt/libxml2/lib to 
+  [Note: we had a missiing line here "Add /opt/libxml2/lib to .."]
 
 
 FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
@@ -167,16 +172,15 @@ Install first the graphics support needed by the web1
   cp php.ini-dist /usr/local/lib/php.ini
   ln -s /opt/php5/bin/php /usr/bin/php
 
-Edit your httpd.conf to load the PHP module
-  LoadModule php5_module modules/libphp5.so
-The path on the right hand
-side of the LoadModule statement must point to the path of the PHP
-module on your system.  Then "make install" from above may have already
-added this for you, but be sure to check.
-Also, tell Apache to parse certain extensions as PHP in httpd.conf
-  AddType application/x-httpd-php .php .phtml
-  AddType application/x-httpd-php-source .phps
-     
+  Edit your httpd.conf to load the PHP module
+    LoadModule php5_module modules/libphp5.so
+    
+  The path on the right hand side of the LoadModule statement must point to the 
+  path of the PHP module on your system.  Then "make install" from above may 
+  have already added this for you, but be sure to check.
+  Also, tell Apache to parse certain extensions as PHP in httpd.conf
+    AddType application/x-httpd-php .php .phtml
+    AddType application/x-httpd-php-source .phps     
   
   mv /usr/bin/php /usr/bin/php4
   ln -s /opt/php5/bin/php /usr/bin/php
@@ -188,6 +192,7 @@ Also, tell Apache to parse certain extensions as PHP in httpd.conf
    ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.4b --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
   and create then make /opt/php5 a link to this directory.
   This allows rollback and less disturbance to running daemons.
+
 
 
 Database rights
@@ -228,7 +233,7 @@ D. The read-only webgui only need "read" access and by default uses a user named
 4. FreeNAC install part #1:
 ===========================
 Rename config.inc.template
-mv /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc
+cp /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc
 
 Adapt /opt/nac/etc/config.inc
 
@@ -240,7 +245,7 @@ and you see messages there.
 ===========================
 Now we get the vmps daemon going.
 
-Copy /etc/init.d/vmps from /opt/nac/contrib/startup_init.d
+Copy /etc/init.d/vmps from /opt/nac/contrib
   cp /opt/nac/contrib/startup_init.d/vmps /etc/init.d
   ln -s /etc/init.d/vmps /usr/sbin/rcvmps
   chmod 750 /etc/init.d/vmps
@@ -267,7 +272,8 @@ Test purging of old devices (and watch syslog), then enable in cron:
 
 6. FreeNAC install part #3: monitoring
 ===========================
-There are several monitoring scripts that need to be individually tested and enabled in root cron:
+There are several monitoring scripts that need to be individually tested and 
+enabled in root cron:
 
 Create /secure and copy from /opt/nac/bin the following scripts:
    monitor_processes.pl    secure.conf  proctst proctst.pl  check_disk       
@@ -282,8 +288,8 @@ Create /secure and copy from /opt/nac/bin the following scripts:
 7. FreeNAC install: syslog pruning
 ===========================
 Enable syslog pruning and analyis:
-ci -l /etc/logrotate.d/syslog
-cp /opt/vmps/contrib/logrotate.d/syslog /etc/logrotate.d/syslog
+  ci -l /etc/logrotate.d/syslog
+  cp /opt/nac/contrib/logrotate.d/syslog /etc/logrotate.d/syslog
 
 
 
