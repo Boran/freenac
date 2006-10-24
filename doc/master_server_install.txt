@@ -210,9 +210,8 @@ grant SELECT,INSERT,UPDATE,DELETE ON inventory.nac_openports to inventwrite@'%' 
 
 C. Root is used by the sysadmin for local configuration. Make sur its only used from localhost.
 
-D. The read-only webgui only need "read" access and by default uses a user
-name 'readonly'.
-==> To do
+D. The read-only webgui only need "read" access and by default uses a user named 'readonly'.
+	grant SELECT       ON inventory.* to readonly@'%' IDENTIFIED by 'PASSWORD1';
 
 
 
