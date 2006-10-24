@@ -95,13 +95,18 @@ Enable the service:
 
 Add mysql to path in /etc/profile
 
+You may also want to change the mysql "root" password (see at the end of this
+doc)
+
 GET DATA:
   cd /mysqldata
   mv mysql mysql.orig
   copy over the FreeNAC sample inventory database (which is in /opt/nac/contrib/inventory_sample.tar.gz) and untar it to the /mysqldata directory 
+  Be carefull, it will replace existing tables in the inventory database.
   cp /opt/nac/contrib/inventory_sample.tar.gz .
-  untar xvzf inventory_sample.tar.gz
-That must create the sample tables required for FreeNAC to work  
+  tar xvzf inventory_sample.tar.gz
+That must create the sample tables required for FreeNAC to work
+  
 START mysql, check that all is OK:
   rcmysql start  
   check /mysqldata/localhost.err for errors.
@@ -199,10 +204,14 @@ grant SELECT,UPDATE        ON inventory.switch  to inventwrite@'%' ;
 grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
 grant SELECT,INSERT,UPDATE ON inventory.sys_class to inventwrite@'%' ;
 grant SELECT,INSERT,UPDATE ON inventory.sys_os to inventwrite@'%';
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.nac_openports to inventwrite@'%' ;
+
+
 
 C. Root is used by the sysadmin for local configuration. Make sur its only used from localhost.
 
-D. The read-only webgui uses a "readonly" user.
+D. The read-only webgui only need "read" access and by default uses a user
+name 'readonly'.
 ==> To do
 
 
@@ -242,8 +251,6 @@ Copy /etc/init.d/vmps_lastseen from /opt/nac/contrib/startup_init.d
   Start and watch syslog for events:
   rcvmps_lastseen start
 
-
-touch /etc/vlan.db
 
 Test purging of old devices (and watch syslog), then enable in cron:
 0   1   26 * *   /opt/nac/bin/purge_unknowns  
