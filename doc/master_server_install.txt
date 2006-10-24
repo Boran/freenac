@@ -26,6 +26,16 @@ see unix_install.txt
 3. Compiling/ installing Key components
 =======================================
 
+Download : you'll need to download the following files 
+
+http://mirror.switch.ch/ftp/mirror/apache/dist/httpd/httpd-2.2.2.tar.gz
+http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-max-5.0.24-linux-i686.tar.gz
+(if compiling from source : http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-5.0.24.tar.gz)
+ftp://fr.rpmfind.net/pub/libxml/libxml2-2.6.23.tar.gz
+http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz
+http://ch2.php.net/get/php-5.1.6.tar.bz2/from/this/mirror
+
+
 Apache 2.2.2:
 cd /opt/install
 tar xvzf http-2.2.2.tar.gz
