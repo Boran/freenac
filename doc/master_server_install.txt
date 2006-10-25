@@ -195,8 +195,8 @@ Install first the graphics support needed by the web1
 
 
 
-Database rights
-==================   
+Database
+========
 There are some DB users you need to setup.
 
 A. Local daemon use for PHP scripts (set the user/pw in config.inc):
@@ -228,7 +228,19 @@ C. Root is used by the sysadmin for local configuration. Make sur its only used 
 D. The read-only webgui only need "read" access and by default uses a user named 'readonly'.
 	grant SELECT       ON inventory.* to readonly@'%' IDENTIFIED by 'PASSWORD1';
 
+Then, you need to populate the following tables :
 
+A. switch : at the beginning, you just need to insert your test switch(es) :
+	INSERT INTO switch(ip,name,location) VALUES ('192.168.123.11','switch11','5th floor');
+
+B. port : this is optional as it will be populated once new machine are connecting.
+   However, it is interesting to pre-populate the field to ease the transition. By setting the "default_vlan" field to the actual vlan configured on this port, you can get the new (unknown) hosts on the same vlan (see config.inc).
+
+	INSERT INTO port(switch,name,location,default_vlan) VALUES ('192.168.254.11','Fa/0/2','5 B','123');
+
+C. user : this contains all your users. It is probably better to regularly update this table by pulling data from a directory (direx, ...)
+
+	INSERT INTO users(AssocNtAccount,Surname,GivenName,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,Mobile) VALUES ("username","Jean","Doe","jean.doe@foo.ch","Building B","5 B2","0797704803);
 
 4. FreeNAC install part #1:
 ===========================
@@ -237,8 +249,11 @@ cp /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc
 
 Adapt /opt/nac/etc/config.inc
 
-At this stage The DB is working and PHP access to the DB. Syslog works too 
-and you see messages there.
+At this stage The DB is working and PHP should be access to the DB, and the
+messages logged trough syslog to '/var/log/messages'.
+
+To test this, you can execute '/opt/nac/bin/purge_unknowns" and verify the content of syslog with `tail /var/log/messages`.
+You should see a line with the following content 'vmps_purge_unknowns: completed'
 
 
 5. FreeNAC install part #2:
