@@ -84,7 +84,6 @@ Copy /opt/php5 /opt/libxml2 and /opt/vmps from your master
 ======================================
 see slave_mysql_sync.txt
 
-Emp
 
 5. Slave: configure DB:
 =======================
