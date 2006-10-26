@@ -187,7 +187,8 @@ sub post_auth()
 {
    $request{macaddr}=$suplicant_mac;			
    $request{client_ip}=$switch_ip;
-   $request{server_ip}='freenac';		
+   #$request{server_ip}='freenac';		
+   $request{server_ip}='localhost';		
    $request{port_name}='Fa0/1';		
    $request{vlan}='';		
    $request{vtp_domain}='';
