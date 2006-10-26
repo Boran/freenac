@@ -235,22 +235,6 @@ do {
 
             if ($lastseen_infnet==TRUE) {         
 
-#                # 1.1 Infnet PC?: See if its known on PC Explorer, can take several secs
-#                $retval='';
-#                $infnet_details=syscall("$check_infnet_mac $mac2", $retval);
-#
-#                #if(preg_match("/Host=(\S+) (.+)$/",$infnet_details, $matches)) {
-#                #Host=uPC2 Vorname=Urs Family=Someone Tel=+41-99-1234566 Org=AA-BB-CC-DD
-#                if(preg_match("/Host=(\S+) Vorname=(.+) Family=(.+) Tel=(\S+) Org=(\S+) NtAccount=(\S+)$/",$infnet_details, $matches)) {
-#
-#                  # Enable PC and set to Infnet VLAN
-#                  #$infnet_name=$matches[1];     
-#                  $infnet_name=strtolower($matches[1]);     
-#                  $infnet_details=$matches[2] ." " .$matches[3] ." " 
-#                                 .$matches[4] ." " .$matches[5];     
-#                  $txx_name= strtoupper($matches[6]);
-
-     
                 # 1.1 Infnet PC?: See if its known on SMS, can take several secs
                 $retval='';
                 $infnet_details=syscall("$sms_infnet_mac $mac2", $retval);
@@ -293,7 +277,7 @@ do {
                   ## User now authorised, so now add user to local DB if needed.
                   #User now authorised, so now add user to local DB if needed.
                   #
-                  #$txx_name= direx_check_new_user("INO-SSM", "Sean", "Boran");
+                  #$txx_name= direx_check_new_user("MY-ORG", "Sean", "Boran");
                   #$txx_name= direx_check_new_user($matches[5], $matches[2], $matches[3]);
                   # TBD: optimise now thzat we have the NT user
                   #      - insert if user not known, use NT account as key
