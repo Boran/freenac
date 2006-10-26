@@ -30,6 +30,9 @@
   $debug_to_syslog=true;          # Daemons: Debug also to syslog?
   $logit_to_stdout=false;         # Debugging to the console?
 
+## Radius
+  $vmps_server="localhost";	  #Required for Radius
+
 ## vmps_external script:  
   $use_port_default_vlan=true;
   $detect_hubs=true;

@@ -13,6 +13,16 @@ $|=0;
 #$DEBUG=1;
 $DEBUG=0;
 #use strict;
+open (CONFIG_FILE,"/opt/nac/etc/config.inc") or die "Couldn't open the config file";
+foreach $line (<CONFIG_FILE>) {
+   if ($line =~ /vmps_server=(.*)$/)
+   {
+       $vmps_server=$1;
+   }
+}
+close (CONFIG_FILE);
+$vmps_server =~ s/[\"\'\;]//g;
+
 use vars qw(%RAD_REQUEST %RAD_REPLY %RAD_CHECK); 
 use Data::Dumper; 
 
@@ -169,6 +179,7 @@ sub authorize()
 {
    if ((!$RAD_REQUEST{'Calling-Station-Id'} && !$RAD_REQUEST{'NAS-IP-Address'}))
    {
+      $RAD_REPLY{'Reply-Message'} = "Required attributes \"Calling-Station-Id\" and \"NAS-IP-Address\" were not found in the request.";
       return RLM_MODULE_NOOP;
    }
    else
@@ -176,9 +187,10 @@ sub authorize()
       my $mac=$RAD_REQUEST{'Calling-Station-Id'};	
       @temp;	
       @temp=split(/-/,$mac);	
-      $mac=@temp[0].@temp[1].@temp[2].@temp[3].@temp[4].@temp[5];
+      $mac=@temp[0].@temp[1]."\.".@temp[2].@temp[3]."\.".@temp[4].@temp[5];
       $suplicant_mac=$mac;
       $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
+      $request{macaddr}=$suplicant_mac;
       return RLM_MODULE_OK;
    }
 }
@@ -187,8 +199,7 @@ sub post_auth()
 {
    $request{macaddr}=$suplicant_mac;			
    $request{client_ip}=$switch_ip;
-   #$request{server_ip}='freenac';		
-   $request{server_ip}='localhost';		
+   $request{server_ip}=$vmps_server;		
    $request{port_name}='Fa0/1';		
    $request{vlan}='';		
    $request{vtp_domain}='';
@@ -200,10 +211,12 @@ sub post_auth()
    
    if ( ! $response{vlan} )
    {
+      $RAD_REPLY{'Reply-Message'} = "$vmps_server returns: Access denied";
       return RLM_MODULE_REJECT;
    }
    else 
    {	
+      $RAD_REPLY{'Reply-Message'} = "$vmps_server returns: Access granted";
       $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
       $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
       $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
