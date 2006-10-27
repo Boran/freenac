@@ -1,9 +1,11 @@
 <?php
 include_once('config.inc');
 include_once('functions.inc');
+include_once('defs.inc');
 
-$select = $_GET["select"];
 $graphtype = $_GET["graphtype"];
+$stattype =  $_GET["stattype"];
+$order =  $_GET["order"];
 
 include_once($jpgraph_path.'/jpgraph.php');
 include_once($jpgraph_path.'/jpgraph_'.$graphtype.'.php');
@@ -13,6 +15,8 @@ function cbFmtPercentage($aVal) {
 };
 
 db_connect();
+
+$select = $sel[$stattype]['graph']." ORDER BY count(*) $order;";
 $result = mysql_query($select);
 
 while ( $row = mysql_fetch_array($result)) {

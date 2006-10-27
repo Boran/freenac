@@ -1,6 +1,7 @@
 <?php
 include_once('config.inc');
 include_once('functions.inc');
+include_once('defs.inc');
 $stattypes = array("class","os","switch","vlan","dat");
 $graphtypes = array("pie","bar");
 $orders = array("DESC","ASC");
@@ -9,24 +10,7 @@ $orders = array("DESC","ASC");
 // - Vendor (dell, ...)
 // - active or not
 
-$sel['class']['table'] = "SELECT cl.value as class, c2.value as subclass, count(*) as count FROM systems s, sys_class cl, sys_class2 c2 WHERE s.class=cl.id AND s.class2=c2.id GROUP BY cl.value, c2.value";
-$sel['class']['graph'] = "SELECT cl.value as datax, count(*) as count FROM systems s, sys_class cl, sys_class2 c2 WHERE s.class=cl.id AND s.class2=c2.id GROUP BY cl.value";
 
-
-$sel['os']['table'] = "SELECT o.value, os1, os3, count(*) as count FROM systems s, sys_os o WHERE s.os=o.id GROUP BY o.value, os1, os3";
-$sel['os']['graph'] = "SELECT o.value as datax, count(*) as count FROM systems s, sys_os o WHERE s.os=o.id GROUP BY o.value";
-
-
-$sel['switch']['table'] = "SELECT sw.name,count(*) as count FROM systems s, switch sw WHERE s.switch=sw.ip GROUP BY sw.name";
-$sel['switch']['graph'] = "SELECT sw.name as datax, count(*) as count FROM systems s, switch sw WHERE s.switch=sw.ip GROUP BY sw.name;";
-
-
-$sel['vlan']['table'] = "SELECT s.vlan as ID, v.value as name, count(*) as count FROM systems s, vlan v WHERE s.vlan=v.id GROUP BY s.vlan";
-$sel['vlan']['graph'] = "SELECT v.value as datax, count(*) as count FROM systems s, vlan v WHERE s.vlan=v.id GROUP BY s.vlan";
-
-
-$sel['dat']['table'] = "SELECT DATversion, count(*) as count FROM EpoComputerProperties GROUP BY DATversion";
-$sel['dat']['graph'] = "SELECT DATversion as datax, count(*) as count FROM EpoComputerProperties GROUP BY DATversion";
 
 
 
@@ -105,7 +89,7 @@ $query = $sel[$type]['table']." ORDER BY count(*) $order;";
 //echo $query.'<hr>';
 
 $queryg = $sel[$type]['graph']." ORDER BY count(*) $order;";
-echo '<img src="statgraph.php?select='.$queryg.'&graphtype='.$graphtype."\"><br>\n";;
+echo '<img src="statgraph.php?stattype='.$type.'&order='.$order.'&graphtype='.$graphtype."\"><br>\n";;
 
 switch ($type) {
 case 'dat':
