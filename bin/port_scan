@@ -155,7 +155,7 @@ function message($string)
       if ($output_to_syslog===TRUE)
       {
          logit($string);
-         reporterr('info',$string);
+         //reporterr('info',$string);
       }   
       else
          echo $string;
@@ -622,8 +622,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       message("port_scan ended abnormally.\n");
       debug1($message);
       debug1("port_scan ended abnormally.\n");
-      reporterr('err',$message);
-      reporterr('err',"port_scan ended abnormally.");
+      //reporterr('err',$message);
+      //reporterr('err',"port_scan ended abnormally.");
       exit();
    }
    else
@@ -633,8 +633,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       message("port_scan ended abnormally.\n");
       debug1($message);
       debug1("port_scan ended abnormally.\n");
-      reporterr('err',$message);
-      reporterr('err',"port_scan ended abnormally.");
+      //reporterr('err',$message);
+      //reporterr('err',"port_scan ended abnormally.");
       exit();
    }
 }
