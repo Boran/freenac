@@ -20,33 +20,41 @@ Please use the 'clear trunk' command to remove vlans from allowed list.
 
 Setting up 802.1x on port 0/2
 -----------------------------
-
 logging  192.168.245.40
+aaa authentication dot1x default group radius
+dot1x system-auth-control
+radius-server host 192.168.245.40 auth-port 1812 acct-port 1813 key 7 141E1C040D14
+radius-server retransmit 3
 
+# a port with static Vlans:
 interface FastEthernet0/2
-  switchport mode access
-  dot1x port-control auto
-  #dot1x default  
-  #dot1x reauthentication  
-  #dot1x timeout reauth-period 7200
+ switchport access vlan 15
+ switchport mode access
+ dot1x port-control auto
+ no cdp enable
+ spanning-tree portfast
+ 
+# dynamic vlans: vlan is returned by the radius server 
+interface FastEthernet0/2
+ switchport access
+ switchport mode access
+ dot1x port-control auto
+ no cdp enable
+ spanning-tree portfast 
+ 
+
+## Option: reauthenticate every two hours
+  dot1x timeout reauth-period 7200
+  dot1x reauthentication 
+  
+## Other options  
+  #dot1x default   
   #dot1x guest-vlan 524
   #dot1x auth-fail vlan 522
 
-dot1x system-auth-control
-radius-server host 192.168.245.40 auth-port 1812 acct-port 1813 key 0 inoap
-radius-server retransmit 3
 
-aaa authentication dot1x default group NAC 
-aaa authentication dot1x NAC_auth group NAC
-aaa authorization network default group NAC
 
-aaa group server radius NAC
-  server 192.168.245.41
-  
-  
-#aaa authorization network default group radius
-#aaa authentication dot1x default group radius
-##aaa authentication dot1x group group radius
+##aaa authorization network default group NAC
 
 
 testing
@@ -57,7 +65,7 @@ Sysauthcontrol                    = Enabled
 Supplicant Allowed In Guest Vlan  = Disabled
 Dot1x Protocol Version            = 1
 
-sw0519#sh dot1x interface fastEthernet 0/2
+#sh dot1x interface fastEthernet 0/2
 
 Supplicant MAC <Not Applicable>
 AuthSM State          = CONNECTING
@@ -82,24 +90,66 @@ Guest-Vlan            = 0
 AuthFail-Vlan         = 0
 AuthFail-Max-Attempts = 3
 
+debug dot1x ?
+  all            All Dot1x debugging messages turned on
+  errors         Error codes
+  events         Events
+  packets        Packets
+  registry       Registries
+  state-machine  State machine
+undebug all
 
- 
-Notes
-------
-dot1x
-  auth-fail          Configure Authentication Fail values for this port
-  control-direction  set the control-direction value
-  default            Configure Dot1x with default values for this port
-  guest-vlan         Configure Guest-vlan on this interface
-  host-mode          Set the Host mode for 802.1x on this interface
-  max-reauth-req     Max No. of Retries to supplicant
-  max-req            Max No. of Retries to Radius
-  port-control       set the port-control value
-  reauthentication   Enable or Disable Reauthentication for this port
-  timeout            Various Timeouts
+#debug dot1x errors
+Dot1x Errors debugging is on
 
-check: dot1x auth-fail vlan
+
 
 References:
 ----------
 http://www.cisco.com/en/US/products/hw/switches/ps5213/products_configuration_guide_chapter09186a00801cdf84.html
+http://wiki.freeradius.org/Rlm_perl
+http://www.cisco.com/univercd/cc/td/doc/product/lan/cat3560/12225see/scg/sw8021x.htm#wp1196845
+
+
+> If you want FreeRadius assigning VLANs dynamically, you do a users 
+> file with:
+> 
+> DEFAULT	Auth-Type == MS-CHAP or 
+> NAS-IP-Address==x.y.z.w, NAS-Port = 50001
+> 		Tunnel-Type = VLAN,
+> 		Tunnel-Medium-Type = 6,
+> 		Tunnel-Private-Group-ID = VLAN_number
+> 
+> DEFAULT	Auth-Type := Reject
+> 
+> You need to keep this file for every vlan you want to return and the 
+> request attributes you want to check.
+> In fact, the script I have does exactly this. It outputs just those 
+> values at the end of the authentification process (post_auth), and 
+> then the switch assigns the client the vlan that VMPS has returned.
+> I think it is easier than maintaining the users file by ourselves
+
+
+0008.7446.2aa5
+
+------------------------------
+/opt/nac/bin/rad2vmps
+
+$request{server_ip}='freenac'
+in the post_auth function
+
+Then modify radiusd.conf accordingly
+// Radiusd.conf in the modules section add
+verify_mac {
+	module = "/opt/nac/bin/rad2vmps"
+}
+//Authorize section
+authorize {
+	verify_mac
+	eap
+}
+// Add a post-auth section
+post-auth {
+	verify_mac
+}
+
