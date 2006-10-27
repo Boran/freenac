@@ -142,7 +142,7 @@ function print_host_table($where) {
 				if (get_nmap_id($mac)) { $html .= 'X'; } else { $html .= '&nbsp;'; };
 
 				$html .= '<td align=center>';
-				if (mysql_num_rows(mysql_query("SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'")) > 0) { $html .= 'X'; };
+				if (mysql_num_rows(mysql_query("SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'")) > 0) { $html .= 'X'; } else { $html .= '&nbsp;'; };
 				
 // name => print details link
 				$html .= '<td><b><a href="display.php?single_host='.$row['mac'].'">';
@@ -160,7 +160,7 @@ function print_host_table($where) {
 				$html .= '<td>'.$row['inventar'].'&nbsp;';
 				$html .= '<td>'.$row['mac'].'&nbsp;';
 				$html .= '<td>'.$row['r_ip'].'&nbsp;';
-				$html .= '<td>'.get_vlan_descr($row['vlan']); // get_vlan_short(get_vlan_descr
+				$html .= '<td>'.get_vlan_descr($row['vlan']).'&nbsp;'; // get_vlan_short(get_vlan_descr
 					if (! $row['building']) { $row['building'] = 'Ber-Omu93' ; };
 				$html .= '<td>'.$row['building'].'&nbsp;'.$row['office'];
 				$html .= '<td>'.get_location($row['switch'],$row['port']).'&nbsp;<td>'.$row['LastSeen'].'</font>'.'&nbsp;';
