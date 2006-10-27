@@ -139,7 +139,7 @@ function print_host_table($where) {
 // extra details
 				$mac = $row['mac'];
 				$html .= '<td align=center>';
-				if (get_nmap_id($mac)) { $html .= 'X'; } else { $html .= '&nbsp;' };;
+				if (get_nmap_id($mac)) { $html .= 'X'; } else { $html .= '&nbsp;'; };
 
 				$html .= '<td align=center>';
 				if (mysql_num_rows(mysql_query("SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'")) > 0) { $html .= 'X'; };
