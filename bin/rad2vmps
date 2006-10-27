@@ -192,7 +192,7 @@ sub authorize()
       my $mac=$RAD_REQUEST{'Calling-Station-Id'};	
       @temp;	
       @temp=split(/-/,$mac);	
-      $mac=@temp[0].@temp[1]."\.".@temp[2].@temp[3]."\.".@temp[4].@temp[5];
+      $mac=@temp[0].@temp[1].@temp[2].@temp[3].@temp[4].@temp[5];
       $suplicant_mac=$mac;
       $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
       $request{macaddr}=$suplicant_mac;
@@ -202,12 +202,11 @@ sub authorize()
 
 sub post_auth()
 {
-   $request{macaddr}=$suplicant_mac;			
    $request{client_ip}=$switch_ip;
    $request{server_ip}=$vmps_server;		
-   $request{port_name}='Fa0/1';		
+   $request{port_name}='Fa0/1';		       # TBD: add later
    $request{vlan}='';		
-   $request{vtp_domain}='';
+   $request{vtp_domain}='';                    # TBD: add later
 
    $buf = makeVQPrequest(%request);
    $buf = sendVQP($request{server_ip},$buf);
