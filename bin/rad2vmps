@@ -177,6 +177,11 @@ sub parseVQPresp($) {
 
 sub authorize()			
 {
+   if (!$vmps_server)
+   {
+      $RAD_REPLY{'Reply-Message'} = "vmps_server not defined in config.inc";
+      return RLM_MODULE_REJECT;
+   }
    if ((!$RAD_REQUEST{'Calling-Station-Id'} && !$RAD_REQUEST{'NAS-IP-Address'}))
    {
       $RAD_REPLY{'Reply-Message'} = "Required attributes \"Calling-Station-Id\" and \"NAS-IP-Address\" were not found in the request.";
@@ -211,12 +216,12 @@ sub post_auth()
    
    if ( ! $response{vlan} )
    {
-      $RAD_REPLY{'Reply-Message'} = "$vmps_server returns: Access denied";
+      $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
       return RLM_MODULE_REJECT;
    }
    else 
    {	
-      $RAD_REPLY{'Reply-Message'} = "$vmps_server returns: Access granted";
+      $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
       $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
       $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
       $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
