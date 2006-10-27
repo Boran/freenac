@@ -157,7 +157,7 @@ FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
 
 PHP5:
 Install first the graphics support needed by the web1
-  yast -i gd-devel freetype2-devel zlib-devel libpng-devel 
+  yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel 
   cd /opt/install;
   tar xBf php-5.1.6.tar.bz2
   cd /opt/install/php-5.1.6/
