@@ -86,7 +86,7 @@ function print_host($mac) {
 		$out .= '<tr><td colspan=3 bgcolor="#EEEEEE"><b>McAfee Updates</b>';
 		$out .= '<tr align=center><td>Part<td>Version<td>Last update';
 		$out .= '<tr><td>Agent<td>'.$epo['AgentVersion'].'<td>'.$epo['LastUpdate'];
-		$out .= '<tr><td>DAT File<td>'.$epo['DATVersion'].'<td>'.$epo['LastDATUpdate'];
+		$out .= '<tr><td>DAT File<td>'.$epo['DATVersion'].'&nbsp;<td>'.$epo['LastDATUpdate'];
 	};
 // 2.3 SCAN
 	if ($scan) {
@@ -139,7 +139,7 @@ function print_host_table($where) {
 // extra details
 				$mac = $row['mac'];
 				$html .= '<td align=center>';
-				if (get_nmap_id($mac)) { $html .= 'X'; };
+				if (get_nmap_id($mac)) { $html .= 'X'; } else { $html .= '&nbsp;' };;
 
 				$html .= '<td align=center>';
 				if (mysql_num_rows(mysql_query("SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'")) > 0) { $html .= 'X'; };
@@ -157,13 +157,13 @@ function print_host_table($where) {
 				  } else {
 					$html .= '<i>Unknown</i>';
 				  };
-				$html .= '<td>'.$row['inventar'];
-				$html .= '<td>'.$row['mac'];
-				$html .= '<td>'.$row['r_ip'];
+				$html .= '<td>'.$row['inventar'].'&nbsp;';
+				$html .= '<td>'.$row['mac'].'&nbsp;';
+				$html .= '<td>'.$row['r_ip'].'&nbsp;';
 				$html .= '<td>'.get_vlan_descr($row['vlan']); // get_vlan_short(get_vlan_descr
 					if (! $row['building']) { $row['building'] = 'Ber-Omu93' ; };
-				$html .= '<td>'.$row['building'].' '.$row['office'];
-				$html .= '<td>'.get_location($row['switch'],$row['port']).'<td>'.$row['LastSeen'].'</font>';
+				$html .= '<td>'.$row['building'].'&nbsp;'.$row['office'];
+				$html .= '<td>'.get_location($row['switch'],$row['port']).'&nbsp;<td>'.$row['LastSeen'].'</font>'.'&nbsp;';
 				$html .= "\n";
 			};
 			$html .= "</table>\n";
