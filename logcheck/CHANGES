@@ -1,0 +1,30 @@
+Original 'logcheck' CHANGES file:
+................................. 
+
+Version 1.0 -- 09/29/96
+
+Initial release.
+
+Version 1.01 -- 11/01/96
+
+Added new temporary working directory so symlink attacks are not possible. 
+
+Version 1.1 -- 05/13/97
+
+Did some clean up of the script that was left over from the original
+prototype. 
+
+Corrected NULL assignment typo in logtail.c code. 
+
+Added keywords/cleaned up keywords files.
+
+Updated Docs
+
+Added HPUX, Digital OSF/1, and Sun support...
+
+Cleaned up/separated system types.
+
+Used Makefile sent in by Richard Bullington <rbulling@obscure.org> as mine
+was pathetic..
+
+

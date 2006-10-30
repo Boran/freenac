@@ -1,0 +1,61 @@
+!=
+-ERR Password
+ATTACK
+BAD
+CWD etc
+DEBUG
+EXPN
+FAILURE
+ILLEGAL
+LOGIN FAILURE
+LOGIN REFUSED
+PERMITTED
+REFUSED
+RETR group
+RETR passwd
+RETR pwd.db
+ROOT LOGIN
+SITE EXEC
+VRFY
+"WIZ"
+admin 
+alias database
+debug
+denied
+deny
+deny host
+expn
+failed
+illegal
+nested
+permitted
+reject
+rexec
+rshd
+securityalert
+setsender
+shutdown
+smrsh
+su root
+su: 
+sucked
+unapproved
+vrfy
+attackalert
+
+## Catch important solaris events
+THERMAL WARNING
+
+
+## VMPS stuff we'd specifically like to report:
+vmpsd_external.*: decide:
+
+
+## Free Radius
+Exec-Program output: Logon failure
+Exec-Program output: Account locked out
+Exec-Program output: No such user
+# debug for now:
+Exec-Program output: NT_KEY
+
+

@@ -1,0 +1,11 @@
+# Default:
+stat=Deferred
+
+## General
+Socks5.* (Inactivity timeout|timed out)
+host address lookup failed
+
+## SSH
+sshd.* Connection reset by peer
+
+
