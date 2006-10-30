@@ -18,7 +18,7 @@ $sel['os']['graph'] = "SELECT o.value as datax, count(*) as count FROM systems s
 
 
 $sel['switch']['table'] = "SELECT sw.name,count(*) as count FROM systems s, switch sw WHERE s.switch=sw.ip GROUP BY sw.name";
-$sel['switch']['graph'] = "SELECT sw.name as datax, count(*) as count FROM systems s, switch sw WHERE s.switch=sw.ip GROUP BY sw.name;";
+$sel['switch']['graph'] = "SELECT sw.name as datax, count(*) as count FROM systems s, switch sw WHERE s.switch=sw.ip GROUP BY sw.name";
 
 
 $sel['vlan']['table'] = "SELECT s.vlan as ID, v.value as name, count(*) as count FROM systems s, vlan v WHERE s.vlan=v.id GROUP BY s.vlan";
