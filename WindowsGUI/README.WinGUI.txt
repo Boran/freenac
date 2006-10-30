@@ -21,4 +21,5 @@ Configuration in vmps.xml:
 
 CHANGES:
 v1.2.0.100: fix 'scannow' button, remove error message when writing patchtable.
-v1.2.0.101 /30.10.06/SB: Deleted systems were not correctly logged, Delection of changes to vlans in Edit Tab improved. For DEMO company allow Admin access for all users.
+v1.2.0.101/30.10.06/SB: Deleted systems were not correctly logged, Delection of changes to vlans in Edit Tab improved. For DEMO company allow Admin access for all users.
+v1.2.0.101/30.10.06/SB: Handling of locates with '/' and not '.' for date seperators.
