@@ -134,6 +134,65 @@ function display_os_select($selected) {
   return($html);
 };
 
+function display_class_select($selected) {
+  global $connect;
+  db_connect();
+
+  $query = "SELECT * FROM sys_class ORDER BY id ASC;";
+  $res = mysql_query($query, $connect);
+
+  $html .= '<option value="">(any)</option>';
+  while ($os = mysql_fetch_array($res)) {
+    if ($os['value'] != '') {
+      $html .= "<option ";
+	  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+      $html .= "value=\"". $os['id']. '">';
+      $html .= $os['value']. '</option>';
+    };
+  };
+  return($html);
+};
+
+  
+function display_class2_select($selected) {
+  global $connect;
+  db_connect();
+
+  $query = "SELECT * FROM sys_class2 ORDER BY id ASC;";
+  $res = mysql_query($query, $connect);
+
+  $html .= '<option value="">(any)</option>';
+  while ($os = mysql_fetch_array($res)) {
+    if ($os['value'] != '') {
+      $html .= "<option ";
+          if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+      $html .= "value=\"". $os['id']. '">';
+      $html .= $os['value']. '</option>';
+    };
+  };
+  return($html);
+};  
+
+
+function display_vlan_select($selected) {
+  global $connect;
+  db_connect();
+
+  $query = "SELECT * FROM vlan ORDER BY id ASC;";
+  $res = mysql_query($query, $connect);
+
+  $html .= '<option value="">(any)</option>';
+  while ($os = mysql_fetch_array($res)) {
+    if ($os['value'] != '') {
+      $html .= "<option ";
+	  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+      $html .= "value=\"". $os['id']. '">';
+      $html .= $os['value']. '</option>';
+    };
+  };
+  return($html);
+};
+
 function display_description_select($selected) {
   global $connect;
   db_connect();
@@ -197,10 +256,17 @@ function user_tooltip($username) {
 };
 
 function get_vlan_color($vlan) {
-  if (($vlan == 0) || ($vlan == 900)) { return('#CCCCCC'); };
-  if ($vlan < 9)                      { return('#FFCC66'); };
-  if ($vlan < 500)                    { return('#FFFFCC'); };
-
+  if (($vlan < 2) || ($vlan > 900)) { return('#CCCCCC'); };
+  if ($vlan < 500)                    { return('#FFCC66'); };
+  if ($vlan == 501)                       { return ('#CC33FF'); };
+  if ($vlan == 520 )                       { return ('#C0C0C0');};
+  if ($vlan == 521 )                       { return ('#99CCFF');};
+  if ($vlan == 522 )                       { return ('#99FF99');};
+  if ($vlan == 523 )                       { return ('#FFFF99');};
+  if (($vlan == 524) || ($vlan == 525)) { return('#9966CC'); };
+  if ($vlan == 526)                     { return ('#99CC66');};
+  if ($vlan > 580)                    	{ return('#FF9933'); };
+// if ($vlan == )			{ return ('#');
   return('#CCFFFF');
 };
 
@@ -220,6 +286,20 @@ function format_mac($macdouble) {
   };
   $mac = rtrim($mac,'.');
   return($mac);
+};
+
+function reformat_mac($macdot) {
+  $numbers = explode('.',$macdot);
+
+  $value = $numbers[0].$numbers[1].$numbers[2];
+  for ($i=0; $i <= 6; $i++) {
+	$mac .= substr($value,$i*2,2).':';
+  };
+
+  $mac = rtrim($mac,':.');
+  return($mac);
+
+
 };
 
 function get_vlan_descr($vlan) {
@@ -243,7 +323,14 @@ function get_location($switch_ip,$port) {
                 $port = mysql_fetch_array($res);
                 return($port['von_office']);
         } else {
-                return(FALSE);
+			$query2 = "SELECT * FROM switch WHERE ip = '$switch_ip';";
+			$res2 =  mysql_query($query2);
+			if (mysql_num_rows($res2) > 0) {
+				$switch = mysql_fetch_array($res2);
+				return($switch['location']);
+			} else {
+	                return(FALSE);
+			};
         };
 };
 
@@ -307,5 +394,48 @@ function display_dat_select() {
 
 };
 
+function get_actual_value($mac,$fieldname) {
+	global $connect;
+	db_connect();
+	$sel = "SELECT $fieldname FROM systems WHERE mac = '$mac';";
+	$res = mysql_query($sel);
+	$list = mysql_fetch_array($res);
+	return($list[0]);
 
+};
+function get_lastseen($mac) {
+	$switch = get_switch_name(get_actual_value($mac,'switch'));
+	$port = get_actual_value($mac,'port');
+
+	$sel = "SELECT inventar, s.mac as mac, s.vlan, v.value as vlanname, stat.value as statusname, s.status,
+  s.name as ComputerName, s.description as user, s.comment, s.ChangeDate, LastSeen, building,
+  office as officeSoll, p.location as officeIst,
+  pat.von_dose as PatchSocket,pat.von_office as PatchCable,
+  port, sw.name as switch, sw.location as swlocation,
+  class, cl.value as classname,
+  class2, c2.value as class2name, os, o.value as osname, os1, os2, os3 FROM systems s, vlan v, vstatus stat, sys_class cl, sys_class2 c2, sys_os o, switch sw, port p, patchcable pat WHERE s.vlan=v.id AND s.status=stat.id AND s.class=cl.id AND s.class2=c2.id AND s.os=o.id
+  AND s.switch=sw.ip AND (s.switch=p.switch AND s.port=p.name) AND (s.port=pat.nach_port AND s.switch=pat.nach_switch) AND s.mac='$mac'";
+
+	$system = mysql_fetch_array(mysql_query($sel));
+
+	$users = get_users($system['officeIst']);
+
+	$lastseen = array("time" => $system['LastSeen'],
+					  "switch" => $system['switch'].' '.$system['port'].' ('.$system['swlocation'].')', 
+					  "patch" => $system['officeIst'].' ('.$system['PatchSocket'].')',
+					  "users" => $users );
+
+	return($lastseen);
+
+};
+
+function get_users($office) {
+	$sel = "SELECT Surname, Givenname, Department FROM users WHERE PhysicalDeliveryOfficeName = '$office';";
+	$res = mysql_query($sel);
+	while ($usr = mysql_fetch_array($res)) {
+		$users[] = $usr['Surname'].' '.$usr['Givenname'].', '.$usr['Department'];
+
+	};
+	return($users);
+};
 ?>
