@@ -18,11 +18,15 @@ include_once('config.inc');
 function get_hosts($sw,$port) {
   $sel = "SELECT name,description FROM systems WHERE switch='$sw' AND port='$port';";
   #debug1($sel);
-  $res = mysql_query($sel);
-  while ($port = mysql_fetch_array($res)) {
+  $res = mysql_query($sel) or die("Unable to query the database");
+  if (mysql_num_rows($res) > 0) {
+	  while ($port = mysql_fetch_array($res)) {
     $out .= $port['name'].' ('.$port['description'].')<br>';
-  };
-  return($out);
+	  };
+	  return($out);
+  } else {
+	  return(FALSE);
+  } 
 };
 
 
@@ -39,22 +43,25 @@ $sel = "SELECT port.name,port.switch,port.location,count(*) ".
 	"GROUP BY port.name,port.switch;";
 
 debug1($sel);
-$res = mysql_query($sel);
+$res = mysql_query($sel) or die("Unable to query the database");
 
-echo '<br>';
-echo '<b>Switch IP ---- Port -- Location -- PC Name (User name)</b><br>';
-echo '<br>';
-echo '<table border=1 cellspacing=0 cellpadding=5>';
-while ($port = mysql_fetch_array($res)) {
-  if ($port['count(*)'] > 1) {
-    echo '<tr valign=top>';
-    echo '<td>'.$port['switch'];
-    echo '<td>'.$port['name'];
-    echo '<td>'.$port['location'];
-    echo '<td>'.get_hosts($port['switch'],$port['name']);
-  };
+if (mysql_num_rows($res) > 0) {
+	echo '<br>';
+	echo '<b>Switch IP ---- Port -- Location -- PC Name (User name)</b><br>';
+	echo '<br>';
+	echo '<table border=1 cellspacing=0 cellpadding=5>';
+	while ($port = mysql_fetch_array($res)) {
+	  if ($port['count(*)'] > 1) {
+	    echo '<tr valign=top>';
+	    echo '<td>'.$port['switch'];
+	    echo '<td>'.$port['name'];
+	    echo '<td>'.$port['location'];
+	    echo '<td>'.get_hosts($port['switch'],$port['name']);
+	  };
+	};
+	echo '</table>';
+} else {
+	echo "<hr><i>Error - Nothing to display</i>";
 };
-echo '</table>';
-
 vmps_footer();
 ?>

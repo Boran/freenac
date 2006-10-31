@@ -58,7 +58,7 @@ function debug2($msg) {
 function get_nmap_id($mac) {
   db_connect();
         $sel = "SELECT id FROM nac_hostscanned WHERE mac='".$mac."';";
-        $res = mysql_query($sel);
+        $res = mysql_query($sel)  or die ("Unable to query MySQL");
         $num = mysql_num_rows($res);
 
         if ($num > 0) {
@@ -72,7 +72,7 @@ function get_nmap_id($mac) {
 function get_nmap_os($nmap_ip) {
   db_connect();
         $sel = "SELECT os FROM nac_hostscanned WHERE id='$nmap_ip';";
-        $res = mysql_query($sel);
+        $res = mysql_query($sel)  or die ("Unable to query MySQL");
         $num = mysql_num_rows($res);
 
         if ($num > 0) {
@@ -120,16 +120,19 @@ function display_os_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM sys_os ORDER BY value ASC;";
-  $res = mysql_query($query, $connect);
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
 
   $html .= '<option value="">(any)</option>';
-  while ($os = mysql_fetch_array($res)) {
-    if ($os['value'] != '') {
-      $html .= "<option ";
-	  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
-      $html .= "value=\"". $os['id']. '">';
-      $html .= $os['value']. '</option>';
-    };
+
+  if (mysql_num_rows($res) > 0) {
+	  while ($os = mysql_fetch_array($res)) {
+	    if ($os['value'] != '') {
+	      $html .= "<option ";
+		  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+	      $html .= "value=\"". $os['id']. '">';
+	      $html .= $os['value']. '</option>';
+	    };
+	  };
   };
   return($html);
 };
@@ -139,16 +142,18 @@ function display_class_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM sys_class ORDER BY id ASC;";
-  $res = mysql_query($query, $connect);
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
 
   $html .= '<option value="">(any)</option>';
-  while ($os = mysql_fetch_array($res)) {
-    if ($os['value'] != '') {
-      $html .= "<option ";
-	  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
-      $html .= "value=\"". $os['id']. '">';
-      $html .= $os['value']. '</option>';
-    };
+  if (mysql_num_rows($res) > 0) {
+	  while ($os = mysql_fetch_array($res)) {
+	    if ($os['value'] != '') {
+	      $html .= "<option ";
+		  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+	      $html .= "value=\"". $os['id']. '">';
+	      $html .= $os['value']. '</option>';
+	    };
+	  };
   };
   return($html);
 };
@@ -159,9 +164,10 @@ function display_class2_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM sys_class2 ORDER BY id ASC;";
-  $res = mysql_query($query, $connect);
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
 
   $html .= '<option value="">(any)</option>';
+  if (mysql_num_rows($res) > 0) {
   while ($os = mysql_fetch_array($res)) {
     if ($os['value'] != '') {
       $html .= "<option ";
@@ -169,6 +175,7 @@ function display_class2_select($selected) {
       $html .= "value=\"". $os['id']. '">';
       $html .= $os['value']. '</option>';
     };
+  };
   };
   return($html);
 };  
@@ -179,9 +186,10 @@ function display_vlan_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM vlan ORDER BY id ASC;";
-  $res = mysql_query($query, $connect);
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
 
   $html .= '<option value="">(any)</option>';
+  if (mysql_num_rows($res) > 0) {
   while ($os = mysql_fetch_array($res)) {
     if ($os['value'] != '') {
       $html .= "<option ";
@@ -189,6 +197,7 @@ function display_vlan_select($selected) {
       $html .= "value=\"". $os['id']. '">';
       $html .= $os['value']. '</option>';
     };
+  };
   };
   return($html);
 };
@@ -198,9 +207,10 @@ function display_description_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM users ORDER BY Surname ASC;";
-  $res = mysql_query($query, $connect);
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
 
   $html .= '<option value="">(any)</option>';
+  if (mysql_num_rows($res) > 0) {
   while ($user = mysql_fetch_array($res)) {
     if ($user['Surname'] != '') {
       $html .= "<option ";
@@ -209,7 +219,7 @@ function display_description_select($selected) {
       $html .= $user['Surname']. ' '. $user['GivenName'].', ';
       $html .= $user['Department']. '</option>';
     };
-
+  };
   };
   return($html);
 };
@@ -218,7 +228,7 @@ function display_description_select($selected) {
 function get_user_email($username) {
   db_connect();
   $query = "SELECT rfc822mailbox FROM users WHERE AssocNtAccount = '$username'; ";
-  $res = mysql_query($query);
+  $res = mysql_query($query)  or die ("Unable to query MySQL");
   $user = mysql_fetch_array($res);
 
   return($user[0]);
@@ -227,17 +237,21 @@ function get_user_email($username) {
 function get_user_name($username) {
   db_connect();
   $query = "SELECT * FROM users WHERE AssocNtAccount = '$username'; ";
-  $res = mysql_query($query);
+  $res = mysql_query($query)  or die ("Unable to query MySQL");
+  if (mysql_num_rows($res) > 0) {
   $user = mysql_fetch_array($res);
-  $name = $user['Surname'].' '.$user['GivenName'].', '.$user['Department'];
-
-  return($name);
+	  $name = $user['Surname'].' '.$user['GivenName'].', '.$user['Department'];
+	  return($name);
+  } else {
+	  return($username);
+  };
 };
 
 function user_tooltip($username) {
   db_connect();
   $query = "SELECT * FROM users WHERE AssocNtAccount = '$username'; ";
-  $res = mysql_query($query);
+  $res = mysql_query($query)  or die ("Unable to query MySQL");
+
   $user = mysql_fetch_array($res);
 
   //$text = $user['GivenName'].' '.$user['Surname'].', '.$user['Department']." (";
@@ -355,23 +369,31 @@ function strip_datversion($long_version) {
 function get_datversions() {
 	$query = "SELECT DISTINCT(DATVersion) FROM EpoComputerProperties ORDER BY DATVersion DESC;";
 	$res = mysql_query($query);
-	while ($row = mysql_fetch_array($res)) {
-		$short_version = strip_datversion($row[0]);
-		if ($short_version > 0) {
-			$datversions[$i] = $short_version;
-			$i++;
+	if (mysql_num_rows($res) > 0) {
+		while ($row = mysql_fetch_array($res)) {
+			$short_version = strip_datversion($row[0]);
+			if ($short_version > 0) {
+				$datversions[$i] = $short_version;
+				$i++;
+			};
 		};
+		return($datversions);
+	} else {
+		return(FALSE);
 	};
-	return($datversions);
 };
 
 
 function get_latestdat() {
 	$query = "SELECT MAX(DATVersion) FROM EpoComputerProperties;";
 	$res = mysql_query($query);
-	$row = mysql_fetch_array($res);
-	$short_version = strip_datversion($row[0]);
-	return($short_version);
+	if (mysql_num_rows($res) > 0) {
+		$row = mysql_fetch_array($res);
+		$short_version = strip_datversion($row[0]);
+		return($short_version);
+	} else {
+		return(0);
+	};
 };
 
 function display_dat_select() {

@@ -23,17 +23,21 @@ function print_switch_sel() {
   global $db;
   global $sw;
   $sel = "SELECT * FROM switch";
-  $res = mysql_query($sel);
+  $res = mysql_query($sel) or die ("Unable to query MySQL");
   $html = "<select name=sw>\n";
 
-  while ($swi = mysql_fetch_array($res)) {
-    $html .= '<option value="'.$swi['ip'].'"';
-    if ($sw == $swi['ip']) {
-      $html .= ' selected ';
-    };
-    $html .='>'.$swi['name'].' ('.$swi['location'].")</option>\n";
+  if (mysql_num_rows($res) > 0) {
+	  while ($swi = mysql_fetch_array($res)) {
+	    $html .= '<option value="'.$swi['ip'].'"';
+	    if ($sw == $swi['ip']) {
+	      $html .= ' selected ';
+	    };
+	    $html .='>'.$swi['name'].' ('.$swi['location'].")</option>\n";
+	  };
+	  $html .= "</select>\n";
+  } else {
+  	  $html .= '';
   };
-  $html .= "</select>\n";
   return($html);
 };
 

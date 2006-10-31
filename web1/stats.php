@@ -17,48 +17,55 @@ $orders = array("DESC","ASC");
 function print_dat_stats($query) {
 	$readme_url='http://vil.nai.com/vil/DATReadme.aspx';
 
-	$result = mysql_query($query);
+	$result = mysql_query($query) or die ("Unable to query MySQL");
 
-
-	echo "<table cellspacing=0 cellpadding=5 border=1>\n";
-	echo "<tr><th><a href=\"$readme_url\">DAT Version</a><th>count";
-	while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-		$short_version = strip_datversion($row['DATversion']);
-		if ($short_version > 0) {
-			echo "<tr>";
-			echo "<td>$short_version</a>";
-			echo "<td>".$row['count'];
-			echo "\n";
-		} else {
-			$unknown = $unknown + $row['count'];
+	if (mysql_num_rows($result) > 0) {
+		echo "<table cellspacing=0 cellpadding=5 border=1>\n";
+		echo "<tr><th><a href=\"$readme_url\">DAT Version</a><th>count";
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+			$short_version = strip_datversion($row['DATversion']);
+			if ($short_version > 0) {
+				echo "<tr>";
+				echo "<td>$short_version</a>";
+				echo "<td>".$row['count'];
+				echo "\n";
+			} else {
+				$unknown = $unknown + $row['count'];
+			};
+			$total = $total + $row['count'];
 		};
-		$total = $total + $row['count'];
+		echo "<tr><td>Unknown<td>$unknown";
+		echo "</table>\n<b>Total = $total\n";
+	} else {
+		echo "Nothing to display";
 	};
-	echo "<tr><td>Unknown<td>$unknown";
-	echo "</table>\n<b>Total = $total\n";
 };
 
 function print_stats($query) {
-	$result = mysql_query($query);
+	$result = mysql_query($query) or die ("Unable to query MySQL");
 	echo "<table cellspacing=0 cellpadding=5 border=1>\n";
-	while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-		if (!$th) {
+	if (mysql_num_rows($result) > 0) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+			if (!$th) {
+				echo "<tr>";
+				foreach ($row as $key => $value) {
+					echo "<th>$key";
+				};
+				echo "\n";
+				$th = TRUE;
+			};
 			echo "<tr>";
-			foreach ($row as $key => $value) {
-				echo "<th>$key";
+			foreach ($row as $value) {
+				echo "<td>$value &nbsp;";
 			};
 			echo "\n";
-			$th = TRUE;
+			$total = $total + $value;
 		};
-		echo "<tr>";
-		foreach ($row as $value) {
-			echo "<td>$value &nbsp;";
-		};
-		echo "\n";
-		$total = $total + $value;
-	};
 
-	echo "</table>\n<b>Total = $total\n";
+		echo "</table>\n<b>Total = $total\n";
+	} else {
+		echo "Nothing to display";
+	};
 };
 
 
