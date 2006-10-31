@@ -1,0 +1,49 @@
+This is the description of the ldap module.
+
+DESCRIPTION
+-----------
+The purpose of this module is to query Microsoft's Active Directory to obtain user information which is then stored in the users table. The module should also work for other LDAP implementations, allthough some modifications may be necessary (attribute names).
+
+
+HOW DOES IT WORK
+----------------
+The module fetches the attributes sAMAccountName, sn (surname) and GivenName of all objects of type person underneath $ad_base_user_dn as configured in config.inc. Then it checks for each account name if it exists already in the database. If it does, the entry is updated, including the LastSeenDirex field. Otherwise a new entry is inserted into the database.
+
+
+HOW TO USE IT
+-------------
+First setup the AD related parameters in config.inc. Then run the module script from the command line with the paramter test. This checks whether your LDAP server can be reached and dumps the user information obtained to stdout. Once your setup works, register the module in crontab.
+
+> crontab -e
+add the next line
+0 0 * * *    nice /opt/nac/bin/ldap
+This will run it every day at midnight
+
+
+CONFIGURATION
+-------------
+There are four options in the global config file (config.inc).
+
+	$ad_server = 'dc.test.xx';							# Domain controller
+	The Domain controller where the AD is queried.
+	
+	$ad_user = 'cn=administrator,cn=users,dc=test,dc=xx';	# AD user with read privileges on AD
+	This is the dn of a user with sufficient privileges to read the necessary information from the AD.
+	
+	$ad_password = 'password';										# AD users's password
+	
+	$ad_base_user_dn = 'cn=users,dc=test,dc=xx';				# Base DN under which user information is stored
+	The dn of the place underneath which users are stored.
+
+
+DEPENDENCIES
+------------
+OpenNac
+PHP with LDAP support
+
+
+FILES
+-----
+bin/ldap
+etc/config.inc
+doc/README.ldap

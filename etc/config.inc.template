@@ -30,9 +30,6 @@
   $debug_to_syslog=true;          # Daemons: Debug also to syslog?
   $logit_to_stdout=false;         # Debugging to the console?
 
-## Radius
-  $vmps_server="localhost";	  #Required for Radius
-
 ## vmps_external script:  
   $use_port_default_vlan=true;
   $detect_hubs=true;
@@ -103,5 +100,12 @@
 
 ## flap_detect
   $flap_limit=40;
+  
+## LDAP coniguration settings (Active Directory)
+	$ad_server = 'dc.test.xx';							# Domain controller
+	$ad_user = 'cn=administrator,cn=users,dc=test,dc=xx';	# AD user with read privileges on AD
+	$ad_password = '';										# AD users's password
+	
+	$ad_base_user_dn = 'cn=users,dc=test,dc=xx';				# Base DN under which user information is stored
 
 ?>
