@@ -270,6 +270,7 @@ function user_tooltip($username) {
 };
 
 function get_vlan_color($vlan) {
+/*
   if (($vlan < 2) || ($vlan > 900)) { return('#CCCCCC'); };
   if ($vlan < 500)                    { return('#FFCC66'); };
   if ($vlan == 501)                       { return ('#CC33FF'); };
@@ -281,7 +282,8 @@ function get_vlan_color($vlan) {
   if ($vlan == 526)                     { return ('#99CC66');};
   if ($vlan > 580)                    	{ return('#FF9933'); };
 // if ($vlan == )			{ return ('#');
-  return('#CCFFFF');
+*/
+  return('#FFFFFF');
 };
 
 function format_mac($macdouble) {
