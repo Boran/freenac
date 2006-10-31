@@ -1,7 +1,9 @@
 The config_static.php script will create a series of scripts that will reconfigure the ports in "static" mode.
 It will browse the current known port and configure the access vlan to the actual default_vlan defined in the port database.
+The script will be created in the /opt/nac/web1/tmp directory.
 
 On the NAC server, it requires expect to be installed.
+
 
 On the switches, it requires the new aaa model with privielge 15 users and telnet access
 
