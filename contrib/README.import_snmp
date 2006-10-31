@@ -16,3 +16,7 @@ Current limitations :
 - same community for all switches
 - warning when scanning 3500XL switches
 - filtering of non-access ports not very nice
+
+Requirements 
+- PHP with support for SNMP enabled
+- SNMP readonly access to switches
