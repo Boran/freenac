@@ -15,11 +15,19 @@ _____________________ NAC Web1 GUI: Installation notes _____________________
 // - graphviz for the switch view
   yast -i graphviz 
 
-// - jpgraph for statistics
+// - jpgraph for statistics [also requires freetype & ms core fonts
+
+  yast -i freetype
+
+  Launch YaST online update - select the option "manually select patches"
+  Select the "fetchmscorefonts.sh"
+  Perform the update
+
   cd /usr/local/share
   wget http://members.chello.se/jpgraph/jpgdownloads/jpgraph-X.X.XX.tar.gz 
   tar zxvf jpgraph-X.X.XX.tar.gz
   ln -s jpgraph-X.X.XX jpgraph
+
 // in that case, you'll need to set $jpgraph_path = '/usr/local/share/jpgraph/src' in the config file
   
 // Install Apache (via Yast)
