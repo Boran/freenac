@@ -1,10 +1,11 @@
 #!/bin/sh  
-# /opt/nac/bin/monitor_lastseen.sh
+# monitor_lastseen.sh
 #
 # Monitor the VMPS logs and notify the Sysadmin via email of 
 # if there at not at least XX "lastseen" per time interval.
 # Called from Cron.
-# The time ionterval is typicall one day
+# The time interval is typically daily
+# 0    7    * * 1-5       /opt/nac/bin/monitor_lastseen.sh
 #
 # <1> 2006.06.28 Sean Boran
 #
