@@ -54,7 +54,7 @@ $DRY_RUN=FALSE;                    ## testing for standaone, no network
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
 $debug_flag3=FALSE;
-$debug_flag1=TRUE;
+#$debug_flag1=TRUE;
 #$debug_flag2=TRUE;
 #$debug_flag3=TRUE;
 
@@ -436,8 +436,8 @@ while ($in && $out) {         // keep waiting on stdin
     $line=rtrim( fgets($in, 1024) );
     if (strlen($line) > 0) {
       list($domain, $switch, $port, $lastvlan, $mac)=explode(" ", $line);
-      #logit("GOT: $line\n");
-      #logit("GOT $switch $port $lastvlan $mac\n");
+      #debug2("GOT: $line\n");
+      debug2("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
 
       $DecidedVlan=decide($port, $switch, $mac, $lastvlan);
       debug1("DecidedVlan=$DecidedVlan");
