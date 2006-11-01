@@ -50,11 +50,12 @@ Freenac
 
 Apache 2.2.2 (from source):
   cd /opt/install
-  tar xvzf http-2.2.2.tar.gz
-  cd http-2.2.2
+  tar xvzf httpd-2.2.2.tar.gz
+  cd httpd-2.2.2
   ./configure --prefix=/usr/local/apache2 --enable-so
   make install
   ln -s /usr/local/apache2 /usr/local/apache
+  [SB: what about startup file? Apache config?]
 
 
 MYSQL 5 (From binaries):
@@ -129,16 +130,15 @@ MYSQL: Install an initial set of empty FreeNAC tables for the
 
 libxml (from source):
   cd /opt/install
-  tar xvzf libxml2-2.6.22.tar.gz
-  cd libxml2-2.6.22/
+  tar xvzf libxml2-2.6.24.tar.gz
+  cd libxml2-2.6.24/
   ./configure --prefix=/opt/libxml2 && make install  
   
-  [Note: we had a missing line here "Add /opt/libxml2/lib to .."]
-
 
 FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
   cd /opt/install
   wget http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz
+  cd freetds-0.64RC2
   ./configure --prefix=/opt/freetds  --enable-msdblib
   make install
   vi /opt/freetds/etc/freetds.conf and add a definition to a DB to test: 
@@ -160,7 +160,7 @@ Install first the graphics support needed by the web1
   yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel 
   cd /opt/install;
   tar xBf php-5.1.6.tar.bz2
-  cd /opt/install/php-5.1.6/
+  cd php-5.1.6
 
 And copy some ttf fonts from a Windows box to /usr/X11R6/lib/X11/fonts/truetype/ (specially verdana.ttf) 
   
@@ -173,6 +173,7 @@ And copy some ttf fonts from a Windows box to /usr/X11R6/lib/X11/fonts/truetype/
   cp php.ini-dist /usr/local/lib/php.ini
  
   mv /usr/bin/php /usr/bin/php.$$
+  mv /opt/php5 /opt/php5.$$
   ln -s /opt/php5.1.6 /opt/php5    
   ln -s /opt/php5/bin/php /usr/bin/php
   
@@ -180,7 +181,7 @@ And copy some ttf fonts from a Windows box to /usr/X11R6/lib/X11/fonts/truetype/
   version specific directory like '/opt/php5.1.6' above, and create links to this 
   directory. 
 
-  Edit your httpd.conf to load the PHP module
+  Edit your httpd.conf (e.g. /usr/local/apache/conf/httpd.conf) to load the PHP module
     LoadModule php5_module modules/libphp5.so
     
   The path on the right hand side of the LoadModule statement must point to the 
@@ -322,6 +323,14 @@ possibly enabling the debug flags. Then add an entry to the root cron:
 
 */6 *    * * *   /opt/nac/bin/router_mac_ip
   
+
+9. FreeNAC install: option modules
+==================================
+To enable specific modules follow the instructions in /opt/nac/doc
+  README.port_scan
+  README.web2
+  cisco_switch.txt
+  README.ldap
 
 
 Other notes
