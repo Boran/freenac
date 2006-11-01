@@ -58,7 +58,6 @@ $debug_flag3=FALSE;
 #$debug_flag2=TRUE;
 #$debug_flag3=TRUE;
 
-include_once "funcs.inc";
 define_syslog_variables();
 openlog("vmpsd_external", LOG_PID , LOG_LOCAL5);
 
@@ -399,8 +398,8 @@ function dryrun() {
 #
 # ------ main() : infinite loop ------------------
 
+require_once "funcs.inc";
 ob_start("callback");         // see call back function above
-
 logit("Connect to DB" );
 db_connect();
 reporterr3("Connect to DB" );
@@ -436,8 +435,8 @@ while ($in && $out) {         // keep waiting on stdin
     $line=rtrim( fgets($in, 1024) );
     if (strlen($line) > 0) {
       list($domain, $switch, $port, $lastvlan, $mac)=explode(" ", $line);
-      #debug2("GOT: $line\n");
-      debug2("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
+      debug1("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
+      #debug2("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
 
       $DecidedVlan=decide($port, $switch, $mac, $lastvlan);
       debug1("DecidedVlan=$DecidedVlan");
