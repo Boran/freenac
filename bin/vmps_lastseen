@@ -40,7 +40,7 @@ $debug_flag2=FALSE;
 #$debug_flag1=TRUE;
 #$debug_flag2=TRUE;
 
-include_once "funcs.inc";
+require_once "funcs.inc";
 
 global  $lastseen_dryrun;
 if ($debug_flag2===TRUE) {

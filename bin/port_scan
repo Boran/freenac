@@ -34,7 +34,7 @@
  *
  */
 
-include_once "/opt/nac/bin/funcs.inc";
+require_once "/opt/nac/bin/funcs.inc";
 include_once "/opt/nac/etc/port_scan.inc";
 $output=TRUE;
 check_requirements();

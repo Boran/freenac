@@ -30,7 +30,7 @@
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
 
-include_once "funcs.inc";               # Load settings & common functions
+require_once "funcs.inc";               # Load settings & common functions
 $catos=TRUE;
 define_syslog_variables();              # not used yet, but anyway..
 openlog("restart_port", LOG_PID , LOG_LOCAL5);

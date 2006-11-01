@@ -21,7 +21,8 @@
  */
 
 
-include_once "/opt/nac/etc/config.inc";
+#include_once "/opt/nac/etc/config.inc";
+require_once "/opt/nac/etc/config.inc";
 
 function debug1($msg) {
   global $debug_flag1, $debug_to_syslog;

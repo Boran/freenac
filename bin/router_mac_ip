@@ -30,7 +30,7 @@
 $debug_flag1=false;
 $debug_flag2=false;
 
-include_once "funcs.inc";               # Load settings & common functions
+require_once "funcs.inc";               # Load settings & common functions
 $debug_to_syslog=TRUE;
 
 define_syslog_variables();              # not used yet, but anyway..
