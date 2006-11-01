@@ -65,14 +65,18 @@ MYSQL 5 (From binaries):
   cd /usr/local
   ln -s mysql-max-5.0.18-linux-i686 mysql
   
-MYSQL 5 (from sources):
+MYSQL 5 (from sources: recommended):
+  Prerequisites: yast -i ncurses-dev gcc-c++
+
   cd /opt/install
-  tar xvzf mysql-5.0.22.tar.gz
-  cd /opt/install/mysql-5.0.22
-  ./configure --prefix=/usr/local/mysql-5.0.22 --localstatedir=/mysqldata --with-unix-socket-path=/tmp/mysql.sock
+  tar xvzf mysql-5.0.27.tar.gz
+  cd mysql-5.0.27
+  ./configure --prefix=/usr/local/mysql-5.0.27 --localstatedir=/mysqldata --with-unix-socket-path=/var/lib/mysql/mysql.sock
   make install
   cd /usr/local
-  ln -s mysql-5.0.22 mysql
+  mv mysql mysql.$$            [in case you have a link already]
+  ln -s mysql-5.0.27 mysql
+  ln -s /usr/local/mysql/bin/mysqld_safe /usr/local/mysql/bin/mysqld
   
   
 MYSQL: create directories, links, users, setting permissions 
@@ -157,25 +161,33 @@ FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
 
 PHP5:
 Install first the graphics support needed by the web1
-  yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel 
+  yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel net-snmp
+  yast -i openssl openssl-devel
   cd /opt/install;
   tar xBf php-5.1.6.tar.bz2
   cd php-5.1.6
 
 And copy some ttf fonts from a Windows box to /usr/X11R6/lib/X11/fonts/truetype/ (specially verdana.ttf) 
   
+  # Without TDS:
   ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.6 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-gd --with-zlib-dir --with-ttf --with-freetype-dir
   
   ## If you need MS-SQL (its best to assume you do - FreeTDS was compiled above)
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.6 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-sybase=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --with-mysql-sock=/var/lib/mysql/mysql.sock --prefix=/opt/php-5.1.6 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --enable-snmp 
+
+  Note: On suse, PHP may complain about MySQL libraries, it may be best to 
+        compile mySQL from source (see above), rather than using binary packages.
+
   make install    
-  cp /usr/local/lib/php.ini /usr/local/lib/php.$$
+  mv /usr/local/lib/php.ini /usr/local/lib/php.$$
   cp php.ini-dist /usr/local/lib/php.ini
  
   mv /usr/bin/php /usr/bin/php.$$
   mv /opt/php5 /opt/php5.$$
-  ln -s /opt/php5.1.6 /opt/php5    
+  ln -s /opt/php-5.1.6 /opt/php5    
   ln -s /opt/php5/bin/php /usr/bin/php
+
+  Test PHP: 'php -v'
   
   Note: To allow easier upgrading, rollback or testing new PHP modules, we install into a 
   version specific directory like '/opt/php5.1.6' above, and create links to this 
@@ -230,17 +242,19 @@ named 'readonly'. See also /opt/nac/web1/config.inc.
 
 Then, you need to populate the following tables :
 
-A. switch : at the beginning, you just need to insert your test switch(es) :
+A. switches : at the beginning, you just need to insert your test switch(es) :
 	INSERT INTO switch(ip,name,location) VALUES ('192.168.123.11','switch11','5th floor');
 
-B. port : this is optional as it will be populated once new machine are connecting.
+B. ports : this is optional as it will be populated once new machine are connecting.
    However, it is interesting to pre-populate the field to ease the transition. By setting the "default_vlan" field to the actual vlan configured on this port, you can get the new (unknown) hosts on the same vlan (see config.inc).
 
 	INSERT INTO port(switch,name,location,default_vlan) VALUES ('192.168.254.11','Fa/0/2','5 B','123');
 
-C. user : this contains all your users. It is probably better to regularly update this table by pulling data from a directory (direx, ...)
+C. users : this contains all your users. It is probably better to regularly update this table by pulling data from a directory (ActiveDirectory: see optional modules below)
 
 	INSERT INTO users(AssocNtAccount,Surname,GivenName,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,Mobile) VALUES ("username","Jean","Doe","jean.doe@foo.ch","Building B","5 B2","0797704803);
+
+
 
 4. FreeNAC install part #1:
 ===========================
@@ -364,7 +378,6 @@ Example complete crontab, from the downloadable Virtual machine:
 # Monitoring
 30   6-22 * * 1-5      /opt/nac/bin/monitor_allows.sh
 */4 *     * * *        /opt/nac/bin/flap_detect
-*/4 * * * *            /opt/nac/bin/flap_detect
 7-18 * * * 1-5         /secure/monitor_processes.pl proctst vmpsd_external
 */3 *     * * *        /secure/check_disk 90 800
 
