@@ -16,22 +16,24 @@
     rotate 99
     missingok
     notifempty
-    size +60M
+    size +30M
     create 640 root root
     sharedscripts
 
-    ## Once a week we rotate logs, do some analysis, and retart all VMPS components:
+    ## Once a week we rotate logs, do some analysis, and restart all VMPS components:
     prerotate
-        /opt/vmps/vmps_logcheck.sh
-        /opt/vmps/monitor_allows_count.sh
+        /opt/nac/logcheck/logcheck.sh
+        /opt/nac/bin/monitor_allows_count.sh
         # Count messages per switch
-        egrep -v `uname -n` /var/log/messages |awk '{print $4}'| sort| uniq -c |sort |mailx -s 'vmps switch logging check after pruning' root
+        #egrep -v `uname -n` /var/log/messages |awk '{print $4}'| sort| uniq -c |sort |mailx -s 'vmps switch/syslog logging check ' root
+        egrep -v `uname -n` /var/log/messages |awk '{print $4}'| sort| uniq -c |sort | logger -t vmps_syslog_check
     endscript
     postrotate
         /etc/init.d/syslog reload
         /etc/init.d/mysql  restart
         /etc/init.d/vmps   restart
-        /etc/init.d/vmps_lastseen restart
+        /etc/init.d/vmps_lastseen stop
+        /etc/init.d/vmps_lastseen start
     endscript
 }
 
