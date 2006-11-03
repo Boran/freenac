@@ -132,7 +132,7 @@ function ping_mac($mac)
    if ($rowcount==1) {
      list($ip)=mysql_fetch_array($res, MYSQL_NUM);
      if (strlen($ip)<8) {
-       logit("Invalid IP - $ip for mac $mac");
+       debug2("Invalid IP - $ip for mac $mac");
        return(false); 
      }
      #debug2("ping $ip - $mac");
