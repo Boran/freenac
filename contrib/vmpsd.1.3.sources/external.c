@@ -182,7 +182,7 @@ return
 			r->mac[0], r->mac[1], r->mac[2], r->mac[3], r->mac[4], r->mac[5]
 	);
 
-	//vmps_log(VQP|DEBUG, ">>>> Sending: %s ", str);
+	vmps_log(VQP|INFO, ">>>> Sending: %s ", str);
 	write(tocli[1], str, strlen(str));
 	//vmps_log(VQP|DEBUG, ">>>> Sent: %s ", str);
 
@@ -194,7 +194,6 @@ return
 
 	if ( strcmp(retcode,"ALLOW") ) { strcpy(vlan_name,""); }
 
-	//vmps_log(SYSTEM|DEBUG, "External prog says: %s %s", retcode, vlan_name);
 	vmps_log(VQP|DEBUG, "External prog says: %s %s", retcode, vlan_name);
 
 	if ( !strcmp(retcode,"ALLOW") ) { return 1; }
