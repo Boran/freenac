@@ -10,7 +10,8 @@
 case "$1" in
 start)
 	[ -f /usr/local/sbin/radiusd ] || exit 1
-	/usr/local/sbin/radiusd
+	#/usr/local/sbin/radiusd -A
+	nohup /usr/local/sbin/radiusd -Xx >> /usr/local/var/log/radius/radius.log &
 	;;
 
 stop)
