@@ -42,7 +42,7 @@ function debug2($msg) {
     if ($debug_to_syslog===TRUE) {
       syslog(LOG_INFO, "Debug2: $msg");
     } else {
-      echo "Debug2: $msg";
+      echo "Debug2: $msg\n";
     }
   }
 }
@@ -54,7 +54,7 @@ function logit($msg) {
 
   # Write a message on stdout too?
   if ($logit_to_stdout===TRUE) {
-    echo "logit: $msg";
+    echo "logit: $msg\n";
   }
 }
 

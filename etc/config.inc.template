@@ -100,5 +100,11 @@
 
 ## flap_detect
   $flap_limit=40;
-
+  
+## LDAP coniguration settings (Active Directory)
+	$ad_server = 'dc.test.xx';						# Domain controller
+	$ad_user = 'cn=administrator,cn=users,dc=test,dc=xx';			# AD user with read privileges on AD
+	$ad_password = '';							# AD users's password
+	
+	$ad_base_user_dn = array('cn=users,dc=test,dc=xx');			# List with base DN under which user information is stored
 ?>
