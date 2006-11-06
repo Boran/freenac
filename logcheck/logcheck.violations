@@ -49,6 +49,7 @@ THERMAL WARNING
 
 ## VMPS stuff we'd specifically like to report:
 vmpsd_external.*: decide:
+vmpsd: .*DENY
 
 
 ## Free Radius
@@ -57,5 +58,8 @@ Exec-Program output: Account locked out
 Exec-Program output: No such user
 # debug for now:
 Exec-Program output: NT_KEY
+
+# key switch events
+AAA_AUTHEN_STATUS_ERROR
 
 

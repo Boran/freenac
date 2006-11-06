@@ -53,6 +53,10 @@ waiting for dynamic assignment
 0000.0000.0000
 --NONE--
 
+# Enable these for level 1 debugging:
+vmpsd: External prog says
+vmpsd: >>>> 
+
 ## We'll see these in email alerts directly, don't need them in logchecK:
 vmps_lastseen.*: New INFNET
 vmps_lastseen[\d+]: New unknown
@@ -76,15 +80,17 @@ sshd.* Accepted publickey for root from ::ffff:192.168.245.40
 #radius_xlat
 #Cleaning up request
 #Walking the entire request list
-Waking up in 
 #-Station-Id
 #Nothing to do.
-(Framed-MTU|Message-Authenticator|NAS-Port|NAS-IP-Address|NAS-Identifier)
 #Processing the authorize section of
 #(rlm_eap|TLS_|eaptls_|MS-MPPE|rlm_mschap)
-#(eap:|tls:|mschapv2:)
 #Exec-Program: /opt/samba/bin/ntlm_auth
+Waking up in 
+(Framed-MTU|Message-Authenticator|NAS-Port|NAS-IP-Address|NAS-Identifier)
 SSL Connection Established
+Debug:  main:
+Debug: +(peap|eap|tls):
+Debug: +(rlm_eap)
 
 
 
