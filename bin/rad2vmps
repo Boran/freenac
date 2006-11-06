@@ -8,20 +8,23 @@
 
 #use Benchmark;   #<1>
 
-use Socket;
+use IO::Socket::INET;
 $|=0;
-#$DEBUG=1;
 $DEBUG=0;
-#use strict;
 open (CONFIG_FILE,"/opt/nac/etc/config.inc") or die "Couldn't open the config file";
 foreach $line (<CONFIG_FILE>) {
-   if ($line =~ /vmps_server=(.*)$/)
+   if ($line =~ /vmps_servers[\s]*=[\s]*(.*)$/)
    {
-       $vmps_server=$1;
+       $vmps_servers=$1;
    }
 }
 close (CONFIG_FILE);
-$vmps_server =~ s/[\"\'\;]//g;
+$vmps_servers =~ s/[\"\'\;]//g;
+$vmps_servers.=',';
+$vmps_servers =~ s/,+/,/g;
+$vmps_servers =~ s/\s*//g;
+@servers=split(/,/,$vmps_servers);
+$servers_to_query = @servers;
 
 use vars qw(%RAD_REQUEST %RAD_REPLY %RAD_CHECK); 
 use Data::Dumper; 
@@ -101,41 +104,34 @@ sub makeVQPrequest($) {
 	return "$buf";
 }
 
-sub sendVQP($$) {
-
+sub sendVQP($) {
 	my $PORTNO="1589";
-	my $HOSTNAME= shift;
 	my $buf = shift;
-
-	if ($DEBUG==1) {
-		print "==============================\n";
-		print "MESSAGE SENT:\n";
-		open (HEX, "|/usr/bin/hexdump");
-		select HEX;
-		print $buf;
-		close HEX;
-		select STDOUT;
-		print "==============================\n";
-	}
-
-	socket(SOCKET, PF_INET, SOCK_DGRAM, getprotobyname("udp")) or die "socket: $!";
-
-	my $ipaddr   = inet_aton($HOSTNAME);
-	my $portaddr = sockaddr_in($PORTNO, $ipaddr);
-	send(SOCKET, $buf, 0, $portaddr) == length($buf)
-	        or die "cannot send to $HOSTNAME($PORTNO): $!";
-
-	$portaddr = recv(SOCKET, $buf, 1500, 0); # or die "recv: $!";
-
-	if ($DEBUG==1) {
-		print "MESSAGE RECV:\n";
-		open (HEX, "|/usr/bin/hexdump");
-		select HEX;
-		print $buf;
-		close HEX;
-		select STDOUT;
-		print "==============================\n";
-	}
+	my $socket;
+	my $var;
+	my $i=my $j=0;
+	for ($i=0;$i<$servers_to_query;$i++)
+        {
+           $socket = IO::Socket::INET->new(PeerAddr     => $servers[$i],
+                                           PeerPort     => $PORTNO,
+                                           Proto        => 'udp');
+           if ($socket)
+           {
+              $socket->autoflush(1);
+              for ($j=0;$j<3;$j++)
+              {
+                 print $socket "$buf";
+                 sysread($socket,$var,1500,0);
+                 if ($var)
+                 {
+                    $i=$servers_to_query;
+                    $j=3;
+		    $buf=$var;
+                 }
+              }
+              close $socket;
+           }
+        }
 	return "$buf";
 }
 
@@ -177,9 +173,9 @@ sub parseVQPresp($) {
 
 sub authorize()			
 {
-   if (!$vmps_server)
+   if (!$vmps_servers)
    {
-      $RAD_REPLY{'Reply-Message'} = "vmps_server not defined in config.inc";
+      $RAD_REPLY{'Reply-Message'} = "vmps_servers not defined in config.inc";
       return RLM_MODULE_REJECT;
    }
    if ((!$RAD_REQUEST{'Calling-Station-Id'} && !$RAD_REQUEST{'NAS-IP-Address'}))
@@ -203,13 +199,12 @@ sub authorize()
 sub post_auth()
 {
    $request{client_ip}=$switch_ip;
-   $request{server_ip}=$vmps_server;		
    $request{port_name}='Fa0/1';		       # TBD: add later
    $request{vlan}='';		
-   $request{vtp_domain}='';                    # TBD: add later
+   $request{vtp_domain}='802.1x';                    # TBD: add later
 
    $buf = makeVQPrequest(%request);
-   $buf = sendVQP($request{server_ip},$buf);
+   $buf = sendVQP($buf);
    %response = parseVQPresp($buf);
    $last_count=$counter;
    
