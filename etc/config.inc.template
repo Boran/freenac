@@ -41,7 +41,11 @@
   #$set_vlan_for_unknowns="";        # Don't set, use default Vlan. 
   $lastseen_patch_lookup=true;      # Lookup Patchcable details in Alerts
 
-  ## Microsoft SMS lookups: 
+## Binding with FreeRadius
+  $vmps_servers = "localhost";	    #Several VMPS servers to query. If one fails, go and query to the next one. List has to be delimited by commas
+				    #Example: $vmps_servers = "vmps1,vmps2,vmps3";  
+
+## Microsoft SMS lookups: 
   $lastseen_infnet=false;           # Lookup Infnet MACs with check_infnet_mac?
   $lastseen_infnet_vlan='10';       # Exact Number of Infnet Vlan
   $lastseen_infnet_restart=true;    # Restart switch port when PC found?
