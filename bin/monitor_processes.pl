@@ -1,6 +1,6 @@
 #!/bin/perl 
 # 
-# name     : /secure/monitor_processes.pl
+# name     : monitor_processes.pl
 #
 # History :
 #            <6> Jan'9'06  (S.Boran) Combine Solaris/linux versions

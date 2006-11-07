@@ -9,15 +9,15 @@
 # INSTALLATION: 
 # Usually installed as a daemon on startup:
 # On Sun:
-#   ln -s /secure/proctst.pl /etc/init.d/proctst
-#   ln -s /secure/proctst.pl /etc/rc2.d/S98proctst
-#   ln -s /secure/proctst.pl /etc/rc2.d/K98proctst
+#   ln -s /opt/nac/bin/proctst.pl /etc/init.d/proctst
+#   ln -s /opt/nac/bin/proctst.pl /etc/rc2.d/S98proctst
+#   ln -s /opt/nac/bin/proctst.pl /etc/rc2.d/K98proctst
 # On Linux:
 #   ln -s /opt/nac/bin/proctst    /etc/init.d/proctst
 #   chkconfig proctst on
 #   /etc/init.d/proctst start
 #
-# ?.?'01 Roy Culley
+# 2001      Roy Culley
 # 27.Dec'01 Sean <1>: Use sendmail pipe rather than cpan module. 
 #           Comments. Add $debug and lots of debug prints. 
 # 30.Jan'06 Sean: finally started to use it :-). Add comments.
