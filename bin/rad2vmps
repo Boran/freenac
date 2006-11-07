@@ -42,6 +42,7 @@ use constant RLM_MODULE_NUMCODES=>9;
 
 $suplicant_mac='';
 $switch_ip='';
+$mac_bypass=0;
 
 sub formatItem($$) {
 
@@ -178,6 +179,32 @@ sub authorize()
       $RAD_REPLY{'Reply-Message'} = "vmps_servers not defined in config.inc";
       return RLM_MODULE_REJECT;
    }
+
+   my $calling_station_id='';
+   
+   if ($RAD_REQUEST{'Calling-Station-Id'})
+   {
+      $calling_station_id=uc($RAD_REQUEST{'Calling-Station-Id'});
+      $calling_station_id =~ s/[-:]//g;
+      $suplicant_mac=$calling_station_id;
+   }
+  
+   if ($RAD_REQUEST{'NAS-IP-Address'})
+   {
+      $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
+   }
+   
+   if (($RAD_REQUEST{'User-Name'})&&($RAD_REQUEST{'Calling-Station-Id'})&&(!$RAD_CHECK{'Auth-Type'})) #Check if we need to perform a Mac-Auth-Bypass
+   {
+      my $username=uc($RAD_REQUEST{'User-Name'});
+      $username =~ s/[-:]//g;
+      if ($username eq $calling_station_id)
+      {
+         $RAD_CHECK{'Auth-Type'}='MAC-Auth-Bypass';
+         return RLM_MODULE_OK;
+      }
+   }
+   
    if ((!$RAD_REQUEST{'Calling-Station-Id'} && !$RAD_REQUEST{'NAS-IP-Address'}))
    {
       $RAD_REPLY{'Reply-Message'} = "Required attributes \"Calling-Station-Id\" and \"NAS-IP-Address\" were not found in the request.";
@@ -185,40 +212,80 @@ sub authorize()
    }
    else
    {
-      my $mac=$RAD_REQUEST{'Calling-Station-Id'};	
-      @temp;	
-      @temp=split(/-/,$mac);	
-      $mac=@temp[0].@temp[1].@temp[2].@temp[3].@temp[4].@temp[5];
-      $suplicant_mac=$mac;
-      $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
-      $request{macaddr}=$suplicant_mac;
       return RLM_MODULE_OK;
+   }
+}
+
+sub authenticate() #MAC-Auth-Bypass
+{
+   if ((!$RAD_REQUEST{'Calling-Station-Id'} && !$RAD_REQUEST{'NAS-IP-Address'}))
+   {
+      $RAD_REPLY{'Reply-Message'} = "Required attributes \"Calling-Station-Id\" and \"NAS-IP-Address\" were not found in the request.";
+      return RLM_MODULE_NOOP;
+   }
+   else
+   {
+      $suplicant_mac=$RAD_REQUEST{'Calling-Station-Id'};
+      $suplicant_mac=~ s/[-:]//g;
+      $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
+      $request{macaddr}= $suplicant_mac;
+      $request{client_ip}=$switch_ip;
+      $request{port_name}='Fa0/1';                # TBD: add later
+      $request{vlan}='';
+      $request{vtp_domain}='802.1x';                    # TBD: add later
+
+      $buf = makeVQPrequest(%request);
+      $buf = sendVQP($buf);
+      %response = parseVQPresp($buf);
+      $last_count=$counter;
+
+      if ( ! $response{vlan} )
+      {
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
+         return RLM_MODULE_REJECT;
+      }
+      else
+      {
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
+         $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
+         $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
+         $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
+         return RLM_MODULE_OK;
+      }
    }
 }
 
 sub post_auth()
 {
-   $request{client_ip}=$switch_ip;
-   $request{port_name}='Fa0/1';		       # TBD: add later
-   $request{vlan}='';		
-   $request{vtp_domain}='802.1x';                    # TBD: add later
-
-   $buf = makeVQPrequest(%request);
-   $buf = sendVQP($buf);
-   %response = parseVQPresp($buf);
-   $last_count=$counter;
-   
-   if ( ! $response{vlan} )
+   if ($RAD_CHECK{'Auth-Type'} eq 'MAC-Auth-Bypass')
    {
-      $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
-      return RLM_MODULE_REJECT;
-   }
-   else 
-   {	
-      $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
-      $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
-      $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
-      $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
       return RLM_MODULE_OK;
+   }
+   else
+   {
+      $request{macaddr}=$suplicant_mac;
+      $request{client_ip}=$switch_ip;
+      $request{port_name}='Fa0/1';		       # TBD: add later
+      $request{vlan}='';		
+      $request{vtp_domain}='802.1x';                    # TBD: add later
+
+      $buf = makeVQPrequest(%request);
+      $buf = sendVQP($buf);
+      %response = parseVQPresp($buf);
+      $last_count=$counter;
+   
+      if ( ! $response{vlan} )
+      {
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
+         return RLM_MODULE_REJECT;
+      }
+      else 
+      {	
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
+         $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
+         $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
+         $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
+         return RLM_MODULE_OK;
+      }
    }
 }
