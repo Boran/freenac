@@ -42,7 +42,6 @@ use constant RLM_MODULE_NUMCODES=>9;
 
 $suplicant_mac='';
 $switch_ip='';
-$mac_bypass=0;
 
 sub formatItem($$) {
 
