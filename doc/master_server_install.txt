@@ -48,14 +48,18 @@ Freenac
   Or, checking out directly from Subversion.
   
 
-Apache 2.2.2 (from source):
+Apache 2.2.2 (from source):  
   cd /opt/install
   tar xvzf httpd-2.2.2.tar.gz
   cd httpd-2.2.2
   ./configure --prefix=/usr/local/apache2 --enable-so
   make install
   ln -s /usr/local/apache2 /usr/local/apache
-  [SB: what about startup file? Apache config?]
+  ln -s /usr/local/apache2/bin/apachectl /etc/init.d/apache2
+  ln -s /usr/local/apache2/bin/apachectl /sbin/rcapache2
+  # Actually start apache if you intend using the web interfaces, see below:
+  chkconfig apache2 on
+  rcapache2 start
 
 
 MYSQL 5 (From binaries):
@@ -162,7 +166,7 @@ FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
 PHP5:
 Install first the graphics support needed by the web1
   yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel net-snmp
-  yast -i openssl openssl-devel
+  yast -i openssl openssl-devel graphviz
   cd /opt/install;
   tar xBf php-5.1.6.tar.bz2
   cd php-5.1.6
@@ -331,7 +335,7 @@ Test these and enable in root cron:
 
 
 8. FreeNAC install: router integration
-===========================   
+======================================
 Adapt the relevant lines in config.inc, then try route_mac_ip from the command line,
 possibly enabling the debug flags. Then add an entry to the root cron:
 
@@ -345,6 +349,7 @@ To enable specific modules follow the instructions in /opt/nac/doc
   README.web2
   cisco_switch.txt
   README.ldap
+  /opt/nac/web1/README
 
 
 Other notes
