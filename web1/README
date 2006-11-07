@@ -3,21 +3,25 @@ NAC Web1 Interface
 
 _____________________ NAC Web1 GUI: Installation notes _____________________
 // Download the software to /opt/nac/web1 (unstable) or /opt/nac2.1/web1 (stable branch)
-   They are probably there already from a tarball of SVN.
+   They are probably there already from a tarball or SVN.
 
 // Create a temporary directory, writeable by the Apache user
-  cd /opt/nac2.1
+// [This may already be there, if so, check the permissions]
+  cd /opt/nac2.1/web1
   mkdir tmp
-  chown wwwrun tmp
-  // note : on certain suse version, the apache user is daemon
+  chown wwwrun tmp      [or chown daemon tmp, depends on the apache user]
+  // note : on certain suse versions, the apache user is daemon, adapt according to your distro
   	
-// Install libraries for graphics : you need
-// - graphviz for the switch view
-  yast -i graphviz 
 
-// - jpgraph for statistics [also requires freetype & ms core fonts
-
-  yast -i freetype
+// Install Apache & libraries for graphics : this should have been done as part
+   of your Server installation, see /opt/nac/doc/master_server_install.txt
+   However, for completeness:
+   - Install Apache (via Yast)
+	chkconfig apache2 on
+	rcapache2 start
+   - graphviz for the switch view
+   - jpgraph for statistics [also requires freetype & ms core fonts
+  yast -i graphviz freetype
 
   Launch YaST online update - select the option "manually select patches"
   Select the "fetchmscorefonts.sh"
@@ -28,11 +32,8 @@ _____________________ NAC Web1 GUI: Installation notes _____________________
   tar zxvf jpgraph-X.X.XX.tar.gz
   ln -s jpgraph-X.X.XX jpgraph
 
-// in that case, you'll need to set $jpgraph_path = '/usr/local/share/jpgraph/src' in the config file
+  // in that case, you'll need to set $jpgraph_path = '/usr/local/share/jpgraph/src' in the config file
   
-// Install Apache (via Yast)
-	chkconfig apache2 on
-	rcapache2 start
 
 // Then configure apache, by creating /etc/apache2/conf.d/vmps.conf:
   Alias /vmps /opt/nac/web1
@@ -53,7 +54,7 @@ _____________________ NAC Web1 GUI: Installation notes _____________________
 // MySQL: grant read-only access for the Web GUI
 // (change PASSWORD1 as needed)
   grant SELECT on inventory.* to readonly@localhost IDENTIFIED by 'PASSWORD1';
-  SET PASSWORD FOR readonly@localhost = OLD_PASSWORD('PASSWORD1');
+  #SET PASSWORD FOR readonly@localhost = OLD_PASSWORD('PASSWORD1');
   
 	
 // Adapt configuration file:
@@ -68,7 +69,7 @@ _____ USAGE ___________
 
 _______ TROUBLE SHOOTING __________
   check syslog
-  enable "$debug_flag1" in various script, check syslog again.
+  enable "$debug_flag1" in various scripts, check syslog again.
   
 
 To do:
