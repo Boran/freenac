@@ -1,6 +1,6 @@
-The import_snmp script is a script that is meant to be use during the initial installation.
+The import_snmp script is a script that is meant to be used during the initial installation.
 
-It will use snmp to get the actual configuration of the switches to populate the port table.
+It will use snmp to get the actual configuration of the switches and populate the port table.
 In particular, it will also take the currently configured vlan so that it can be used as a port default vlan (cf config file).
 
 It is currently a demo script and is not foolproof. However, it has been tested on various switches and is functionnal.
@@ -12,6 +12,13 @@ To use it,
 - insert it into the DB
 	mysql inventory < /tmp/ports.sql
 
+Option :
+- default_vlan variable (in script) can be set to 
+	TRUE : a default vlan will be set in the DB : either
+		- the current configured vlan (if > 1)
+		- the general default vlan as defined in config.inc
+	FALSE : not default_vlan value will be set in the DB
+
 Current limitations :
 - same community for all switches
 - warning when scanning 3500XL switches
@@ -20,3 +27,4 @@ Current limitations :
 Requirements 
 - PHP with support for SNMP enabled
 - SNMP readonly access to switches
+- Switches already in the DB
