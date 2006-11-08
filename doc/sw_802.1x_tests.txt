@@ -52,6 +52,14 @@ interface FastEthernet0/2
   #dot1x guest-vlan 524
   #dot1x auth-fail vlan 522
 
+##Enabling MAC-auth-bypass in switches that allow this option
+  #dot1x mac-auth-bypass
+
+##Timing options specially for MAC-auth-bypass
+  #dot1x max-reauth-req 3   		#Number of EAP requests sent to the client before trying MAC-auth-bypass
+  #dot1x timeout quiet-period 5		#Number of seconds to retry auth after a failed auth
+  #dot1x tx-period 5			#Number of seconds to wait for an answer after an EAP request has been sent to the  client
+  
 
 
 ##aaa authorization network default group NAC
