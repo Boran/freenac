@@ -6,8 +6,8 @@
 # 2006.09.10/Hector <2> :Adaptation to work with FreeRadius
 #-------------------------------
 
-#use Benchmark;   #<1>
-
+use Sys::Syslog;
+use Sys::Syslog qw(:DEFAULT setlogsock);
 use IO::Socket::INET;
 $|=0;
 $DEBUG=0;
@@ -130,6 +130,12 @@ sub sendVQP($) {
                  }
               }
               close $socket;
+	      if (!$var)
+              {
+                 openlog('rad2vmps','cons,pid','user');
+                 syslog('info',"VMPS server $servers[$i] seems to be down");
+                 closelog();
+	      }
            }
         }
 	return "$buf";
