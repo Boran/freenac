@@ -297,7 +297,6 @@ echo print_footer();
 // Print page header (if not already done)
 //
 function print_header($entityname){
-	global $_SERVER['PHP_SELF'];
 	if (!defined(HEADER)){
 		$ret='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 		<html xmlns="http://www.w3.org/1999/xhtml">
@@ -313,7 +312,7 @@ function print_header($entityname){
 			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
 		  </tr>
 		  <tr>
-			<td class="center"><a href="'.$SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a></td>
+			<td class="center"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a></td>
 		  </tr>
 		</table>
 		';
