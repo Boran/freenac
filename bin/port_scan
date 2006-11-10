@@ -1067,7 +1067,7 @@ function parse_scanfile($scan_file,$list)
       $res=execute_query($query);
       while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
       {
-         $query="update nac_hostscanned set os='Unreachable', timestamp='$timestamp' where id=".$result['id'].";";
+         $query="update nac_hostscanned set os='Firewalled', timestamp='$timestamp' where id=".$result['id'].";";
          execute_query($query);
       }
    }
