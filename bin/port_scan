@@ -935,7 +935,7 @@ function parse_scanfile($scan_file,$list)
             {
                debug1($list['ip'][$i]." is down\n");
                logit($list['ip'][$i]." is down\n");
-               reporterr('info',$list['ip'][$i]." is down\n");
+               reporterr('info',$list['ip'][$i]." is down");
             }
             if ($flagscannow) //Lets set os=Unreachable to those devices which are present in the nac_hostscanned table
             {
