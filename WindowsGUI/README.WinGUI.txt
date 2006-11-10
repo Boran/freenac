@@ -19,7 +19,21 @@ Configuration in vmps.xml:
     e) Restart the GUI, and press "Connect"
 
 
+To try out this GUI on our demo database
+----------------------------------------
+  1. Download vmps.exe from http://svn.sourceforge.net/viewvc/opennac/branches/2.1/WindowsGUI/
+  2. Download the demo config file vmps.xml from
+     http://svn.sourceforge.net/viewvc/opennac/branches/2.1/WindowsGUI/demo1
+  3. Then save these in a directory, and start it. 
+  
+  This will try to connected via the Internet to our demo database, which 
+  is re-initiailised automatically every hour. 
+  Note: this will not run behind a corporate proxying firewall, 
+        port 3306/mysql needs to be open outgoing.
+
+
 CHANGES:
 v1.2.0.100: fix 'scannow' button, remove error message when writing patchtable.
 v1.2.0.101/30.10.06/SB: Deleted systems were not correctly logged, Delection of changes to vlans in Edit Tab improved. For DEMO company allow Admin access for all users.
 v1.2.0.101/30.10.06/SB: Handling of locates with '/' and not '.' for date seperators.
+v1.2.0.102/10.11.06/SB: fix history log timestamps for some timezones, and add the demodb/vmps.xml

@@ -1,0 +1,11 @@
+<vmps>
+  <comment c="Sample vmps.xml configuration file for the NAC gui vmps.exe with Demo company"/>
+  
+  <settings company="DEMO"  StaticInvEnabled="0" NmapEnabled="1" AntiVirusEnabled="0"/>
+	<mysql server="193.5.233.131" port="3306" 
+        auth="9pBTSB1doVGRovnd8vGfDfwcGIM/==" database="inventory" />
+        
+	<mssql-inv server="UnusedServer\UnusedInstance"  
+        auth="XX" database="YYY" />        	
+</vmps>
+
