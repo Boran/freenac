@@ -84,7 +84,7 @@ else
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 if ($flagscannow)
-   reporterr('info',"port_scan finished normally. ".$var['equipments']." hosts scanned\n");
+   reporterr('info',"port_scan finished normally. ".$var['equipments']." hosts scanned");
 
 function check_requirements()  //Checks for required functions and tables structure
 {
@@ -875,7 +875,7 @@ function get_ips()	//This function will get some ips to scan
                {
                   debug1($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
                   logit($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
-		  reporterr('info',$rejected_ip." doesn't meet criteria specified in netsallowed table\n");
+		  reporterr('info',$rejected_ip." doesn't meet criteria specified in netsallowed table");
                }
             }
       }
@@ -1054,7 +1054,7 @@ function parse_scanfile($scan_file,$list)
       {
          debug1($down." is down\n");
          logit($down." is down\n");
-         reporterr('info',$down." is down\n");
+         reporterr('info',$down." is down");
       }
       for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
       {
