@@ -118,10 +118,12 @@ http://www.cisco.com/en/US/products/hw/switches/ps5213/products_configuration_gu
 http://wiki.freeradius.org/Rlm_perl
 http://www.cisco.com/univercd/cc/td/doc/product/lan/cat3560/12225see/scg/sw8021x.htm#wp1196845
 
+Mac bypass authentication: (note not all IOS switches have this..)
+http://www.cisco.com/en/US/products/hw/switches/ps708/products_configuration_guide_chapter09186a008041f23e.html
 
-> If you want FreeRadius assigning VLANs dynamically, you do a users 
-> file with:
-> 
+
+
+Note: For FreeRadius assigning VLANs dynamically, do a users file with:
 > DEFAULT	Auth-Type == MS-CHAP or 
 > NAS-IP-Address==x.y.z.w, NAS-Port = 50001
 > 		Tunnel-Type = VLAN,
