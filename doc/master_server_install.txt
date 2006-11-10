@@ -242,7 +242,7 @@ Remote delphi Windows GUI use. See also the vmps.ini file on the Windows client.
 
 The read-only webgui Web1 needs "read" access and by default uses a user 
 named 'readonly'. See also /opt/nac/web1/config.inc.  
-	grant SELECT       ON inventory.* to readonly@'%' IDENTIFIED by 'PASSWORD1';
+  grant SELECT       ON inventory.* to readonly@'localhost' IDENTIFIED by 'PASSWORD1';
 
 Then, you need to populate the following tables :
 
