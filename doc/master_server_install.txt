@@ -35,8 +35,7 @@ see unix_install.txt
 Download : you'll need to download the following files 
 
 http://mirror.switch.ch/ftp/mirror/apache/dist/httpd/httpd-2.2.2.tar.gz
-http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-max-5.0.24-linux-i686.tar.gz
-(if compiling from source : http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-5.0.24.tar.gz)
+http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-5.0.27.tar.gz
 ftp://fr.rpmfind.net/pub/libxml/libxml2-2.6.23.tar.gz
 http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz
 http://ch2.php.net/get/php-5.1.6.tar.bz2/from/this/mirror
@@ -61,16 +60,9 @@ Apache 2.2.2 (from source):
   chkconfig apache2 on
   rcapache2 start
 
-
-MYSQL 5 (From binaries):
-  cd /opt/install  
-  tar xvzf mysql-max-5.0.18-linux-i686.tar.gz
-  mv mysql-max-5.0.18-linux-i686 /usr/local
-  cd /usr/local
-  ln -s mysql-max-5.0.18-linux-i686 mysql
   
 MYSQL 5 (from sources: recommended):
-  Prerequisites: yast -i ncurses-dev gcc-c++
+  Prerequisites: yast -i ncurses-devel gcc-c++
 
   cd /opt/install
   tar xvzf mysql-5.0.27.tar.gz
@@ -146,6 +138,7 @@ libxml (from source):
 FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
   cd /opt/install
   wget http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz
+  tar xvzf freetds-0.64RC2.tar.gz
   cd freetds-0.64RC2
   ./configure --prefix=/opt/freetds  --enable-msdblib
   make install
@@ -218,6 +211,7 @@ C. Root is used by the sysadmin for local configuration. By default root
    recommended that you set a root password for mysql root, if the NAC 
    server login is accessible to several users.
 D. The Web1 GUI has a specific user%localhost, by default called "readonly".
+E. The Web2 GUI has a specific user%localhost, by default called "webwrite".
 
 Local daemon use for PHP scripts (set the user/pw in /opt/nac/config.inc):
   grant SELECT,INSERT,UPDATE    ON inventory.*       to inventwrite@localhost IDENTIFIED by 'PASSWORD2';
@@ -243,6 +237,21 @@ Remote delphi Windows GUI use. See also the vmps.ini file on the Windows client.
 The read-only webgui Web1 needs "read" access and by default uses a user 
 named 'readonly'. See also /opt/nac/web1/config.inc.  
   grant SELECT       ON inventory.* to readonly@'localhost' IDENTIFIED by 'PASSWORD1';
+
+The webgui Web2 needs "read-write" access and by default uses a user 
+  grant SELECT,INSERT        ON inventory.*       to webwrite@'localhost' IDENTIFIED by 'PASSWORD1';
+  SET PASSWORD FOR webwrite@'localhost' = OLD_PASSWORD('PASSWORD1');
+  grant SELECT,UPDATE ON inventory.systems to webwrite@'localhost' ;
+  grant SELECT               ON inventory.users   to webwrite@'localhost' ;
+  grant SELECT,              ON inventory.patchcable to webwrite@'localhost' ;
+  grant SELECT,              ON inventory.port    to webwrite@'localhost' ;
+  grant SELECT               ON inventory.oper    to webwrite@'localhost' ;
+  grant SELECT               ON inventory.switch  to webwrite@'localhost' ;
+  grant SELECT               ON inventory.vlan    to webwrite@'localhost' ;
+  grant SELECT,INSERT,UPDATE ON inventory.sys_class to webwrite@'localhost' ;
+  grant SELECT,INSERT,UPDATE ON inventory.sys_os to webwrite@'localhost';
+  grant SELECT               ON inventory.nac_openports to webwrite@'localhost' ;
+
 
 Then, you need to populate the following tables :
 
@@ -383,8 +392,8 @@ Example complete crontab, from the downloadable Virtual machine:
 # Monitoring
 30   6-22 * * 1-5      /opt/nac/bin/monitor_allows.sh
 */4 *     * * *        /opt/nac/bin/flap_detect
-7-18 * * * 1-5         /secure/monitor_processes.pl proctst vmpsd_external
-*/3 *     * * *        /secure/check_disk 90 800
+7-18 * * * 1-5         /opt/nac/bin/monitor_processes.pl proctst vmpsd_external
+*/3 *     * * *        /opt/nac/bin/check_disk 90 800
 
 # Backups
 0 1 * * 1              /opt/nac/bin/dump_ports
