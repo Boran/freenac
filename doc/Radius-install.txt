@@ -1,0 +1,240 @@
+# ==============================================
+
+FreeNAC: Documentation of FreeRadius component for 802.1x
+
+Configuring FreeRadius to authenticate via windows domain logon
+/doc/Radius-install
+
+Overview
+1. Installing Software
+2. Configure & test Kerberos & Samba
+3. Configure Freeradius
+
+# ==============================================
+
+// 1. Installing Software
+//    ---------------------------------------------
+
+# Installing Samba
+# Make sure you have installed in your system the Kerberos and OpenLDAP development libraries
+# if not, yast -i krb5-devel krb5-client openldap2-devel
+# If you can't find them in yast, I added the following installation source in yast
+
+http://mirror.switch.ch/ftp/mirror/opensuse/distribution/SL-10.0-OSS/inst-source
+
+#Get Samba
+#Untar and compile
+
+   nac:/opt/install #tar xvzf  samba-3.0.23c.tar.gz
+   cd samba-3.0.23c/source/
+   ./configure --prefix=/opt/samba-3.0.23c
+
+#Make sure you have these lines in the file include/config.h
+
+   #define HAVE_KRB5 1
+   #define HAVE_LDAP 1
+#Then
+
+   make 
+   make install
+   ln -s /opt/samba-3.0.23c /opt/samba
+   ln -s /opt/samba/sbin/smbd /etc/init.d/smbd
+   ln -s /opt/samba/sbin/winbindd /etc/init.d/winbindd
+
+# Installing FreeRadius
+# Get freeradius, untar and compile
+   cd /opt/install
+   tar xvzf freeradius-1.1.3.tar.gz
+   cd freeradius-1.1.3
+   ./configure 
+   make
+   make install
+
+
+// 2. Configure & test Kerberos & Samba
+//    ----------------------
+
+# Create the file /opt/samba/lib/smb.conf with the following info (change for your Windows environment)
+
+   [global]
+        workgroup = domain
+        security = ads
+        idmap uid = 16777216-33554431
+        idmap gid = 16777216-33554431
+        template shell = /bin/bash
+        winbind use default domain = no
+        password server = ads.domain.com
+        realm = domain.com
+   [homes]
+        comment = Home Directories
+        browseable = No
+        writable = yes
+
+# Presumably you already have a functioning Active Directory domain, and know how to run it.
+# AD is very dependent on DNS (domain name system) so first you'll need to add an entry for your server in your DNS. 
+# Once you've added this entry, we need to configure kerberos. 
+# Edit the file /etc/krb5.conf and add in the realms section info concerning your domain.
+# Your /etc/krb5.conf file should look like
+
+   [libdefaults]
+        default_realm = DOMAIN.COM
+        dns_lookup_real = false
+        dns_lookup_kdc = false
+
+   [realms]
+        DOMAIN.COM = {
+                default_domain = domain.com
+                kdc = ads.domain.com
+                admin_server = ads.domain.com
+        }
+
+   [logging]
+	  kdc = FILE:/var/log/krb5kdc.log
+    	  admin_server = FILE:/var/log/kadmin.log
+    	  default = FILE:/var/log/krb5lib.log
+
+# Modify the lines
+
+   default_realm = DOMAIN.COM
+   DOMAIN.COM = {
+   default_domain = domain.com
+
+# And change domain.com for your domain. Mind the case.
+# For the lines
+
+   kdc = ad.domain.com
+   admin_server = ad.domain.com
+
+# You specifiy your Active Directory domain server.
+
+# Clock synchronization is so important in the security of the Kerberos protocol. 
+# If clocks are not synchronized within a reasonable window, Kerberos will report fatal errors and refuse to function. 
+# Clients attempting to authenticate from a machine with an inaccurate clock will be failed by the KDC in authentication 
+# attempts due to the time difference with the KDC's clock. 
+# Ensure you have your clock properly configured. If you want to use an external source to synchronize your server use ntp.
+
+# The Network Time Protocol (NTP) is available for the time synchronization of servers. 
+# Add an entry in your crontab to synchronize the clock of your computer with an external time source adding the next entry.
+
+   #Time synchronization
+   0 0 * * *		/usr/sbin/ntpdate server > /dev/null 2>&1
+
+# Save your changes. This entry will synchronize every midnight your clock with the one of server.
+
+# Even if your DNS servers are perfect in every way, it is a good idea to add important servers to your local /etc/hosts file.
+# It speeds up lookups and provides a fallback in case the DNS servers go down. 
+# So, add the entry for your Active Directory domain server in /etc/hosts.
+
+Sample:
+   192.168.1.1		ad.domain.com	ad
+
+# Check that you get no error from typing
+
+   kinit Administrator
+
+# This will ask you for the administrator's password. Make sure you know it beforehand.
+# Possible causes of error are:
+# Clocks not properly synchronized
+# DNS resolution
+
+# Edit the file /etc/nsswitch.conf and add winbind at the end of the following lines:
+   
+   passwd:
+   group:
+   protocols:
+   services:
+   netgroup:
+   automount:
+
+# If everything went ok, let's start Samba
+
+   /etc/init.d/smbd start
+
+# Verify that it started
+
+   ps uax ¦ grep smbd
+
+# And check for errors in /opt/samba/var/log.smbd. 
+# If errors are present, check again your sbm.conf file. Once Samba has started correctly, do:
+
+   net join
+
+# This will join you to the domain. You can verify that your computer has joined the domain by typing 
+
+   klist
+
+# This should display valid Kerberos tickets and one of those is from your Active Directory domain server.
+# Now, change the group that /opt/samba/var/locks/winbindd_privileged belongs to
+
+   chgrp radiusd /opt/samba/var/locks/winbindd_privileged
+
+# This is done because we'll run freeradius as the radiusd user, and this user needs to access this directory in order
+# to perform the authentication against the Windows Domain
+
+# Now change its permissions
+
+   chmod 750 /opt/samba/var/locks/winbindd_privileged
+
+# And start winbind
+
+   /etc/init.d/winbindd start
+
+# Verify that windbind is working. This command pulls a list of users from AD 
+
+   wbinfo -u
+
+# And check for errors in /opt/samba/var/log.winbindd. 
+# If it started successfully, it will create another log file called log.wb-DOMAIN.
+# Once we have winbindd running, let's activate both smbd and winbindd as a service.
+
+   chkconfig smbd on
+   chkconfig winbindd on
+
+# We have done all this just to get ntlm_auth running.
+# Now, let's try to auth with NTLM
+  
+  ntlm_auth --request-nt-key --domain=domain.com --username=Administrator
+  password:
+  NT_STATUS_OK: Success (0x0)
+
+# This success message indicates that Samba is properly configured to authenticate users against AD, 
+# which is what we need for FreeRadius.
+
+// 3. Configure Freeradius
+//    --------------------
+
+# Configure the access points known in FreeRadius
+  mv /usr/local/etc/raddb/clients.conf /usr/local/etc/raddb/clients.conf.$$
+  cp /opt/nac/contrib/freeradius/etc/raddb/clients.conf /usr/local/etc/raddb/clients.conf
+
+# Then, edit /usr/local/etc/raddb/clients.conf to include the NAS (switches or APs)
+# that will contact our Freeradius server; change ip addresses and PASSWORD1/2/3
+
+# Configure the /usr/local/etc/raddb/radiusd.conf file, this example uses Windows logon
+  mv /usr/local/etc/raddb/radiusd.conf /usr/local/etc/raddb/radiusd.conf.$$
+  cp /opt/nac/contrib/freeradius/etc/raddb/radiusd.conf.winlogon+macauthbypass /usr/local/etc/raddb/radiusd.conf
+
+# Another configuration file that you may modify is the /usr/local/etc/raddb/eap.conf. 
+# The certificates defined in this file are the ones provided by FreeRadius. 
+# These certificates are not intended to be used in a production environment. 
+# You will need to create your own certificates later on. If you only want to perform test, these will work.
+# If you want to generate your own certificates, please see "certificates_802.1x.txt" which contains information
+# about how to generate certificates for your FreeRadius server if you have a Windows CA
+
+# Copy the radius startup script to /etc/init.d/
+
+   cp /opt/nac/contrib/startup_init.d/radius /etc/init.d/
+
+# Start radius in debug mode to see if there are errors
+
+   /etc/init.d/radius debug
+
+# If you get at the end the line:
+
+Ready to process requests.
+
+# Then you are done. You are reading to authenticate users in the windows domain and validate devices with VMPS.
+
+The FreeNAC team
+
+
