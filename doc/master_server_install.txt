@@ -231,6 +231,7 @@ Remote delphi Windows GUI use. See also the vmps.ini file on the Windows client.
   grant SELECT,UPDATE        ON inventory.switch  to inventwrite@'%' ;
   grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
   grant SELECT,INSERT,UPDATE ON inventory.sys_class to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE ON inventory.sys_class2 to inventwrite@'%' ;
   grant SELECT,INSERT,UPDATE ON inventory.sys_os to inventwrite@'%';
   grant SELECT,INSERT,UPDATE,DELETE ON inventory.nac_openports to inventwrite@'%' ;
 
