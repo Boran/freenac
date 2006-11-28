@@ -29,6 +29,8 @@
 
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
+#$debug_flag1=TRUE;
+#$debug_flag2=TRUE;
 
 require_once "funcs.inc";               # Load settings & common functions
 $catos=TRUE;
@@ -57,7 +59,7 @@ function get_switch_type($switch)
         echo($answer[$j] . " - ABORTED.\n");
         exit(2); 
 
-      } else if (preg_match("/Internetwork Operating System/", $answer[$j], $matches)) {
+      } else if (preg_match("/Cisco IOS Software|Internetwork Operating System/", $answer[$j], $matches)) {
         $catos=FALSE;
         $found=TRUE;
         debug2('IOS !');
@@ -72,6 +74,8 @@ function get_switch_type($switch)
     if ($found==FALSE) {
         echo("ABORTED: Could not contact switch, or unknown Switch (neither IOS nor CATOS).\n");
         echo($answer[0]);
+        logit("ABORTED: Could not contact switch, or unknown Switch (neither IOS nor CATOS).\n");
+        logit($answer[0]);
         exit(2); 
     }
 }
