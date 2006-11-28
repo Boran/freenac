@@ -112,4 +112,9 @@
 	
 	$ad_base_user_dn = array('cn=users,dc=test,dc=xx');				# List with base DNs under which user information is stored
 
+## SNMP Configuration
+
+	$snmp_ro = 'public';
+	$snmp_rw = 'private';
+
 ?>
