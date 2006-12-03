@@ -80,31 +80,60 @@ if ($_REQUEST['action']=='search'){
 }
 
 // if the ouput is a xls file we need to do it now (before returning anything to the browser... header issue)
-if ($_REQUEST['action']=='export'){
+if ($_REQUEST['action']=='xls' && $_REQUEST['type']!=''){
 	// sql query
-	$sql='SELECT vlan, LastVlan,
-	(SELECT value from vlan WHERE vlan.id=vlan) as vlanname,
-	(SELECT vlan_group from vlan WHERE vlan.id=vlan) as vlangroup, status, 
-	(SELECT value from vstatus WHERE vstatus.id=status) as statusname,name, inventar, description, comment, mac, ChangeDate, ChangeUser, LastSeen, building, office, port,
-	(SELECT location from port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortLocation,
-	(SELECT comment  from port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortComment,
-	(SELECT IF(location, (SELECT GROUP_CONCAT(Surname) from users WHERE PhysicalDeliveryOfficeName=location), \' \') FROM port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortUserList, switch, 
-	(SELECT name from switch WHERE systems.switch=switch.ip) as SwitchName,
-	(SELECT location from switch WHERE systems.switch=switch.ip) as SwitchLocation,
-	(SELECT GROUP_CONCAT(von_user,\', \',von_dose, \', \',von_office, \', \', comment) FROM patchcable pat WHERE systems.switch=pat.nach_switch AND systems.port=pat.nach_port) as PatchCable, history,
-	(SELECT Surname         from users WHERE systems.description=users.AssocNtAccount) as UserSurname,
-	(SELECT GivenName       from users WHERE systems.description=users.AssocNtAccount) as UserForename,
-	(SELECT Department      from users WHERE systems.description=users.AssocNtAccount) as UserDept,
-	(SELECT rfc822mailbox   from users WHERE systems.description=users.AssocNtAccount) as UserEmail,
-	(SELECT HouseIdentifier from users WHERE systems.description=users.AssocNtAccount) as UserHouse,
-	(SELECT PhysicalDeliveryOfficeName from users WHERE systems.description=users.AssocNtAccount) as UserOffice,
-	(SELECT TelephoneNumber from users WHERE systems.description=users.AssocNtAccount) as UserTel,
-	(SELECT Mobile          from users WHERE systems.description=users.AssocNtAccount) as UserMobileTel,
-	(SELECT LastSeenDirex   from users WHERE systems.description=users.AssocNtAccount) as UserLastSeenDirex, os1, os2, os, 
-	(SELECT value from sys_os WHERE id=os) as OsName, class, 
-	(SELECT value from sys_class WHERE id=class) as ClassName, class2, 
-	(SELECT value from sys_class2 WHERE id=class2) as Class2Name, scannow, os3, r_ip, r_timestamp, r_ping_timestamp
-	FROM systems';
+	if ($_REQUEST['type']=='12plus'){ // not seen in the last 12 month
+		$sql='SELECT vlan, LastVlan,
+		(SELECT value from vlan WHERE vlan.id=vlan) as vlanname,
+		(SELECT vlan_group from vlan WHERE vlan.id=vlan) as vlangroup, status, 
+		(SELECT value from vstatus WHERE vstatus.id=status) as statusname,name, inventar, description, comment, mac, ChangeDate, ChangeUser, LastSeen, building, office, port,
+		(SELECT location from port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortLocation,
+		(SELECT comment  from port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortComment,
+		(SELECT IF(location, (SELECT GROUP_CONCAT(Surname) from users WHERE PhysicalDeliveryOfficeName=location), \' \') FROM port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortUserList, switch, 
+		(SELECT name from switch WHERE systems.switch=switch.ip) as SwitchName,
+		(SELECT location from switch WHERE systems.switch=switch.ip) as SwitchLocation,
+		(SELECT GROUP_CONCAT(von_user,\', \',von_dose, \', \',von_office, \', \', comment) FROM patchcable pat WHERE systems.switch=pat.nach_switch AND systems.port=pat.nach_port) as PatchCable, history,
+		(SELECT Surname         from users WHERE systems.description=users.AssocNtAccount) as UserSurname,
+		(SELECT GivenName       from users WHERE systems.description=users.AssocNtAccount) as UserForename,
+		(SELECT Department      from users WHERE systems.description=users.AssocNtAccount) as UserDept,
+		(SELECT rfc822mailbox   from users WHERE systems.description=users.AssocNtAccount) as UserEmail,
+		(SELECT HouseIdentifier from users WHERE systems.description=users.AssocNtAccount) as UserHouse,
+		(SELECT PhysicalDeliveryOfficeName from users WHERE systems.description=users.AssocNtAccount) as UserOffice,
+		(SELECT TelephoneNumber from users WHERE systems.description=users.AssocNtAccount) as UserTel,
+		(SELECT Mobile          from users WHERE systems.description=users.AssocNtAccount) as UserMobileTel,
+		(SELECT LastSeenDirex   from users WHERE systems.description=users.AssocNtAccount) as UserLastSeenDirex, os1, os2, os, 
+		(SELECT value from sys_os WHERE id=os) as OsName, class, 
+		(SELECT value from sys_class WHERE id=class) as ClassName, class2, 
+		(SELECT value from sys_class2 WHERE id=class2) as Class2Name, scannow, os3, r_ip, r_timestamp, r_ping_timestamp
+		FROM systems
+		WHERE LastSeen < (NOW() - INTERVAL 1 YEAR)
+		ORDER BY LastSeen DESC;';
+	}
+	else { // all systems
+		$sql='SELECT vlan, LastVlan,
+		(SELECT value from vlan WHERE vlan.id=vlan) as vlanname,
+		(SELECT vlan_group from vlan WHERE vlan.id=vlan) as vlangroup, status, 
+		(SELECT value from vstatus WHERE vstatus.id=status) as statusname,name, inventar, description, comment, mac, ChangeDate, ChangeUser, LastSeen, building, office, port,
+		(SELECT location from port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortLocation,
+		(SELECT comment  from port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortComment,
+		(SELECT IF(location, (SELECT GROUP_CONCAT(Surname) from users WHERE PhysicalDeliveryOfficeName=location), \' \') FROM port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortUserList, switch, 
+		(SELECT name from switch WHERE systems.switch=switch.ip) as SwitchName,
+		(SELECT location from switch WHERE systems.switch=switch.ip) as SwitchLocation,
+		(SELECT GROUP_CONCAT(von_user,\', \',von_dose, \', \',von_office, \', \', comment) FROM patchcable pat WHERE systems.switch=pat.nach_switch AND systems.port=pat.nach_port) as PatchCable, history,
+		(SELECT Surname         from users WHERE systems.description=users.AssocNtAccount) as UserSurname,
+		(SELECT GivenName       from users WHERE systems.description=users.AssocNtAccount) as UserForename,
+		(SELECT Department      from users WHERE systems.description=users.AssocNtAccount) as UserDept,
+		(SELECT rfc822mailbox   from users WHERE systems.description=users.AssocNtAccount) as UserEmail,
+		(SELECT HouseIdentifier from users WHERE systems.description=users.AssocNtAccount) as UserHouse,
+		(SELECT PhysicalDeliveryOfficeName from users WHERE systems.description=users.AssocNtAccount) as UserOffice,
+		(SELECT TelephoneNumber from users WHERE systems.description=users.AssocNtAccount) as UserTel,
+		(SELECT Mobile          from users WHERE systems.description=users.AssocNtAccount) as UserMobileTel,
+		(SELECT LastSeenDirex   from users WHERE systems.description=users.AssocNtAccount) as UserLastSeenDirex, os1, os2, os, 
+		(SELECT value from sys_os WHERE id=os) as OsName, class, 
+		(SELECT value from sys_class WHERE id=class) as ClassName, class2, 
+		(SELECT value from sys_class2 WHERE id=class2) as Class2Name, scannow, os3, r_ip, r_timestamp, r_ping_timestamp
+		FROM systems';
+	}
 	// query database
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// Nothing found.
@@ -263,8 +292,14 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 		echo '<br />Port '.$_REQUEST['port'].' will be restarted whithin the next minute.';
 	}
 }
-
-// display a list a systems
+// show export choices
+else if ($_REQUEST['action']=='export'){
+	echo '<table width="1000" border="0"><tr><td>Excel Export<br /><br />'."\n";
+	echo '<a href="'.$_SERVER['PHP_SELF'].'?action=xls&type=all">All systems</a><br />'."\n";
+	echo '<a href="'.$_SERVER['PHP_SELF'].'?action=xls&type=12plus">Not seen during last 12 month</a><br />'."\n";
+	echo '</td></tr></table>'."\n";
+}
+// display (all) systems
 else {
 	// get the systems
 	$sql=' SELECT sys.name, sys.mac, stat.value as status, sys.vlan, vlan.value as vlanname, sys.lastvlan, sys.description as user, us.surname, us.givenname, sys.port, sys.lastseen, swi.location, swi.name as switch, sys.switch as switchip, sys.r_ip as lastip
@@ -318,7 +353,6 @@ else {
     <td width="112" class="center">Last IP </td>
   </tr>
 	';
-
 
 	// if it is a search print the search area
 	if ($_REQUEST['action']=='search'){
@@ -385,7 +419,6 @@ else {
 		</tr>
 		<input type="hidden" name="action" value="search" /></form>
 		';
-
 	}
 	// Nothing found.
 	if (mysql_num_rows($result)<1){
@@ -399,9 +432,6 @@ else {
 	}
 	echo '</table>';
 }
-
-
-
 
 // we're done. and as all tags need to be closed, print the footer now!
 echo print_footer();
