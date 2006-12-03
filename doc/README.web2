@@ -4,7 +4,12 @@ _________Prerequisites_________
 
 - Working installation of Apache with PHP4 or higher (with support for sessions) as described in the file "master_server_install.txt".
 - Working FreeNAC installation
-
+ 
+(Optional)
+If you want to use the Excel export function you also need the following PEAR Module: Spreadsheet_Excel_Writer
+PEAR is installed by default with PHP, unless you build PHP from source with ./configure --without-pear
+To install Spreadsheet_Excel_Writer invoque the following command on your shell:
+	pear install --alldeps -f Spreadsheet_Excel_Writer 
 
 _________Install_________
 
@@ -28,7 +33,8 @@ _________Configure_________
 	>
 	[Restrict access to certain networks as shown above]
 
-- Edit /opt/nac/web2/index.php and adjust the following variables to fit your installation
+- Copy /opt/nac/web2/web2.conf.inc.template to /opt/nac/web2/web2.conf.inc
+- Edit /opt/nac/web2/web2.conf.inc and adjust the following variables to fit your installation
 
 	// MySQL DB settings for all scripts
 	$dbhost="localhost";
@@ -38,6 +44,11 @@ _________Configure_________
 
 	// Variable setup
 	$entityname='MyCompany';	# name of your company
+
+	
+	// Enable XLS export? (requires the PEAR module Spreadsheet_Excel_Writer
+	$xls_output=false; // To enable set it to: true
+
 
 
 _________Usage_________
