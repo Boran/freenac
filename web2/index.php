@@ -113,35 +113,10 @@ if ($_REQUEST['action']=='export'){
 	}
 	// Found something
 	else {
-		$fields = mysql_num_fields($result);
-		// create a new workbook
-		$xls = new Spreadsheet_Excel_Writer();
-		
-		// format head row
-		$head =& $xls->addFormat();
-		$head->setBold();
-		$head->setAlign('center');
-
-		// send HTTP headers
-		$xls->send('freenac.xls');
-
-		// create a worksheet
-		$sheet =& $xls->addWorksheet('FreeNAC');
-
-		// iterate trough the result set
-		$r=0; // row
-		$c=0; // column
-		for ($c=0; $c < $fields; $c++) {
-			$sheet->writeString(0, $c, ucfirst(mysql_field_name($result, $c)), $head);
-		}
-		while ($row=mysql_fetch_row($result)){
-			$r++;
-			for ($c=0; $c < $fields; $c++) {
-				$sheet->write($r, $c, $row[$c]);
-			}
-		}
-		// send the file
-		$xls->close();
+		// put the results in a neat excel file and send it to the browser
+		create_xls($result);
+		// work done, exit gracefully
+		exit(0);
 	}
 }
 

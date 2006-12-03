@@ -125,4 +125,42 @@ function get_userdropdown($selected_user) {
 	$ret.='</select></td></tr>'."\n";
 	return $ret;
 }
+
+//
+// creates an excel sheet and sends it to the browser
+// input: $result (must be a mysql query result)
+//
+function create_xls($result){
+	$fields = mysql_num_fields($result);
+	// create a new workbook
+	$xls = new Spreadsheet_Excel_Writer();
+	
+	// format head row
+	$head =& $xls->addFormat();
+	$head->setBold();
+	$head->setAlign('center');
+
+	// send HTTP headers
+	$xls->send('freenac.xls');
+
+	// create a worksheet
+	$sheet =& $xls->addWorksheet('FreeNAC');
+
+	// iterate trough the result set
+	$r=0; // row
+	$c=0; // column
+	for ($c=0; $c < $fields; $c++) {
+		$sheet->writeString(0, $c, ucfirst(mysql_field_name($result, $c)), $head);
+	}
+	while ($row=mysql_fetch_row($result)){
+		$r++;
+		for ($c=0; $c < $fields; $c++) {
+			$sheet->write($r, $c, $row[$c]);
+		}
+	}
+	// send the file
+	$xls->close();
+}
+
+
 ?>
