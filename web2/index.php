@@ -27,7 +27,14 @@
 ///////////////////////////////////////////
 
 // include configuration
-include_once('web2.conf.inc');
+require_once('web2.conf.inc');
+// include functions
+require_once('funcs.inc');
+// include pear module (if activated in config)
+if ($xls_output){
+	require_once "Spreadsheet/Excel/Writer.php";
+}
+
 
 //session setup
 session_name('FreeNAC');
@@ -59,17 +66,87 @@ if ($_REQUEST['action']=='search'){
 	if ($_REQUEST['submit']=='Clear'){
 		$_SESSION['name']=$unknown;
 		$_SESSION['mac']='';
+		$_SESSION['vlan']='';
 		$_SESSION['username']='';
+		$_SESSION['switch']='';
 	}
 	if ($_REQUEST['submit']=='Submit'){
 		$_SESSION['name']=$_REQUEST['name'];
 		$_SESSION['mac']=$_REQUEST['mac'];
+		$_SESSION['vlan']=$_REQUEST['vlan'];
 		$_SESSION['username']=$_REQUEST['username'];
+		$_SESSION['switch']=$_REQUEST['switch'];
+	}
+}
+
+// if the ouput is a xls file we need to do it now (before returning anything to the browser... header issue)
+if ($_REQUEST['action']=='export'){
+	// sql query
+	$sql='SELECT vlan, LastVlan,
+	(SELECT value from vlan WHERE vlan.id=vlan) as vlanname,
+	(SELECT vlan_group from vlan WHERE vlan.id=vlan) as vlangroup, status, 
+	(SELECT value from vstatus WHERE vstatus.id=status) as statusname,name, inventar, description, comment, mac, ChangeDate, ChangeUser, LastSeen, building, office, port,
+	(SELECT location from port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortLocation,
+	(SELECT comment  from port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortComment,
+	(SELECT IF(location, (SELECT GROUP_CONCAT(Surname) from users WHERE PhysicalDeliveryOfficeName=location), \' \') FROM port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortUserList, switch, 
+	(SELECT name from switch WHERE systems.switch=switch.ip) as SwitchName,
+	(SELECT location from switch WHERE systems.switch=switch.ip) as SwitchLocation,
+	(SELECT GROUP_CONCAT(von_user,\', \',von_dose, \', \',von_office, \', \', comment) FROM patchcable pat WHERE systems.switch=pat.nach_switch AND systems.port=pat.nach_port) as PatchCable, history,
+	(SELECT Surname         from users WHERE systems.description=users.AssocNtAccount) as UserSurname,
+	(SELECT GivenName       from users WHERE systems.description=users.AssocNtAccount) as UserForename,
+	(SELECT Department      from users WHERE systems.description=users.AssocNtAccount) as UserDept,
+	(SELECT rfc822mailbox   from users WHERE systems.description=users.AssocNtAccount) as UserEmail,
+	(SELECT HouseIdentifier from users WHERE systems.description=users.AssocNtAccount) as UserHouse,
+	(SELECT PhysicalDeliveryOfficeName from users WHERE systems.description=users.AssocNtAccount) as UserOffice,
+	(SELECT TelephoneNumber from users WHERE systems.description=users.AssocNtAccount) as UserTel,
+	(SELECT Mobile          from users WHERE systems.description=users.AssocNtAccount) as UserMobileTel,
+	(SELECT LastSeenDirex   from users WHERE systems.description=users.AssocNtAccount) as UserLastSeenDirex, os1, os2, os, 
+	(SELECT value from sys_os WHERE id=os) as OsName, class, 
+	(SELECT value from sys_class WHERE id=class) as ClassName, class2, 
+	(SELECT value from sys_class2 WHERE id=class2) as Class2Name, scannow, os3, r_ip, r_timestamp, r_ping_timestamp
+	FROM systems';
+	// query database
+	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
+	// Nothing found.
+	if (mysql_num_rows($result)<1){
+		die('Empty Data Set.');
+	}
+	// Found something
+	else {
+		$fields = mysql_num_fields($result);
+		// create a new workbook
+		$xls = new Spreadsheet_Excel_Writer();
+		
+		// format head row
+		$head =& $xls->addFormat();
+		$head->setBold();
+		$head->setAlign('center');
+
+		// send HTTP headers
+		$xls->send('freenac.xls');
+
+		// create a worksheet
+		$sheet =& $xls->addWorksheet('FreeNAC');
+
+		// iterate trough the result set
+		$r=0; // row
+		$c=0; // column
+		for ($c=0; $c < $fields; $c++) {
+			$sheet->writeString(0, $c, ucfirst(mysql_field_name($result, $c)), $head);
+		}
+		while ($row=mysql_fetch_row($result)){
+			$r++;
+			for ($c=0; $c < $fields; $c++) {
+				$sheet->write($r, $c, $row[$c]);
+			}
+		}
+		// send the file
+		$xls->close();
 	}
 }
 
 // print the page header; so the user knows there's (much) more to come
-echo print_header($entityname);
+echo print_header($entityname, $xls_output);
 
 // let's find out what we're supposed to do
 // edit the properties of a given system
@@ -102,7 +179,7 @@ if ($_REQUEST['action']=='edit'){
 		// Status
 		echo '<tr><td>Status:</td><td>'."\n";
 		echo '<select name="status">';
-        echo '<option value="1" '.($row['status']==1?'selected="selected"':'').'>active</option>'."\n";
+    echo '<option value="1" '.($row['status']==1?'selected="selected"':'').'>active</option>'."\n";
 		echo '<option value="0" '.($row['status']==0?'selected="selected"':'').'>inactive</option>'."\n";
 		echo '</select></td></tr>'."\n";
 		// VLAN
@@ -122,15 +199,7 @@ if ($_REQUEST['action']=='edit'){
 		echo '</td></tr>'."\n";
 		// User
 		echo '<tr><td>User:</td><td>'."\n";
-		echo '<select name="assocntaccount">';
-		$sql='SELECT assocntaccount, surname, givenname FROM users ORDER BY surname'; // Get details for all users
-		$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
-		if (mysql_num_rows($res)>0){
-			while ($r=mysql_fetch_array($res)){
-				echo '<option value="'.$r['assocntaccount'].'" '.(trim(strtolower($r['assocntaccount']))==trim(strtolower($row['user']))?'selected="selected"':'').'>'.$r['surname'].' '.$r['givenname'].'</option>'."\n";
-			}
-		}
-		echo '</select></td></tr>'."\n";
+		echo get_userdropdown($row['user']);
 		// Office
 		echo '<tr><td>Office:</td><td>'."\n";
 		echo '<input name="office" type="text" value="'.stripslashes($row['office']).'"/>'."\n";
@@ -223,53 +292,125 @@ else if ($_REQUEST['action']=='restartport' && $_REQUEST['switch']!='' && $_REQU
 // display a list a systems
 else {
 	// get the systems
-	$sql='SELECT sys.name, sys.mac, stat.value as status, sys.vlan, vlan.value as vlanname, sys.description as user, sys.port, swi.name as switch
-			FROM systems as sys LEFT JOIN vstatus as stat ON sys.status=stat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN switch as swi ON sys.switch=swi.ip';
+	$sql=' SELECT sys.name, sys.mac, stat.value as status, sys.vlan, vlan.value as vlanname, sys.lastvlan, sys.description as user, us.surname, us.givenname, sys.port, sys.lastseen, swi.location, swi.name as switch, sys.switch as switchip, sys.r_ip as lastip
+		FROM systems as sys LEFT JOIN vstatus as stat ON sys.status=stat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN switch as swi ON sys.switch=swi.ip LEFT JOIN users AS us ON us.assocntaccount=sys.description';
+
 	// if its a search adjust the where...
 	if ($_REQUEST['action']=='search'){
 		$sql.=' WHERE (1=1)';
+		// looking for a certain system?
 		if ($_SESSION['name']!=''){
 			$sql.=' AND sys.name LIKE \''.$_SESSION['name'].'\'';
 		}
+		// looking for a mac address?
 		if ($_SESSION['mac']!=''){
 			$sql.=' AND sys.mac LIKE \''.$_SESSION['mac'].'\'';
 		}
+		// looking for aVLAN?
+		if ($_SESSION['vlan']!=''){
+			$sql.=' AND sys.vlan LIKE \''.$_SESSION['vlan'].'\'';
+		}
+		// looking for a user?
 		if ($_SESSION['username']!=''){
 			$sql.=' AND sys.description LIKE \''.$_SESSION['username'].'\'';
 		}
+		// looking for a switch'
+		if ($_SESSION['switch']!=''){
+			$sql.=' AND swi.name LIKE \''.$_SESSION['switch'].'\'';
+		}
 		$sql.=' ORDER BY sys.name ASC;';
 	}
+	
 	// ... if not get today's unknowns
 	else{
 		$sql.=' WHERE sys.name=\'unknown\' AND sys.LastSeen > (NOW() - INTERVAL 1 DAY)';
-		$sql.=' ORDER BY sys.LastSeen ASC;';
+		$sql.=' ORDER BY sys.LastSeen DESC;';
 	}
 	
 	$result=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	// echo table head
-	echo '<table width="500" border="0">';
-	echo'<tr>
-			<td width="124" class="center">Name</td>
-			<td width="99" class="center">MAC</td>
-			<td width="23" class="center">S</td>
-			<td width="39" class="center">Vlan</td>
-			<td width="62" class="center">Username</td>
-			<td width="55" class="center">Port</td>
-			<td width="66" class="center">Switch</td>
-		  </tr>
+	echo '<table width="1000" border="0">
+  <tr>
+    <td width="140" class="center">Name</td>
+    <td width="101" class="center">MAC</td>
+    <td width="54" class="center">Status</td>
+    <td width="60" class="center">Vlan</td>
+    <td width="60" class="center">Last Vlan </td>
+    <td width="112" class="center">Username</td>
+    <td width="49" class="center">Port</td>
+    <td width="163" class="center">Last Seen </td>
+    <td width="105" class="center">Switch</td>
+    <td width="112" class="center">Last IP </td>
+  </tr>
 	';
+
+
 	// if it is a search print the search area
 	if ($_REQUEST['action']=='search'){
 		echo '<form action="'.$_SERVER['PHP_SELF'].'" method="GET">';
-		echo '<tr>
-			<td><input name="name" type="text" size="14" value="'.$_SESSION['name'].'" /></td>
-			<td class="center"><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>
-			<td colspan="2" class="center">&nbsp;</td>
-			<td class="center"><input name="username" type="text" size="14" value="'.$_SESSION['username'].'" /></td>
-			<td colspan="2" class="right"><input type="submit" name="submit" value="Submit" />
+		echo '<tr align="center">'."\n";
+		// Name
+		echo '<td><input name="name" type="text" size="20" value="'.$_SESSION['name'].'" /></td>'."\n";
+		// MAC
+		echo '<td><input name="mac" type="text" size="14" value="'.$_SESSION['mac'].'" /></td>'."\n";
+		// Status
+		echo '<td>&nbsp;</td>'."\n";
+		// VLAN
+		echo '<td><select name="vlan">';
+		$sql='SELECT id, value FROM vlan ORDER BY value;'; // Get details for all vlans
+		$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+		if (mysql_num_rows($res)>0){
+			echo '<option value=""></option>'."\n";
+			while ($r=mysql_fetch_array($res)){
+				if ($r['value']!=''){ // only those with actual values
+					echo '<option value="'.$r['id'].'" '.($r['id']==$_SESSION['vlan']?'selected="selected"':'').'>'.$r['value'].'</option>'."\n";
+				}
+			}
+		}
+		echo '</select></td>'."\n";
+		// Last VLAN
+		echo '<td>&nbsp;</td>'."\n";
+		// Username
+		echo '<td><select name="username">';
+		$sql='SELECT DISTINCT(sys.description) AS username FROM systems AS sys ORDER BY sys.description ASC;'; // Get details for all active users
+		$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+		if (mysql_num_rows($res)>0){
+			echo '<option value=""></option>'."\n";
+			while ($r=mysql_fetch_array($res)){
+				if ($r['username']!=''){ // only those with actual values
+					echo '<option value="'.$r['username'].'" '.($r['username']==$_SESSION['username']?'selected="selected"':'').'>'.$r['username'].'</option>'."\n";
+				}
+			}
+		}
+		echo '</select></td>'."\n";
+		// Port
+		echo '<td>&nbsp;</td>'."\n";
+		// Last seen
+		echo '<td>&nbsp;</td>'."\n";
+		// Switch
+		echo '<td><select name="switch">';
+		$sql='select distinct(swi.name) as switch  from systems as sys left join switch as swi on sys.switch=swi.ip order by switch asc;'; // Get details for all active switches
+		$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+		if (mysql_num_rows($res)>0){
+			echo '<option value=""></option>'."\n";
+			while ($r=mysql_fetch_array($res)){
+				if ($r['switch']!=''){ // only those with actual values
+					echo '<option value="'.$r['switch'].'" '.($r['switch']==$_SESSION['switch']?'selected="selected"':'').'>'.$r['switch'].'</option>'."\n";
+				}
+			}
+		}
+		echo '</select></td>'."\n";
+		// Last IP
+		echo '<td>&nbsp;</td>'."\n";
+		echo '</tr>'."\n";
+		// Clear/Submit
+		echo '<tr align="right">
+		  <td colspan="10"><input type="submit" name="submit" value="Submit" />
 			<input type="submit" name="submit" value="Clear" /></td>
 		</tr>
-		<input type="hidden" name="action" value="search" /></form>';
+		<input type="hidden" name="action" value="search" /></form>
+		';
+
 	}
 	// Nothing found.
 	if (mysql_num_rows($result)<1){
@@ -289,88 +430,5 @@ else {
 
 // we're done. and as all tags need to be closed, print the footer now!
 echo print_footer();
-
-///////////////////////////////////////////
-// Functions
-///////////////////////////////////////////
-//
-// Print page header (if not already done)
-//
-function print_header($entityname){
-	if (!defined(HEADER)){
-		$ret='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-		<html xmlns="http://www.w3.org/1999/xhtml">
-		<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>FreeNAC @'.$entityname.'</title>
-		<link href="bw.css" rel="stylesheet" type="text/css" />
-		</head>
-
-		<body>
-		<table class="bw" width="500" border="0">
-		  <tr>
-			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
-		  </tr>
-		  <tr>
-			<td class="center"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a></td>
-		  </tr>
-		</table>
-		';
-		define('HEADER',true); // The header is out
-		return $ret;
-	}
-
-}
-
-//
-// Print page footer (if not already done)
-//
-function print_footer(){
-	if(!defined(FOOTER)){
-		$ret='</table></body></html>';
-		define('FOOTER',true);
-		return $ret;
-	}
-}
-
-//
-// Print the lookup results
-//
-function print_resultset($res,$server){
-	$ret='';
-	while ($row=mysql_fetch_array($res)){
-		$ret.=($i%2==0)?'<tr class="light">':'<tr class="dark">';
-		$ret.='<td><a href="'.$server['PHP_SELF'].'?action=edit&mac='.$row['mac'].'">'.stripslashes($row['name']).'</a></td>'."\n";
-		$ret.='<td class="center">'.$row['mac'].'</td>'."\n";
-		$ret.='<td class="center">'.ucfirst($row['status']{0}).'</td>'."\n";
-		$ret.='<td class="center" title="'.$row['vlanname'].'">'.$row['vlan'].'</td>'."\n";
-		$ret.='<td class="center">'.$row['user'].'</td>'."\n";
-		$ret.='<td class="center">'.$row['port'].'</td>'."\n";
-		$ret.='<td class="center">'.$row['switch'].'</td>'."\n";
-		$ret.='</tr>'."\n";
-		$i++;
-	}
-	return $ret;
-}
-
-//
-// validates webinput
-// if the variable is an array recursevly call the 
-// function for each value
-//
-function validate_webinput($value){
-	if (is_array($value)){
-		array_map('validate_webinput',$value);
-	}
-	else {
-		if (get_magic_quotes_gpc()) {
-			$value = stripslashes($value);
-		}
-		if (!is_numeric($value)){
-			mysql_real_escape_string($value);
-		}
-	}
-	return trim($value);
-}
 
 ?>
