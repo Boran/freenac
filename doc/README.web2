@@ -18,9 +18,9 @@ _________Install_________
 
 _________Configure_________
 
-- Configure apache by creating /etc/apache2/conf.d/nac.conf
+- Configure apache by creating /usr/local/apache2/conf.d/nac.conf
 
-	vi /etc/apache2/conf.d/nac.conf
+	vi /usr/local/apache2/conf.d/nac.conf
 	>
 	> Alias /web2 /opt/nac/web2
         > <Directory /opt/nac/web2/>
