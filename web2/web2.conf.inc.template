@@ -34,5 +34,7 @@ $entityname='MyCompany';		# name of your company
 // unknown machines in the database
 $unknown='%unknown%';
 
+// Enable XLS export? (requires the PEAR module Spreadsheet_Excel_Writer)
+$xls_output=false; // To enable set it to: true
 
 ?>
