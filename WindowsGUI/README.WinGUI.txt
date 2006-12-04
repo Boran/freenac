@@ -41,3 +41,10 @@ v1.2.0.103/24.11.06/SB:
 	Allow the port default vlan to be changed. 
 	Add Queries for expired user, expired systems. Add button to export entire table to excel.
 	Sources: delete old components taPorts, taSystems.
+v1.2.0.103/4.12.06/SB: 	
+  History field was accidentally read-only. Edit tab: make user lookups much faster via a dedicated query.
+  Query tab: add Anti-Virus out of date
+  Query tab: add the actual query SQL to the bottom of each query.  
+  Allow vlans, switchs, ports, lookups rows to be deleted by an admin.
+  
+	
