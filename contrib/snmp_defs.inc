@@ -1,26 +1,30 @@
 <?php
 /**
- * /opt/nac/contrib/snmp_defs.php
+ * /opt/nac/contrib/snmp_defs.inc
  *
  * Long description for file:
  * - Specific SNMP queires
  * - Some functions for snmp scripts
  *
+ * Further reading:
+ *    http://www.cisco.com/public/sw-center/netmgmt/cmtk/mibs.shtml
+ *    The "getif" tool for exploring MIBs.
+ *
  * PHP version 5
- * Requires SNMP support
  *
  * LICENSE: This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
  * by the Free Software Foundation.
  *
- * @package			FreeNAC
- * @author			Thomas Dagonnier - Sean Boran (FreeNAC Core Team)
- * @copyright		2006 FreeNAC
- * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			CVS: $Id:$
- * @link			http://www.freenac.net
+ * @package                     FreeNAC
+ * @author                      Thomas Dagonnier - Sean Boran (FreeNAC Core Team)
+ * @copyright                   2006 FreeNAC
+ * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version                     CVS: $Id:$
+ * @link                        http://www.freenac.net
  *
  */
+
 
 $snmp_sw['descr'] =             'SNMPv2-MIB::sysDescr.0';
 $snmp_sw['name'] =              'SNMPv2-MIB::sysName.0';
@@ -37,12 +41,24 @@ $snmp_if['phys'] =              '1.3.6.1.2.1.31.1.1.1.17';              // true 
 $snmp_if['trunk'] =             '1.3.6.1.4.1.9.9.46.1.6.1.1.13';        // 1 : on - 2 : off - 3 : desirable - 4 : auto - 5 : onNoNegotiate
 $snmp_if['vlan'] =              '1.3.6.1.4.1.9.9.68.1.2.2.1.2';
 
+/*
+ * is_port_vmps() is this a vmps candidate port?
+ * Assume that if its not a trunk, iis physical, and the interface i
+ * name starts with Fa,Gi or X/YY, then its a candidate.
+ */
 function is_port_vmps($myiface) {
-        if (($myiface['phys'] == 1) && ($myiface['trunk'] != 1) &&
-                                ((stristr($myiface['name'],'Fa') || stristr($myiface['name'],'Gi'))))
+        if ( ($myiface['phys'] == 1) && ($myiface['trunk'] != 1) &&
+          (( stristr($myiface['name'],'Fa') || stristr($myiface['name'],'Gi') ||
+             preg_match("/\d+\/\d+/", $myiface['name'])     )) )
         {
+             debug2("$switchname int=" .$myiface['name']
+               .', vlan=' .$myiface['vlan'] .', trunk= ' .$myiface['trunk']
+               .', phys=' .$myiface['phys'] .', vmps=YES' );
                 return(TRUE);
         } else {
+             debug2("$switchname int=" .$myiface['name']
+               .', vlan=' .$myiface['vlan'] .', trunk= ' .$myiface['trunk']
+               .', phys=' .$myiface['phys'] .', vmps=NO' );
                 return(FALSE);
         };
 
@@ -53,7 +69,8 @@ function walk_ports($switch,$snmp_ro) {
         global $snmp_ifaces; // query to get all interfaces
         global $snmp_if; // sub-queries with interfaces characteristics
 
-		$iface = array();
+	$iface = array();
+        debug2("snmprealwalk $switch $snmp_ro $snmp_ifaces");
         $ifaces = snmprealwalk($switch,$snmp_ro,$snmp_ifaces);
 
 		if (count($ifaces) == 0) { return($iface); };
@@ -74,6 +91,7 @@ function walk_ports($switch,$snmp_ro) {
                             $iface[$idx][$field] = '';
                     };
                     $walk = snmprealwalk($switch,$snmp_ro,$query);
+        	    debug2("snmprealwalk $switch $query");
                     foreach ($walk as $oid => $value) {
                             $oids = explode('.',$oid);
                             $idx = $oids[count($oids)-1];
@@ -87,6 +105,7 @@ function walk_ports($switch,$snmp_ro) {
                     $iface[$idx]['vmps'] = is_port_vmps($myiface);
             };
 		};
+
         return($iface);
 };
 
