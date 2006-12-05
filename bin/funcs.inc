@@ -21,7 +21,6 @@
  */
 
 
-#include_once "/opt/nac/etc/config.inc";
 require_once "/opt/nac/etc/config.inc";
 
 function debug1($msg) {
@@ -43,7 +42,7 @@ function debug2($msg) {
     if ($debug_to_syslog===TRUE) {
       syslog(LOG_INFO, "Debug2: $msg");
     } else {
-      echo "Debug2: $msg";
+      echo "Debug2: $msg\n";
     }
   }
 }
