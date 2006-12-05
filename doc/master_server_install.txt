@@ -158,36 +158,45 @@ FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
 
 PHP5:
 Install first the graphics support needed by the web1
-  yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel net-snmp
-  yast -i openssl openssl-devel graphviz
+  yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel 
+  yast -i net-snmp net-snmp-devel tcpd-devel rpm-devel
+  yast -i openssl openssl-devel graphviz  
   cd /opt/install;
-  tar xBf php-5.1.6.tar.bz2
-  cd php-5.1.6
+  tar xBf php-5.2.0.tar.bz2
+  cd php-5.2.0
 
-And copy some ttf fonts from a Windows box to /usr/X11R6/lib/X11/fonts/truetype/ (specially verdana.ttf) 
+  # Question: what is this comment?? [sb, 4.12.06]
+  # Copy some ttf fonts from a Windows box to /usr/X11R6/lib/X11/fonts/truetype/ (specially verdana.ttf) 
   
   # Without TDS:
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.6 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-gd --with-zlib-dir --with-ttf --with-freetype-dir
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.2.0 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-gd --with-zlib-dir --with-ttf --with-freetype-dir
   
   ## If you need MS-SQL (its best to assume you do - FreeTDS was compiled above)
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --with-mysql-sock=/var/lib/mysql/mysql.sock --prefix=/opt/php-5.1.6 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --enable-snmp 
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --with-mysql-sock=/var/lib/mysql/mysql.sock --prefix=/opt/php-5.2.0 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --with-snmp=/usr --enable-ucd-snmp-hack ----with-openssl=/usr 
+ 
 
   Note: On suse, PHP may complain about MySQL libraries, it may be best to 
         compile mySQL from source (see above), rather than using binary packages.
 
   make install    
+  
+  ## Setup details php environment:
   mv /usr/local/lib/php.ini /usr/local/lib/php.$$
-  cp php.ini-dist /usr/local/lib/php.ini
+  ci -l /etc/php5/cli/php.ini
+  mv /etc/php5/cli/php.ini /etc/php5/cli/php.ini.$$
+  cp php.ini-recommended /etc/php5/cli/php.ini
+  ## To do: list of recommended settings in php.ini
  
   mv /usr/bin/php /usr/bin/php.$$
   mv /opt/php5 /opt/php5.$$
-  ln -s /opt/php-5.1.6 /opt/php5    
+  ln -s /opt/php-5.2.0 /opt/php5    
   ln -s /opt/php5/bin/php /usr/bin/php
 
-  Test PHP: 'php -v'
+  Test PHP: 
+  	php -v
   
   Note: To allow easier upgrading, rollback or testing new PHP modules, we install into a 
-  version specific directory like '/opt/php5.1.6' above, and create links to this 
+  version specific directory like '/opt/php5.2.0' above, and create links to this 
   directory. 
 
   Edit your httpd.conf (e.g. /usr/local/apache/conf/httpd.conf) to load the PHP module
