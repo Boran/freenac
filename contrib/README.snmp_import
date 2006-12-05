@@ -14,8 +14,11 @@ To use it,
 - insert it into the DB
 	mysql inventory < /tmp/ports.sql
 
+Command line option :
+- "--switch NAME" : to import a single switch, you need to specify its name, as it is documented in the database
+
 Option :
-- snmp_ro, snmp_rw in global configuration file
+- snmp_ro in global configuration file
 
 Current limitations :
 - same community for all switches
@@ -25,3 +28,6 @@ Requirements
 - PHP with support for SNMP enabled
 - SNMP readonly access to switches
 - Switches already in the DB
+
+TODO :
+- add CLI option to import just one switch
