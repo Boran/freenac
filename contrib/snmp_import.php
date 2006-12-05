@@ -1,11 +1,12 @@
 #!/usr/bin/php -- -f
 <?php
 /**
- * /opt/nac/contrib/snmp_import.php
+ * contrib/snmp_import.php
  *
  * Long description for file:
- * The snmp_import.php script is a script that is meant to be used during the deployment phase
- * - get the actual configuration of non-trunk ports of the switches and 
+ * This script that is meant to be used during the deployment phase to add
+ *   ports to the DB that we expect to be managed by NAC.
+ * - get the actual configuration of non-trunk ports of switches and 
  *   populate the port table.  
  * - ignore ports with vlan=0, and take the current vlan so that it can be used as a port 
  *   default vlan
@@ -43,16 +44,14 @@ require_once "bin/funcs.inc";               # Load settings & common functions
 require_once "snmp_defs.inc";
 
 define_syslog_variables();              # not used yet, but anyway..
-openlog("import_snmp", LOG_PID, LOG_LOCAL5);
+openlog("snmp_import.php", LOG_PID, LOG_LOCAL5);
 
 // Enable debugging to understand how the script works
   $debug_flag1=false;
   $debug_flag2=false;
-  $debug_flag1=true;
-  $debug_flag2=true;
   $debug_to_syslog=FALSE;
 
-debug2("Checking for SNMP: " . SNMP_OID_OUTPUT_FULL);
+debug2("Checking for SNMP: " . SNMP_OID_OUTPUT_FULL); // we'll gte a number if PHP SNMP is working
 snmp_set_oid_numeric_print(TRUE);
 snmp_set_quick_print(TRUE);
 snmp_set_enum_print(TRUE); 
