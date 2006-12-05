@@ -37,8 +37,8 @@
 
 ## vmps_lastseen script:  
   $lastseen_dryrun=false;           # Test, don't update DB
-  $set_vlan_for_unknowns="vlan=0,"; # Set to NONE: deny unknowns
-  #$set_vlan_for_unknowns="";        # Don't set, use default Vlan. 
+  $set_vlan_for_unknowns="vlan=0,"; # Set to NONE: deny unknowns. The number corresponding to 
+                                    # an entry in the vlan table.
   $lastseen_patch_lookup=true;      # Lookup Patchcable details in Alerts
 
 ## Binding with FreeRadius
@@ -52,7 +52,6 @@
   $lastseen_infnet_notify=true;
   $check_infnet_mac="";
   $sms_infnet_mac="";
-  #include_once " ";
   $check_infnet_mac_target="sms1.test.com";
   $check_infnet_mac_url="/ASP/PCexplorer/PCexplorerSel.asp";
 
@@ -83,19 +82,23 @@
   $vmps_user_direx="direx.test.com";
   $vmps_user_direx_path="/my/url/GetXML.aspx";
   
-
 ## purge_unknowns :
   $unknown_purge=30;               # Delete unknown systems older than XX days
 
+
+## SNMP communities
+  $snmp_ro="PASSWORD2";            # maybe public	
+  $snmp_rw="PASSWORD3";            # very private
+
 ## restart_port
-  $snmpwalk="/usr/bin/snmpwalk -v 1 -c PASSWORD2 ";    # SNMP Read community
-  $snmpset ="/usr/bin/snmpset  -v 1 -c PASSWORD3"; # SNMP Write community
+  $snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";  # SNMP Read community
+  $snmpset ="/usr/bin/snmpset  -v 1 -c $snmp_rw";   # SNMP Write community
 
 ## router_mac_ip
   $core_routers="192.168.245.3 192.168.245.6";
   $router_mac_ip_ignore_ip="/^(127\.0\.0|192\.168\.|193\.5\.232|193\.5\.237|193\.5\.238)/";
   $router_mac_ip_ignore_mac="/^(00d0\.0064\.d000)/";
-  $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c PASSWORD4 ";    # SNMP Read
+  $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";    # SNMP Read
   $router_mac_ip_update_from_dns=false;     # Auto-update system names from DNS for 'unknowns'?
 
 
