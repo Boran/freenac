@@ -57,7 +57,7 @@ for ($i=0;$i<$argc;$i++) {
 // TODO switch instead of if
    if ($argv[$i]=="--switch") {
 	  $single = TRUE;
-	  $singleswitch = $argv[$i+1];
+	  $singleswitch = mysql_real_escape_string($argv[$i+1]);
 	};
 };
 
