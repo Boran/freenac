@@ -30,7 +30,7 @@ require_once "funcs.inc";
 
 # configure logging
 $logit_to_stdout = TRUE;
-$debug_flag1 = FALSE;
+$debug_flag1 = TRUE;
 $debug_to_syslog = FALSE;
 
 debug1("variables from configfile: $ad_server | $ad_user | $ad_password | " . print_r($ad_base_user_dn, TRUE));
@@ -175,29 +175,60 @@ function fill_db($users) {
 		
 		
 		if( $account ) {	# make sure each entry processed has an account name
-			$check_query = "SELECT AssocNTAccount from users where AssocNTAccount = '$account'";
+			echo($account);
+			echo(mysql_real_escape_string($account));
+
+			$check_query = sprintf("SELECT AssocNTAccount from users where AssocNTAccount = '%s'",
+				mysql_real_escape_string($account)
+			);
 			debug1($check_query);
 			$entry_exists = mysql_query($check_query) or logit('Check query failed, ' . mysql_error());
 			
-			if( mysql_num_rows($entry_exists) > 0 ) {	# does entry alread exist?
+			if( mysql_num_rows($entry_exists) > 0 ) {	# does entry alread exist? then update ....
 				debug1("$account exists already, will update it");
 				if( $exchange ) {
-					$update_query = "UPDATE users SET Surname = '$surname', GivenName = '$given_name', department = '$department', rfc822mailbox = '$rfc822mailbox', physicalDeliveryOfficeName = '$physical_delivery_office_name', telephoneNumber = '$telephone_number', mobile = '$mobile', LastSeenDirex = NOW() WHERE AssocNTAccount = '$account'";
+					$update_query = sprintf("UPDATE users SET Surname = '%s', GivenName = '%s', department = '%s', rfc822mailbox = '%s', physicalDeliveryOfficeName = '%s', telephoneNumber = '%s', mobile = '$mobile', LastSeenDirex = NOW() WHERE AssocNTAccount = '%s'",
+						mysql_real_escape_string($surname),
+						mysql_real_escape_string($given_name),
+						mysql_real_escape_string($department),
+						mysql_real_escape_string($rfc822mailbox),
+						mysql_real_escape_string($physical_delivery_office_name),
+						mysql_real_escape_string($telephone_number),
+						mysql_real_escape_string($account)
+					);
 				}
-				else {
-					$update_query = "UPDATE users SET Surname = '$surname', GivenName = '$given_name', LastSeenDirex = NOW() WHERE AssocNTAccount = '$account'";
+				else { 
+					$update_query = sprintf("UPDATE users SET Surname = '%s', GivenName = '%s', LastSeenDirex = NOW() WHERE AssocNTAccount = '%s'",
+						mysql_real_escape_string($surname),
+						mysql_real_escape_string($given_name),
+						mysql_real_escape_string($account)
+					);
 				}
 				debug1($update_query);
 				mysql_query($update_query) or logit('Update query failed, ' . mysql_error());
 				$updates++;
 			}
-			else {
+			else {	# ... otherwise insert it
 				debug1("$account dosen't exist yet, will insert it");
 				if( $exchange ) {
-					$insert_query = "INSERT INTO users (AssocNTAccount, Surname, GivenName, department, rfc822mailbox, physicalDeliveryOfficeName, telephoneNumber, mobile, LastSeenDirex) VALUES('$account', '$surname', '$given_name', '$department', '$rfc822mailbox', '$physical_delivery_office_name', '$telephone_number', '$mobile', NOW())";
+					$insert_query = sprintf("INSERT INTO users (AssocNTAccount, Surname, GivenName, department, rfc822mailbox, physicalDeliveryOfficeName, telephoneNumber, mobile, LastSeenDirex) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', NOW())",
+						mysql_real_escape_string($account),
+						mysql_real_escape_string($surname),
+						mysql_real_escape_string($given_name),
+						mysql_real_escape_string($department),
+						mysql_real_escape_string($rfc822mailbox),
+						mysql_real_escape_string($physical_delivery_office_name),
+						mysql_real_escape_string($telephone_number),
+						mysql_real_escape_string($mobile)
+					);
 				}
 				else {
-					$insert_query = "INSERT INTO users (AssocNTAccount, Surname, GivenName, LastSeenDirex) VALUES('$account', '$surname', '$given_name', NOW())";
+					$insert_query = sprintf("INSERT INTO users (AssocNTAccount, Surname, GivenName, LastSeenDirex) VALUES('%s', '%s', '%s', NOW())",
+						mysql_real_escape_string($account),
+						mysql_real_escape_string($surname),
+						mysql_real_escape_string($given_name)
+					);
+					
 				}
 				debug1($insert_query);
 				mysql_query($insert_query) or logit('Insert query failed, ' . mysql_error());
@@ -215,7 +246,7 @@ function usage() {
 	print("\nWrong command line paramters\n\n");
 	print("Usage:\n\n");
 	print("ad_user_sync [test] [exchange]\n");
-	print("\ttest: Test AD server connection and dump results. Do not connect DB\n");
+	print("\ttest: Test AD server connection and dump results. Do not connect to DB\n");
 	print("\texchange: Query additonal attributes from MS Exchange schema extension\n");
 	exit();
 }
