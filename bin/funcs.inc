@@ -20,8 +20,9 @@
  *
  */
 
-
-require_once "/opt/nac/etc/config.inc";
+chdir(dirname(__FILE__));
+set_include_path("./:../");
+require_once "etc/config.inc";
 
 function debug1($msg) {
   global $debug_flag1, $debug_to_syslog;
