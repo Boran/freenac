@@ -20,6 +20,10 @@
  *
  */
 
+## Enterprise config options
+#require_once "/opt/nac/enterprise/config_en.inc";
+
+
 ## MySQL DB settings for all scripts
   $dbhost="localhost";
   $dbname="inventory";
