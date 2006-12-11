@@ -96,7 +96,7 @@
 
 ## router_mac_ip
   $core_routers="192.168.245.3 192.168.245.6";
-  $router_mac_ip_ignore_ip="/^(127\.0\.0|192\.168\.|193\.5\.232|193\.5\.237|193\.5\.238)/";
+  $router_mac_ip_ignore_ip="/^(127\.0\.0|192\.168\./";
   $router_mac_ip_ignore_mac="/^(00d0\.0064\.d000)/";
   $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";    # SNMP Read
   $router_mac_ip_update_from_dns=false;     # Auto-update system names from DNS for 'unknowns'?
@@ -108,12 +108,13 @@
 ## flap_detect
   $flap_limit=40;
   
+
 ## LDAP coniguration settings (Active Directory)
-	$ad_server = 'dc.test.xx';							# Domain controller
-	$ad_user = 'cn=administrator,cn=users,dc=test,dc=xx';	# AD user with read privileges on AD
-	$ad_password = '';										# AD users's password
-	
-	$ad_base_user_dn = array('cn=users,dc=test,dc=xx');				# List with base DNs under which user information is stored
+## ad_user_sync
+  $ad_server = 'dc.test.xx';		# Domain controller
+  $ad_user = 'cn=administrator,cn=users,dc=test,dc=xx';	# AD user with read privileges on AD
+  $ad_password = '';			# AD users's password
+  $ad_base_user_dn = array('cn=users,dc=test,dc=xx');	# List with base DNs under which user information is stored
 
 
 ?>
