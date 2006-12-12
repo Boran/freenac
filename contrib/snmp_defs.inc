@@ -120,4 +120,51 @@ function iface_exist($switch,$port) {
 		};
 };
 
+
+function switch_exist($name,$value) {
+		global $connect;
+		$query = "SELECT * FROM switch WHERE $name='$value'";
+		$result = mysql_query($query) or die("Unable to query switch table");
+		if (mysql_num_rows($result) > 0) {
+			return(TRUE);
+		} else {
+			return(FALSE);
+		};
+};
+
+function get_cisco_info($switch,$snmp_ro) {
+		global $snmp_sw;
+	// will return an array with name, hardware, software, catos
+		foreach ($snmp_sw as $field => $query) {
+			$sw[$field] = snmpget($switch,$snmp_ro,$query);
+		};
+// get short name
+		$names = explode('.',$sw['name']);
+		$sw['shortname'] = $names[0];
+
+// parse description field
+		if (stristr($sw['descr'],'cisco')) {
+			$words = explode(' ',$sw['descr']);
+			foreach($words as $idx => $word) {
+		// first, version
+				if (stristr($word,'Version')) {
+					$sw['cisco_sw'] = rtrim($words[$idx+1],',');
+				}; 
+				if (stristr($word,'IOS')) {
+					$sw['catos'] = FALSE;
+				};
+			};
+		// then hardware
+			$hw_versions = snmprealwalk($switch,$snmp_ro,$snmp_cisco['hw']);
+			foreach ($hw_versions as $value) {
+				if (strstr($value,'WS')) {
+					$sw['cisco_hw'] = rtrim(ltrim($value,'"'),'"');
+				};
+			};
+			unset($words);		
+		};
+
+		return(array($sw['shortname'],$sw['cisco_hw'],$sw['cisco_sw'],$sw['catos']));
+};
+
 ?>

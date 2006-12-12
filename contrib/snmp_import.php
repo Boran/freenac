@@ -64,23 +64,102 @@ snmp_set_enum_print(TRUE);
 
 db_connect();
 
+function print_usage() {
+	echo "snmp_import.php - Usage\n";
+	echo " --switch name- only scan given switch (require switch name)\n";
+	echo " --new A.B.C.D : to insert a new switch (requie switch IP Address)\n";
+	echo "\n";
+
+};
+
+function ask_user($question,$default) {
+print "$question ? [$default] : ";
+   $out = "";
+   $key = "";
+   $key = fgetc(STDIN);        //read from standard input (keyboard)
+   while ($key!="\n")        //if the newline character has not yet arrived read another
+   {
+       $out.= $key;
+       $key = fread(STDIN, 1);
+   }
+
+   if ($out == '') { $out = $default; };
+   return($out);
+};
+
 // command line:
 //   Look for: snmp_import.php -switch sw0503
+// or		   snmp_import.php -new A.B.C.D
 //   otherwise scan all switches
 // TODO switch instead of if, make sure there are 3 args!
-$single = FALSE;
-for ($i=0;$i<$argc;$i++) {
-   if ($argv[$i]=='-switch') {   // even if user gives --switch we see -switch
-	  $single = TRUE;
-	  $singleswitch = mysql_real_escape_string($argv[$i+1]);
+
+	$single = FALSE;
+	$newswitch = FALSE;
+
+
+	for ($i=0;$i<$argc;$i++) {
+	   if ($argv[$i]=='-switch') {   // even if user gives --switch we see -switch
+		  $single = TRUE;
+		  $singleswitch = mysql_real_escape_string($argv[$i+1]);
+		};
+	   if ($argv[$i]=='-new') {   // even if user gives --switch we see -switch
+		  $new = TRUE;
+		  $single = TRUE;
+		  $newswitch = $argv[$i+1];
+		};
+	   if ($argv[$i]=='-help') {   // even if user gives --switch we see -switch
+			print_usage();
+		};
+	};
+
+
+// preliminary : create new switch
+ // we have ip - we need name, location, comment, swgroup, contact, ap (1x - not used)
+if ($new === TRUE) {
+		// ugly IP Validation
+	$count = substr_count($newswitch,'.');
+	if ($count != 3) {
+		echo "$newswitch $count\n";
+		exit("Invalid IP Address\n");
+	} else {
+		$sql_ip = $newswitch;
+	};
+
+		// check if switch doesn't exist
+	if (switch_exist('ip',$sql_ip)) {
+		echo "Error : This switch exists.\nIf you want to update its ports' default vlan, please use :\n snmp_import.php -switch NAME\n";
+	} else {
+		echo "Discovering the switch ($sql_ip) using SNMP ...\n";
+		list($sql_name,$cisco_hw,$cisco_sw,$catos) = get_cisco_info($sql_ip,$snmp_ro);
+		echo "It looks like it is a $cisco_hw running $cisco_sw.\n";
+
+		$sql_name = ask_user("What is the hostname",$sql_name);
+		$sql_location = ask_user("What is the switch location",snmpget($sql_ip,$snmp_ro,$snmp_sw['location']));
+		$sql_contact = ask_user("Who should be notified of changes (email adress)",snmpget($sql_ip,$snmp_ro,$snmp_sw['contact']));
+
+		$sql_comment = "$cisco_hw - $cisco_sw";
+
+		$sql_comment = ask_user("What would you like for comment",$sql_comment);
+
+
+		$sql_swgroup = 1;
+		$sql_ap = 0;
+
+		$query = "INSERT INTO switch(ip,name,location,comment,swgroup,notify,ap) VALUES ";
+		$query .= "('$sql_ip','$sql_name','$sql_location','$sql_comment',$sql_swgroup,$sql_contact,$sql_ap);";
+
+		// mysql_query($query) or die("unable to query");
+		$singleswitch = $sql_name;
 	};
 };
 
+
+// Main part : import
 if (!$single) {
-        $switches =  mysql_fetch_all("SELECT * FROM switch");
+    $switches =  mysql_fetch_all("SELECT * FROM switch");
 	debug1("Scanning all switches in the Database");
 } else {
-        $switches =  mysql_fetch_all("SELECT * FROM switch WHERE name='$singleswitch'");
+    $switches =  mysql_fetch_all("SELECT * FROM switch WHERE name='$singleswitch'");
 	debug1("Scanning one switch: $singleswitch");
 };
 
@@ -108,7 +187,7 @@ if (is_array($switches)) {
 				};
 				echo "$query\n";
 			//        mysql_query($query) or die("unable to query");
-				unset($query);
+			//	unset($query);
 			};
 		 };
         };
