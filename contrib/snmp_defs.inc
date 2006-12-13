@@ -30,8 +30,13 @@ $snmp_sw['descr'] =             'SNMPv2-MIB::sysDescr.0';
 $snmp_sw['name'] =              'SNMPv2-MIB::sysName.0';
 $snmp_sw['location'] =          'SNMPv2-MIB::sysLocation.0';
 $snmp_sw['contact'] =           'SNMPv2-MIB::sysContact.0';
+$snmp_sw['cdp'] =				'1.3.6.1.4.1.9.9.23.1.2.1.1.8';		// get array with port index + CDP neigbours
 
 $snmp_ifaces =                  '1.3.6.1.2.1.31.1.1.1.1';
+$snmp_mac =						'1.3.6.1.2.1.17.4.3.1.1';
+$snmp_bridge =					'1.3.6.1.2.1.17.4.3.1.2';
+$snmp_ports =					'1.3.6.1.2.1.17.1.4.1.2';
+
 $snmp_cisco['hw'] =             'SNMPv2-SMI::mib-2.47.1.1.1.1.13';
 
 $snmp_if['name'] =              '1.3.6.1.2.1.31.1.1.1.1';
@@ -66,6 +71,9 @@ function is_port_vmps($myiface) {
 };
 
 function walk_ports($switch,$snmp_ro) {
+	snmp_set_oid_numeric_print(TRUE);
+	snmp_set_quick_print(TRUE);
+	snmp_set_enum_print(TRUE); 
         global $snmp_ifaces; // query to get all interfaces
         global $snmp_if; // sub-queries with interfaces characteristics
 
@@ -107,6 +115,17 @@ function walk_ports($switch,$snmp_ro) {
 		};
 
         return($iface);
+};
+
+function mac_exist($mac) {
+		global $connect;
+		$query = "SELECT * FROM systems WHERE mac='$mac'";
+		$result = mysql_query($query) or die("Unable to query systems table");
+		if (mysql_num_rows($result) > 0) {
+			return(TRUE);
+		} else {
+			return(FALSE);
+		};
 };
 
 function iface_exist($switch,$port) {
@@ -165,6 +184,84 @@ function get_cisco_info($switch,$snmp_ro) {
 		};
 
 		return(array($sw['shortname'],$sw['cisco_hw'],$sw['cisco_sw'],$sw['catos']));
+};
+
+function format_snmpmac($mac) {
+// input  = "00 02 44 45 9B FE "
+// output = 0002.4445.9BFE
+	$mac = rtrim(ltrim($mac,'"'),'"');
+	$mb = explode(' ',$mac);
+	$newmac = $mb[0].$mb[1].'.'.$mb[2].$mb[3].'.'.$mb[4].$mb[5];
+	return($newmac);
+};
+
+function walk_macs($switch,$vlanid,$snmp_ro) {
+	snmp_set_oid_numeric_print(TRUE);
+	snmp_set_quick_print(TRUE);
+	snmp_set_enum_print(TRUE); 
+	global $snmp_mac;
+	global $snmp_bridge;
+	global $snmp_ports;
+	global $switch_ifaces;
+
+	$snmp_ro_vlan = $snmp_ro.'@'.$vlanid;
+
+	$iface = array();
+        debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_mac");
+        $macs = snmprealwalk($switch,$snmp_ro_vlan,$snmp_mac);
+
+		if (count($macs) == 0) { return($mac); };
+
+		$mac=array();
+		$mac2=array();
+		foreach ($macs as $oid => $macaddress) {
+			$oids = explode('.',$oid);
+			$idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
+			$mac[$idx]['mac'] = format_snmpmac($macaddress);
+			$mac[$idx]['bridgeref'] = $idx;
+		};
+		unset($idx);
+
+
+       debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_bridge");
+       $bridges = snmprealwalk($switch,$snmp_ro_vlan,$snmp_bridge);
+
+		if (count($bridges) == 0) { return($mac); };
+
+		foreach($bridges as $oid => $bridgeid) {
+			$oids = explode('.',$oid);
+			$idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
+			if ($mac[$idx]) {
+				$mac2[$bridgeid] = $mac[$idx];
+			};
+//			echo "$bridgeid - $idx - ".$mac[$idx]['mac']."\n";
+		};
+
+       debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_ports");
+       $ports = snmprealwalk($switch,$snmp_ro_vlan,$snmp_ports);
+
+		if (count($bridges) == 0) { return($mac); };
+
+		foreach($ports as $oid => $portid) {
+			$oids = explode('.',$oid);
+			$idx = $oids[12];
+			if ($mac2[$idx]) {
+				$mac2[$idx]['portid'] = $portid;
+				$mac2[$idx]['port'] = $switch_ifaces[$portid]['name'];
+				$mac2[$idx]['trunk'] = $switch_ifaces[$portid]['trunk'];
+			};
+		};
+/*
+		foreach ($mac2 as $key => $value) {			
+			echo "$vlanid - $key : \t";
+			foreach ($value as $k2 => $v2) {
+				echo $k2.' = '.$v2."\t";
+			};
+			echo "\n";
+		};
+*/
+
+		return($mac2);
 };
 
 ?>
