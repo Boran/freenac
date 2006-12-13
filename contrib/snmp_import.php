@@ -138,6 +138,8 @@ print "$question ? [$default] : ";
 	   };
    };
 
+   if ($type = 'string') { $out = mysql_real_escape_string($out); };
+
    return($out);
 };
 
