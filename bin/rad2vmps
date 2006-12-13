@@ -199,11 +199,13 @@ sub authorize()
       $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
    }
    
-   if (($RAD_REQUEST{'User-Name'})&&($RAD_REQUEST{'Calling-Station-Id'})&&(!$RAD_CHECK{'Auth-Type'})) #Check if we need to perform a Mac-Auth-Bypass
+   if (($RAD_REQUEST{'User-Name'})&&($RAD_REQUEST{'Calling-Station-Id'})&&($RAD_REQUEST{'User-Password'})&&(!$RAD_CHECK{'Auth-Type'})) #Check if we need to perform a Mac-Auth-Bypass
    {
       my $username=uc($RAD_REQUEST{'User-Name'});
       $username =~ s/[-:]//g;
-      if ($username eq $calling_station_id)
+      my $password=uc($RAD_REQUEST{'User-Password'});
+      $password =~ s/[-:]//g;
+      if (($username eq $password)&&($password eq $calling_station_id))
       {
          $RAD_CHECK{'Auth-Type'}='MAC-Auth-Bypass';
          return RLM_MODULE_OK;
