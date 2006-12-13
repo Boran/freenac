@@ -51,6 +51,14 @@ openlog("snmp_import.php", LOG_PID, LOG_LOCAL5);
   $debug_flag2=false;
   $debug_to_syslog=FALSE;
 
+if ($snmp_dryrun) {
+  $debug_flag2=true;
+  $domysql=false;
+} else {
+  $domysql=true;
+};
+
+
 debug2("Checking for SNMP: " . SNMP_OID_OUTPUT_FULL); // we'll gte a number if PHP SNMP is working
 snmp_set_oid_numeric_print(TRUE);
 snmp_set_quick_print(TRUE);
@@ -72,18 +80,64 @@ function print_usage() {
 
 };
 
-function ask_user($question,$default) {
+function validate_input($type,$input) {
+// type : string, email, emaillist, IP
+// retrun : TRUE/FALSE
+	$valid = FALSE;
+	switch($type) {
+		case 'ip':
+			if (($binIp = ip2long($input)) === false) {
+#			if ($substr_count($input,'.') != 3) {
+				$valid = FALSE;
+			} else {
+				$valid = TRUE;
+			};
+		break;
+		case 'emaillist':
+			$emails = explode(',',$input);
+			$valid = TRUE;
+			foreach ($emails as $key => $email) {
+				$valid = $valid && validate_input('email',$email);
+			};
+		break;
+		case 'email':
+			if(eregi("^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$", $input)) {
+  				$valid = TRUE;
+			} else {
+				$valid = FALSE;
+			};
+		break;
+		case 'string':
+			if (is_string($input)) {
+				$valid = TRUE;
+			} else {
+				$valid = FALSE;
+			};
+	};
+
+	return($valid);
+};
+
+function ask_user($question,$default,$type) {
 print "$question ? [$default] : ";
    $out = "";
    $key = "";
    $key = fgetc(STDIN);        //read from standard input (keyboard)
-   while ($key!="\n")        //if the newline character has not yet arrived read another
-   {
-       $out.= $key;
-       $key = fread(STDIN, 1);
-   }
+   $validated = FALSE;
+   while (!$validated) {
+	   while ($key!="\n") {       //if the newline character has not yet arrived read another
+	       $out.= $key;
+	       $key = fread(STDIN, 1);
+	   };
+	   if ($out == '') { $out = $default; };
+	   $validated = validate_input($type,$out);
+	   if (!$validated) {
+	       print "Invalid answer.\n$question ? [$default] : ";
+		   unset($key);
+           unset($out);
+	   };
+   };
 
-   if ($out == '') { $out = $default; };
    return($out);
 };
 
@@ -117,8 +171,7 @@ print "$question ? [$default] : ";
  // we have ip - we need name, location, comment, swgroup, contact, ap (1x - not used)
 if ($new === TRUE) {
 		// ugly IP Validation
-	$count = substr_count($newswitch,'.');
-	if ($count != 3) {
+	if (!validate_input('ip',$newswitch)) {
 		echo "$newswitch $count\n";
 		exit("Invalid IP Address\n");
 	} else {
@@ -128,18 +181,20 @@ if ($new === TRUE) {
 		// check if switch doesn't exist
 	if (switch_exist('ip',$sql_ip)) {
 		echo "Error : This switch exists.\nIf you want to update its ports' default vlan, please use :\n snmp_import.php -switch NAME\n";
-	} else {
+#	} else {
+	}; 
+	if (1 == 1) {
 		echo "Discovering the switch ($sql_ip) using SNMP ...\n";
 		list($sql_name,$cisco_hw,$cisco_sw,$catos) = get_cisco_info($sql_ip,$snmp_ro);
 		echo "It looks like it is a $cisco_hw running $cisco_sw.\n";
 
-		$sql_name = ask_user("What is the hostname",$sql_name);
-		$sql_location = ask_user("What is the switch location",snmpget($sql_ip,$snmp_ro,$snmp_sw['location']));
-		$sql_contact = ask_user("Who should be notified of changes (email adress)",snmpget($sql_ip,$snmp_ro,$snmp_sw['contact']));
+		$sql_name = ask_user("What is the hostname",$sql_name,'string');
+		$sql_location = ask_user("What is the switch location",snmpget($sql_ip,$snmp_ro,$snmp_sw['location']),'string');
+		$sql_contact = ask_user("Who should be notified of changes (email adress)",snmpget($sql_ip,$snmp_ro,$snmp_sw['contact']),'emaillist');
 
 		$sql_comment = "$cisco_hw - $cisco_sw";
 
-		$sql_comment = ask_user("What would you like for comment",$sql_comment);
+		$sql_comment = ask_user("What would you like for comment",$sql_comment,'string');
 
 
 		$sql_swgroup = 1;
@@ -148,7 +203,8 @@ if ($new === TRUE) {
 		$query = "INSERT INTO switch(ip,name,location,comment,swgroup,notify,ap) VALUES ";
 		$query .= "('$sql_ip','$sql_name','$sql_location','$sql_comment',$sql_swgroup,$sql_contact,$sql_ap);";
 
-		// mysql_query($query) or die("unable to query");
+		debug2("MySQL : $query");
+		if($domysql) { mysql_query($query) or die("unable to query"); };
 		$singleswitch = $sql_name;
 	};
 };
@@ -185,9 +241,9 @@ if (is_array($switches)) {
 					$query .= "'$switch','".$myiface['name']."','".$myiface['vlan']."','$location');";
 
 				};
-				echo "$query\n";
-			//        mysql_query($query) or die("unable to query");
-			//	unset($query);
+				debug2("MySQL : $query");
+				if($domysql) { mysql_query($query) or die("unable to query"); };
+				unset($query);
 			};
 		 };
         };
