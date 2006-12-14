@@ -5,6 +5,7 @@
 # 2006.01.11/Sean <1> :add performance measurements
 # 2006.09.10/Hector <2> :Adaptation to work with FreeRadius
 #-------------------------------
+#TO DO: Port translation function
 
 use Sys::Syslog;
 use Sys::Syslog qw(:DEFAULT setlogsock);
@@ -20,7 +21,7 @@ $slashes=@file;
 for ($i=0;$i<$slashes-1;$i++) {
    $path .= "/$file[$i]";
 }
-$path.='/';
+$path.='/';   
 
 #Open configuration file
 open (CONFIG_FILE,"$path/../etc/config.inc") or die "Couldn't open the config file";
