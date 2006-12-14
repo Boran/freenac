@@ -35,29 +35,30 @@
   $logit_to_stdout=false;         # Debugging to the console?
 
 ## vmps_external script:  
-  $use_port_default_vlan=true;
-  $detect_hubs=true;
-  $default_vlan=0;                 # Default deny
+  $use_port_default_vlan=true;     # should a default port per default be checked? If not only
+                                   # the global $default_vlan will be checked.
+  $detect_hubs=true;               # 'Intelligent' algorithm to resolve conflicts of several devices
+                                   # on one port, i.e. an un-managed switch or hub
+  $default_vlan=0;                 # 0=Default deny, otherwise unknown devices are put on this vlan
 
 ## vmps_lastseen script:  
   $lastseen_dryrun=false;           # Test, don't update DB
-  $set_vlan_for_unknowns="vlan=0,"; # Set to NONE: deny unknowns. The number corresponding to 
+  $set_vlan_for_unknowns="vlan=0,"; # Set to "vlan=0," deny unknowns. The number corresponding to 
                                     # an entry in the vlan table.
-  $lastseen_patch_lookup=true;      # Lookup Patchcable details in Alerts
+                                    # (don't forget the comma :-)
+  $lastseen_patch_lookup=false;     # Lookup Patchcable details in Alerts
+                                    # set false by default since most people don't use the patch table
 
 ## Binding with FreeRadius
   $vmps_servers = "localhost";	    #Several VMPS servers to query. If one fails, go and query to the next one. List has to be delimited by commas
 				    #Example: $vmps_servers = "vmps1,vmps2,vmps3";  
 
-## Microsoft SMS lookups: 
-  $lastseen_infnet=false;           # Lookup Infnet MACs with check_infnet_mac?
-  $lastseen_infnet_vlan='10';       # Exact Number of Infnet Vlan
-  $lastseen_infnet_restart=true;    # Restart switch port when PC found?
-  $lastseen_infnet_notify=true;
+
+# enterprise legacy issues, leave false
+  $lastseen_infnet=false;          
+  $lastseen_infnet_notify=false;
   $check_infnet_mac="";
   $sms_infnet_mac="";
-  $check_infnet_mac_target="sms1.test.com";
-  $check_infnet_mac_url="/ASP/PCexplorer/PCexplorerSel.asp";
 
 
   $mail_user="root@DOMAIN.ch";      # mail to root? Set your domain
