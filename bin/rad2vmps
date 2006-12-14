@@ -13,12 +13,14 @@ $|=0;
 $DEBUG=0;
 open (CONFIG_FILE,"/opt/nac/etc/config.inc") or die "Couldn't open the config file";
 foreach $line (<CONFIG_FILE>) {
-   if ($line =~ /vmps_servers[\s]*=[\s]*(.*)$/)
+   if ($line =~ /^[\s]*\$vmps_servers[\s]*=[\s]*(.*)\";/)
    {
        $vmps_servers=$1;
    }
 }
 close (CONFIG_FILE);
+@vmps_servers = split(/;/,$vmps_servers);
+$vmps_servers = $vmps_servers[0];
 $vmps_servers =~ s/[\"\'\;]//g;
 $vmps_servers.=',';
 $vmps_servers =~ s/,+/,/g;
