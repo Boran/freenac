@@ -57,27 +57,63 @@ if ($snmp_dryrun) {
 };
 
 
-    $vlans =  mysql_fetch_all("SELECT * FROM vlan");
-    $switches =  mysql_fetch_all("SELECT * FROM switch");
+function print_usage() {
+	echo "snmp_scan.php - Usage\n";
+	echo " -switch name - only scan given switch (require switch name)\n";
+	echo " -vlan name - only scan given vlan (require vlan name)\n";
+	echo " -help - print usage\n";
+	echo " (no args) : will scan all switches and all vlans\n";
+	echo "\n";
+};
+	$newswitch = FALSE;
 
-#	$switch = '192.168.254.7';
-	$vlans = array(520,521,522,523,524,525,526);
-#	$vlans = array(523);
+	for ($i=0;$i<$argc;$i++) {
+	   if ($argv[$i]=='-switch') {   // even if user gives --switch we see -switch
+		  $singlesw = TRUE;
+		  $singleswitch = mysql_real_escape_string($argv[$i+1]);
+		};
+           if ($argv[$i]=='-vlan') {   
+                  $singlevl = TRUE;
+                  $singlevlan = mysql_real_escape_string($argv[$i+1]);
+                };
+	   if ($argv[$i]=='-help') {   // even if user gives --switch we see -switch
+			print_usage();
+			exit();
+		};
+	};
+
+if (!$singlesw) {
+    $switches =  mysql_fetch_all("SELECT * FROM switch");
+	debug1("Scanning all switches in the Database");
+} else {
+    $switches =  mysql_fetch_all("SELECT * FROM switch WHERE name='$singleswitch'");
+	debug1("Scanning one switch: $singleswitch");
+};
+if (!$singlevl) {
+	$vlans =  mysql_fetch_all("SELECT * FROM vlan WHERE id != 0");
+	debug1("Scanning all VLAN");
+} else {
+	$vlans = mysql_fetch_all("SELECT * FROM vlan WHERE value='$singlevlan'");
+	debug1("Scanning one vlan : $singlevlan");
+};
+
+
 
 	foreach ($switches as $switchrow) {
 		$switch = $switchrow['ip'];
 		$switch_ifaces = walk_ports($switch,'public');
 		foreach ($vlans as $vlan) {
-			$macs = walk_macs($switch,$vlan,$snmp_ro);
+			$vlanid = $vlan['id'];
+			$macs = walk_macs($switch,$vlanid,$snmp_ro);
 			foreach ($macs as $idx => $mac) {
-				if($mac['trunk'] != 1) {
+				if (($mac['trunk'] != 1) && !(preg_match("$router_mac_ip_ignore_mac", $mac['mac']))) {
 					if (mac_exist($mac['mac'])) {
 						$query = "UPDATE systems SET switch='$switch', port='".$mac['port']."', LastSeen=NOW() ";
 						$query .= "WHERE mac='".$mac['mac']."';";
 						debug2($switch." - ".$mac['port']." - ".$mac['mac']." - Insert host ");
 					} else {
 						$query = 'INSERT INTO systems (name, mac, switch, port, vlan, status) VALUES ';
-						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlan,3);";
+						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3);";
 						debug2($switch." - ".$mac['port']." - ".$mac['mac']." - Update host ");
 					};
 					if($domysql) { mysql_query($query) or die("unable to query"); };
@@ -86,7 +122,7 @@ if ($snmp_dryrun) {
 			};
 		};
 	};
-
+# $router_mac_ip_ignore_mac
  // measure performance
    $mtime = microtime();
    $mtime = explode(" ",$mtime);
