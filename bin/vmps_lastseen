@@ -108,7 +108,7 @@ function patch_lookup($switch, $port) {
   }
 
   ## Lookup all details for that switch/port from patches
-  $query="select CONCAT(von_dose,' ',von_office,' ',von_user,' ',comment) from patchcable where nach_switch='" . $switch . "' and nach_port='" . $port ."'";
+  $query="select CONCAT(von_dose,' ',von_office,' ',comment) from patchcable where nach_switch='" . $switch . "' and nach_port='" . $port ."'";
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
