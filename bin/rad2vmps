@@ -9,10 +9,21 @@
 use Sys::Syslog;
 use Sys::Syslog qw(:DEFAULT setlogsock);
 use IO::Socket::INET;
-use Cwd;
+use Cwd 'abs_path';
 $|=0;
 $DEBUG=0;
-open (CONFIG_FILE,"../etc/config.inc") or die "Couldn't open the config file";
+
+#Avoid hardcoded absolute paths
+$file=abs_path(__FILE__);
+@file=split(/\//,$file);
+$slashes=@file;
+for ($i=0;$i<$slashes-1;$i++) {
+   $path .= "/$file[$i]";
+}
+$path.='/';
+
+#Open configuration file
+open (CONFIG_FILE,"$path/../etc/config.inc") or die "Couldn't open the config file";
 foreach $line (<CONFIG_FILE>) {
    if ($line =~ /^[\s]*\$vmps_servers[\s]*=[\s]*(.*)\";/)
    {
@@ -20,6 +31,8 @@ foreach $line (<CONFIG_FILE>) {
    }
 }
 close (CONFIG_FILE);
+
+#Parse list of servers
 @vmps_servers = split(/;/,$vmps_servers);
 $vmps_servers = $vmps_servers[0];
 $vmps_servers =~ s/[\"\'\;]//g;
@@ -28,6 +41,8 @@ $vmps_servers =~ s/,+/,/g;
 $vmps_servers =~ s/\s*//g;
 @servers=split(/,/,$vmps_servers);
 $servers_to_query = @servers;
+
+#Radius stuff
 use vars qw(%RAD_REQUEST %RAD_REPLY %RAD_CHECK); 
 use Data::Dumper; 
 
