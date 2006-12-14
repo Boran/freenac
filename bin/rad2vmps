@@ -9,9 +9,10 @@
 use Sys::Syslog;
 use Sys::Syslog qw(:DEFAULT setlogsock);
 use IO::Socket::INET;
+use Cwd;
 $|=0;
 $DEBUG=0;
-open (CONFIG_FILE,"/opt/nac/etc/config.inc") or die "Couldn't open the config file";
+open (CONFIG_FILE,"../etc/config.inc") or die "Couldn't open the config file";
 foreach $line (<CONFIG_FILE>) {
    if ($line =~ /^[\s]*\$vmps_servers[\s]*=[\s]*(.*)\";/)
    {
@@ -27,7 +28,6 @@ $vmps_servers =~ s/,+/,/g;
 $vmps_servers =~ s/\s*//g;
 @servers=split(/,/,$vmps_servers);
 $servers_to_query = @servers;
-
 use vars qw(%RAD_REQUEST %RAD_REPLY %RAD_CHECK); 
 use Data::Dumper; 
 
