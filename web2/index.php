@@ -94,7 +94,7 @@ if ($_REQUEST['action']=='xls' && $_REQUEST['type']!=''){
 		(SELECT IF(location, (SELECT GROUP_CONCAT(Surname) from users WHERE PhysicalDeliveryOfficeName=location), \' \') FROM port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortUserList, switch, 
 		(SELECT name from switch WHERE systems.switch=switch.ip) as SwitchName,
 		(SELECT location from switch WHERE systems.switch=switch.ip) as SwitchLocation,
-		(SELECT GROUP_CONCAT(von_user,\', \',von_dose, \', \',von_office, \', \', comment) FROM patchcable pat WHERE systems.switch=pat.nach_switch AND systems.port=pat.nach_port) as PatchCable, history,
+		(SELECT GROUP_CONCAT(von_dose, \', \',von_office, \', \', comment) FROM patchcable pat WHERE systems.switch=pat.nach_switch AND systems.port=pat.nach_port) as PatchCable, history,
 		(SELECT Surname         from users WHERE systems.description=users.AssocNtAccount) as UserSurname,
 		(SELECT GivenName       from users WHERE systems.description=users.AssocNtAccount) as UserForename,
 		(SELECT Department      from users WHERE systems.description=users.AssocNtAccount) as UserDept,
