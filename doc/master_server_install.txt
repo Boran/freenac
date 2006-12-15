@@ -160,7 +160,7 @@ PHP5:
 Install first the graphics support needed by the web1
   yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel 
   yast -i net-snmp net-snmp-devel tcpd-devel rpm-devel
-  yast -i openssl openssl-devel graphviz  
+  yast -i openssl openssl-devel openldap2-devel graphviz  
   cd /opt/install;
   tar xBf php-5.2.0.tar.bz2
   cd php-5.2.0
