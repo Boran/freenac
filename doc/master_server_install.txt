@@ -169,11 +169,10 @@ Install first the graphics support needed by the web1
   # Copy some ttf fonts from a Windows box to /usr/X11R6/lib/X11/fonts/truetype/ (specially verdana.ttf) 
   
   # Without TDS:
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.6 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --with-ldap
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.2.0 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --with-ldap
 
   ## If you need MS-SQL (its best to assume you do - FreeTDS was compiled above)
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --with-mysql-sock=/var/lib/mysql/mysql.sock --prefix=/opt/php-5.1.6 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir
---with-snmp=/usr --enable-ucd-snmp-hack --with-ldap
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --with-mysql-sock=/var/lib/mysql/mysql.sock --prefix=/opt/php-5.2.0 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --with-snmp=/usr --enable-ucd-snmp-hack --with-ldap
 
 
 
