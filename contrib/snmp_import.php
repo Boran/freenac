@@ -4,13 +4,13 @@
  * contrib/snmp_import.php
  *
  * Long description for file:
- * This script that is meant to be used during the deployment phase to add
+ * To be used during the deployment phase to add
  *   ports to the DB that we expect to be managed by NAC.
  * - get the actual configuration of non-trunk ports of switches and 
  *   populate the port table.  
  * - ignore ports with vlan=0, and take the current vlan so that it can be used as a port 
  *   default vlan
- * - the output is SWL that you should review debore executing
+ * - the output is SQL that you should review before executing
  * see also README:snmp_import, snmp_defs.inc, config.inc
  * Enable $debug_flag1 and $debug_flag2 the first time you use this.
  *
@@ -28,7 +28,7 @@
  * by the Free Software Foundation.
  *
  * @package			FreeNAC
- * @author			Thomas Dagonnier - Sean Boran (FreeNAC Core Team)
+ * @author			Thomas Dagonnier (FreeNAC Core Team)
  * @copyright			2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version			CVS: $Id:$
@@ -74,8 +74,8 @@ db_connect();
 
 function print_usage() {
 	echo "snmp_import.php - Usage\n";
-	echo " --switch name- only scan given switch (require switch name)\n";
-	echo " --new A.B.C.D : to insert a new switch (requie switch IP Address)\n";
+	echo " -switch name- only scan given switch (requires switch name)\n";
+	echo " -new A.B.C.D : to insert a new switch (requires switch IP Address)\n";
 	echo "\n";
 
 };
