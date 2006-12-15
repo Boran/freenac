@@ -14,17 +14,34 @@ use Cwd 'abs_path';
 $|=0;
 $DEBUG=0;
 
-#Avoid hardcoded absolute paths
-$file=abs_path(__FILE__);
-@file=split(/\//,$file);
+#Radius stuff
+use vars qw(%RAD_REQUEST %RAD_REPLY %RAD_CHECK);
+use Data::Dumper;
+
+use constant RLM_MODULE_REJECT=>0;
+use constant RLM_MODULE_FAIL=>1;
+use constant RLM_MODULE_OK=>2;
+use constant RLM_MODULE_HANDLED=>3;
+use constant RLM_MODULE_INVALID=>4;
+use constant RLM_MODULE_USERLOCK=>5;
+use constant RLM_MODULE_NOTFOUND=>6;
+use constant RLM_MODULE_NOOP=>7;
+use constant RLM_MODULE_UPDATED=>8;
+use constant RLM_MODULE_NUMCODES=>9;
+
+#Fix weird issue when calling radiusd -X from /root directory
+chdir ('/tmp');
+
+#Avoid hardcoded absolute paths for the location on this script
+$script=abs_path($0);
+@file=split(/\//,$script);
 $slashes=@file;
-for ($i=0;$i<$slashes-1;$i++) {
+for ($i=0;$i<$slashes-2;$i++) {
    $path .= "/$file[$i]";
 }
-$path.='/';   
 
 #Open configuration file
-open (CONFIG_FILE,"$path/../etc/config.inc") or die "Couldn't open the config file";
+open (CONFIG_FILE,"$path/etc/config.inc") or die "Couldn't open the config file";
 foreach $line (<CONFIG_FILE>) {
    if ($line =~ /^[\s]*\$vmps_servers[\s]*=[\s]*(.*)\";/)
    {
@@ -42,21 +59,6 @@ $vmps_servers =~ s/,+/,/g;
 $vmps_servers =~ s/\s*//g;
 @servers=split(/,/,$vmps_servers);
 $servers_to_query = @servers;
-
-#Radius stuff
-use vars qw(%RAD_REQUEST %RAD_REPLY %RAD_CHECK); 
-use Data::Dumper; 
-
-use constant RLM_MODULE_REJECT=>0;
-use constant RLM_MODULE_FAIL=>1; 
-use constant RLM_MODULE_OK=>2;	
-use constant RLM_MODULE_HANDLED=>3;
-use constant RLM_MODULE_INVALID=>4;
-use constant RLM_MODULE_USERLOCK=>5;
-use constant RLM_MODULE_NOTFOUND=>6;
-use constant RLM_MODULE_NOOP=>7;
-use constant RLM_MODULE_UPDATED=>8;
-use constant RLM_MODULE_NUMCODES=>9;
 
 $suplicant_mac='';
 $switch_ip='';
