@@ -26,18 +26,18 @@
  */
 
 
-$snmp_sw['descr'] =             'SNMPv2-MIB::sysDescr.0';
-$snmp_sw['name'] =              'SNMPv2-MIB::sysName.0';
-$snmp_sw['location'] =          'SNMPv2-MIB::sysLocation.0';
-$snmp_sw['contact'] =           'SNMPv2-MIB::sysContact.0';
-$snmp_sw['cdp'] =				'1.3.6.1.4.1.9.9.23.1.2.1.1.8';		// get array with port index + CDP neigbours
+$snmp_sw['descr'] =             '1.3.6.1.2.1.1.1.0';
+$snmp_sw['name'] =              '1.3.6.1.2.1.1.5.0';
+$snmp_sw['location'] =          '1.3.6.1.2.1.1.6.0';
+$snmp_sw['contact'] =           '1.3.6.1.2.1.1.4.0';
+$snmp_sw['cdp'] =		'1.3.6.1.4.1.9.9.23.1.2.1.1.8';		// get array with port index + CDP neigbours
 
 $snmp_ifaces =                  '1.3.6.1.2.1.31.1.1.1.1';
-$snmp_mac =						'1.3.6.1.2.1.17.4.3.1.1';
-$snmp_bridge =					'1.3.6.1.2.1.17.4.3.1.2';
-$snmp_ports =					'1.3.6.1.2.1.17.1.4.1.2';
+$snmp_mac =			'1.3.6.1.2.1.17.4.3.1.1';
+$snmp_bridge =			'1.3.6.1.2.1.17.4.3.1.2';
+$snmp_ports =			'1.3.6.1.2.1.17.1.4.1.2';
 
-$snmp_cisco['hw'] =             'SNMPv2-SMI::mib-2.47.1.1.1.1.13';
+$snmp_cisco['hw'] =             '1.3.6.1.2.1.47.1.1.1.1.13.1';
 
 $snmp_if['name'] =              '1.3.6.1.2.1.31.1.1.1.1';
 $snmp_if['highspeed'] =         '1.3.6.1.2.1.31.1.1.1.15';              //      10 - 100 - 1000 
