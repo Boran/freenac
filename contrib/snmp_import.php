@@ -11,9 +11,12 @@
  * - ignore ports with vlan=0, and take the current vlan so that it can be used as a port 
  *   default vlan
  * - the output is SQL that you should review before executing
- * see also README:snmp_import, snmp_defs.inc, config.inc
- * Enable $debug_flag1 and $debug_flag2 the first time you use this.
+ * - see also README:snmp_import, snmp_defs.inc, config.inc
  *
+ * TESTED against Cisco switches:
+ *    2950, 2940-8TT 2900XL 3500xl 3550 3560 3750
+ *
+ * Enable $debug_flag1 and $debug_flag2 the first time you use this.
  * On IOS do "show ip arp" - "show vlan"
  *        or "sh ip arp vrf insec"
  * On CatOS so "show port status"
