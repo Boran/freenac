@@ -98,8 +98,8 @@ function walk_ports($switch,$snmp_ro) {
                     foreach($index as $idx) {
                             $iface[$idx][$field] = '';
                     };
+		    debug2("snmprealwalk $switch $query");	
                     $walk = snmprealwalk($switch,$snmp_ro,$query);
-        	    debug2("snmprealwalk $switch $query");
                     foreach ($walk as $oid => $value) {
                             $oids = explode('.',$oid);
                             $idx = $oids[count($oids)-1];
@@ -155,6 +155,7 @@ function get_cisco_info($switch,$snmp_ro) {
 		global $snmp_sw;
 	// will return an array with name, hardware, software, catos
 		foreach ($snmp_sw as $field => $query) {
+			debug2("snmpget $switch $query");
 			$sw[$field] = snmpget($switch,$snmp_ro,$query);
 		};
 // get short name
@@ -174,6 +175,7 @@ function get_cisco_info($switch,$snmp_ro) {
 				};
 			};
 		// then hardware
+			debug2("snmprealwalk $switch ".$snmp_cisco['hw']);	
 			$hw_versions = snmprealwalk($switch,$snmp_ro,$snmp_cisco['hw']);
 			foreach ($hw_versions as $value) {
 				if (strstr($value,'WS')) {
