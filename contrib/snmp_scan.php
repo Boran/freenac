@@ -46,15 +46,15 @@ require_once "bin/funcs.inc";               # Load settings & common functions
 require_once "snmp_defs.inc";
 
 define_syslog_variables();              # not used yet, but anyway..
-openlog("snmp_import.php", LOG_PID, LOG_LOCAL5);
+openlog("snmp_scan.php", LOG_PID, LOG_LOCAL5);
 
 db_connect();
 
 
 // Enable debugging to understand how the script works
   $debug_flag1=true;
-  $debug_flag2=true;
-  $debug_to_syslog=FALSE;
+  $debug_flag2=false;
+  $debug_to_syslog=true;
 // allow performance measurements
    $mtime = microtime();
    $mtime = explode(" ",$mtime);
@@ -72,8 +72,8 @@ if ($snmp_dryrun) {
 
 function print_usage() {
 	echo "snmp_scan.php - Usage\n";
-	echo " -switch name - only scan given switch (require switch name)\n";
-	echo " -vlan name - only scan given vlan (require vlan name)\n";
+	echo " -switch name - only scan a given switch (require switch name)\n";
+	echo " -vlan name - only scan a given vlan (require vlan name)\n";
 	echo " -help - print usage\n";
 	echo " (no args) : will scan all switches and all vlans\n";
 	echo "\n";
@@ -89,7 +89,7 @@ function print_usage() {
                   $singlevl = TRUE;
                   $singlevlan = mysql_real_escape_string($argv[$i+1]);
                 };
-	   if ($argv[$i]=='-help') {   // even if user gives --switch we see -switch
+	   if (($argv[$i]=='-help') || ($argv[$i]=='-h') ) {   // even if user gives --switch we see -switch
 			print_usage();
 			exit();
 		};
@@ -123,11 +123,11 @@ if (!$singlevl) {
 					if (mac_exist($mac['mac'])) {
 						$query = "UPDATE systems SET switch='$switch', port='".$mac['port']."', LastSeen=NOW() ";
 						$query .= "WHERE mac='".$mac['mac']."';";
-						debug2($switch." - ".$mac['port']." - ".$mac['mac']." - Insert host ");
+						debug1($switch." - ".$mac['port']." - ".$mac['mac']." - update host ");
 					} else {
 						$query = 'INSERT INTO systems (name, mac, switch, port, vlan, status) VALUES ';
 						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3);";
-						debug2($switch." - ".$mac['port']." - ".$mac['mac']." - Update host ");
+						debug1($switch." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
 					};
 					if($domysql) { mysql_query($query) or die("unable to query"); };
 					unset($query);

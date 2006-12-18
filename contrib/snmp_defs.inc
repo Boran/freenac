@@ -119,6 +119,7 @@ function walk_ports($switch,$snmp_ro) {
 
 function mac_exist($mac) {
 		global $connect;
+                $mac=strtolower($mac);
 		$query = "SELECT * FROM systems WHERE mac='$mac'";
 		$result = mysql_query($query) or die("Unable to query systems table");
 		if (mysql_num_rows($result) > 0) {
@@ -194,7 +195,7 @@ function format_snmpmac($mac) {
 	$mac = rtrim(ltrim($mac,'"'),'"');
 	$mb = explode(' ',$mac);
 	$newmac = $mb[0].$mb[1].'.'.$mb[2].$mb[3].'.'.$mb[4].$mb[5];
-	return($newmac);
+	return(strtolower($newmac));
 };
 
 function walk_macs($switch,$vlanid,$snmp_ro) {
