@@ -3,8 +3,15 @@
  * /opt/nac/contrib/snmp_defs.inc
  *
  * Long description for file:
- * - Specific SNMP queires
+ * - Specific SNMP queries
  * - Some functions for snmp scripts
+ *
+ * - tested on the following switches:
+ * - Cisco
+ *	- 3500xl
+ * 	- 2950, 2940-8TT
+ *	- 3550
+ *	- 3750
  *
  * Further reading:
  *    http://www.cisco.com/public/sw-center/netmgmt/cmtk/mibs.shtml
@@ -45,6 +52,11 @@ $snmp_if['description'] =       '1.3.6.1.2.1.31.1.1.1.18';
 $snmp_if['phys'] =              '1.3.6.1.2.1.31.1.1.1.17';              // true - false
 $snmp_if['trunk'] =             '1.3.6.1.4.1.9.9.46.1.6.1.1.13';        // 1 : on - 2 : off - 3 : desirable - 4 : auto - 5 : onNoNegotiate
 $snmp_if['vlan'] =              '1.3.6.1.4.1.9.9.68.1.2.2.1.2';
+
+#$snmp_vlan['id'] =				'1.3.6.1.4.1.9.9.46.1.3.1.1.1';			// not reliable ???
+$snmp_vlan['state'] =			'1.3.6.1.4.1.9.9.46.1.3.1.1.2';
+$snmp_vlan['type'] =			'1.3.6.1.4.1.9.9.46.1.3.1.1.3';			// 1 : ethernet - 2, 4 : fddi -3 tokenring - 5, trnet
+$snmp_vlan['name'] =			'1.3.6.1.4.1.9.9.46.1.3.1.1.4';
 
 /*
  * is_port_vmps() is this a vmps candidate port?
@@ -119,7 +131,7 @@ function walk_ports($switch,$snmp_ro) {
 
 function mac_exist($mac) {
 		global $connect;
-                $mac=strtolower($mac);
+        $mac=strtolower($mac);
 		$query = "SELECT * FROM systems WHERE mac='$mac'";
 		$result = mysql_query($query) or die("Unable to query systems table");
 		if (mysql_num_rows($result) > 0) {
@@ -265,6 +277,34 @@ function walk_macs($switch,$vlanid,$snmp_ro) {
 */
 
 		return($mac2);
+};
+
+
+function walk_vlans($switch,$snmp_ro) {
+	snmp_set_oid_numeric_print(TRUE);
+	snmp_set_quick_print(TRUE);
+	snmp_set_enum_print(TRUE); 
+	global $snmp_vlan;
+
+
+	$vlans = array();
+
+	foreach ($snmp_vlan as $key => $query) {
+		debug2("snmprealwalk $switch $query");
+		$listvlans = snmprealwalk($switch,$snmp_ro,$query);
+
+		if (count($listvlans) == 0) { return($vlans); };
+
+		foreach ($listvlans as $oid => $value) {
+				$oids = explode('.',$oid);
+				$idx = $oids[count($oids)-1];
+				if ($key == 'name') { $value = rtrim(ltrim($value,'"'),'"'); };
+				$vlans[$idx][$key] = $value;
+				unset($value);
+		};
+	};
+
+	return($vlans);
 };
 
 ?>
