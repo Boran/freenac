@@ -118,7 +118,8 @@ if (!$singlevl) {
 		foreach ($vlans as $vlan) {
 			$vlanid = $vlan['id'];
 			$macs = walk_macs($switch,$vlanid,$snmp_ro);
-			foreach ($macs as $idx => $mac) {
+			if (count($macs) > 0) {
+  			    foreach ($macs as $idx => $mac) {
 				if (($mac['trunk'] != 1) && !(preg_match("$router_mac_ip_ignore_mac", $mac['mac']))) {
 					if (mac_exist($mac['mac'])) {
 						$query = "UPDATE systems SET switch='$switch', port='".$mac['port']."', LastSeen=NOW() ";
@@ -132,6 +133,7 @@ if (!$singlevl) {
 					if($domysql) { mysql_query($query) or die("unable to query"); };
 					unset($query);
 				};
+			    };
 			};
 		};
 	};
