@@ -13,6 +13,10 @@
  * Such non-managed are typically critical servers, network equipment,
  * VirtualServers, systems with static vlan ports ...
  *
+ * Newly discovered devices are inserted into the systems table
+ *   as status=3, name=unknown, and update mac,lastseen,switch,port
+ *   For existing systems; lastseen,switch,port is updated.
+ *
  * USAGE :
  *   -switch name - only scan given switch (require switch name)
  *   -vlan name - only scan given vlan (require vlan name)
@@ -48,8 +52,8 @@ db_connect();
 
 
 // Enable debugging to understand how the script works
-  $debug_flag1=false;
-  $debug_flag2=false;
+  $debug_flag1=true;
+  $debug_flag2=true;
   $debug_to_syslog=FALSE;
 // allow performance measurements
    $mtime = microtime();
