@@ -167,11 +167,11 @@ if (!$singlevl) {
 					if (mac_exist($mac['mac'])) {
 						$query = "UPDATE systems SET switch='$switch', port='".$mac['port']."', LastSeen=NOW() ";
 						$query .= "WHERE mac='".$mac['mac']."';";
-						debug1($switch." - ".$mac['port']." - ".$mac['mac']." - update host ");
+						debug1($switch. " ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - update host ");
 					} else {
 						$query = 'INSERT INTO systems (name, mac, switch, port, vlan, status,LastSeen) VALUES ';
 						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3,NOW());";
-						debug1($switch." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
+						debug1($switch. " ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
 					};
 					if($domysql) { mysql_query($query) or die("unable to query"); };
 					unset($query);
