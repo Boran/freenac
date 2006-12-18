@@ -114,7 +114,7 @@ if (!$singlevl) {
 
 	foreach ($switches as $switchrow) {
 		$switch = $switchrow['ip'];
-		$switch_ifaces = walk_ports($switch,'public');
+		$switch_ifaces = walk_ports($switch,$snmp_ro);
 		foreach ($vlans as $vlan) {
 			$vlanid = $vlan['id'];
 			$macs = walk_macs($switch,$vlanid,$snmp_ro);
