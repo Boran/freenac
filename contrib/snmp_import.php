@@ -50,8 +50,8 @@ define_syslog_variables();              # not used yet, but anyway..
 openlog("snmp_import.php", LOG_PID, LOG_LOCAL5);
 
 // Enable debugging to understand how the script works
-  $debug_flag1=false;
-  $debug_flag2=false;
+  $debug_flag1=true;
+  $debug_flag2=true;
   $debug_to_syslog=FALSE;
 
 if ($snmp_dryrun) {
@@ -206,7 +206,7 @@ if ($new === TRUE) {
 		$sql_ap = 0;
 
 		$query = "INSERT INTO switch(ip,name,location,comment,swgroup,notify,ap) VALUES ";
-		$query .= "('$sql_ip','$sql_name','$sql_location','$sql_comment',$sql_swgroup,$sql_contact,$sql_ap);";
+		$query .= "('$sql_ip','$sql_name','$sql_location','$sql_comment',$sql_swgroup,'$sql_contact',$sql_ap);";
 
 		debug2("MySQL : $query");
 		if($domysql) { mysql_query($query) or die("unable to query"); };
