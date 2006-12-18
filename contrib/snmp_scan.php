@@ -30,7 +30,7 @@
  * by the Free Software Foundation.
  *
  * @package			FreeNAC
- * @author			Thomas Dagonnier (FreeNAC Core Team)
+ * @author			Thomas Dagonnier - Sean Boran (FreeNAC Core Team)
  * @copyright			2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version			CVS: $Id:$
@@ -72,11 +72,50 @@ if ($snmp_dryrun) {
 
 function print_usage() {
 	echo "snmp_scan.php - Usage\n";
-	echo " -switch name - only scan a given switch (require switch name)\n";
-	echo " -vlan name - only scan a given vlan (require vlan name)\n";
-	echo " -help - print usage\n";
+	echo " -switch [name] - only scan a given switch (require switch name)\n";
+	echo " -vlan [name]   - only scan a given vlan (require vlan name)\n";
+	echo " -listvlans     - list all vlans\n";
+	echo " -help          - print usage\n";
 	echo " (no args) : will scan all switches and all vlans\n";
 	echo "\n";
+};
+
+function print_vlans() {
+	global $snmp_ro;
+	global $debug_flag1;
+	global $debug_flag2;
+	$switches =  mysql_fetch_all("SELECT * FROM switch");
+	$vlan = array();
+	foreach ($switches as $switchrow) {
+		$switch = $switchrow['ip'];
+		$switch_name = $switchrow['name'];
+		$switch_vlans = walk_vlans($switch,$snmp_ro);
+		foreach ($switch_vlans as $idx => $svalue) {
+			if (($switch_vlans[$idx]['type'] == 1) && ($switch_vlans[$idx]['state'] == 1)) {
+			$vlan_name = $switch_vlans[$idx]['name'];
+			$vlan[$vlan_name][$idx] .= $switch_name.',';
+			};
+		};
+	};
+
+	foreach ($vlan as $vlan_name => $vlan_ids) {
+	$first = TRUE;
+		foreach ($vlan_ids as $vlan_id => $switches) {
+			if (count($vlan_ids) == 1) {
+				echo "$vlan_id\t";
+				printf("%-16s",  substr($vlan_name,0,14));
+				echo "\t- Switches : ".rtrim($switches,',')."\n";
+			} else {
+				if (!$first) {
+					echo "VLAN $vlan_name :\n";
+					$first = FALSE;
+				};
+				echo " :\n";
+				echo "\t - $vlan_id : ".rtrim($switches,',')."\n";
+			};
+		};
+	};
+
 };
 	$newswitch = FALSE;
 
@@ -84,6 +123,10 @@ function print_usage() {
 	   if ($argv[$i]=='-switch') {   // even if user gives --switch we see -switch
 		  $singlesw = TRUE;
 		  $singleswitch = mysql_real_escape_string($argv[$i+1]);
+		};
+	   if ($argv[$i]=='-listvlans') {
+			print_vlans();
+			exit();
 		};
            if ($argv[$i]=='-vlan') {   
                   $singlevl = TRUE;
@@ -126,8 +169,8 @@ if (!$singlevl) {
 						$query .= "WHERE mac='".$mac['mac']."';";
 						debug1($switch." - ".$mac['port']." - ".$mac['mac']." - update host ");
 					} else {
-						$query = 'INSERT INTO systems (name, mac, switch, port, vlan, status) VALUES ';
-						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3);";
+						$query = 'INSERT INTO systems (name, mac, switch, port, vlan, status,LastSeen) VALUES ';
+						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3,NOW());";
 						debug1($switch." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
 					};
 					if($domysql) { mysql_query($query) or die("unable to query"); };

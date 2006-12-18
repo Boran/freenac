@@ -293,8 +293,8 @@ function walk_vlans($switch,$snmp_ro) {
 		debug2("snmprealwalk $switch $query");
 		$listvlans = snmprealwalk($switch,$snmp_ro,$query);
 
-		if (count($listvlans) == 0) { return($vlans); };
-
+		if ((count($listvlans) == 0) || (!is_array($listvlans))) { return($vlans); };
+		
 		foreach ($listvlans as $oid => $value) {
 				$oids = explode('.',$oid);
 				$idx = $oids[count($oids)-1];
