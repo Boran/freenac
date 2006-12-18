@@ -216,12 +216,17 @@ if ($new === TRUE) {
 
 
 // Main part : import
-if (!$single) {
-    $switches =  mysql_fetch_all("SELECT * FROM switch");
-	debug1("Scanning all switches in the Database");
+if (!$new && !$domysql) {
+	if (!$single) {
+    	$switches =  mysql_fetch_all("SELECT * FROM switch");
+		debug1("Scanning all switches in the Database");
+	} else {
+    	$switches =  mysql_fetch_all("SELECT * FROM switch WHERE name='$singleswitch'");
+		debug1("Scanning one switch: $singleswitch");
+	};
 } else {
-    $switches =  mysql_fetch_all("SELECT * FROM switch WHERE name='$singleswitch'");
-	debug1("Scanning one switch: $singleswitch");
+	// that means it's a new switch & dry run
+	$switches[0] = array("ip" => $sql_ip, "name" => $sql_name, "location" => $sql_location);
 };
 
 

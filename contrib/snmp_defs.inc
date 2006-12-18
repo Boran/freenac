@@ -30,7 +30,7 @@ $snmp_sw['descr'] =             '1.3.6.1.2.1.1.1.0';
 $snmp_sw['name'] =              '1.3.6.1.2.1.1.5.0';
 $snmp_sw['location'] =          '1.3.6.1.2.1.1.6.0';
 $snmp_sw['contact'] =           '1.3.6.1.2.1.1.4.0';
-$snmp_sw['cdp'] =		'1.3.6.1.4.1.9.9.23.1.2.1.1.8';		// get array with port index + CDP neigbours
+// $snmp_sw['cdp'] =		'1.3.6.1.4.1.9.9.23.1.2.1.1.8';		// get array with port index + CDP neigbours
 
 $snmp_ifaces =                  '1.3.6.1.2.1.31.1.1.1.1';
 $snmp_mac =			'1.3.6.1.2.1.17.4.3.1.1';
