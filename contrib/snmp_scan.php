@@ -5,10 +5,19 @@
  *
  * Long description for file:
  * This script will scan all existing switches & routers using SNMP
- * It focuses on getting informations about systems who are not managed
- * or/and on static access ports. 
- * Such systems are typically critical servers, network equipment, ...
- * It is complementary to the snmp_import script
+ * It focuses on getting information about systems who are not managed
+ * or/and on static access ports. With this information, NAC then has
+ * an overview of all systems on the network, providing the Network
+ * manager with a more complete picture. This non-vmps-managed systems
+ * can still be scanned, and their Anti-Virus status shown.
+ * Such non-managed are typically critical servers, network equipment,
+ * VirtualServers, systems with static vlan ports ...
+ *
+ * USAGE :
+ *   -switch name - only scan given switch (require switch name)
+ *   -vlan name - only scan given vlan (require vlan name)
+ *   -help - print usage
+ *   (no args) : will scan all switches and all vlans
  *
  * PHP version 5
  *
@@ -17,7 +26,7 @@
  * by the Free Software Foundation.
  *
  * @package			FreeNAC
- * @author			Thomas Dagonnier - Sean Boran (FreeNAC Core Team)
+ * @author			Thomas Dagonnier (FreeNAC Core Team)
  * @copyright			2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version			CVS: $Id:$
