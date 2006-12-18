@@ -91,7 +91,7 @@ foreach (split(' ', $core_routers) as $router) {
 
   if ( preg_match("/ipNetToMediaPhysAddress\.(\d+)\.(.*) = STRING: (.*)/", $results[$i], $matches) ) {
      $ip=$matches[2];
-     #debug1("$ip - $matches[3] ");
+     #debug2("$ip - $matches[3] ");
      $mac=normalise_mac($matches[3]);
      debug2("$ip - $mac ");
 
@@ -125,6 +125,7 @@ foreach (split(' ', $core_routers) as $router) {
               if($fqdn!=$ip) { // We got the host name, now update it
                 // strip domain name
                 list($hostname_only) = split('[.]', $fqdn);
+                $hostname_only = strtolower($hostname_only);
                 $sql='UPDATE systems SET name=\''.$hostname_only.'\' WHERE mac=\''.$mac.'\'';
                 logit($sql);
                 logit("Changed name of $mac to its DNS name $hostname_only");
@@ -145,7 +146,7 @@ foreach (split(' ', $core_routers) as $router) {
   }
  }
 
- # Don't write to VMPS table any more, its too noisy/frequent
+ # Don't write to the GUI logging table any more, its too noisy/frequent
  #reporterr('info',"Update $count_updates mac/ip tables from router $router");
  logit("Update $count_updates mac/ip tables from $router");
 }
@@ -157,7 +158,6 @@ foreach (split(' ', $core_routers) as $router) {
    $endtime = $mtime;
    $totaltime = ($endtime - $starttime);
    debug1("Time taken= ".$totaltime." seconds\n");
-   #logit("Time taken= ".$totaltime." seconds\n");
 
 ###
 ?>
