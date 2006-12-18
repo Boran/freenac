@@ -186,8 +186,8 @@ if ($new === TRUE) {
 		// check if switch doesn't exist
 	if (switch_exist('ip',$sql_ip)) {
 		echo "Error : This switch exists.\nIf you want to update its ports' default vlan, please use :\n snmp_import.php -switch NAME\n";
-#	} else {
-	}; 
+		exit();
+	} else {
 	if (1 == 1) {
 		echo "Discovering the switch ($sql_ip) using SNMP ...\n";
 		list($sql_name,$cisco_hw,$cisco_sw,$catos) = get_cisco_info($sql_ip,$snmp_ro);
