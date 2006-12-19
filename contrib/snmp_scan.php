@@ -81,7 +81,7 @@ function print_usage() {
 };
 
 function print_vlans() {
-	global $snmp_ro;
+	global $snmp_ro, $default_user_unknown;
 	global $debug_flag1;
 	global $debug_flag2;
 	$switches =  mysql_fetch_all("SELECT * FROM switch");
@@ -169,8 +169,8 @@ if (!$singlevl) {
 						$query .= "WHERE mac='".$mac['mac']."';";
 						debug1($switch. " ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - update host ");
 					} else {
-						$query = 'INSERT INTO systems (name, mac, switch, port, vlan, status,LastSeen) VALUES ';
-						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3,NOW());";
+						$query = 'INSERT INTO systems (name, mac, switch, port, vlan, status,LastSeen,description) VALUES ';
+						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3,NOW(),$default_user_unknown);";
 						debug1($switch. " ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
 					};
 					if($domysql) { mysql_query($query) or die("unable to query"); };
