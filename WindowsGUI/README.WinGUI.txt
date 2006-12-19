@@ -1,4 +1,4 @@
-__________ Free NAC  Windows GUI Version 1.2.099 ___________
+__________ Free NAC  Windows GUI  ___________
 
 [This is a primitive, prelimiary doc, more should follow]
 
@@ -46,6 +46,7 @@ v1.2.0.103/4.12.06/SB:
   Query tab: add Anti-Virus out of date
   Query tab: add the actual query SQL to the bottom of each query.  
   Allow vlans, switchs, ports, lookups rows to be deleted by an admin.
-v1.2.0.104/14.12.06/SB: 	
+v1.2.0.104/18.12.06/SB: 	
   Remove references to old 'oper' table. Remove 'user' column from patch cables tab.  
+  Add a PatchCable column to the Overview tab, added an 'unmanaged' status to the Edit/Overvew tabs
 	
