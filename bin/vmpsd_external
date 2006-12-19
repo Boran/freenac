@@ -119,7 +119,7 @@ function get_port_status($switch, $port, $mac, $new_vlan, $lastvlan)
   } else {                # systems found, interate though them
     while ( list($othermac, $othervlan, $AuthLast)=mysql_fetch_array($res, MYSQL_NUM) ) {
 
-      logit("get_port_status: found $othermac, vlan=$othervlan, $AuthLast");
+      debug1("get_port_status: found $othermac, vlan=$othervlan, $AuthLast");
 
       if (ping_mac($othermac))     {    # Is there another system live on that port?
         // yes, so find out about it
@@ -193,7 +193,7 @@ function get_port_status_old($switch, $port, $mac, $new_vlan)
     if (!$res) { die('Invalid query: ' . mysql_error()); }
 
   if (mysql_num_rows($res)==0) {
-    logit("get_port_status: nothing else conflicting on that port");
+    debug1("get_port_status: nothing else conflicting on that port");
 
   } else {
     while ( list($othermac, $othername, $othervlan, $othervlangroup)=mysql_fetch_array($res, MYSQL_NUM) ) {
