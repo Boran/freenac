@@ -42,6 +42,7 @@
   $default_vlan=0;                 # 0=Default deny, otherwise unknown devices are put on this vlan
 
 ## vmps_lastseen script:  
+  $default_user_unknown='KEINE';   # Unknown devices are assigned to this User ID
   $lastseen_dryrun=false;           # Test, don't update DB
   $set_vlan_for_unknowns="vlan=0,"; # Set to "vlan=0," deny unknowns. The number corresponding to 
                                     # an entry in the vlan table.
