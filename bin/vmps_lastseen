@@ -42,7 +42,7 @@ $debug_flag2=FALSE;
 
 require_once "funcs.inc";
 
-global  $lastseen_dryrun;
+global  $lastseen_dryrun, $default_user_unknown;
 if ($debug_flag2===TRUE) {
   $daemon=false;
   $lastseen_dryrun=true;
@@ -242,7 +242,7 @@ do {
                 # Enable PC and set to Infnet VLAN
                 if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$infnet_details, $matches)) {
                   $infnet_name=$matches[1];     
-                  $txx_name= "KEINE";                          # default
+                  $txx_name= $default_user_unknown;                          # default
                   $txx_name   =$matches[2];
                   $sms_os     =$matches[3];
                   $infnet_details="";
@@ -310,8 +310,7 @@ do {
                 .      $set_vlan_for_unknowns
                 .      "port='"    .$port   . "', "
                 .      "switch='"  .$switch . "', "
-#                .      "description='keine', "   # nt account
-                .      "description='KEINE', "   # nt account
+                .      "description='$default_user_unknown', "   # usually 'KEINE'
                 .      "mac='"     . $mac2  . "' ";
               $log_entry="New unknown $mac2 ($newmac_vendor), switch ";
               #logit($log_entry);
