@@ -163,7 +163,7 @@ if (!$singlevl) {
 			$macs = walk_macs($switch,$vlanid,$snmp_ro);
 			if (count($macs) > 0) {
   			    foreach ($macs as $idx => $mac) {
-				if (($mac['trunk'] != 1) && !(preg_match("$router_mac_ip_ignore_mac", $mac['mac']))) {
+				if (($mac['trunk'] != 1) && !(preg_match("$router_mac_ip_ignore_mac", $mac['mac'])) && ($mac['port'] != '')) {
 					if (mac_exist($mac['mac'])) {
 						$query = "UPDATE systems SET switch='$switch', port='".$mac['port']."', LastSeen=NOW() ";
 						$query .= "WHERE mac='".$mac['mac']."';";
