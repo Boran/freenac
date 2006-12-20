@@ -58,6 +58,20 @@ $snmp_vlan['state'] =			'1.3.6.1.4.1.9.9.46.1.3.1.1.2';
 $snmp_vlan['type'] =			'1.3.6.1.4.1.9.9.46.1.3.1.1.3';			// 1 : ethernet - 2, 4 : fddi -3 tokenring - 5, trnet
 $snmp_vlan['name'] =			'1.3.6.1.4.1.9.9.46.1.3.1.1.4';
 
+/** This function is called for any errors or
+ *  messages sent to stdout/err. The idea is to catch all
+ *  such messages and send them to syslog, this this is a daemon normally
+ *  detached from the console
+ */
+function callback($buffer)
+{
+  if (strlen($buffer) > 1) {
+    logit('callback:[' . $buffer .']');
+  }
+  #return(true);
+}
+
+
 /*
  * is_port_vmps() is this a vmps candidate port?
  * Assume that if its not a trunk, iis physical, and the interface i
@@ -88,6 +102,7 @@ function walk_ports($switch,$snmp_ro) {
 	snmp_set_enum_print(TRUE); 
         global $snmp_ifaces; // query to get all interfaces
         global $snmp_if; // sub-queries with interfaces characteristics
+	ob_start("callback"); 
 
 	$iface = array();
         debug2("snmprealwalk $switch $snmp_ro $snmp_ifaces");
@@ -126,6 +141,7 @@ function walk_ports($switch,$snmp_ro) {
             };
 		};
 
+	ob_flush();
         return($iface);
 };
 
@@ -218,6 +234,7 @@ function walk_macs($switch,$vlanid,$snmp_ro) {
 	global $snmp_bridge;
 	global $snmp_ports;
 	global $switch_ifaces;
+	ob_start("callback"); 
 
 	$snmp_ro_vlan = $snmp_ro.'@'.$vlanid;
 
@@ -276,7 +293,7 @@ function walk_macs($switch,$vlanid,$snmp_ro) {
 			echo "\n";
 		};
 */
-
+		ob_flush();
 		return($mac2);
 };
 
@@ -286,6 +303,7 @@ function walk_vlans($switch,$snmp_ro) {
 	snmp_set_quick_print(TRUE);
 	snmp_set_enum_print(TRUE); 
 	global $snmp_vlan;
+	ob_start("callback"); 
 
 
 	$vlans = array();
@@ -305,7 +323,7 @@ function walk_vlans($switch,$snmp_ro) {
 			};
 		};
 	};
-
+	ob_flush();
 	return($vlans);
 };
 
