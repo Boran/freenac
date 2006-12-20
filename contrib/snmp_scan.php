@@ -170,10 +170,10 @@ if (!$singlevl) {
 						debug1($switch. " ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - update host ");
 					} else {
 						$query = 'INSERT INTO systems (name, mac, switch, port, vlan, status,LastSeen,description) VALUES ';
-						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3,NOW(),$default_user_unknown);";
+						$query .= "('unknown','".$mac['mac']."','$switch','".$mac['port']."',$vlanid,3,NOW(),'$default_user_unknown');";
 						debug1($switch. " ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
 					};
-					if($domysql) { mysql_query($query) or die("unable to query"); };
+					if($domysql) { mysql_query($query) or die("unable to query $query\n"); };
 					unset($query);
 				};
 			    };
