@@ -209,7 +209,7 @@ if ($new === TRUE) {
 		$query .= "('$sql_ip','$sql_name','$sql_location','$sql_comment',$sql_swgroup,'$sql_contact',$sql_ap);";
 
 		debug2("MySQL : $query");
-		if($domysql) { mysql_query($query) or die("unable to query"); };
+		if($domysql) { mysql_query($query) or die("Unable to query MySQL (import new switch)"); };
 		$singleswitch = $sql_name;
 	};
 };
@@ -252,7 +252,7 @@ if (is_array($switches)) {
 
 				};
 				debug2("MySQL : $query");
-				if($domysql) { mysql_query($query) or die("unable to query"); };
+				if($domysql) { mysql_query($query) or die("Unable to query MySQL : update/insert system"); };
 				unset($query);
 			};
 		 };

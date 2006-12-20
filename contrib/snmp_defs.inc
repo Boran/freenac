@@ -93,7 +93,7 @@ function walk_ports($switch,$snmp_ro) {
         debug2("snmprealwalk $switch $snmp_ro $snmp_ifaces");
         $ifaces = snmprealwalk($switch,$snmp_ro,$snmp_ifaces);
 
-		if (count($ifaces) == 0) { return($iface); };
+	if ((count($ifaces) == 0) || !(is_array($ifaces))) { return($iface); };
 
         foreach ($ifaces as $oid => $name) {
             $oids = explode('.',$oid);
@@ -225,10 +225,11 @@ function walk_macs($switch,$vlanid,$snmp_ro) {
         debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_mac");
         $macs = snmprealwalk($switch,$snmp_ro_vlan,$snmp_mac);
 
-		if (count($macs) == 0) { return($mac); };
-
 		$mac=array();
 		$mac2=array();
+
+		if ((count($macs) == 0) || !(is_array($macs)))  { return($mac); };
+
 		foreach ($macs as $oid => $macaddress) {
 			$oids = explode('.',$oid);
 			$idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
@@ -293,14 +294,15 @@ function walk_vlans($switch,$snmp_ro) {
 		debug2("snmprealwalk $switch $query");
 		$listvlans = snmprealwalk($switch,$snmp_ro,$query);
 
-		if ((count($listvlans) == 0) || (!is_array($listvlans))) { return($vlans); };
-		
-		foreach ($listvlans as $oid => $value) {
+		if (count($listvlans) == 0) { return($vlans); };
+		if (is_array($listvlans)) {	
+			foreach ($listvlans as $oid => $value) {
 				$oids = explode('.',$oid);
 				$idx = $oids[count($oids)-1];
 				if ($key == 'name') { $value = rtrim(ltrim($value,'"'),'"'); };
 				$vlans[$idx][$key] = $value;
 				unset($value);
+			};
 		};
 	};
 
