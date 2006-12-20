@@ -89,16 +89,18 @@ function get_port_status($port_index, $switch)
   // use index to check port status
   if ($port_index>0 ) {
     #debug2("Index=$port_index");
-    $mymatch="ifEntry.ifAdminStatus.$port_index : INTEGER:";
+    #$mymatch="ifEntry.ifAdminStatus.$port_index : INTEGER:";
+    $mymatch="ifAdminStatus.$port_index (:|=) INTEGER:";
 
     ## Get all port status and find the one that interests us
+    debug2("$snmpwalk $switch ifAdminStatus");
     $stat_list=explode("\n", syscall("$snmpwalk $switch ifAdminStatus"));    
     for ($j = 0; $j < count($stat_list); $j++){
-      #debug1($stat_list[$j]);
+      #debug2($stat_list[$j]);
       # Invalid snmp will give "no MIB objects contained under subtree."
       if (preg_match("/$mymatch (.+)/", $stat_list[$j], $matches)) {
-        debug1("STATUS " . $matches[1]);
-        $result=$matches[1];
+        debug1("STATUS " . $matches[2]);
+        $result=$matches[2];
       }  // if match
     }
   }
@@ -119,6 +121,7 @@ function restart_port($port_index, $switch)
 
     // down
     $cmd="$snmpset $switch ifAdminStatus.$port_index integer 2";  // down
+    debug2($cmd);
     $answer=explode("\n", syscall($cmd));    
     for ($j = 0; $j < count($answer); $j++){
       if ( strlen($answer[$j]) >1 ) {
@@ -130,6 +133,7 @@ function restart_port($port_index, $switch)
 
     // up
     $cmd="$snmpset $switch ifAdminStatus.$port_index integer 1";  // up
+    debug2($cmd);
     $answer=explode("\n", syscall($cmd));    
     for ($j = 0; $j < count($answer); $j++){
       if ( strlen($answer[$j]) >0 ) {
@@ -184,11 +188,15 @@ for ($i = 0; $i < count($if_list); $i++){
 
    # Did we find a valid number?
    if ($port_index >0) {
-     get_port_status($port_index, $switch);
-     restart_port($port_index, $switch);
-     logit("Port successfully restarted $port on switch $switch");
-     reporterr('info',"Port successfully restarted $port on switch $switch");
-
+     if (get_port_status($port_index, $switch) ==='') {
+       logit("Cannot get port status $port on switch $switch");
+       reporterr('info',"Cannot get port status $port on switch $switch");
+     } else {
+       restart_port($port_index, $switch);
+       logit("Port successfully restarted $port on switch $switch");
+       reporterr('info',"Port successfully restarted $port on switch $switch");
+     }
+  
    } else {
      logit("Port index invalid ($port_index)");
    }
