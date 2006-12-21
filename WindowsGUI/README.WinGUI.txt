@@ -49,4 +49,7 @@ v1.2.0.103/4.12.06/SB:
 v1.2.0.104/18.12.06/SB: 	
   Remove references to old 'oper' table. Remove 'user' column from patch cables tab.  
   Add a PatchCable column to the Overview tab, added an 'unmanaged' status to the Edit/Overvew tabs
+v1.2.0.105/21.12.06/SB: 	  
+  IP address visible in the Edit tab again. Record port restarts
+  in the Change History. Remove some unneeded warnings.
 	
