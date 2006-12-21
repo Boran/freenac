@@ -233,7 +233,7 @@ do {
 
             $newmac_vendor=lookup_vendor_mac($mac2);
 
-            if ($lastseen_infnet==TRUE) {         
+            if ($lastseen_infnet==TRUE) {         # Enterprise only
 
                 # 1.1 Infnet PC?: See if its known on SMS, can take several secs
                 $retval='';
@@ -242,7 +242,7 @@ do {
                 # Enable PC and set to Infnet VLAN
                 if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$infnet_details, $matches)) {
                   $infnet_name=$matches[1];     
-                  $txx_name= $default_user_unknown;                          # default
+                  $txx_name= $default_user_unknown;         # default
                   $txx_name   =$matches[2];
                   $sms_os     =$matches[3];
                   $infnet_details="";
@@ -266,23 +266,10 @@ do {
                   if ($lastseen_dryrun==FALSE) {
                     $res = mysql_query($query);
                     if (!$res) { die('Invalid query: ' . mysql_error()); }
-                    # DB is now 'live'
-                    #sleep(1);    # wait a sec, otherwise it seem to be too fast 
-                    #request_vmps_update();
-
                     snmp_restart_port($port, $switch);
                   }
 
                
-                  ## User now authorised, so now add user to local DB if needed.
-                  #User now authorised, so now add user to local DB if needed.
-                  #
-                  #$txx_name= direx_check_new_user("MY-ORG", "Sean", "Boran");
-                  #$txx_name= direx_check_new_user($matches[5], $matches[2], $matches[3]);
-                  # TBD: optimise now thzat we have the NT user
-                  #      - insert if user not known, use NT account as key
-                  #direx_check_new_user($matches[5], $matches[2], $matches[3]);
-                  # 7.6.06: insert user if needed, then get user details from Direx.
                   insert_user($txx_name);
                   #logit("Inserted new user $txx_name");
                   direx_sync_user($txx_name);
@@ -301,17 +288,16 @@ do {
             }   # if infnet
             
 
-            ## 1.2 Add new NON-Infnet system
+            ## 1.2 Add new Unknown system: normal case
 
             if ($newmac_found==FALSE) { # Already added in Infnet Section?
               $query="INSERT INTO systems "
                 . "SET LastSeen=NOW(), " 
-                .      "status=0, name='unknown',"
-                .      $set_vlan_for_unknowns
-                .      "port='"    .$port   . "', "
-                .      "switch='"  .$switch . "', "
+                .      "status='$set_status_for_unknowns', name='unknown',"
+                .      "vlan='$set_vlan_for_unknowns',"
+                .      "port='$port', switch='$switch', "
                 .      "description='$default_user_unknown', "   # usually 'KEINE'
-                .      "mac='"     . $mac2  . "' ";
+                .      "mac='$mac2' ";
               $log_entry="New unknown $mac2 ($newmac_vendor), switch ";
               #logit($log_entry);
 

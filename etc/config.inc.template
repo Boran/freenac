@@ -42,11 +42,12 @@
   $default_vlan=0;                 # 0=Default deny, otherwise unknown devices are put on this vlan
 
 ## vmps_lastseen script:  
-  $default_user_unknown='KEINE';   # Unknown devices are assigned to this User ID
   $lastseen_dryrun=false;           # Test, don't update DB
-  $set_vlan_for_unknowns="vlan=0,"; # Set to "vlan=0," deny unknowns. The number corresponding to 
-                                    # an entry in the vlan table.
-                                    # (don't forget the comma :-)
+  $default_user_unknown='KEINE';    # Unknown devices are assigned to this User ID
+  $set_vlan_for_unknowns="0";       # Set to "0" deny unknowns. The number
+                                    # corresponds to an entry in the vlan table. 
+                                    # In a learning phase you might set this to an internal lan, and 0 afterwards to block unknowns
+  $set_status_for_unknowns="0";     # 0=disabled, 1=enabled: often set to during the 'learning phase' and 0 afterwards.
   $lastseen_patch_lookup=false;     # Lookup Patchcable details in Alerts
                                     # set false by default since most people don't use the patch table
 
