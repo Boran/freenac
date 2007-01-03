@@ -163,3 +163,25 @@ post-auth {
 	verify_mac
 }
 
+Setting up the nas-port attribute
+-----------------------------------------
+conf t
+radius-server attribute nas-port format X
+where X can be
+
+a	Format is type, channel or port
+b	Either interface(16) or isdn(16), async(16)
+c	Data format(bits): shelf(2), slot(4), port(5), channel(5)
+d	Data format(bits): slot(4), module(1), port(3), vpi(8), vci(16)
+
+Recommended for FreeNAC: a (default)
+
+Reference: http://www.cisco.com/en/US/products/sw/iosswrel/ps5207/products_feature_guide09186a008039caa3.html
+
+
+Sending vendor specific attributes
+------------------------------------------
+conf t
+radius-server vsa send authentication
+end
+
