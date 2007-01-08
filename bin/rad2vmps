@@ -205,8 +205,11 @@ sub parseVQPresp($) {
 	return %response;
 }
 
+#This function will be called in the authorize section of radiusd.conf
 sub authorize()			
 {
+   #Let's retrieve the needed parameters from the RADIUS request to make the VMPS request
+   #First, check if there have been vmps servers defined in the configuration file
    if (!$vmps_servers)
    {
       $RAD_REPLY{'Reply-Message'} = "vmps_servers not defined in config.inc";
@@ -215,13 +218,15 @@ sub authorize()
 
    my $calling_station_id='';
    
-   if ($RAD_REQUEST{'Calling-Station-Id'})
+   #MAC address of the connecting client
+   if ($RAD_REQUEST{'Calling-Station-Id'}) 
    {
       $calling_station_id=uc($RAD_REQUEST{'Calling-Station-Id'});
       $calling_station_id =~ s/[-:]//g;
       $suplicant_mac=$calling_station_id;
    }
 
+   #Vendor defined attribute. NOT STANDARD
    if ($RAD_REQUEST{'Cisco-NAS-Port'})
    {
       my $string=$RAD_REQUEST{'Cisco-NAS-Port'};
@@ -231,6 +236,7 @@ sub authorize()
       $nas_port=$beginning.$ending;
    }
   
+   #Switch's IP
    if ($RAD_REQUEST{'NAS-IP-Address'})
    {
       $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
@@ -262,6 +268,8 @@ sub authorize()
 
 sub authenticate() #MAC-Auth-Bypass
 {
+   #In the authorize section we have defined an authentication type because there was none. So, this is a MAC-Auth-Bypass
+
    if ((!$RAD_REQUEST{'Calling-Station-Id'} && !$RAD_REQUEST{'NAS-IP-Address'}))
    {
       $RAD_REPLY{'Reply-Message'} = "Required attributes \"Calling-Station-Id\" and \"NAS-IP-Address\" were not found in the request.";
@@ -269,6 +277,7 @@ sub authenticate() #MAC-Auth-Bypass
    }
    else
    {
+      #Create the VMPS request with the RADIUS parameters recollected in the authorize section
       my $string=$RAD_REQUEST{'Cisco-NAS-Port'};
       my $ending=$string;
       my $beginning=substr($string,0,2);
@@ -284,11 +293,11 @@ sub authenticate() #MAC-Auth-Bypass
       $request{vtp_domain}='802.1x';                    # TBD: add later
 
       $buf = makeVQPrequest(%request);
-      $buf = sendVQP($buf);
+      $buf = sendVQP($buf); #Send the request
       %response = parseVQPresp($buf);
       $last_count=$counter;
 
-      if ( ! $response{vlan} )
+      if ( ! $response{vlan} ) #Here we have obtained the answer
       {
          $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
          return RLM_MODULE_REJECT;
@@ -298,7 +307,7 @@ sub authenticate() #MAC-Auth-Bypass
          $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
          $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
          $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
-         $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
+         $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan}; #VLAN where the connecting device will be put in
          return RLM_MODULE_OK;
       }
    }
@@ -306,12 +315,14 @@ sub authenticate() #MAC-Auth-Bypass
 
 sub post_auth()
 {
+   #If we have done a MAC-Auth-Bypass, this part doesn't make much sense, so skip it
    if ($RAD_CHECK{'Auth-Type'} eq 'MAC-Auth-Bypass')
    {
       return RLM_MODULE_OK;
    }
    else
    {
+      #This was not a MAC-Auth-Bypass. We know who the user is, let's assign her now a vlan based on her MAC address
       $request{macaddr}=$suplicant_mac;
       $request{client_ip}=$switch_ip;
       $request{port_name}=$nas_port;		       # TBD: add later
