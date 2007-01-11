@@ -97,9 +97,6 @@
   $snmp_ro="PASSWORD2";            # maybe public	
   $snmp_rw="PASSWORD3";            # very private
 
-## snmp_import
-  $snmp_dryrun=TRUE;               # Do not update MySQL after SNMP queries
-
 ## restart_port
   $snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";  # SNMP Read community
   $snmpset ="/usr/bin/snmpset  -v 1 -c $snmp_rw";   # SNMP Write community
