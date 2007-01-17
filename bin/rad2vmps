@@ -18,6 +18,8 @@ use Sys::Syslog;
 use Sys::Syslog qw(:DEFAULT setlogsock);
 use IO::Socket::INET;
 use Cwd 'abs_path';
+use Time::HiRes qw(usleep);
+
 $|=0;
 $DEBUG=0;
 
@@ -142,13 +144,15 @@ sub sendVQP($) {
         {
            $socket = IO::Socket::INET->new(PeerAddr     => $servers[$i],
                                            PeerPort     => $PORTNO,
-                                           Proto        => 'udp');
+                                           Proto        => 'udp',
+					   Blocking	=> 0);
            if ($socket)
            {
               $socket->autoflush(1);
               for ($j=0;$j<3;$j++)
               {
                  print $socket "$buf";
+                 usleep(1000*$j);
                  sysread($socket,$var,1500,0);
                  if ($var)
                  {
@@ -166,7 +170,7 @@ sub sendVQP($) {
 	      }
            }
         }
-	return "$buf";
+	return $buf;
 }
 
 sub parseVQPresp($) {
