@@ -52,4 +52,14 @@ v1.2.0.104/18.12.06/SB:
 v1.2.0.105/21.12.06/SB: 	  
   IP address visible in the Edit tab again. Record port restarts
   in the Change History. Remove some unneeded warnings.
+
+
+v1.2.0.108/19.01.07/SB: 	  
+  Add PatchCableEnabled to vmps.xml, which hides or shows relevant Tabs/fields.
+  Install DeveloperExpress tools for delphi and start using their improved componensts
+  - Change grids in Change and Server log
+  - Improved edit-User ComboBox to show key zuser details
+  - Add Filter by Switch to the Ports page  
+
+
 	
