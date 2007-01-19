@@ -66,6 +66,8 @@
   $mail_user="root@DOMAIN.ch";      # mail to root? Set your domain
   #$maildomain="0";                 # set to 0 to disable.
   $maildomain="DOMAIN.ch";          # 
+  
+  $send_mail_if_updates=FALSE;	    # send mail to root if there is a new revision available
 
   $vmps_monitor_restart=FALSE;
   $os_hostname="vmps1";           # for alerting
