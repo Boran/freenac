@@ -27,7 +27,7 @@ set_include_path("./:../");
 require_once('bin/funcs.inc');
 
 define_syslog_variables();
-openlog("updates", LOG_PID , LOG_LOCAL5);
+openlog("nac_updates", LOG_PID , LOG_LOCAL5);
 
 $new_revision=trim(@file_get_contents('http://www.freenac.net/updates/revision'));
 
@@ -41,11 +41,12 @@ if ($new_revision)
       $installed_revision=$xml->entry['revision'];
       if ($new_revision > $installed_revision)
       {
-         logit("New revision $new_revision is available");
+         $subject="New revision $new_revision is available. Please go to http://www.freenac.net to see the list of changes"
+         logit($subject);
          if ($send_mail_if_updates)
          {
             $message="To upgrade your system to the newest revision, go to the directory $nac_root and type:\n\n\tsvn update";
-            mail($mail_user,"New revision $new_revision is available",$message);
+            mail($mail_user,$subject,$message);
          }
       }
    }
