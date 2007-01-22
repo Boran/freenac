@@ -1,0 +1,94 @@
+
+_____________ Install checklist: FreeNAC Master       _______________
+
+master_server_config.txt                      Last Update: 25.10.06/SB
+______________________________________________________________________
+
+
+0. INTRODUCTION
+===============
+This is a "copy & paste" guide for *expert* administrators for setting up modules needed for FreeNAC. 
+
+1. FreeNAC config part #1: monitoring
+===========================
+There are several monitoring scripts that need to be individually tested and 
+enabled in root cron:
+
+30   6-22 * * 1-5 /opt/nac/bin/monitor_allows.sh
+*/4 *     * * *   /opt/nac/bin/flap_detect
+
+
+Enable syslog pruning and analyis:
+  cp /etc/logrotate.d/syslog /etc/logrotate.d/syslog.$$
+  cp /opt/nac/contrib/logrotate.d/syslog /etc/logrotate.d/syslog
+
+
+
+2. FreeNAC config: backups
+===========================
+Scripts to backup the system in different ways to the second internal disk.
+Test these and enable in root cron:
+
+0   3    * * 1-5 /opt/nac/bin/dump_ports
+0   3    * * 1   /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
+0   3    * * 6   rdiff-backup  --exclude /media --exclude /sys --exclude /disk2 --exclude /proc  --exclude /mnt --print-statistics  / /disk2/backups/vmps0.rdiff;
+
+
+3. FreeNAC config: router integration
+======================================
+Adapt the relevant lines in config.inc, then try route_mac_ip from the command line,
+possibly enabling the debug flags. Then add an entry to the root cron:
+
+*/6 *    * * *   /opt/nac/bin/router_mac_ip
+  
+
+4. FreeNAC config: optional modules
+==================================
+To enable specific modules follow the instructions in /opt/nac/doc
+  README.port_scan
+  README.web2
+  cisco_switch.txt
+  README.ldap
+  /opt/nac/web1/README
+
+
+Other notes
+===========   
+Are syslog messages arriving from the Switches in /var/log/messages ?
+   egrep -v `uname -n` /var/log/messages |awk '{print $4}'| sort| uniq -c |sort
+    
+
+Mysql root: If the server is not exclusively used by FreeNAC with one or two 
+  administrators, you probably want to set a local root password for mysql.
+mysqladmin -u root password 'new-password'
+mysqladmin -u root -h MYHOST password 'new-password'
+
+
+Example complete crontab, from the downloadable Virtual machine:
+
+# NAC control
+* * * * *              /opt/nac/bin/cron_restart_port
+*/5 8-18 * * 1-5       /opt/nac/bin/port_scan --scannow
+*/6 * * * *            /opt/nac/bin/router_mac_ip
+0 1 * * 1              /opt/nac/bin/purge_unknowns
+
+# Active scanning: once on weekend, once during the day
+0 1 * * 6             /opt/nac/bin/port_scan
+0 11 * * 1             /opt/nac/bin/port_scan
+
+# Log pruning
+0 6 * * 1-5            /usr/sbin/logrotate /etc/logrotate.conf | logger
+0   1   26 * *         /opt/nac/bin/purge_unknowns
+
+# Monitoring
+30   6-22 * * 1-5      /opt/nac/bin/monitor_allows.sh
+*/4 *     * * *        /opt/nac/bin/flap_detect
+7-18 * * * 1-5         /opt/nac/bin/monitor_processes.pl proctst vmpsd_external
+*/3 *     * * *        /opt/nac/bin/check_disk 90 800
+
+# Backups
+0 1 * * 1              /opt/nac/bin/dump_ports
+0 3 * * 1-5            /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
+
+#updates
+0 0 * * 0		/opt/nac/bin/updates
