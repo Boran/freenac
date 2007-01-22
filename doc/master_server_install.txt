@@ -394,23 +394,31 @@ Example complete crontab, from the downloadable Virtual machine:
 */6 * * * *            /opt/nac/bin/router_mac_ip
 0 1 * * 1              /opt/nac/bin/purge_unknowns
 
-# Active scanning: once on weekend, once during the day
-0 1 * * 6             /opt/nac/bin/port_scan
+# Active scanning: nmap monday
 0 11 * * 1             /opt/nac/bin/port_scan
 
 # Log pruning
 0 6 * * 1-5            /usr/sbin/logrotate /etc/logrotate.conf | logger
+#0 8,12  * * 1-5       /opt/nac/logcheck/logcheck.sh
 0   1   26 * *         /opt/nac/bin/purge_unknowns
 
-# Monitoring
-30   6-22 * * 1-5      /opt/nac/bin/monitor_allows.sh
-*/4 *     * * *        /opt/nac/bin/flap_detect
-7-18 * * * 1-5         /opt/nac/bin/monitor_processes.pl proctst vmpsd_external
-*/3 *     * * *        /opt/nac/bin/check_disk 90 800
+# Mysql Master: Clean mysql logs on the 1st per month
+0 6 30  * 1     /usr/local/mysql/bin/mysql -uroot -e "PURGE MASTER LOGS BEFORE DATE_SUB( NOW( ), INTERVAL 30 DAY);"
+
+
+## Monitoring:
+## [Note: the proctst daemon is the main method of daemon watching]
+#*/20 7-18 * * 1-5 /opt/nac/bin/monitor_processes.pl proctst vmpsd_external winbindd smbd nmbd radiusd
+#*/20 7-18 * * 1-5 /opt/nac/bin/monitor_processes.pl proctst vmpsd_external 
+#30   6-22 * * 1-5 /opt/nac/bin/monitor_allows.sh
+*/4 *     * * *   /opt/nac/bin/flap_detect
+2    7-18 * * 1-5 /opt/nac/bin/check_mysql
+*/3 *     * * *    /opt/nac/bin/check_disk 90 800
 
 # Backups
-0 1 * * 1              /opt/nac/bin/dump_ports
-0 3 * * 1-5            /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
+0 1 * * 1          /opt/nac/bin/dump_ports
+#0 3 * * 1-5       /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
+#0 2 * * 3,6       /opt/nac/contrib/rdiff.run / /disk2/backups/vmps1.rdiff|logger; /opt/nac/contrib/rdiff.run svmps2::/ /disk2/backups/vmps2.rdiff|logger
 
-#updates
+# Notify if there are updates
 0 0 * * 0		/opt/nac/bin/updates
