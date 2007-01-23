@@ -5,7 +5,6 @@
   PatchCableEnabled="1"/>
 	<mysql server="193.5.227.120" port="3306" 
         auth="9pBTSB1doVGRovnd8vGfDfwcGIM8" database="inventory" />
-        
 	<mssql-inv server="UnusedServer\UnusedInstance"  
         auth="XX" database="YYY" />        	
 </vmps>
