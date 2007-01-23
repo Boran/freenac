@@ -32,7 +32,7 @@ _________Configure_________
         > </Directory>
 	>
 	[Restrict access to certain networks as shown above]
-
+	[To enable access through the domain controller please see webADauth.txt]
 - Copy /opt/nac/web2/web2.conf.inc.template to /opt/nac/web2/web2.conf.inc
 - Edit /opt/nac/web2/web2.conf.inc and adjust the following variables to fit your installation
 
