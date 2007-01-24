@@ -1,6 +1,7 @@
 <?php
 include_once('../web1/config.inc');
 include_once('../web1/functions.inc');
+include_once('config_switch.inc');
 db_connect();
 
 $sel = "select distinct(switch) from port where default_vlan > 0;";
@@ -17,28 +18,51 @@ while ($switch = mysql_fetch_array($res)) {
 
 	$script = '#!/usr/bin/expect -f'."\n";
 	$script .= 'set timeout -1\n\n'."\n";
+	
+	
+	// protocol specific connection strings
+	$ssh_connect = 'spawn ssh -l ' . $switch_user . ' ' . $switch_ip . "\n";
+	$ssh_connect .= 'expect "password: $"' . "\n";
+	$ssh_connect .= 'send "' . $switch_password . '\n"' . "\n";
+	
+	$telnet_connect = 'spawn telnet ' . $switch_ip . "\n"; 
+	$telnet_connect .= 'expect "Username: $"' . "\n";
+	$telnet_connect .= 'send "' . $switch_user . '\n"' . "\n";
+	$telnet_connect .= 'expect "Password: $"' . "\n";
+	$telnet_connect .= 'send "' . $switch_password . '\n"' . "\n";
+	
+	
+	// choose proper default setting for connection method 
 	$script .= "# connect to switch"."\n";
-	$script .= 'spawn telnet '.$switch_ip."\n";
+	if ( $switch_default_access == 'ssh' ) {
+		$script .= 'if { $argc > 0 &&  [lindex $argv 0] eq "-t" } {' . $telnet_connect . '}' . "\n";
+		$script .= 'else { ' . $ssh_connect . '}' . "\n";
+	}
+	else {
+		$script = 'if { $argc > 0 &&  [lindex $argv 0] eq "-s" } {' . $ssh_connect . '}' . "\n";
+		$script .= 'else { ' . $telnet_connect . '}' . "\n";
+	}
+		
+	
+	// change to privilege level 15 if necessary
+	$script .= "expect {\n";
+	$script .= "\t" . '"' . $switch_name . '>$" { send "ena\n"; expect "Password: $"; send "' . $switch_enable_password . '\n"; expect "' . $switch_name . '#$"}' . "\n";
+	$script .= "\t" . '"' . $switch_name . '#$"' . "\n";
+	$script .= '}' . "\n";
 
-// authentication - only ok for lab
-	$script .= "\n#Authenticate\n";
-	$script .= 'expect "Username: $"'."\n";
-	$script .= 'send "ADMINUSER\n"'."\n";
-	$script .= 'expect "Password: $"'."\n";
-	$script .= 'send "ADMINPASSWORD\n"'."\n";
 
-// the two prompts we should expect 
+	// enter configuration mode
+	$script .= 'send "conf t\n"'."\n";
+
+
+	// the two prompts we should expect 
 	$expect_cmd = 'expect "'.$switch_name;
 	$expect_config = $expect_cmd.'(config)#$"'."\n";
 	$expect_config_if = $expect_cmd.'(config-if)#$"'."\n";
 	$expect_cmd .= '#$"'."\n";
 
-// wait
-	$script .= $expect_cmd;
-	$script .= 'send "conf t\n"'."\n";
 
-// now, let's query all ports
-
+	// now, let's query all ports
 	$selp = "SELECT * FROM port WHERE switch='$switch_ip' AND default_vlan > 0;";
 	$resp = mysql_query($selp) or die("Unable to make query");
 	if (mysql_num_rows($resp) > 0) {
