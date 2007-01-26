@@ -12,7 +12,7 @@ ALTER TABLE vstatus ADD COLUMN color VARCHAR(6);
 ALTER TABLE vlan ADD COLUMN color VARCHAR(6);
 ALTER TABLE guirights ADD COLUMN ad_group VARCHAR(255) NOT NULL;
 ALTER TABLE users ADD COLUMN GuiVlanRights VARCHAR(255);
-
+alter table sys_class2 add PRIMARY key(`id`);
 
 CREATE TABLE `auth_profile` (
   `id` int(10) unsigned NOT NULL default '0',
