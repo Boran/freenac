@@ -12,7 +12,6 @@ ALTER TABLE vstatus ADD COLUMN color VARCHAR(6);
 ALTER TABLE vlan ADD COLUMN color VARCHAR(6);
 ALTER TABLE guirights ADD COLUMN ad_group VARCHAR(255) NOT NULL;
 ALTER TABLE users ADD COLUMN GuiVlanRights VARCHAR(255);
-alter table sys_class2 add PRIMARY key(`id`);
 
 
 CREATE TABLE `auth_profile` (
@@ -52,64 +51,3 @@ CREATE TABLE `stat_ports` (
    `count` INT(11),
    PRIMARY KEY (`date`, `auth_profile`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-
-CREATE TABLE `nac_wsusneededpatches` (
- `TargetID` int(11) NOT NULL,
- `Title` varchar(200) NOT NULL,
- `Timestamp` datetime default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-
-CREATE TABLE `nac_wsuscomputertarget` (
- `TargetID` int(11) NOT NULL,
- `IPAddress` varchar(40) character set utf8 default NULL,
- `FullDomainName` varchar(255) character set utf8 default NULL,
- `OSMajorVersion` int(11) default NULL,
- `OSMinorVersion` int(11) default NULL,
- `OSBuildNumber` int(11) default NULL,
- `OSServicePackMajorNumber` int(11) default NULL,
- `OSServicePackMinorNumber` int(11) default NULL,
- `OSLocale` varchar(10) character set utf8 default NULL,
- `ComputerMake` varchar(64) character set utf8 default NULL,
- `ComputerModel` varchar(64) character set utf8 default NULL,
- `BiosVersion` varchar(64) character set utf8 default NULL,
- `BiosName` varchar(64) character set utf8 default NULL,
- `BiosReleaseDate` datetime default NULL,
- `ProcessorArchitecture` varchar(50) character set utf8 default NULL,
- `Timestamp` datetime default NULL,
- PRIMARY KEY  (`TargetID`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-
-CREATE TABLE `nac_wsusinstalledpatches` (
- `TargetID` int(11) NOT NULL,
- `Title` varchar(200) NOT NULL,
- `Timestamp` datetime default NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-
-CREATE TABLE `nac_wsusosmap` (
- `OSid` tinyint(4) NOT NULL,
- `OSMajorVersion` smallint(6) NOT NULL,
- `OSMinorVersion` smallint(6) NOT NULL,
- `OSBuildNumber` smallint(6) NOT NULL,
- `OSServicePackMajorNumber` smallint(6) NOT NULL,
- `OSServicePackMinorNumber` smallint(6) NOT NULL,
- `ProcessorArchitecture` varchar(50) character set utf8 NOT NULL,
- `OSShortName` varchar(16) default NULL,
- `OSLongName` mediumtext,
- PRIMARY KEY  (`OSid`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-
-CREATE TABLE `nac_wsusprocessor` (
-  `Pid` tinyint(4) NOT NULL,
-  `ProcessorArchitecture` varchar(50) character set utf8 default NULL,
-  PRIMARY KEY (`Pid`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
-
-INSERT INTO `nac_wsusprocessor` VALUES
-(1,'x86'),(2,'x86-64'),(3,'AMD64');
-
