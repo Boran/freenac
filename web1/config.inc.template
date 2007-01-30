@@ -27,10 +27,6 @@ include('functions.inc');
   $hubs_querydays=60;      # Show devices seen in last XX days
 
 ## statgraph.php
-  $jpgraph_path = '/usr/local/share/jpgraph/src';            # path to jpgraph library
-
-
-#  ## vmpsdot.php
-    $dotcmd = 'digraph';                                  # graphviz executable (cf `man dot` for choices)
+  $jpgraph_path = '/usr/share/php5/jpgraph';            # path to jpgraph library
 
 ?>

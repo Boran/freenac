@@ -1,0 +1,355 @@
+#!/usr/bin/perl
+
+# 
+# Originally from OpenVMS distribution
+# 2006.01.11/Sean <1> :add performance measurements
+# 2006.09.10/Hector <2> :Adaptation to work with FreeRadius
+#-------------------------------
+#TO DO: Port translation function
+# This script transforms a RADIUS request into a VMPS request.
+# Assigns a VLAN name to the connecting device once we have authenticated the username
+# For non 802.1x capable devices, it performs MAC-Auth-Bypass
+# For passing the physical interface in the VMPS request, the Cisco-NAS-Port has to be present in the RADIUS request
+# To do so, in your switch do 
+# 	radius-server vsa send authentication
+# Script has been tested with Catalyst 2940 and 3560
+
+use Sys::Syslog;
+use Sys::Syslog qw(:DEFAULT setlogsock);
+use IO::Socket::INET;
+use Cwd 'abs_path';
+use Time::HiRes qw(usleep);
+
+$|=0;
+$DEBUG=0;
+
+#Radius stuff
+use vars qw(%RAD_REQUEST %RAD_REPLY %RAD_CHECK);
+use Data::Dumper;
+
+use constant RLM_MODULE_REJECT=>0;
+use constant RLM_MODULE_FAIL=>1;
+use constant RLM_MODULE_OK=>2;
+use constant RLM_MODULE_HANDLED=>3;
+use constant RLM_MODULE_INVALID=>4;
+use constant RLM_MODULE_USERLOCK=>5;
+use constant RLM_MODULE_NOTFOUND=>6;
+use constant RLM_MODULE_NOOP=>7;
+use constant RLM_MODULE_UPDATED=>8;
+use constant RLM_MODULE_NUMCODES=>9;
+
+#Fix weird issue when calling radiusd -X from /root directory
+chdir ('/tmp');
+
+#Avoid hardcoded absolute paths for the location on this script
+$script=abs_path($0);
+@file=split(/\//,$script);
+$slashes=@file;
+for ($i=0;$i<$slashes-2;$i++) {
+   $path .= "/$file[$i]";
+}
+
+#Open configuration file
+open (CONFIG_FILE,"$path/etc/config.inc") or die "Couldn't open the config file";
+foreach $line (<CONFIG_FILE>) {
+   if ($line =~ /^[\s]*\$vmps_servers[\s]*=[\s]*(.*)\";/)
+   {
+       $vmps_servers=$1;
+   }
+}
+close (CONFIG_FILE);
+
+#Parse list of servers
+@vmps_servers = split(/;/,$vmps_servers);
+$vmps_servers = $vmps_servers[0];
+$vmps_servers =~ s/[\"\'\;]//g;
+$vmps_servers.=',';
+$vmps_servers =~ s/,+/,/g;
+$vmps_servers =~ s/\s*//g;
+@servers=split(/,/,$vmps_servers);
+$servers_to_query = @servers;
+
+$suplicant_mac='';
+$switch_ip='';
+$nas_port='';
+
+sub formatItem($$) {
+
+	my $mybuf;
+	undef($mybuf);
+
+	$itemheader = shift;
+	$itemvalue = shift;
+
+	$mybuf = $mybuf . pack("H*",(unpack("a*",$itemheader))); # Add header 
+
+	$payload = pack("a*",(unpack("a*",$itemvalue)));
+	$length=length($payload);
+	$length= pack("H*",(unpack("a*",sprintf("%04x",$length))));
+
+	$mybuf = $mybuf . $length . $payload; # Add payload + length
+
+	return $mybuf;
+}
+
+sub makeVQPrequest($) {
+
+	my $request = $_;
+	my $buf;
+
+	# Header...
+	$buf = $buf . pack("H*",(unpack("a*","01"))); # Header bit
+
+	# Is a request to join a vlan
+	$buf = $buf . pack("H*",(unpack("a*","01"))); # Is a request
+
+	# No error
+	$buf = $buf . pack("H*",(unpack("a*","00"))); # No error
+
+	# 6 data items in inbound payload
+	$buf = $buf . pack("H*",(unpack("a*","06")));
+
+	# Sequence number of request
+	$buf = $buf . pack("H*",(unpack("a*","000 1234"))); # Bogus sequence number
+
+	# Add Client switch IP
+	$buf = $buf . formatItem("000 0c01",(sprintf("%s",unpack("a*",inet_aton($request{client_ip})))));
+
+	# Add Port Name
+	$buf = $buf . formatItem("000 0c02",$request{port_name}); # Payload 
+
+	# Add VLAN to confirm to buffer
+	$buf = $buf . formatItem("000 0c03",$request{vlan}); # Payload 
+
+	# Add VTP domain name
+	$buf = $buf . formatItem("000 0c04",$request{vtp_domain}); # Payload 
+
+	# Add UNKNOWN data to buffer...
+	$buf = $buf . pack("H*",(unpack("a*","000 0c07"))); # Header
+	$buf = $buf . pack("H*",(unpack("a*","0001 0"))); # Unknown filler
+
+	# Add MAC address to buffer
+	$buf = $buf . formatItem("000 0c06",sprintf("%s",pack("H*",(unpack("a*",$request{macaddr}))))); # Payload 
+
+	return "$buf";
+}
+
+sub sendVQP($) {
+	my $PORTNO="1589";
+	my $buf = shift;
+	my $socket;
+	my $var;
+	my $i=my $j=0;
+	for ($i=0;$i<$servers_to_query;$i++)
+        {
+           $socket = IO::Socket::INET->new(PeerAddr     => $servers[$i],
+                                           PeerPort     => $PORTNO,
+                                           Proto        => 'udp',
+					   Blocking	=> 0);
+           if ($socket)
+           {
+              $socket->autoflush(1);
+              for ($j=0;$j<3;$j++)
+              {
+                 print $socket "$buf";
+                 usleep(1000*$j);
+                 sysread($socket,$var,1500,0);
+                 if ($var)
+                 {
+                    $i=$servers_to_query;
+                    $j=3;
+		    $buf=$var;
+                 }
+              }
+              close $socket;
+	      if (!$var)
+              {
+                 openlog('rad2vmps','cons,pid','user');
+                 syslog('info',"VMPS server $servers[$i] seems to be down");
+                 closelog();
+	      }
+           }
+        }
+	return $buf;
+}
+
+sub parseVQPresp($) {
+
+	my %response = (
+		status		=>	"",
+		vlan 		=>	"",
+		macaddr		=>	"",
+	);
+
+	my $buf = shift;
+	$buf =~ /^(.)(.)(.)(.)(....)/;
+	my ($header,$type,$status,$size,$sequence) = 
+		(ord($1),ord($2),ord($3),ord($4),pack("a*",(unpack("H*",$5))));
+
+	$buf =~ s/^........//;
+
+	$response{status}="ALLOW" if ($status == 0);
+	$response{status}="DENY" if ($status == 3);
+	$response{status}="SHUTDOWN" if ($status == 4);
+	$response{status}="WRONG_DOMAIN" if ($status == 5);
+
+	for ($i=1;$i<=$size;$i++) {
+
+		$payload_type=pack("a*",(unpack("H*",substr($buf,0,4))));
+		$payload_size=sprintf("%d",hex(pack("a*",(unpack("H*",substr($buf,4,2))))));
+		$payload=substr($buf,6,$payload_size);
+
+		if ($payload_type eq "00000c03") {
+			$response{vlan}=$payload;
+		} elsif ($payload_type eq"00000c08") {
+			$response{macaddr}=pack("a*",(unpack("H*",$payload)));
+		}
+		substr($buf,0,($payload_size + 6)) = "";
+	}
+	return %response;
+}
+
+#This function will be called in the authorize section of radiusd.conf
+sub authorize()			
+{
+   #Let's retrieve the needed parameters from the RADIUS request to make the VMPS request
+   #First, check if there have been vmps servers defined in the configuration file
+   if (!$vmps_servers)
+   {
+      $RAD_REPLY{'Reply-Message'} = "vmps_servers not defined in config.inc";
+      return RLM_MODULE_REJECT;
+   }
+
+   my $calling_station_id='';
+   
+   #MAC address of the connecting client
+   if ($RAD_REQUEST{'Calling-Station-Id'}) 
+   {
+      $calling_station_id=uc($RAD_REQUEST{'Calling-Station-Id'});
+      $calling_station_id =~ s/[-:]//g;
+      $suplicant_mac=$calling_station_id;
+   }
+
+   #Vendor defined attribute. NOT STANDARD
+   if ($RAD_REQUEST{'Cisco-NAS-Port'})
+   {
+      my $string=$RAD_REQUEST{'Cisco-NAS-Port'};
+      my $ending=$string;
+      my $beginning=substr($string,0,2);
+      $ending =~ s/[a-zA-Z]//g;
+      $nas_port=$beginning.$ending;
+   }
+  
+   #Switch's IP
+   if ($RAD_REQUEST{'NAS-IP-Address'})
+   {
+      $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
+   }
+   
+   if (($RAD_REQUEST{'User-Name'})&&($RAD_REQUEST{'Calling-Station-Id'})&&($RAD_REQUEST{'User-Password'})&&(!$RAD_CHECK{'Auth-Type'})) #Check if we need to perform a Mac-Auth-Bypass
+   {
+      my $username=uc($RAD_REQUEST{'User-Name'});
+      $username =~ s/[-:]//g;
+      my $password=uc($RAD_REQUEST{'User-Password'});
+      $password =~ s/[-:]//g;
+      if (($username eq $password)&&($password eq $calling_station_id))
+      {
+         $RAD_CHECK{'Auth-Type'}='MAC-Auth-Bypass';
+         return RLM_MODULE_OK;
+      }
+   }
+   
+   if ((!$RAD_REQUEST{'Calling-Station-Id'} && !$RAD_REQUEST{'NAS-IP-Address'}))
+   {
+      $RAD_REPLY{'Reply-Message'} = "Required attributes \"Calling-Station-Id\" and \"NAS-IP-Address\" were not found in the request.";
+      return RLM_MODULE_NOOP;
+   }
+   else
+   {
+      return RLM_MODULE_OK;
+   }
+}
+
+sub authenticate() #MAC-Auth-Bypass
+{
+   #In the authorize section we have defined an authentication type because there was none. So, this is a MAC-Auth-Bypass
+
+   if ((!$RAD_REQUEST{'Calling-Station-Id'} && !$RAD_REQUEST{'NAS-IP-Address'}))
+   {
+      $RAD_REPLY{'Reply-Message'} = "Required attributes \"Calling-Station-Id\" and \"NAS-IP-Address\" were not found in the request.";
+      return RLM_MODULE_NOOP;
+   }
+   else
+   {
+      #Create the VMPS request with the RADIUS parameters recollected in the authorize section
+      my $string=$RAD_REQUEST{'Cisco-NAS-Port'};
+      my $ending=$string;
+      my $beginning=substr($string,0,2);
+      $ending =~ s/[a-zA-Z]//g;
+      $nas_port=$beginning.$ending;
+      $suplicant_mac=$RAD_REQUEST{'Calling-Station-Id'};
+      $suplicant_mac=~ s/[-:]//g;
+      $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
+      $request{macaddr}= $suplicant_mac;
+      $request{client_ip}=$switch_ip;
+      $request{port_name}=$nas_port;                # TBD: add later
+      $request{vlan}='';
+      $request{vtp_domain}='802.1x';                    # TBD: add later
+
+      $buf = makeVQPrequest(%request);
+      $buf = sendVQP($buf); #Send the request
+      %response = parseVQPresp($buf);
+      $last_count=$counter;
+
+      if ( ! $response{vlan} ) #Here we have obtained the answer
+      {
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
+         return RLM_MODULE_REJECT;
+      }
+      else
+      {
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
+         $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
+         $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
+         $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan}; #VLAN where the connecting device will be put in
+         return RLM_MODULE_OK;
+      }
+   }
+}
+
+sub post_auth()
+{
+   #If we have done a MAC-Auth-Bypass, this part doesn't make much sense, so skip it
+   if ($RAD_CHECK{'Auth-Type'} eq 'MAC-Auth-Bypass')
+   {
+      return RLM_MODULE_OK;
+   }
+   else
+   {
+      #This was not a MAC-Auth-Bypass. We know who the user is, let's assign her now a vlan based on her MAC address
+      $request{macaddr}=$suplicant_mac;
+      $request{client_ip}=$switch_ip;
+      $request{port_name}=$nas_port;		       # TBD: add later
+      $request{vlan}='';		
+      $request{vtp_domain}='802.1x';                    # TBD: add later
+
+      $buf = makeVQPrequest(%request);
+      $buf = sendVQP($buf);
+      %response = parseVQPresp($buf);
+      $last_count=$counter;
+   
+      if ( ! $response{vlan} )
+      {
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
+         return RLM_MODULE_REJECT;
+      }
+      else 
+      {	
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
+         $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
+         $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
+         $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
+         return RLM_MODULE_OK;
+      }
+   }
+}

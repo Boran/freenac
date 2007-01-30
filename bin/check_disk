@@ -1,13 +1,13 @@
 #!/bin/sh 
 #
-# /secure/check_disk
+# check_disk
 #
 # Function:
 #    If a filesystem is full or system heavily loaded alert
 #    $admin ONCE. Set a flag and alert again when problem is fixed.
 #
 # Example cron usage:
-#    0 8-18 * * 1-5 /secure/check_disk  99 200
+#    0 8-18 * * 1-5 /opt/nac/bin/check_disk  99 200
 #
 # 2005.10.02 SB: Major Update. Fix & test for HP-UX, 
 #            Suse 9.1/9.3, Solaris 8/9, RHEL3.o
@@ -16,21 +16,15 @@
 
 #DEBUG=1
 
-## read in settings from config file
-config="/secure/secure.conf"
-#group=`uname -n`
-group=default
-tool="check_disk"
-#unused=` awk -F: '{if ($1==g && $2==t) print $3}' g=$group t=$tool $config`
-admin=`   awk -F: '{if ($1==g && $2==t) print $4}' g=$group t=$tool $config`
-##
+# Email addressess to notify
+admin=root
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 ignore="nfs|shm|smb|hsfs|cdfs|subfs|devpts|usbdevfs|sysfs|iso9660|/dev/fd|mnttab|/proc|/mnt"     # Ignore these Filesystems
 subject="Disk/performance problems"
 subject2="Disk/performance FIXED - OK"
-tempfile=/tmp/chek_disk.$$
-flagfile=/tmp/chek_disk.flag
+tempfile=/tmp/check_disk.$$
+flagfile=/tmp/check_disk.flag
 
 ##---------- functions -------
 os=`uname -s`
@@ -101,7 +95,7 @@ for filesys in `$mount |egrep -v "$ignore"  | awk '{print $3}'`; do
   [ $DEBUG ] && $echo "space=$fs_space"
   if [ $fs_space -gt $fs_limit ]; then
     $echo "Filesystem $filesys is $fs_space % full" > $tempfile
-    [ $DEBUG ] && $echo "Filesystem $filesys is $fs_space % full"
+    [ $DEBUG ] && $echo "Filesystem $filesys is $fs_space % full (limit=$fs_limit)"
   fi
 
 done
@@ -125,6 +119,7 @@ if [ -f $tempfile ] ; then
   ## if not, report it and set flag
   if [ ! -f $flagfile ]; then
     [ $DEBUG ] && $echo " send alert email."
+    [ $DEBUG ] && cat $tempfile
 
     # add in some more info to help the admin
     $echo "  "                         >> $tempfile

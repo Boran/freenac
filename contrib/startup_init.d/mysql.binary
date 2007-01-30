@@ -59,7 +59,12 @@ rc_reset
 #test "$MYSQLD" || { echo "Nor /usr/sbin/mysqld nor /usr/sbin/mysqld-max exists"; rc_failed 5; rc_status -v; rc_exit; }
 
 ## Forget all that, set it directly to the /uar/local
+if test -x /usr/local/mysql/libexec/mysqld
+then
+MYSQLD=/usr/local/mysql/libexec/mysqld
+else
 MYSQLD=/usr/local/mysql/bin/mysqld
+fi
 SAFE_MYSQLD=/usr/local/mysql/bin/mysqld_safe
 #SAFE_MYSQLD=/usr/bin/mysqld_safe
 

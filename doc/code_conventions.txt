@@ -24,7 +24,7 @@ Program file headers:
 Other coding conventions:
 - use two spaces when indenting
 - comment your code
-- always use version control, preferable SVN, by RCS is OK for initial testing
+- always use version control, preferable SVN, but RCS is OK for initial testing
 
 Other naming conventions:
 - TBD

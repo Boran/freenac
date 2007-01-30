@@ -42,7 +42,7 @@ function get_color($vlan) {
 
 function get_dose($switch,$port) {
   $sel = "SELECT von_dose FROM patchcable WHERE nach_switch='$switch' AND nach_port='$port';";
-  $res = mysql_query($sel);
+  $res = mysql_query($sel)  or die ("Unable to query MySQL");
 
   if ($dose = mysql_fetch_array($res)) {
     return($dose['von_dose']);
@@ -55,8 +55,13 @@ function get_dose($switch,$port) {
 
 function get_patch($switch,$port) {
   $sel = "SELECT von_dose,von_office FROM patchcable WHERE nach_switch='$switch' AND nach_port='$port';";
-  list($dose,$office) = mysql_fetch_array(mysql_query($sel));
-  return("$dose ($office)");
+  $res = mysql_query($sel) or die ("Unable to query MySQL");
+  if (mysql_num_rows($sel) > 0) {
+	  list($dose,$office) = mysql_fetch_array($res);
+	  return("$dose ($office)");
+  } else {
+	  return(FALSE);
+  };
 };
 
 // ----- main() ----------------
@@ -78,22 +83,26 @@ $dotvmps=''; $dotpatch=''; $dothosts=''; $dotdose=''; $dotports='';
 // 1. Make the ports
 $sel_ports = "SELECT * FROM port WHERE switch='$sw';";
 debug2($sel_ports);
-$ports = mysql_query($sel_ports);
-while ($port = mysql_fetch_array($ports)) {
-  $portref = 'port'.strtr($port['name'], "/", "e");
-  $dotports .= $portref." [ label=\"".$port['name']."\",shape=\"box\" ] \n";
+$ports = mysql_query($sel_ports) or die ("Unable to query MySQL");
+if (mysql_num_rows($ports) > 0) {
+	while ($port = mysql_fetch_array($ports)) {
+	  $portref = 'port'.strtr($port['name'], "/", "e");
+	  $dotports .= $portref." [ label=\"".$port['name']."\",shape=\"box\" ] \n";
+	};
 };
 
 // 2. Make the nodes
 $sel_dose = "SELECT * FROM patchcable WHERE nach_switch='$sw' AND von_dose != ''";
-$doses = mysql_query($sel_dose);
-while ($dose = mysql_fetch_array($doses)) {
-  $doseref = 'dose' . strtr($dose['von_dose'], "/. -", "efgh");
-  $dotdose .= $doseref . " [ label=\"".$dose['von_office'].'\n('.$dose['von_dose'].')",shape="egg",fontsize=10 ] '."\n";
+$doses = mysql_query($sel_dose) or die ("Unable to query MySQL");
+if (mysql_num_rows($doses) > 0) {
+	while ($dose = mysql_fetch_array($doses)) {
+	  $doseref = 'dose' . strtr($dose['von_dose'], "/. -", "efgh");
+	  $dotdose .= $doseref . " [ label=\"".$dose['von_office'].'\n('.$dose['von_dose'].')",shape="egg",fontsize=10 ] '."\n";
 
-// 3. and patch them to the ports
-  $portref = 'port'.strtr($dose['nach_port'], "/", "e");
-  $dotpatch .= $portref.'->'.$doseref." [	dir=\"none\" ] \n";
+	// 3. and patch them to the ports
+	  $portref = 'port'.strtr($dose['nach_port'], "/", "e");
+	  $dotpatch .= $portref.'->'.$doseref." [	dir=\"none\" ] \n";
+	};
 };
 
 // 2. Make nodes for all the hosts since in the last $querdays Days.
@@ -102,25 +111,26 @@ while ($dose = mysql_fetch_array($doses)) {
 $today = " AND (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$vmpsdot_querydays)";
 
 $sel_hosts = "SELECT * FROM systems WHERE switch='$sw' $today";
-$hosts = mysql_query($sel_hosts);
-while ($host = mysql_fetch_array($hosts)) {
-  $hostref = 'host'.strtr($host['mac'], ".", "e");
-  $dothosts .= $hostref." [ label=\"".$host['name'].'\n'.$host['description'].'",style="filled",fontsize=10,fillcolor="'.get_color($host['vlan'])."\" ] \n";
+$hosts = mysql_query($sel_hosts) or die ("Unable to query MySQL");
+if (mysql_num_rows($hosts) > 0) {
+	while ($host = mysql_fetch_array($hosts)) {
+	  $hostref = 'host'.strtr($host['mac'], ".", "e");
+	  $dothosts .= $hostref." [ label=\"".$host['name'].'\n'.$host['description'].'",style="filled",fontsize=10,fillcolor="'.get_color($host['vlan'])."\" ] \n";
 
-// 3. Make links
-  #$portref = $switchref. 'port'. strtr($host['port'], "/", "e");
-  $portref = 'port'. strtr($host['port'], "/", "e");
-  $hostdose = get_dose($host['switch'],$host['port']);
-  if ($hostdose) {
-    $doseref = 'dose'.strtr($hostdose, "/. -", "efgh");
-    $dotvmps .= $doseref.'->'.$hostref." [ dir=\"none\" ] \n";
-  } else {
-    $dotvmps .= $portref.'->'.$hostref." [ dir=\"none\" ] \n";
-  };
+	// 3. Make links
+	  #$portref = $switchref. 'port'. strtr($host['port'], "/", "e");
+	  $portref = 'port'. strtr($host['port'], "/", "e");
+	  $hostdose = get_dose($host['switch'],$host['port']);
+	  if ($hostdose) {
+	    $doseref = 'dose'.strtr($hostdose, "/. -", "efgh");
+	    $dotvmps .= $doseref.'->'.$hostref." [ dir=\"none\" ] \n";
+	  } else {
+	    $dotvmps .= $portref.'->'.$hostref." [ dir=\"none\" ] \n";
+	  };
+	};
 };
 
-
-$dot = "$dotcmd simple_hierarchy {\n\n";
+$dot = "digraph simple_hierarchy {\n\n";
 $dot .= $dotports."\n";
 $dot .= $dotdose."\n";
 $dot .= $dotpatch."\n";

@@ -1,0 +1,96 @@
+#############################
+## logcheck.ignore
+## Site specific logcheck ignore pattern for vptt.ch
+##
+## History:
+## <1> 8.6.06/SB Tune for NAC/VMPS
+##
+##############################
+
+## Common Linux Entries to go into .gen later ###
+##
+postfix.*: (statistics)
+postfix.*: (daemon started|reload)
+
+## Common Mysql Entries to go into .gen later ###
+##
+InnoDB: Started
+InnoDB: Starting shutdown
+MySQL Community Edition
+mysqld: ready for connections
+mysqld: Shutdown complete
+mysqld: Normal shutdown
+mysqld started
+[Note] 
+logger: Deleting previous 'old' hotcopy directory
+logger: Flushed tables
+logger: Copying indices for
+
+rdistd.* startup for gdv052
+
+kernel: Kernel logging (proc) stopped
+kernel: Kernel log daemon
+restarting syslog
+syslog-ng.*: (new configuration|Changing permissions on special file|SIGHUP received)
+Reload syslog service
+
+crontab.* (BEGIN|END) EDIT
+
+
+############# Common VMPS entries #######
+##
+vmpsd_external.*: (get_port_status|decide|Debug|ping|Ping)
+
+flap_detect.*: (Debug1|restart_port for GWP)
+
+restart_port.*: Port restart try
+cron_restart_port[\d+]: restart_port switch
+
+vmpsd: (Unknown|No. Data Items|Sequence No.|Client IP address|Port name):
+vmpsd: (==============|VQP Request|ResponseDomain name|MAC address)
+vmpsd: (Vlan name|Domain name|Response)
+waiting for dynamic assignment
+0000.0000.0000
+--NONE--
+
+# Enable these for level 1 debugging:
+vmpsd: External prog says
+vmpsd: >>>> 
+
+## We'll see these in email alerts directly, don't need them in logchecK:
+vmps_lastseen.*: New INFNET
+vmps_lastseen[\d+]: New unknown
+
+vmps_purge_unknowns[\d+]: completed
+dump_ports[\d+]: completed
+
+############# Common Switch entries #######
+VQPCLIENT-7-RECONF Reconfirming VMPS responses
+VQPCLIENT-7-RECONF
+
+
+############# Site specific entries #######
+sshd.* Accepted publickey for root from ::ffff:192.168.245.40
+
+# not interested in this Cisco switch stuff:
+(LINEPROTO-5-UPDOWN|LINK-3-UPDOWN)
+
+
+## Freeradius
+#radius_xlat
+#Cleaning up request
+#Walking the entire request list
+#-Station-Id
+#Nothing to do.
+#Processing the authorize section of
+#(rlm_eap|TLS_|eaptls_|MS-MPPE|rlm_mschap)
+#Exec-Program: /opt/samba/bin/ntlm_auth
+Waking up in 
+(Framed-MTU|Message-Authenticator|NAS-Port|NAS-IP-Address|NAS-Identifier)
+SSL Connection Established
+Debug:  main:
+Debug: +(peap|eap|tls):
+Debug: +(rlm_eap)
+
+
+

@@ -69,6 +69,7 @@ if ($_REQUEST['action']=='search'){
 		$_SESSION['vlan']='';
 		$_SESSION['username']='';
 		$_SESSION['switch']='';
+		$_SESSION['ip']='';
 	}
 	if ($_REQUEST['submit']=='Submit'){
 		$_SESSION['name']=$_REQUEST['name'];
@@ -76,6 +77,7 @@ if ($_REQUEST['action']=='search'){
 		$_SESSION['vlan']=$_REQUEST['vlan'];
 		$_SESSION['username']=$_REQUEST['username'];
 		$_SESSION['switch']=$_REQUEST['switch'];
+		$_SESSION['ip']=$_REQUEST['ip'];
 	}
 }
 
@@ -92,7 +94,7 @@ if ($_REQUEST['action']=='xls' && $_REQUEST['type']!=''){
 		(SELECT IF(location, (SELECT GROUP_CONCAT(Surname) from users WHERE PhysicalDeliveryOfficeName=location), \' \') FROM port p WHERE systems.switch=p.switch AND systems.port=p.name) as PortUserList, switch, 
 		(SELECT name from switch WHERE systems.switch=switch.ip) as SwitchName,
 		(SELECT location from switch WHERE systems.switch=switch.ip) as SwitchLocation,
-		(SELECT GROUP_CONCAT(von_user,\', \',von_dose, \', \',von_office, \', \', comment) FROM patchcable pat WHERE systems.switch=pat.nach_switch AND systems.port=pat.nach_port) as PatchCable, history,
+		(SELECT GROUP_CONCAT(von_dose, \', \',von_office, \', \', comment) FROM patchcable pat WHERE systems.switch=pat.nach_switch AND systems.port=pat.nach_port) as PatchCable, history,
 		(SELECT Surname         from users WHERE systems.description=users.AssocNtAccount) as UserSurname,
 		(SELECT GivenName       from users WHERE systems.description=users.AssocNtAccount) as UserForename,
 		(SELECT Department      from users WHERE systems.description=users.AssocNtAccount) as UserDept,
@@ -324,9 +326,13 @@ else {
 		if ($_SESSION['username']!=''){
 			$sql.=' AND sys.description LIKE \''.$_SESSION['username'].'\'';
 		}
-		// looking for a switch'
+		// looking for a switch?
 		if ($_SESSION['switch']!=''){
 			$sql.=' AND swi.name LIKE \''.$_SESSION['switch'].'\'';
+		}
+		// looking for an ip?
+		if ($_SESSION['ip']!=''){
+			$sql.=' AND sys.r_ip LIKE \''.$_SESSION['ip'].'\'';
 		}
 		$sql.=' ORDER BY sys.name ASC;';
 	}
@@ -410,7 +416,7 @@ else {
 		}
 		echo '</select></td>'."\n";
 		// Last IP
-		echo '<td>&nbsp;</td>'."\n";
+		echo '<td><input name="ip" type="text" size="16" value="'.$_SESSION['ip'].'" /></td>'."\n";
 		echo '</tr>'."\n";
 		// Clear/Submit
 		echo '<tr align="right">

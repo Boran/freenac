@@ -1,22 +1,29 @@
 
 _____________ Install checklist: FreeNAC Master       _______________
 
-master_server_install.txt                      Last Update: 19.7.06/SB
+master_server_install.txt                      Last Update: 25.10.06/SB
 ______________________________________________________________________
 
 
 0. INTRODUCTION
 ===============
 This is a "copy & paste" guide for *expert* administrators for setting up an
-FreeNAC master server.
-Untar this file under /opt
-It will create /opt/nac
+FreeNAC master server. The instructions assume that one build all needed components
+from source. Depending on your distribution this may not be necessary, but this way
+one can be sure that all the needed options are enabled, and its resproduceable.
+The reference Linux distribution is Suse Linux.
 
+The software versions below were the latest when we last used these instructions,
+obviously the newest versions are to be used when doing this, so adapt
+the versions numbers below accordingly.
+Note also that a virtaul machine is available on FreeNAC.net, if this all sounds a
+complicated.
 
 
 1. UNIX preparation
 ===================
 see unix_install.txt
+	
 	
 2. Installing Suse packages
 ===========================
@@ -25,102 +32,114 @@ see unix_install.txt
   
 3. Compiling/ installing Key components
 =======================================
+Download : you'll need to download the following files 
 
-Apache 2.2.2:
-cd /opt/install
-tar xvzf http-2.2.2.tar.gz
-cd http-2.2.2
-./configure --prefix=/usr/local/apache2 --enable-so
-make install
-ln -s /usr/local/apache2 /usr/local/apache
+http://mirror.switch.ch/ftp/mirror/apache/dist/httpd/httpd-2.2.2.tar.gz
+http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-5.0.27.tar.gz
+ftp://fr.rpmfind.net/pub/libxml/libxml2-2.6.23.tar.gz
+http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz
+http://ch2.php.net/get/php-5.1.6.tar.bz2/from/this/mirror
 
-MYSQL 5 (From binaries):
-  cd /opt/install  
-  tar xvzf mysql-max-5.0.18-linux-i686.tar.gz
-  mv mysql-max-5.0.18-linux-i686 /usr/local
+
+Freenac
+  Start by downloading the latest stable release nac tarball from FreeNac.net,
+  copying to /opt, and extracting it into /opt/nac.
+  Or, checking out directly from Subversion.
+  
+
+Apache 2.2.2 (from source):  
+  cd /opt/install
+  tar xvzf httpd-2.2.2.tar.gz
+  cd httpd-2.2.2
+  ./configure --prefix=/usr/local/apache2 --enable-so
+  make install
+  ln -s /usr/local/apache2 /usr/local/apache
+  ln -s /usr/local/apache2/bin/apachectl /etc/init.d/apache2
+  ln -s /usr/local/apache2/bin/apachectl /sbin/rcapache2
+  # Actually start apache if you intend using the web interfaces, see below:
+  chkconfig apache2 on
+  rcapache2 start
+
+  
+MYSQL 5 (from sources: recommended):
+  Prerequisites: yast -i ncurses-devel gcc-c++
+
+  cd /opt/install
+  tar xvzf mysql-5.0.27.tar.gz
+  cd mysql-5.0.27
+  ./configure --prefix=/usr/local/mysql-5.0.27 --localstatedir=/mysqldata --with-unix-socket-path=/var/lib/mysql/mysql.sock
+  make install
   cd /usr/local
-  ln -s mysql-max-5.0.18-linux-i686 mysql
+  mv mysql mysql.$$            [in case you have a link already]
+  ln -s mysql-5.0.27 mysql
+  ln -s /usr/local/mysql/bin/mysqld_safe /usr/local/mysql/bin/mysqld
+  
+  
+MYSQL: create directories, links, users, setting permissions 
+  Create a mysql user:  
+    groupadd mysql
+    useradd -g mysql mysql 
+  
   cd /usr/local/mysql
-  scripts/mysql_install_db               [install empty mysql config tables]
-  mv data /var/lib/mysql
+  bin/mysql_install_db --user=mysql
+  mv data /var/lib/mysql  
   ln -s /var/lib/mysql data
   ln -s /var/lib/mysql /mysqldata
   ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock
       
-  copy /etc/my.cnf from another machine
+  copy /etc/my.cnf from /opt/nac/contrib/etc/my.cnf
     Adapt log-bin and report-host to include hostname:
     log-bin=vmps1-bin
-    report-host     = vmps1
+    report-host= vmps1
   
-  copy /etc/init.d/mysql from another machine 
+  copy /etc/init.d/mysql from /opt/nac/contrib/startup_init.d 
     Enable the service:
     chkconfig mysql on 
     ln -s /etc/init.d/mysql /usr/sbin/rcmysql
 
   Add mysql to path:
-  . /etc/profile.local
-    
-  groupadd mysql
-  useradd -g mysql mysql
-  chown -R mysql:mysql *
-  chgrp -R mysql /usr/local/mysql/*
+    vi /etc/profile.local
+    . /etc/profile.local
   
-MYSQL 5 (from sources):
-  cd /opt/install
-  tar xvzf mysql-5.0.22.tar.gz
-  cd /opt/install/mysql-5.0.22
-  groupadd mysql
-  useradd -g mysql mysql
-  mkdir /mysqldata
-  ./configure --prefix=/usr/local/mysql-5.0.22 --localstatedir=/mysqldata --with-unix-socket-path=/tmp/mysql.sock
-  make install
-  cp support-files/my-large.cnf /etc/my.cnf
-  cp support-files/mysql.server /etc/init.d/mysql
-  chmod 744 /etc/init.d/mysql
-  ln -s /etc/init.d/mysql /usr/sbin/rcmysql
-  cd /usr/local/mysql
-  bin/mysql_install_db --user=mysql
-  ln -s /mysqldata /var/lib/mysql
-  chown -R root  .
-  chown -R mysql /mysqldata /var/lib/mysql
-  chgrp -R mysql .
+  Set permissions:
+    chown -R root  .
+    chown -R mysql /mysqldata /var/lib/mysql
+    chgrp -R mysql .    
+ 
+  You may also want to change the mysql "root" password 
+  (see the end of this doc).
 
 
-Modify /etc/my.cnf
-  report-host     = mysql
-
-Enable the service:
-  chkconfig mysql on 
-  ln -s /etc/init.d/mysql /usr/sbin/rcmysql
-
-Add mysql to path in /etc/profile
-
-GET DATA:
-  cd /mysqldata
-  mv mysql mysql.orig
-  copy over the FreeNAC sample inventory database (which is in /opt/nac/contrib/inventory_sample.tar.gz) and untar it to the /mysqldata directory 
-  cp /opt/nac/contrib/inventory_sample.tar.gz .
-  untar xvzf inventory_sample.tar.gz
-That must create the sample tables required for FreeNAC to work  
-START mysql, check that all is OK:
-  rcmysql start  
-  check /mysqldata/localhost.err for errors.
-  mysql inventory
+MYSQL: Install an initial set of empty FreeNAC tables for the 
+  'inventory' database, backing up the existing tables first:
+    cd /mysqldata
+    mv mysql mysql.$$
+    mv inventory inventory.$$  
+    cp /opt/nac/contrib/inventory_sample.tar.gz .
+    tar xvzf inventory_sample.tar.gz
+  
+  Start mysql, check that its OK:
+    rcmysql start  
+    check /mysqldata/localhost.err for errors.
+  Login to sql and look at a few tables:
+    mysql inventory
   		show tables;
   		select * from ports;
 
-libxml:
+
+
+libxml (from source):
   cd /opt/install
-  tar xvzf libxml2-2.6.22.tar.gz
-  cd libxml2-2.6.22/
+  tar xvzf libxml2-2.6.24.tar.gz
+  cd libxml2-2.6.24/
   ./configure --prefix=/opt/libxml2 && make install  
   
-  Add /opt/libxml2/lib to 
-
 
 FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
   cd /opt/install
   wget http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz
+  tar xvzf freetds-0.64RC2.tar.gz
+  cd freetds-0.64RC2
   ./configure --prefix=/opt/freetds  --enable-msdblib
   make install
   vi /opt/freetds/etc/freetds.conf and add a definition to a DB to test: 
@@ -138,90 +157,150 @@ FreeTDS:   If you need to access MS-SQL or Sybase Enterprise databases:
 
 
 PHP5:
+Install first the graphics support needed by the web1
+  yast -i gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel 
+  yast -i net-snmp net-snmp-devel tcpd-devel rpm-devel
+  yast -i openssl openssl-devel openldap2-devel graphviz  
   cd /opt/install;
-  tar xBf php-5.1.4.tar.bz2
-  cd /opt/install/php-5.1.4/
+  tar xBf php-5.2.0.tar.bz2
+  cd php-5.2.0
+
+  # Question: what is this comment?? [sb, 4.12.06]
+  # Copy some ttf fonts from a Windows box to /usr/X11R6/lib/X11/fonts/truetype/ (specially verdana.ttf) 
   
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php5 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect
-  
+  # Without TDS:
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.2.0 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --with-ldap
+
   ## If you need MS-SQL (its best to assume you do - FreeTDS was compiled above)
-  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php5.1.4 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
+  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --with-mysql-sock=/var/lib/mysql/mysql.sock --prefix=/opt/php-5.2.0 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --with-snmp=/usr --enable-ucd-snmp-hack --with-ldap
+
+
+
+
+
+  Note: On suse, PHP may complain about MySQL libraries, it may be best to 
+        compile mySQL from source (see above), rather than using binary packages.
+
   make install    
-  cp php.ini-dist /usr/local/lib/php.ini
+  
+  ## Setup details php environment:
+  mv /usr/local/lib/php.ini /usr/local/lib/php.$$
+  ci -l /etc/php5/cli/php.ini
+  mv /etc/php5/cli/php.ini /etc/php5/cli/php.ini.$$
+  cp php.ini-recommended /etc/php5/cli/php.ini
+  ## To do: list of recommended settings in php.ini
+ 
+  mv /usr/bin/php /usr/bin/php.$$
+  mv /opt/php5 /opt/php5.$$
+  ln -s /opt/php-5.2.0 /opt/php5    
   ln -s /opt/php5/bin/php /usr/bin/php
 
-Edit your httpd.conf to load the PHP module
-  LoadModule php5_module modules/libphp5.so
-The path on the right hand
-side of the LoadModule statement must point to the path of the PHP
-module on your system.  Then "make install" from above may have already
-added this for you, but be sure to check.
-Also, tell Apache to parse certain extensions as PHP in httpd.conf
-  AddType application/x-httpd-php .php .phtml
-  AddType application/x-httpd-php-source .phps
-     
+  Test PHP: 
+  	php -v
   
-  mv /usr/bin/php /usr/bin/php4
-  ln -s /opt/php5/bin/php /usr/bin/php
-  ln -s /opt/php5.1.4 /opt/php5
+  Note: To allow easier upgrading, rollback or testing new PHP modules, we install into a 
+  version specific directory like '/opt/php5.2.0' above, and create links to this 
+  directory. 
+
+  Edit your httpd.conf (e.g. /usr/local/apache/conf/httpd.conf) to load the PHP module
+    LoadModule php5_module modules/libphp5.so
+    
+  The path on the right hand side of the LoadModule statement must point to the 
+  path of the PHP module on your system.  Then "make install" from above may 
+  have already added this for you, but be sure to check.
+  Also, tell Apache to parse certain extensions as PHP in httpd.conf
+    AddType application/x-httpd-php .php .phtml
+    AddType application/x-httpd-php-source .phps     
   
-  Note: 
-  ^^^^^
-  If later upgrading or testing new PHP modules, then install into a version specifc directory:
-   ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.1.4b --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds
-  and create then make /opt/php5 a link to this directory.
-  This allows rollback and less disturbance to running daemons.
+
+Database
+========
+There are 4 mysql users needed for accessing the database. 
+A. Local daemon user for PHP scripts: inventwrite@localhost
+B. A user for the remote Delphi Windows GUI: inventwrite@'%' 
+C. Root is used by the sysadmin for local configuration. By default root 
+   is only allowed from localhost, and has no password. Its is 
+   recommended that you set a root password for mysql root, if the NAC 
+   server login is accessible to several users.
+D. The Web1 GUI has a specific user%localhost, by default called "readonly".
+E. The Web2 GUI has a specific user%localhost, by default called "webwrite".
+
+Local daemon use for PHP scripts (set the user/pw in /opt/nac/config.inc):
+  grant SELECT,INSERT,UPDATE    ON inventory.*       to inventwrite@localhost IDENTIFIED by 'PASSWORD2';
+  SET PASSWORD FOR inventwrite@localhost = OLD_PASSWORD('PASSWORD2');
+  grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@localhost;
+  grant CREATE TEMPORARY TABLES ON inventory.*        to inventwrite@localhost;
+  grant ALL                     ON inventory.vmpsauth to inventwrite@localhost;
+
+Remote delphi Windows GUI use. See also the vmps.ini file on the Windows client.
+  grant SELECT,INSERT        ON inventory.*       to inventwrite@'%' IDENTIFIED by 'PASSWORD1';
+  SET PASSWORD FOR inventwrite@'%' = OLD_PASSWORD('PASSWORD1');
+  grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@'%';
+  grant SELECT,INSERT,UPDATE ON inventory.users   to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE,DELETE ON inventory.patchcable to inventwrite@'%';
+  grant SELECT,INSERT,UPDATE ON inventory.port    to inventwrite@'%' ;
+  grant SELECT,UPDATE        ON inventory.oper    to inventwrite@'%' ;
+  grant SELECT,UPDATE        ON inventory.switch  to inventwrite@'%' ;
+  grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE ON inventory.sys_class to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE ON inventory.sys_class2 to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE ON inventory.sys_os to inventwrite@'%';
+  grant SELECT,INSERT,UPDATE,DELETE ON inventory.nac_openports to inventwrite@'%' ;
+
+The read-only webgui Web1 needs "read" access and by default uses a user 
+named 'readonly'. See also /opt/nac/web1/config.inc.  
+  grant SELECT       ON inventory.* to readonly@'localhost' IDENTIFIED by 'PASSWORD1';
+
+The webgui Web2 needs "read-write" access and by default uses a user 
+  grant SELECT,INSERT        ON inventory.*       to webwrite@'localhost' IDENTIFIED by 'PASSWORD1';
+  SET PASSWORD FOR webwrite@'localhost' = OLD_PASSWORD('PASSWORD1');
+  grant SELECT,UPDATE ON inventory.systems to webwrite@'localhost' ;
+  grant SELECT               ON inventory.users   to webwrite@'localhost' ;
+  grant SELECT,              ON inventory.patchcable to webwrite@'localhost' ;
+  grant SELECT,              ON inventory.port    to webwrite@'localhost' ;
+  grant SELECT               ON inventory.oper    to webwrite@'localhost' ;
+  grant SELECT               ON inventory.switch  to webwrite@'localhost' ;
+  grant SELECT               ON inventory.vlan    to webwrite@'localhost' ;
+  grant SELECT,INSERT,UPDATE ON inventory.sys_class to webwrite@'localhost' ;
+  grant SELECT,INSERT,UPDATE ON inventory.sys_os to webwrite@'localhost';
+  grant SELECT               ON inventory.nac_openports to webwrite@'localhost' ;
 
 
-Database rights
-==================   
-There are some DB users you need to setup.
+Then, you need to populate the following tables :
 
-A. Local daemon use for PHP scripts (set the user/pw in config.inc):
-grant SELECT,INSERT,UPDATE        ON inventory.*       to inventwrite@localhost IDENTIFIED by 'PASSWORD2';
-SET PASSWORD FOR inventwrite@localhost = OLD_PASSWORD('PASSWORD2');
-grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@localhost;
-grant CREATE TEMPORARY TABLES ON inventory.*        to inventwrite@localhost;
-grant ALL                     ON inventory.vmpsauth to inventwrite@localhost;
+A. switches : at the beginning, you just need to insert your test switch(es) :
+	INSERT INTO switch(ip,name,location) VALUES ('192.168.123.11','switch11','5th floor');
 
+B. ports : this is optional as it will be populated once new machine are connecting.
+   However, it is interesting to pre-populate the field to ease the transition. By setting the "default_vlan" field to the actual vlan configured on this port, you can get the new (unknown) hosts on the same vlan (see config.inc).
 
-B. Setup a user for the remote delphi Windows GUI. see the vmps.ini file on the Windows client.
-grant SELECT,INSERT        ON inventory.*       to inventwrite@'%' IDENTIFIED by 'PASSWORD1';
-SET PASSWORD FOR inventwrite@'%' = OLD_PASSWORD('PASSWORD1');
-grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@'%';
-grant SELECT,INSERT,UPDATE ON inventory.users   to inventwrite@'%' ;
-grant SELECT,INSERT,UPDATE,DELETE ON inventory.patchcable to inventwrite@'%';
-grant SELECT,INSERT,UPDATE ON inventory.port    to inventwrite@'%' ;
-grant SELECT,UPDATE        ON inventory.oper    to inventwrite@'%' ;
-grant SELECT,UPDATE        ON inventory.switch  to inventwrite@'%' ;
-grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
-grant SELECT,INSERT,UPDATE ON inventory.sys_class to inventwrite@'%' ;
-grant SELECT,INSERT,UPDATE ON inventory.sys_os to inventwrite@'%';
+	INSERT INTO port(switch,name,location,default_vlan) VALUES ('192.168.254.11','Fa/0/2','5 B','123');
 
-C. Root is used by the sysadmin for local configuration. Make sur its only used from localhost.
+C. users : this contains all your users. It is probably better to regularly update this table by pulling data from a directory (ActiveDirectory: see optional modules below)
 
-D. The read-only webgui uses a "readonly" user.
-==> To do
+	INSERT INTO users(AssocNtAccount,Surname,GivenName,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,Mobile) VALUES ("username","Jean","Doe","jean.doe@foo.ch","Building B","5 B2","0797704803);
 
 
 
 4. FreeNAC install part #1:
 ===========================
-Rename config.inc.template
-mv /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc
+Create a config.inc from a template and set some options:
+  cp /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc
+  vi /opt/nac/etc/config.inc
 
-Adapt /opt/nac/etc/config.inc
 
-At this stage The DB is working and PHP access to the DB. Syslog works too 
-and you see messages there.
+At this stage The DB is working and PHP should be access to the DB, and the
+messages logged trough syslog to '/var/log/messages'.
+
+To test this, you can execute '/opt/nac/bin/purge_unknowns" and verify the content of syslog with `tail /var/log/messages`.
+You should see a line with the following content 'vmps_purge_unknowns: completed'
 
 
 5. FreeNAC install part #2:
 ===========================
-Now we get the vmps daemon going.
+Start the vmps daemon, by creating a startup file and starting the service:
 
-Copy /etc/init.d/vmps from /opt/nac/contrib/startup_init.d
-  cp /opt/nac/contrib/startup_init.d/vmps /etc/init.d
+  cp /opt/nac/contrib/startup_init.d/vmps /etc/init.d/vmps
   ln -s /etc/init.d/vmps /usr/sbin/rcvmps
   chmod 750 /etc/init.d/vmps
   chkconfig vmps on
@@ -229,99 +308,23 @@ Copy /etc/init.d/vmps from /opt/nac/contrib/startup_init.d
    
   Start and watch syslog for events:
   rcvmps start
+  tail -f /var/log/messages
   
 
-Copy /etc/init.d/vmps_lastseen from /opt/nac/contrib/startup_init.d
-  cp /opt/nac/contrib/startup_init.d/vmps_lastseen /etc/init.d/
+Start the vmps_lastseen daemon, by creating a startup file and starting the service:
+
+  cp /opt/nac/contrib/startup_init.d/vmps_lastseen /etc/init.d/vmps_lastseen
   ln -s /etc/init.d/vmps_lastseen /usr/sbin/rcvmps_lastseen
   chmod 750 /etc/init.d/vmps_lastseen
   chkconfig vmps_lastseen on
   
   Start and watch syslog for events:
   rcvmps_lastseen start
+  tail -f /var/log/messages
 
 
-touch /etc/vlan.db
-
-Test purging of old devices (and watch syslog), then enable in cron:
-0   1   26 * *   /opt/nac/bin/purge_unknowns  
-
-
-6. FreeNAC install part #3: monitoring
-===========================
-There are several monitoring scripts that need to be individually tested and enabled in root cron:
-
-Create /secure and copy from /opt/nac/bin the following scripts:
-   monitor_processes.pl    secure.conf  proctst proctst.pl  check_disk       
-   And make a subdir 'tmp'.           
-
-*/3 *     * * *   /secure/check_disk 90 800
-*/10 6-22 * * *   /secure/monitor_processes.pl vmpsd_external proctst
-30   6-22 * * 1-5 /opt/nac/bin/monitor_allows.sh
-*/4 *     * * *   /opt/nac/bin/flap_detect
-
-
-7. FreeNAC install: syslog pruning
-===========================
-Enable syslog pruning and analyis:
-ci -l /etc/logrotate.d/syslog
-cp /opt/vmps/contrib/logrotate.d/syslog /etc/logrotate.d/syslog
-
-
-
-8. FreeNAC install: backups
-===========================
-Scripts for backups up the system in different ways to the second internal disk:
-Test these and enabled in root cron:
-0   3    * * 1-5 /opt/nac/bin/dump_ports
-0   3    * * 1   /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
-0   3    * * 6   rdiff-backup  --exclude /media --exclude /sys --exclude /disk2 --exclude /proc  --exclude /mnt --print-statistics  / /disk2/backups/vmps0.rdiff;
-
-
-8. FreeNAC install: router integration
-===========================   
-Adapt the relevant lins in config.inc, then try route_mac_ip from the command line, possibly enabling the debug flags. Then add an entry to the root cron.
-*/6 *    * * *   /opt/nac/bin/router_mac_ip
+Test purging of old unknown device entries in the system table (and watch syslog):
+  /opt/nac/bin/purge_unknowns 
   
-
-
-Other notes
-===========================   
-Are syslog messages arriving from the Switches in /var/log/messages ?
-   egrep -v `uname -n` /var/log/messages |awk '{print $4}'| sort| uniq -c |sort
-    
-Maybe discuss later:
-/etc/hosts.allow 
-/etc/hosts.deny
-
-If the server is not exclusively used by FreeNAC with one administrator, you probably want to set a local root password for mysql.
-mysqladmin -u root password 'new-password'
-mysqladmin -u root -h MYHOST password 'new-password'
-
-This is the sample crontab used in the VM
-#Installation done based on /opt/nac/doc/master_server_install.txt
-
-#NAC control
-* * * * *              /opt/nac/bin/cron_restart_port
-*/5 8-18 * * 1-5       /opt/nac/bin/port_scan --scannow
-*/6 * * * *            /opt/nac/bin/router_mac_ip
-0 1 * * 1              /opt/nac/bin/purge_unknowns
-
-#Active scanning: once on weekend, once during the day
-0 1 * * 6             /opt/nac/bin/port_scan
-0 11 * * 1             /opt/nac/bin/port_scan
-
-#Log pruning
-0 6 * * 1-5            /usr/sbin/logrotate /etc/logrotate.conf | logger
-0   1   26 * *         /opt/nac/bin/purge_unknowns
-
-#Monitoring
-30   6-22 * * 1-5      /opt/nac/bin/monitor_allows.sh
-*/4 *     * * *        /opt/nac/bin/flap_detect
-7-18 * * * 1-5         /secure/monitor_processes.pl proctst vmpsd_external
-*/3 *     * * *        /secure/check_disk 90 800
-*/4 * * * *            /opt/nac/bin/flap_detect
-
-#Backups
-0 1 * * 1              /opt/nac/bin/dump_ports
-0 3 * * 1-5            /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=".+" /disk2/backups/mysql 2>&1 | logger
+Then enable this in the root in cron:
+0   1   26 * *   /opt/nac/bin/purge_unknowns  

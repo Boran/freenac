@@ -54,11 +54,10 @@ $DRY_RUN=FALSE;                    ## testing for standaone, no network
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
 $debug_flag3=FALSE;
-$debug_flag1=TRUE;
+#$debug_flag1=TRUE;
 #$debug_flag2=TRUE;
 #$debug_flag3=TRUE;
 
-include_once "funcs.inc";
 define_syslog_variables();
 openlog("vmpsd_external", LOG_PID , LOG_LOCAL5);
 
@@ -120,7 +119,7 @@ function get_port_status($switch, $port, $mac, $new_vlan, $lastvlan)
   } else {                # systems found, interate though them
     while ( list($othermac, $othervlan, $AuthLast)=mysql_fetch_array($res, MYSQL_NUM) ) {
 
-      logit("get_port_status: found $othermac, vlan=$othervlan, $AuthLast");
+      debug1("get_port_status: found $othermac, vlan=$othervlan, $AuthLast");
 
       if (ping_mac($othermac))     {    # Is there another system live on that port?
         // yes, so find out about it
@@ -194,7 +193,7 @@ function get_port_status_old($switch, $port, $mac, $new_vlan)
     if (!$res) { die('Invalid query: ' . mysql_error()); }
 
   if (mysql_num_rows($res)==0) {
-    logit("get_port_status: nothing else conflicting on that port");
+    debug1("get_port_status: nothing else conflicting on that port");
 
   } else {
     while ( list($othermac, $othername, $othervlan, $othervlangroup)=mysql_fetch_array($res, MYSQL_NUM) ) {
@@ -399,8 +398,8 @@ function dryrun() {
 #
 # ------ main() : infinite loop ------------------
 
+require_once "funcs.inc";
 ob_start("callback");         // see call back function above
-
 logit("Connect to DB" );
 db_connect();
 reporterr3("Connect to DB" );
@@ -436,8 +435,8 @@ while ($in && $out) {         // keep waiting on stdin
     $line=rtrim( fgets($in, 1024) );
     if (strlen($line) > 0) {
       list($domain, $switch, $port, $lastvlan, $mac)=explode(" ", $line);
-      #logit("GOT: $line\n");
-      #logit("GOT $switch $port $lastvlan $mac\n");
+      debug1("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
+      #debug2("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
 
       $DecidedVlan=decide($port, $switch, $mac, $lastvlan);
       debug1("DecidedVlan=$DecidedVlan");

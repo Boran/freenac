@@ -1,5 +1,12 @@
 ________ CHANGE Version 2.1 ___________
 
+---- Changes from V2.1 RC1 to V2.1 RC2
+
+   Added 802.1x support with MAC validation (through the rad2vmps module)
+   Added ad_user_sync module
+   Some documentation reviewed and added 802.1x doc
+   Added configuration files for freeradius, samba, kerberos
+
 ---- Changes since From snapshot 20.05.2006 (we call it Version 2.0) to V2.1:
 ---- Tarball freenac_2.1.rc1.tar.gz created. Comprises revision 155 from repository ho/14.9.06
 

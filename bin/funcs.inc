@@ -18,11 +18,11 @@
  * @version			CVS: $Id:$
  * @link				http://www.freenac.net
  *
- *
  */
 
-
-include_once "/opt/nac/etc/config.inc";
+chdir(dirname(__FILE__));
+set_include_path("./:../");
+require_once "etc/config.inc";
 
 function debug1($msg) {
   global $debug_flag1, $debug_to_syslog;
@@ -55,7 +55,7 @@ function logit($msg) {
 
   # Write a message on stdout too?
   if ($logit_to_stdout===TRUE) {
-    echo "logit: $msg\n";
+    echo "logit: $msg";
   }
 }
 
@@ -132,7 +132,7 @@ function ping_mac($mac)
    if ($rowcount==1) {
      list($ip)=mysql_fetch_array($res, MYSQL_NUM);
      if (strlen($ip)<8) {
-       logit("Invalid IP - $ip for mac $mac");
+       debug2("Invalid IP - $ip for mac $mac");
        return(false); 
      }
      #debug2("ping $ip - $mac");

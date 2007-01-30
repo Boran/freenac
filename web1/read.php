@@ -58,7 +58,7 @@ if ($submit) {
 			};
 		};
 	};
-
+	echo $where.'<hr>';
 
 // if there is an actual query, display the host
 	if ($notnull) {

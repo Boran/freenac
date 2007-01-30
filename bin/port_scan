@@ -34,8 +34,8 @@
  *
  */
 
-include_once "/opt/nac/bin/funcs.inc";
-include_once "/opt/nac/etc/port_scan.inc";
+require_once "funcs.inc";
+include_once "etc/port_scan.inc";
 $output=TRUE;
 check_requirements();
 //If we get up to this point, life is good
@@ -84,7 +84,7 @@ else
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 if ($flagscannow)
-   reporterr('info',"port_scan finished normally. ".$var['equipments']." hosts scanned\n");
+   reporterr('info',"port_scan finished normally. ".$var['equipments']." hosts scanned");
 
 function check_requirements()  //Checks for required functions and tables structure
 {
@@ -137,10 +137,11 @@ function check_requirements()  //Checks for required functions and tables struct
    $tmp=syscall($which_nmap." --version | grep nmap");
    $tmp=explode(" ",$tmp);
    $nmap_string=$tmp[0];
-   $nmap_version=(float)$tmp[2];
+   $nmap_version=$tmp[2];
    if (isset($nmap_string)&&(strcasecmp($nmap_string,"nmap")!=0))
       check_and_abort("Nmap seems not to be installed in your system\n",0);
-   if (isset($nmap_version)&&($nmap_version<4))
+   #if (isset($nmap_version)&&($nmap_version<4.11))
+   if (isset($nmap_version)&&($nmap_version<4.10))
       check_and_abort("You need a newer version of nmap\n",0);
    if (!isset($nmap_flags))
      check_and_abort("Var \$nmap_flags not defined in port_scan.inc\n",0);
@@ -154,7 +155,7 @@ function message($string)
       if ($output_to_syslog===TRUE)
       {
          logit($string);
-         reporterr('info',$string);
+         //reporterr('info',$string);
       }   
       else
          echo $string;
@@ -621,8 +622,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       message("port_scan ended abnormally.\n");
       debug1($message);
       debug1("port_scan ended abnormally.\n");
-      reporterr('err',$message);
-      reporterr('err',"port_scan ended abnormally.");
+      //reporterr('err',$message);
+      //reporterr('err',"port_scan ended abnormally.");
       exit();
    }
    else
@@ -632,8 +633,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       message("port_scan ended abnormally.\n");
       debug1($message);
       debug1("port_scan ended abnormally.\n");
-      reporterr('err',$message);
-      reporterr('err',"port_scan ended abnormally.");
+      //reporterr('err',$message);
+      //reporterr('err',"port_scan ended abnormally.");
       exit();
    }
 }
@@ -874,7 +875,7 @@ function get_ips()	//This function will get some ips to scan
                {
                   debug1($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
                   logit($rejected_ip." doesn't meet criteria specified in netsallowed table\n");
-		  reporterr('info',$rejected_ip." doesn't meet criteria specified in netsallowed table\n");
+		  reporterr('info',$rejected_ip." doesn't meet criteria specified in netsallowed table");
                }
             }
       }
@@ -934,7 +935,7 @@ function parse_scanfile($scan_file,$list)
             {
                debug1($list['ip'][$i]." is down\n");
                logit($list['ip'][$i]." is down\n");
-               reporterr('info',$list['ip'][$i]." is down\n");
+               reporterr('info',$list['ip'][$i]." is down");
             }
             if ($flagscannow) //Lets set os=Unreachable to those devices which are present in the nac_hostscanned table
             {
@@ -1053,7 +1054,7 @@ function parse_scanfile($scan_file,$list)
       {
          debug1($down." is down\n");
          logit($down." is down\n");
-         reporterr('info',$down." is down\n");
+         reporterr('info',$down." is down");
       }
       for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
       {
@@ -1066,7 +1067,7 @@ function parse_scanfile($scan_file,$list)
       $res=execute_query($query);
       while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
       {
-         $query="update nac_hostscanned set os='Unreachable', timestamp='$timestamp' where id=".$result['id'].";";
+         $query="update nac_hostscanned set os='Firewalled', timestamp='$timestamp' where id=".$result['id'].";";
          execute_query($query);
       }
    }

@@ -21,7 +21,7 @@ function print_host($mac) {
 
 // 1.2 McAfee EPO
 	$sel = "SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'";
-	$res = mysql_query($sel);
+	$res = mysql_query($sel) or die ("Unable to query MySQL");
 	if (mysql_num_rows($res) > 0) {
 		$epo = mysql_fetch_array($res);
 	} else {
@@ -33,12 +33,14 @@ function print_host($mac) {
 	if ($nmap_id) {
 		$scan = TRUE;
 		$sel = "SELECT * FROM nac_hostscanned WHERE id = '$nmap_id';";
-		$nmap = mysql_fetch_array(mysql_query($sel));
+		$res = mysql_query($sel) or die ("Unable to query MySQL");
+		// this query MUST give an answer otherwise nmap_id should be FALSE
+		$nmap = mysql_fetch_array($res);
 	
 		$sel = "SELECT nac_openports.port as port, nac_servicestcp.description as description, nac_openports.banner as `banner` FROM nac_openports 
 						 LEFT JOIN nac_servicestcp ON nac_openports.port = nac_servicestcp.port 
 						 WHERE host = '$nmap_id' and protocol='tcp' ;";
-		$ports = mysql_query($sel);
+		$ports = mysql_query($sel) or die ("Unable to query MySQL");
 		if (mysql_num_rows($ports) > 0) {
 			while ($port = mysql_fetch_array($ports)) {
 				$tcp_port[$port['port']] = $port['description'];
@@ -51,7 +53,7 @@ function print_host($mac) {
 		$sel = "SELECT nac_openports.port as port, nac_servicesudp.description as description, nac_openports.banner as `banner` FROM nac_openports 
 						 LEFT JOIN nac_servicesudp ON nac_openports.port = nac_servicesudp.port 
 						 WHERE host = '$nmap_id' and protocol='udp' ;";
-		$ports = mysql_query($sel);
+		$ports = mysql_query($sel) or die ("Unable to query MySQL");
 		if (mysql_num_rows($ports) > 0) {
 			while ($port = mysql_fetch_array($ports)) {
 				$udp_port[$port['port']] = $port['description'];
@@ -86,7 +88,7 @@ function print_host($mac) {
 		$out .= '<tr><td colspan=3 bgcolor="#EEEEEE"><b>McAfee Updates</b>';
 		$out .= '<tr align=center><td>Part<td>Version<td>Last update';
 		$out .= '<tr><td>Agent<td>'.$epo['AgentVersion'].'<td>'.$epo['LastUpdate'];
-		$out .= '<tr><td>DAT File<td>'.$epo['DATVersion'].'<td>'.$epo['LastDATUpdate'];
+		$out .= '<tr><td>DAT File<td>'.$epo['DATVersion'].'&nbsp;<td>'.$epo['LastDATUpdate'];
 	};
 // 2.3 SCAN
 	if ($scan) {
@@ -129,7 +131,7 @@ function print_host($mac) {
 function print_host_table($where) {
 		$query = "SELECT * FROM systems WHERE $where ;";
 //		echo $query.'<br>';
-		$mysql_res = mysql_query($query);
+		$mysql_res = mysql_query($query) or die ("Unable to query MySQL");
 		if (mysql_num_rows($mysql_res) > 0) {
 			$html .= "<table cellspacing=0 cellpadding=5 border=1>\n";
 			$html .= "<tr><th>OS<td>Nmap<td>ePO<th>Hostname<th>Owner<th>Inventar<th>MAC<th>Last IP<th>VLAN<th>Standard<br>location<th colspan=2>LastSeen\n";
@@ -139,10 +141,13 @@ function print_host_table($where) {
 // extra details
 				$mac = $row['mac'];
 				$html .= '<td align=center>';
-				if (get_nmap_id($mac)) { $html .= 'X'; };
+				if (get_nmap_id($mac)) { $html .= 'X'; } else { $html .= '&nbsp;'; };
 
 				$html .= '<td align=center>';
-				if (mysql_num_rows(mysql_query("SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'")) > 0) { $html .= 'X'; };
+
+				$sel_epo = "SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'";
+				$res_epo = mysql_query($sel_epo) or die ("Unable to query MySQL");
+				if (mysql_num_rows($res_epo) > 0) { $html .= 'X'; } else { $html .= '&nbsp;'; };
 				
 // name => print details link
 				$html .= '<td><b><a href="display.php?single_host='.$row['mac'].'">';
@@ -157,13 +162,13 @@ function print_host_table($where) {
 				  } else {
 					$html .= '<i>Unknown</i>';
 				  };
-				$html .= '<td>'.$row['inventar'];
-				$html .= '<td>'.$row['mac'];
-				$html .= '<td>'.$row['r_ip'];
-				$html .= '<td>'.get_vlan_descr($row['vlan']); // get_vlan_short(get_vlan_descr
+				$html .= '<td>'.$row['inventar'].'&nbsp;';
+				$html .= '<td>'.$row['mac'].'&nbsp;';
+				$html .= '<td>'.$row['r_ip'].'&nbsp;';
+				$html .= '<td>'.get_vlan_descr($row['vlan']).'&nbsp;'; // get_vlan_short(get_vlan_descr
 					if (! $row['building']) { $row['building'] = 'Ber-Omu93' ; };
-				$html .= '<td>'.$row['building'].' '.$row['office'];
-				$html .= '<td>'.get_location($row['switch'],$row['port']).'<td>'.$row['LastSeen'].'</font>';
+				$html .= '<td>'.$row['building'].'&nbsp;'.$row['office'];
+				$html .= '<td>'.get_location($row['switch'],$row['port']).'&nbsp;<td>'.$row['LastSeen'].'</font>'.'&nbsp;';
 				$html .= "\n";
 			};
 			$html .= "</table>\n";

@@ -16,7 +16,6 @@ Replace the following below:
 ==============================
 
 On the mysql prompt:
-
 GRANT SELECT, PROCESS, FILE, SUPER, REPLICATION CLIENT, REPLICATION SLAVE ON *.*
   TO 'repl'@'vmps2' IDENTIFIED BY 'REPL_PASSWD';
   
@@ -25,6 +24,7 @@ SHOW MASTER STATUS;
 Purge uneeded logs on the master:
 PURGE MASTER LOGS TO 'SERVER-bin.NUMBER'            [the exactname comes from the File field in the status above]
     
+
 
 3. Re-synchronisation
 =====================
@@ -64,16 +64,13 @@ rcmysql stop
    chmod 770 inventory; chmod g+s inventory; chown -R mysql:mysql inventory;
 
 - Configure slave: start daemon with slave off
-
-/usr/local/mysql/bin/mysqld --user=mysql --skip-slave-start --log-warnings
-
-
+  /usr/local/mysql/bin/mysqld --user=mysql --skip-slave-start --log-warnings
 
 Start mysql client:
 	reset slave;
 
-# CHANGE MASTER TO MASTER_HOST='XXXX', MASTER_USER='repl',
-  MASTER_PASSWORD='YYYY', MASTER_LOG_FILE='file_name',         MASTER_LOG_POS=XXXX;
+# CHANGE MASTER, replace XXXX, YYYY and 'file_name': 
+  MASTER_PASSWORD='YYYY', MASTER_LOG_FILE='file_name', MASTER_LOG_POS=XXXX;
   
 - Start replication:
 	START SLAVE;
@@ -82,23 +79,29 @@ Start mysql client:
 - Check the log position with that on the master:
 	show master status;
 
+--- Create a new vmpsauth table, which is the only local table:
+CREATE TABLE inventory.`vmpsauth` ( `mac` varchar(30) NOT NULL default '', `AuthLast` datetime default NULL, `AuthPort` varchar(20) default NULL, `AuthSw` varchar(20) default NULL, `vlan_group` int(11) default NULL, `AuthVlan` int(11) default NULL, PRIMARY KEY (`mac`) ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='List of VMPS authenticated Computers' ;
+
 - Also check the slave mysql log for errors.
 
 - If all looks fine, stop the slave and start it normally:
 
    rcmysql stop
    rcmysql start
+   rcvmps start
+   tail -f /var/log/messages | grep vmpsd_external
+
 
 
 3. Fixing a replication problem
 ================================
-We noticed that replication had stopped due to an invalid query.
-Repliction if OK if
+It has happened that replication had stops due to an invalid query.
+Replication if OK if
     show slave status \G;
 shows the master log position  correct, Slave_IO_Running: Yes and Slave_SQL_Running: Yes.
 
-In this eaxmple, Slave_SQL_Running was 'No', so we fixed it, by stopping the slave and 
-skipping the SQL Query causing the problem:
+In this eaxmple, Slave_SQL_Running was 'No', so we fixed it, by stopping the 
+slave and skipping the SQL Query causing the problem:
 
   stop slave;
   SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1;
@@ -106,21 +109,21 @@ skipping the SQL Query causing the problem:
   show slave status \G;
   
 It now skips to the next error:
-          Slave_SQL_Running: No
-          Last_Error: Error 'Unknown table 'inventory.v_1'' on query. Default database: 'inventory'. Query: 'DROP   VIEW v_1'
+  Slave_SQL_Running: No
+  Last_Error: Error 'Unknown table 'inventory.v_1'' on query. Default database: 'inventory'. Query: 'DROP   VIEW v_1'
 
-To get through these difficult queries, had to do the above three times.
+To get through these difficult queries, it may be necessary to repeat the above.
   
-[Note: I don't know by these (test) queries to create and drop views failed, but thats another story]
-         
-  More reading:
+[Note: I don't why drop views failed, seems to be a MySQL5 issue]
+More reading:
   http://dev.mysql.com/doc/refman/5.0/en/set-global-sql-slave-skip-counter.html
   http://dev.mysql.com/doc/refman/5.1/en/replication-options.html
 
+
 4. Monitoring replication
 =========================
-Install /opt/vmps/monitor_mysql_slave and call it from cron on the slave:
-*/5  7-18 * * 1-5 /opt/vmps/monitor_mysql_slave
+Install monitor_mysql_slave and call it from cron on the slave:
+*/5  7-18 * * 1-5 /opt/nac/bin/monitor_mysql_slave
 
 
 // done

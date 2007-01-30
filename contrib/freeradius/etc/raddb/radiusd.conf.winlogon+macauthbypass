@@ -1,0 +1,100 @@
+prefix = /usr/local
+exec_prefix = ${prefix}
+sysconfdir = ${prefix}/etc
+localstatedir = ${prefix}/var
+sbindir = ${exec_prefix}/sbin
+logdir = ${localstatedir}/log/radius
+raddbdir = ${sysconfdir}/raddb
+radacctdir = ${logdir}/radacct
+confdir = ${raddbdir}
+run_dir = ${localstatedir}/run/radiusd
+log_file = ${logdir}/radius.log
+libdir = ${exec_prefix}/lib
+pidfile = ${run_dir}/radiusd.pid
+user = radiusd
+group = radiusd
+max_request_time = 30
+delete_blocked_requests = no
+cleanup_delay = 5
+max_requests = 1024
+bind_address = *
+port = 0
+hostname_lookups = no
+allow_core_dumps = no
+regular_expressions	= yes
+extended_expressions	= yes
+log_stripped_names = no
+log_auth = no
+log_auth_badpass = no
+log_auth_goodpass = no
+usercollide = no
+lower_user = no
+lower_pass = no
+nospace_user = no
+nospace_pass = no
+
+
+security {
+        max_attributes = 200
+        reject_delay = 1
+        status_server = no
+}
+
+proxy_requests  = no
+
+$INCLUDE  ${confdir}/clients.conf
+
+snmp    = no
+#$INCLUDE  ${confdir}/snmp.conf
+
+thread pool {
+        start_servers           = 5
+        max_servers             = 32
+        min_spare_servers       = 3
+        max_spare_servers       = 10
+        max_requests_per_server = 0
+}
+
+modules {
+
+$INCLUDE ${confdir}/eap.conf
+
+        mschap {
+                authtype = MS-CHAP
+		use_mppe = yes
+                require_encryption = yes
+                require_strong = yes
+                with_ntdomain_hack = yes
+		ntlm_auth = "/opt/samba/bin/ntlm_auth --request-nt-key --domain=%{mschap:NT-Domain} --username=%{mschap:User-Name} --challenge=%{mschap:Challenge:-00} --nt-response=%{mschap:NT-Response:-00}"
+	}
+
+	perl verify_mac {
+		module = "/opt/nac/bin/rad2vmps"
+	}
+}
+
+authorize {
+ 	mschap {
+	   fail = 1
+	   ok = return
+	}
+	eap {
+	   fail = 1
+	   ok = return
+	}
+        verify_mac
+}
+
+authenticate {
+	Auth-Type MS-CHAP {
+	 	mschap
+	}
+        eap
+	Auth-Type MAC-Auth-Bypass {
+		verify_mac
+	}
+}
+
+post-auth {
+	verify_mac
+}

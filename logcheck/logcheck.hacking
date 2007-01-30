@@ -1,0 +1,67 @@
+## 
+## /secure/logcheck/logcheck.hacking
+##
+## Original "logcheck" entries:
+"wiz"
+"WIZ"
+"debug"
+"DEBUG"
+# To general: gets ACE errors 
+#ATTACK
+#nested
+VRFY bbs
+VRFY decode
+VRFY uudecode
+VRFY lp
+VRFY demo
+VRFY guest
+VRFY root
+VRFY uucp
+VRFY oracle
+VRFY sybase
+VRFY games
+vrfy bbs
+vrfy decode
+vrfy uudecode
+vrfy lp
+vrfy demo
+vrfy guest
+vrfy root
+vrfy uucp
+vrfy oracle
+vrfy sybase
+vrfy games
+expn decode
+expn uudecode
+expn wheel
+expn root
+EXPN decode
+EXPN uudecode
+EXPN wheel
+EXPN root
+LOGIN root REFUSED
+rlogind.*: Connection from .* on illegal port
+rshd.*: Connection from .* on illegal port
+sendmail.*: user .* attempted to run daemon
+uucico.*: refused connect from .*
+tftpd.*: refused connect from .*
+login.*: .*LOGIN FAILURE.* FROM .*root
+login.*: .*LOGIN FAILURE.* FROM .*guest
+login.*: .*LOGIN FAILURE.* FROM .*bin
+login.*: .*LOGIN FAILURE.* FROM .*uucp
+login.*: .*LOGIN FAILURE.* FROM .*adm
+login.*: .*LOGIN FAILURE.* FROM .*bbs
+login.*: .*LOGIN FAILURE.* FROM .*games
+login.*: .*LOGIN FAILURE.* FROM .*sync
+login.*: .*LOGIN FAILURE.* FROM .*oracle
+login.*: .*LOGIN FAILURE.* FROM .*sybase
+attackalert
+
+## Added by Sean, 16.Oct.02
+sshd.* Corrupted check bytes on input.
+sshd.* compensation attack
+
+# Need to know when cisco switches enable sniffing
+local span session active
+
+## eof

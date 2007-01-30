@@ -1,0 +1,21 @@
+#For any user authenticating with a Certificate, put her in the VLAN "CertificateVLAN"
+DEFAULT         Auth-Type == EAP
+                Tunnel-Type = VLAN,
+                Tunnel-Medium-Type = 6,
+                Tunnel-Private-Group-ID = CertificateVLAN
+
+#For any user authenticating with SQL, put her in the VLAN "SQLVLAN"
+DEFAULT         Auth-Type == SQL
+                Tunnel-Type = VLAN,
+                Tunnel-Medium-Type = 6,
+                Tunnel-Private-Group-ID = SQLVLAN
+
+#For any user authenticating with the windows logon infomation, put her in the VLAN "WinLogonVLAN"
+DEFAULT         Auth-Type == MS-CHAP
+                Tunnel-Type = VLAN,
+                Tunnel-Medium-Type = 6,
+                Tunnel-Private-Group-ID = WinLogonVLAN
+
+
+#All the rest, reject them
+DEFAULT Auth-Type := Reject

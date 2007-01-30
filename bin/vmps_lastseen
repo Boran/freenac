@@ -40,9 +40,9 @@ $debug_flag2=FALSE;
 #$debug_flag1=TRUE;
 #$debug_flag2=TRUE;
 
-include_once "funcs.inc";
+require_once "funcs.inc";
 
-global  $lastseen_dryrun;
+global  $lastseen_dryrun, $default_user_unknown;
 if ($debug_flag2===TRUE) {
   $daemon=false;
   $lastseen_dryrun=true;
@@ -108,7 +108,7 @@ function patch_lookup($switch, $port) {
   }
 
   ## Lookup all details for that switch/port from patches
-  $query="select CONCAT(von_dose,' ',von_office,' ',von_user,' ',comment) from patchcable where nach_switch='" . $switch . "' and nach_port='" . $port ."'";
+  $query="select CONCAT(von_dose,' ',von_office,' ',comment) from patchcable where nach_switch='" . $switch . "' and nach_port='" . $port ."'";
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
@@ -233,24 +233,8 @@ do {
 
             $newmac_vendor=lookup_vendor_mac($mac2);
 
-            if ($lastseen_infnet==TRUE) {         
+            if ($lastseen_infnet==TRUE) {         # Enterprise only
 
-#                # 1.1 Infnet PC?: See if its known on PC Explorer, can take several secs
-#                $retval='';
-#                $infnet_details=syscall("$check_infnet_mac $mac2", $retval);
-#
-#                #if(preg_match("/Host=(\S+) (.+)$/",$infnet_details, $matches)) {
-#                #Host=uPC2 Vorname=Urs Family=Someone Tel=+41-99-1234566 Org=AA-BB-CC-DD
-#                if(preg_match("/Host=(\S+) Vorname=(.+) Family=(.+) Tel=(\S+) Org=(\S+) NtAccount=(\S+)$/",$infnet_details, $matches)) {
-#
-#                  # Enable PC and set to Infnet VLAN
-#                  #$infnet_name=$matches[1];     
-#                  $infnet_name=strtolower($matches[1]);     
-#                  $infnet_details=$matches[2] ." " .$matches[3] ." " 
-#                                 .$matches[4] ." " .$matches[5];     
-#                  $txx_name= strtoupper($matches[6]);
-
-     
                 # 1.1 Infnet PC?: See if its known on SMS, can take several secs
                 $retval='';
                 $infnet_details=syscall("$sms_infnet_mac $mac2", $retval);
@@ -258,7 +242,7 @@ do {
                 # Enable PC and set to Infnet VLAN
                 if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$infnet_details, $matches)) {
                   $infnet_name=$matches[1];     
-                  $txx_name= "KEINE";                          # default
+                  $txx_name= $default_user_unknown;         # default
                   $txx_name   =$matches[2];
                   $sms_os     =$matches[3];
                   $infnet_details="";
@@ -282,23 +266,10 @@ do {
                   if ($lastseen_dryrun==FALSE) {
                     $res = mysql_query($query);
                     if (!$res) { die('Invalid query: ' . mysql_error()); }
-                    # DB is now 'live'
-                    #sleep(1);    # wait a sec, otherwise it seem to be too fast 
-                    #request_vmps_update();
-
                     snmp_restart_port($port, $switch);
                   }
 
                
-                  ## User now authorised, so now add user to local DB if needed.
-                  #User now authorised, so now add user to local DB if needed.
-                  #
-                  #$txx_name= direx_check_new_user("INO-SSM", "Sean", "Boran");
-                  #$txx_name= direx_check_new_user($matches[5], $matches[2], $matches[3]);
-                  # TBD: optimise now thzat we have the NT user
-                  #      - insert if user not known, use NT account as key
-                  #direx_check_new_user($matches[5], $matches[2], $matches[3]);
-                  # 7.6.06: insert user if needed, then get user details from Direx.
                   insert_user($txx_name);
                   #logit("Inserted new user $txx_name");
                   direx_sync_user($txx_name);
@@ -317,18 +288,16 @@ do {
             }   # if infnet
             
 
-            ## 1.2 Add new NON-Infnet system
+            ## 1.2 Add new Unknown system: normal case
 
             if ($newmac_found==FALSE) { # Already added in Infnet Section?
               $query="INSERT INTO systems "
                 . "SET LastSeen=NOW(), " 
-                .      "status=0, name='unknown',"
-                .      $set_vlan_for_unknowns
-                .      "port='"    .$port   . "', "
-                .      "switch='"  .$switch . "', "
-#                .      "description='keine', "   # nt account
-                .      "description='KEINE', "   # nt account
-                .      "mac='"     . $mac2  . "' ";
+                .      "status='$set_status_for_unknowns', name='unknown',"
+                .      "vlan='$set_vlan_for_unknowns',"
+                .      "port='$port', switch='$switch', "
+                .      "description='$default_user_unknown', "   # usually 'KEINE'
+                .      "mac='$mac2' ";
               $log_entry="New unknown $mac2 ($newmac_vendor), switch ";
               #logit($log_entry);
 

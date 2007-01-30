@@ -1,0 +1,77 @@
+#! /bin/sh 
+#
+# Author: Lars Mueller <lmuelle@suse.de>
+#
+# /etc/init.d/winbindd
+#   and its symbolic link
+# /usr/sbin/rcwinbindd
+#
+### BEGIN INIT INFO
+# Provides:       winbindd
+# Required-Start: $network $remote_fs syslog
+# X-UnitedLinux-Should-Start: cupsd nmb
+# Required-Stop:
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Description:    winbindd SMB/CIFS file and print server
+### END INIT INFO
+
+SMBD_BIN="/opt/samba/sbin/winbindd"
+SMB_CONF="/opt/samba/lib/smb.conf"
+PID_FILE="/opt/samba/var/locks/winbindd.pid"
+
+. /etc/rc.status
+rc_reset
+
+# Check for missing binary
+if [ ! -x ${SMBD_BIN} ]; then
+	echo -n >&2 "Samba winbind daemon, ${SMBD_BIN} is not installed. "
+	rc_status -s
+	exit 5
+fi
+
+# be extra carefull cause connection fail if TMPDIR is not writeable
+export TMPDIR="/var/tmp"
+
+case "$1" in
+	start)
+		echo -n "Starting Samba winbind daemon "
+		checkproc -p ${PID_FILE} ${SMBD_BIN}
+		case $? in
+			0) echo -n "- Warning: daemon already running. " ;;
+			1) echo -n "- Warning: ${PID_FILE} exists. " ;;
+		esac
+		#startproc -p ${PID_FILE} ${SMBD_BIN} -D -s ${SMB_CONF}
+		startproc -p ${PID_FILE} ${SMBD_BIN} 
+		rc_status -v
+		;;
+	stop)
+		echo -n "Shutting down Samba winbind daemon ${PID_FILE} "
+		checkproc -p ${PID_FILE} ${SMBD_BIN} || \
+			echo -n " Warning: daemon not running. "
+		killproc -p ${PID_FILE} -t 10 ${SMBD_BIN}
+		rc_status -v
+		;;
+	try-restart|condrestart)
+		if test "$1" = "condrestart"; then
+			echo "${attn} Use try-restart ${done}(LSB)${attn} rather than condrestart ${warn}(RH)${norm}"
+		fi
+		$0 status
+		if test $? = 0; then
+			$0 restart
+		else 
+			rc_reset
+		fi
+		rc_status
+		;;
+	restart)
+		$0 stop
+		$0 start
+		rc_status
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+		exit 1
+		;;
+esac
+rc_exit
