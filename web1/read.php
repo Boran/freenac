@@ -5,7 +5,7 @@ include_once('functions.inc');
 include_once('print.inc');
 
 $fields[$i] = array("name", "Hostname","INOSSMsean1"); $i++;
-$fields[$i] = array("description", "NT Account<br>(of the owner)","option"); $i++;
+$fields[$i] = array("uid", "NT Account<br>(of the owner)","option"); $i++;
 $fields[$i] = array("inventar", "Inventory #","8361226 or <br><i>(12345679</i>"); $i++;
 $fields[$i] = array("mac", "MAC Adress<br>(ethernet)","0020.e068.dfb1 or <br> 00:20:e0:68:df:b1"); $i++;
 $fields[$i] = array("r_ip", "Last IP Address","193.5.227.123"); $i++;
@@ -47,8 +47,8 @@ if ($submit) {
 		$fieldvalue = validate_input($$fieldname);
 		if (($fieldvalue != '') && ($fieldvalue != -1)) {
 			$notnull = TRUE;
-			if ($fieldname == 'description') { $fieldvalue = strtoupper($fieldvalue); };
-			if ($fieldname == 'mac') {
+#			if ($fieldname == 'description') { $fieldvalue = strtoupper($fieldvalue); };
+			if (($fieldname == 'mac') || ($fieldname == 'uid')) {
 				if (stristr($fieldvalue,':')) {
 					$fieldvalue = format_mac($fieldvalue);
 				};
@@ -58,7 +58,7 @@ if ($submit) {
 			};
 		};
 	};
-	echo $where.'<hr>';
+#	echo $where.'<hr>';
 
 // if there is an actual query, display the host
 	if ($notnull) {

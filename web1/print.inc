@@ -5,23 +5,17 @@
 // all informations known about a specific host host
 
 function print_host($mac) {
-
+	global $big_sel;
 // 1. query all data
 // 1.1. General Properties
 //	$sel = "SELECT * FROM systems WHERE mac = '$mac';";
-	$sel = "SELECT inventar, s.mac as mac, s.vlan, v.value as vlanname, stat.value as statusname, s.status,
-  s.name as ComputerName, s.description as user, s.comment, s.ChangeDate, LastSeen, building,
-  office as officeSoll, p.location as officeIst,
-  pat.von_dose as PatchSocket,pat.von_office as PatchCable,
-  port, sw.name as switch,
-  class, cl.value as classname,
-  class2, c2.value as class2name, os, o.value as osname, os1, os2, os3 FROM systems s, vlan v, vstatus stat, sys_class cl, sys_class2 c2, sys_os o, switch sw, port p, patchcable pat WHERE s.vlan=v.id AND s.status=stat.id AND s.class=cl.id AND s.class2=c2.id AND s.os=o.id
-  AND s.switch=sw.ip AND (s.switch=p.switch AND s.port=p.name) AND (s.port=pat.nach_port AND s.switch=pat.nach_switch) AND s.mac='$mac'";
+	$sel = $big_sel." WHERE s.mac='$mac'";
 	$system = mysql_fetch_array(mysql_query($sel));
+	$sid = $system['sid'];
 
 // 1.2 McAfee EPO
 	$sel = "SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'";
-	$res = mysql_query($sel) or die ("Unable to query MySQL");
+	$res = mysql_query($sel) or die ("Unable to query MySQL ($sel)");
 	if (mysql_num_rows($res) > 0) {
 		$epo = mysql_fetch_array($res);
 	} else {
@@ -29,40 +23,35 @@ function print_host($mac) {
 	};
 
 // 1.3 Open ports
+# TODO : get nmap_id out : not used anymore
 	$nmap_id = get_nmap_id($mac);
 	if ($nmap_id) {
 		$scan = TRUE;
 		$sel = "SELECT * FROM nac_hostscanned WHERE id = '$nmap_id';";
-		$res = mysql_query($sel) or die ("Unable to query MySQL");
+		$res = mysql_query($sel) or die ("Unable to query MySQL ($sel)");
 		// this query MUST give an answer otherwise nmap_id should be FALSE
 		$nmap = mysql_fetch_array($res);
 	
-		$sel = "SELECT nac_openports.port as port, nac_servicestcp.description as description, nac_openports.banner as `banner` FROM nac_openports 
-						 LEFT JOIN nac_servicestcp ON nac_openports.port = nac_servicestcp.port 
-						 WHERE host = '$nmap_id' and protocol='tcp' ;";
-		$ports = mysql_query($sel) or die ("Unable to query MySQL");
-		if (mysql_num_rows($ports) > 0) {
-			while ($port = mysql_fetch_array($ports)) {
-				$tcp_port[$port['port']] = $port['description'];
-				$tcp_banner[$port['port']] = $port['banner'];
-			};
-		} else {
-			$tcp_port[0] = 'No open TCP port scanned';
-		};
-		
-		$sel = "SELECT nac_openports.port as port, nac_servicesudp.description as description, nac_openports.banner as `banner` FROM nac_openports 
-						 LEFT JOIN nac_servicesudp ON nac_openports.port = nac_servicesudp.port 
-						 WHERE host = '$nmap_id' and protocol='udp' ;";
-		$ports = mysql_query($sel) or die ("Unable to query MySQL");
-		if (mysql_num_rows($ports) > 0) {
-			while ($port = mysql_fetch_array($ports)) {
-				$udp_port[$port['port']] = $port['description'];
-				$udp_banner[$port['port']] = $port['banner'];
-			};
-		} else {
-			$udp_port[0] = 'No open UDP port scanned';
-		};
+		$sel = "SELECT services.port AS port, services.description AS description, open.banner AS banner, protocols.name AS protocol, services.id as serviceid
+FROM nac_openports open
+LEFT JOIN services ON services.id = open.service
+LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid';";
 
+
+#		$sel = "SELECT nac_openports.port as port, nac_servicestcp.description as description, nac_openports.banner as `banner` FROM nac_openports 
+#						 LEFT JOIN nac_servicestcp ON nac_openports.port = nac_servicestcp.port 
+#						 WHERE host = '$nmap_id' and protocol='tcp' ;";
+		$ports = mysql_query($sel) or die ("Unable to query MySQL ($sel)");
+		if (mysql_num_rows($ports) > 0) {
+			while ($port = mysql_fetch_array($ports)) {
+				$openport[$port['serviceid']] = $port['port'];
+				$openport_descr[$port['serviceid']] = $port['description'];
+				$openport_banner[$port['serviceid']] = $port['banner'];
+				$openport_proto[$port['serviceid']] = $port['protocol'];
+			};
+		} else {
+			$openport[0] = 'No open port found in last scan';
+		};
  	} else {
 		$scan = FALSE;
 	};
@@ -96,16 +85,11 @@ function print_host($mac) {
 		$out .= '<tr><td>Time/date of scan<td colspan=2>'.$nmap['timestamp'];
 		$out .= '<tr><td>OS Detection<td colspan=2>'.$nmap['os'];
 		$out .= '<tr><td colspan=3 bgcolor="#EEEEEE"><b>TCP</b>';
-			foreach($tcp_port as $num => $descr) {
-				$sdescr = explode(',',$descr);
-				$banner = $tcp_banner[$num];
-				$out .= '<tr><td>'.$num.'<td>'.$sdescr[0].'<td>'.$banner;
-			};
-
-			foreach($udp_port as $num => $descr) {
-				$sdescr = explode(',',$descr);
-				$banner = $udp_banner[$num];
-				$out .= '<tr><td>'.$num.'<td>'.$sdescr[0].'<td>'.$banner;
+			foreach($openport as $num => $port) {
+				$sdescr = explode(',',$openport_descr[$num]);
+				$banner = $openport_banner[$num];
+				$out .= '<tr><td>'.$port.'/'.strtolower($openport_proto[$num]);
+				$out .= '<td>'.$sdescr[0].'<td>'.$openport_banner[$num];
 			};
 	};
 	
@@ -130,23 +114,23 @@ function print_host($mac) {
 
 function print_host_table($where) {
 		$query = "SELECT * FROM systems WHERE $where ;";
-//		echo $query.'<br>';
-		$mysql_res = mysql_query($query) or die ("Unable to query MySQL");
+		$mysql_res = mysql_query($query) or die ("Unable to query MySQL ($query)\n");
 		if (mysql_num_rows($mysql_res) > 0) {
 			$html .= "<table cellspacing=0 cellpadding=5 border=1>\n";
-			$html .= "<tr><th>OS<td>Nmap<td>ePO<th>Hostname<th>Owner<th>Inventar<th>MAC<th>Last IP<th>VLAN<th>Standard<br>location<th colspan=2>LastSeen\n";
+			$html .= "<tr><th>OS<td>Nmap<td>ePO<th>Hostname<th>Owner<th>Inventory<th>MAC<th>Last IP<th>VLAN<th>Standard<br>location<th colspan=2>LastSeen\n";
 			while ($row = mysql_fetch_array($mysql_res,MYSQL_ASSOC)) {
 				$html .= '<tr bgcolor="'.get_vlan_color($row['vlan']).'">';
 				$html .= '<td align=center><img src="os/'.$row['os'].'.gif" border=0>';
 // extra details
 				$mac = $row['mac'];
+				$sid = $row['id'];
 				$html .= '<td align=center>';
-				if (get_nmap_id($mac)) { $html .= 'X'; } else { $html .= '&nbsp;'; };
+				if (get_nmap_id($sid)) { $html .= 'X'; } else { $html .= '&nbsp;'; };
 
 				$html .= '<td align=center>';
 
 				$sel_epo = "SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'";
-				$res_epo = mysql_query($sel_epo) or die ("Unable to query MySQL");
+				$res_epo = mysql_query($sel_epo) or die ("Unable to query MySQL ($sel_epo)");
 				if (mysql_num_rows($res_epo) > 0) { $html .= 'X'; } else { $html .= '&nbsp;'; };
 				
 // name => print details link
@@ -162,7 +146,7 @@ function print_host_table($where) {
 				  } else {
 					$html .= '<i>Unknown</i>';
 				  };
-				$html .= '<td>'.$row['inventar'].'&nbsp;';
+				$html .= '<td>'.$row['inventory'].'&nbsp;';
 				$html .= '<td>'.$row['mac'].'&nbsp;';
 				$html .= '<td>'.$row['r_ip'].'&nbsp;';
 				$html .= '<td>'.get_vlan_descr($row['vlan']).'&nbsp;'; // get_vlan_short(get_vlan_descr

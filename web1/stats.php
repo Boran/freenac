@@ -2,7 +2,7 @@
 include_once('config.inc');
 include_once('functions.inc');
 include_once('defs.inc');
-$stattypes = array("class","os","switch","vlan","dat");
+$stattypes = array("class","class2","os","os1","os2","os3","switch","vlan","vlan_group","dat");
 $graphtypes = array("pie","bar");
 $orders = array("DESC","ASC");
 // still todo
@@ -17,7 +17,7 @@ $orders = array("DESC","ASC");
 function print_dat_stats($query) {
 	$readme_url='http://vil.nai.com/vil/DATReadme.aspx';
 
-	$result = mysql_query($query) or die ("Unable to query MySQL");
+	$result = mysql_query($query) or die ("Unable to query MySQL ($query)\n");
 
 	if (mysql_num_rows($result) > 0) {
 		echo "<table cellspacing=0 cellpadding=5 border=1>\n";
@@ -42,7 +42,7 @@ function print_dat_stats($query) {
 };
 
 function print_stats($query) {
-	$result = mysql_query($query) or die ("Unable to query MySQL");
+	$result = mysql_query($query) or die ("Unable to query MySQL ($query)\n");
 	echo "<table cellspacing=0 cellpadding=5 border=1>\n";
 	if (mysql_num_rows($result) > 0) {
 		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {

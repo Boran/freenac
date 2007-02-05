@@ -15,13 +15,13 @@ $debug_flag1=true;
 
 include_once('config.inc');
 
-function get_hosts($sw,$port) {
-  $sel = "SELECT name,description FROM systems WHERE switch='$sw' AND port='$port';";
+function get_hosts($port) {
+	$sel = "SELECT s.name, CONCAT(users.Surname, ' ',users.GivenName, ', ',users.Department) as owner FROM systems as s LEFT JOIN users ON users.id = s.uid WHERE LastPort='$port';";
   #debug1($sel);
   $res = mysql_query($sel) or die("Unable to query the database");
   if (mysql_num_rows($res) > 0) {
 	  while ($port = mysql_fetch_array($res)) {
-    $out .= $port['name'].' ('.$port['description'].')<br>';
+    $out .= $port['name'].' ('.$port['owner'].')<br>';
 	  };
 	  return($out);
   } else {
@@ -42,6 +42,12 @@ $sel = "SELECT port.name,port.switch,port.location,count(*) ".
          " AND (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$hubs_querydays)".
 	"GROUP BY port.name,port.switch;";
 
+$hubs_querydays = 99;
+$sel = "SELECT switch.name, port.name, LastPort as portid,count(*) FROM systems 
+	LEFT JOIN port ON systems.LastPort = port.id
+	LEFT JOIN switch ON port.switch = switch.id
+	 WHERE (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$hubs_querydays) GROUP BY LastPort";
+
 debug1($sel);
 $res = mysql_query($sel) or die("Unable to query the database");
 
@@ -51,12 +57,12 @@ if (mysql_num_rows($res) > 0) {
 	echo '<br>';
 	echo '<table border=1 cellspacing=0 cellpadding=5>';
 	while ($port = mysql_fetch_array($res)) {
-	  if ($port['count(*)'] > 1) {
+	  if (($port['count(*)'] > 1) && ($port['portid'])) {
 	    echo '<tr valign=top>';
 	    echo '<td>'.$port['switch'];
 	    echo '<td>'.$port['name'];
-	    echo '<td>'.$port['location'];
-	    echo '<td>'.get_hosts($port['switch'],$port['name']);
+	    echo '<td>'.get_location($port['portid']);
+	    echo '<td>'.get_hosts($port['portid']);
 	  };
 	};
 	echo '</table>';

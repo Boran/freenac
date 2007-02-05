@@ -10,6 +10,32 @@
 ####################################
 
 
+$big_sel = "SELECT s.id as sid, inventory as inventory, s.mac as mac, v.default_id as vlan, v.default_name as vlanname, vstatus.value as status,
+	s.name as ComputerName, u.username as user, s.comment, s.ChangeDate, LastSeen, sysbd.name as building, 
+	sysloc.name as officeSoll, patchloc.name as officeIst,
+	pat.outlet as PatchSocket, patchloc.name as PatchCable,
+	p.name as port, sw.name as switch,
+	s.class as class, c1.value as classname,
+	s.class2 as class2, c2.value as class2name,
+	os.value as os, os.value as osname, os1.value as os1, os2.value as os2, os3.value as os3
+FROM systems s
+LEFT JOIN vstatus ON vstatus.id = s.status
+LEFT JOIN vlan v ON v.id = s.LastVlan
+LEFT JOIN port p ON p.id = s.LastPort
+LEFT JOIN switch sw ON sw.id = p.switch
+LEFT JOIN patchcable pat ON pat.port = p.id
+	LEFT JOIN location as patchloc ON patchloc.id = pat.office
+LEFT JOIN users u ON u.id = s.uid
+LEFT JOIN sys_class c1 ON c1.id = s.class
+LEFT JOIN sys_class2 c2 ON c2.id = s.class2
+LEFT JOIN sys_os os ON os.id = s.os
+LEFT JOIN sys_os1 os1 ON os1.id = s.os1
+LEFT JOIN sys_os2 os2 ON os2.id = s.os2
+LEFT JOIN sys_os3 os3 ON os3.id = s.os3
+LEFT JOIN location sysloc ON sysloc.id = s.office
+	LEFT JOIN building sysbd ON sysbd.id = sysloc.building_id";
+
+
 function db_connect()
 {
   global $connect, $dbhost, $dbuser, $dbpass, $dbname;
@@ -55,10 +81,10 @@ function debug2($msg) {
   }
 }
 
-function get_nmap_id($mac) {
+function get_nmap_id($sid) {
   db_connect();
-        $sel = "SELECT id FROM nac_hostscanned WHERE mac='".$mac."';";
-        $res = mysql_query($sel)  or die ("Unable to query MySQL");
+        $sel = "SELECT id FROM nac_hostscanned WHERE sid='".$sid."';";
+        $res = mysql_query($sel)  or die ("Unable to query MySQL ($sel)");
         $num = mysql_num_rows($res);
 
         if ($num > 0) {
@@ -72,7 +98,7 @@ function get_nmap_id($mac) {
 function get_nmap_os($nmap_ip) {
   db_connect();
         $sel = "SELECT os FROM nac_hostscanned WHERE id='$nmap_ip';";
-        $res = mysql_query($sel)  or die ("Unable to query MySQL");
+        $res = mysql_query($sel)  or die ("Unable to query MySQL ($sel)");
         $num = mysql_num_rows($res);
 
         if ($num > 0) {
@@ -120,7 +146,7 @@ function display_os_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM sys_os ORDER BY value ASC;";
-  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
 
   $html .= '<option value="">(any)</option>';
 
@@ -142,7 +168,7 @@ function display_class_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM sys_class ORDER BY id ASC;";
-  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
 
   $html .= '<option value="">(any)</option>';
   if (mysql_num_rows($res) > 0) {
@@ -164,7 +190,7 @@ function display_class2_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM sys_class2 ORDER BY id ASC;";
-  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
 
   $html .= '<option value="">(any)</option>';
   if (mysql_num_rows($res) > 0) {
@@ -186,7 +212,7 @@ function display_vlan_select($selected) {
   db_connect();
 
   $query = "SELECT * FROM vlan ORDER BY id ASC;";
-  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
 
   $html .= '<option value="">(any)</option>';
   if (mysql_num_rows($res) > 0) {
@@ -194,7 +220,7 @@ function display_vlan_select($selected) {
     if ($os['value'] != '') {
       $html .= "<option ";
 	  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
-      $html .= "value=\"". $os['id']. '">';
+      $html .= "value=\"". $os['vlan_description']. '">';
       $html .= $os['value']. '</option>';
     };
   };
@@ -202,20 +228,20 @@ function display_vlan_select($selected) {
   return($html);
 };
 
-function display_description_select($selected) {
+function display_uid_select($selected) {
   global $connect;
   db_connect();
 
   $query = "SELECT * FROM users ORDER BY Surname ASC;";
-  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL");
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
 
   $html .= '<option value="">(any)</option>';
   if (mysql_num_rows($res) > 0) {
   while ($user = mysql_fetch_array($res)) {
     if ($user['Surname'] != '') {
       $html .= "<option ";
-	  if (($selected == $user['AssocNtAccount']) && $selected != '') { $html .= "selected "; };
-	  $html .= "value=\"". $user['AssocNtAccount']. '">';
+	  if (($selected == $user['id']) && $selected != '') { $html .= "selected "; };
+	  $html .= "value=\"". $user['id']. '">';
       $html .= $user['Surname']. ' '. $user['GivenName'].', ';
       $html .= $user['Department']. '</option>';
     };
@@ -227,8 +253,8 @@ function display_description_select($selected) {
 
 function get_user_email($username) {
   db_connect();
-  $query = "SELECT rfc822mailbox FROM users WHERE AssocNtAccount = '$username'; ";
-  $res = mysql_query($query)  or die ("Unable to query MySQL");
+  $query = "SELECT rfc822mailbox FROM users WHERE id = '$username'; ";
+  $res = mysql_query($query)  or die ("Unable to query MySQL ($query)");
   $user = mysql_fetch_array($res);
 
   return($user[0]);
@@ -236,8 +262,8 @@ function get_user_email($username) {
 
 function get_user_name($username) {
   db_connect();
-  $query = "SELECT * FROM users WHERE AssocNtAccount = '$username'; ";
-  $res = mysql_query($query)  or die ("Unable to query MySQL");
+  $query = "SELECT * FROM users WHERE id = '$username'; ";
+  $res = mysql_query($query)  or die ("Unable to query MySQL ($query)");
   if (mysql_num_rows($res) > 0) {
   $user = mysql_fetch_array($res);
 	  $name = $user['Surname'].' '.$user['GivenName'].', '.$user['Department'];
@@ -245,28 +271,6 @@ function get_user_name($username) {
   } else {
 	  return($username);
   };
-};
-
-function user_tooltip($username) {
-  db_connect();
-  $query = "SELECT * FROM users WHERE AssocNtAccount = '$username'; ";
-  $res = mysql_query($query)  or die ("Unable to query MySQL");
-
-  $user = mysql_fetch_array($res);
-
-  //$text = $user['GivenName'].' '.$user['Surname'].', '.$user['Department']." (";
-  $text .= $user['HouseIdentifier'].' '.$user['PhysicalDeliveryOfficeName']." / ";
-
-  // Shorter tel number for INO
-  if (stristr($user['TelephoneNumber'],'31-342')) {
-    $user['TelephoneNumber'] = str_replace(' ','',substr($user['TelephoneNumber'],strlen($user['TelephoneNumber'])-7,7));
-  };
-
-  $text .= $user['TelephoneNumber']. " / ";
-  $text .= $user['Mobile'];
-  //."\n";
-
-  return($text);
 };
 
 function get_vlan_color($vlan) {
@@ -331,15 +335,15 @@ function get_vlan_descr($vlan) {
   };
 };
 
-function get_location($switch_ip,$port) {
+function get_location($port) {
   db_connect();
-        $query = "SELECT * FROM patchcable WHERE nach_switch = '$switch_ip' AND nach_port = '$port';";
+        $query = "SELECT location.name as office FROM port LEFT JOIN patchcable ON patchcable.port = port.id LEFT JOIN location ON location.id = patchcable.office WHERE port.id = '$port';";
         $res = mysql_query($query);
         if (mysql_num_rows($res) > 0) {
                 $port = mysql_fetch_array($res);
-                return($port['von_office']);
+                return($port['office']);
         } else {
-			$query2 = "SELECT * FROM switch WHERE ip = '$switch_ip';";
+			$query2 = "SELECT location.name as office FROM port LEFT JOIN switch ON switch.id = port.switch LEFT JOIN location ON location.id = switch.location WHERE port.id = '$port';";
 			$res2 =  mysql_query($query2);
 			if (mysql_num_rows($res2) > 0) {
 				$switch = mysql_fetch_array($res2);
@@ -428,17 +432,11 @@ function get_actual_value($mac,$fieldname) {
 
 };
 function get_lastseen($mac) {
+	global $big_sel;
 	$switch = get_switch_name(get_actual_value($mac,'switch'));
 	$port = get_actual_value($mac,'port');
-
-	$sel = "SELECT inventar, s.mac as mac, s.vlan, v.value as vlanname, stat.value as statusname, s.status,
-  s.name as ComputerName, s.description as user, s.comment, s.ChangeDate, LastSeen, building,
-  office as officeSoll, p.location as officeIst,
-  pat.von_dose as PatchSocket,pat.von_office as PatchCable,
-  port, sw.name as switch, sw.location as swlocation,
-  class, cl.value as classname,
-  class2, c2.value as class2name, os, o.value as osname, os1, os2, os3 FROM systems s, vlan v, vstatus stat, sys_class cl, sys_class2 c2, sys_os o, switch sw, port p, patchcable pat WHERE s.vlan=v.id AND s.status=stat.id AND s.class=cl.id AND s.class2=c2.id AND s.os=o.id
-  AND s.switch=sw.ip AND (s.switch=p.switch AND s.port=p.name) AND (s.port=pat.nach_port AND s.switch=pat.nach_switch) AND s.mac='$mac'";
+	
+	$sel = $big_sel ." WHERE s.mac='$mac'";
 
 	$system = mysql_fetch_array(mysql_query($sel));
 

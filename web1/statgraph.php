@@ -17,7 +17,7 @@ function cbFmtPercentage($aVal) {
 db_connect();
 
 $select = $sel[$stattype]['graph']." ORDER BY count(*) $order;";
-$result = mysql_query($select) or die ("Unable to query MySQL");
+$result = mysql_query($select) or die ("Unable to query MySQL ($select) \n");
 
 if (mysql_num_rows($result) > 0) {
 
