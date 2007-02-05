@@ -22,14 +22,14 @@ openlog("nac.web1", LOG_PID, LOG_LOCAL5);
 function print_switch_sel() {
   global $db;
   global $sw;
-  $sel = "SELECT * FROM switch";
-  $res = mysql_query($sel) or die ("Unable to query MySQL");
+  $sel = "SELECT sw.id as id, sw.name as name, location.name as location FROM switch sw LEFT JOIN location ON location.id = sw.location";
+  $res = mysql_query($sel) or die ("Unable to query MySQL ($sel)\n");
   $html = "<select name=sw>\n";
 
   if (mysql_num_rows($res) > 0) {
 	  while ($swi = mysql_fetch_array($res)) {
-	    $html .= '<option value="'.$swi['ip'].'"';
-	    if ($sw == $swi['ip']) {
+	    $html .= '<option value="'.$swi['id'].'"';
+	    if ($sw == $swi['id']) {
 	      $html .= ' selected ';
 	    };
 	    $html .='>'.$swi['name'].' ('.$swi['location'].")</option>\n";

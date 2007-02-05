@@ -40,12 +40,12 @@ function get_color($vlan) {
 };
 
 
-function get_dose($switch,$port) {
-  $sel = "SELECT von_dose FROM patchcable WHERE nach_switch='$switch' AND nach_port='$port';";
-  $res = mysql_query($sel)  or die ("Unable to query MySQL");
+function get_dose($port) {
+  $sel = "SELECT outlet FROM patchcable WHERE port='$port';";
+  $res = mysql_query($sel)  or die ("Unable to query MySQL ($sel)");
 
   if ($dose = mysql_fetch_array($res)) {
-    return($dose['von_dose']);
+    return($dose['outlet']);
   } else {
     return(FALSE);
   };
@@ -53,12 +53,12 @@ function get_dose($switch,$port) {
 };
 
 
-function get_patch($switch,$port) {
-  $sel = "SELECT von_dose,von_office FROM patchcable WHERE nach_switch='$switch' AND nach_port='$port';";
-  $res = mysql_query($sel) or die ("Unable to query MySQL");
+function get_patch($port) {
+  $sel = "SELECT outlet,location.name as location FROM patchcable LEFT JOIN location ON location.id = patchcable.office WHERE port='$port';";
+  $res = mysql_query($sel) or die ("Unable to query MySQL ($sel)");
   if (mysql_num_rows($sel) > 0) {
-	  list($dose,$office) = mysql_fetch_array($res);
-	  return("$dose ($office)");
+	  list($dose,$location) = mysql_fetch_array($res);
+	  return("$dose ($location)");
   } else {
 	  return(FALSE);
   };
@@ -83,7 +83,8 @@ $dotvmps=''; $dotpatch=''; $dothosts=''; $dotdose=''; $dotports='';
 // 1. Make the ports
 $sel_ports = "SELECT * FROM port WHERE switch='$sw';";
 debug2($sel_ports);
-$ports = mysql_query($sel_ports) or die ("Unable to query MySQL");
+$ports = mysql_query($sel_ports) or die ("Unable to query MySQL ($sel_ports)");
+$dotports .= "\n# 1. Make the ports\n\n";
 if (mysql_num_rows($ports) > 0) {
 	while ($port = mysql_fetch_array($ports)) {
 	  $portref = 'port'.strtr($port['name'], "/", "e");
@@ -92,15 +93,20 @@ if (mysql_num_rows($ports) > 0) {
 };
 
 // 2. Make the nodes
-$sel_dose = "SELECT * FROM patchcable WHERE nach_switch='$sw' AND von_dose != ''";
-$doses = mysql_query($sel_dose) or die ("Unable to query MySQL");
+$sel_dose = "SELECT patchcable.outlet as outlet, location.name as location, port.name as port FROM patchcable 
+                       LEFT JOIN port ON port.id = patchcable.port 
+                       LEFT JOIN switch ON switch.id = port.switch 
+                       LEFT JOIN location ON location.id = patchcable.office
+                   WHERE switch.id = $sw AND patchcable.outlet != '';";
+
+$doses = mysql_query($sel_dose) or die ("Unable to query MySQL ($sel_dose)");
 if (mysql_num_rows($doses) > 0) {
 	while ($dose = mysql_fetch_array($doses)) {
-	  $doseref = 'dose' . strtr($dose['von_dose'], "/. -", "efgh");
-	  $dotdose .= $doseref . " [ label=\"".$dose['von_office'].'\n('.$dose['von_dose'].')",shape="egg",fontsize=10 ] '."\n";
+	  $doseref = 'dose' . strtr($dose['outlet'], "/. -", "efgh");
+	  $dotdose .= $doseref . " [ label=\"".$dose['location'].'\n('.$dose['outlet'].')",shape="egg",fontsize=10 ] '."\n";
 
 	// 3. and patch them to the ports
-	  $portref = 'port'.strtr($dose['nach_port'], "/", "e");
+	  $portref = 'port'.strtr($dose['port'], "/", "e");
 	  $dotpatch .= $portref.'->'.$doseref." [	dir=\"none\" ] \n";
 	};
 };
@@ -110,17 +116,27 @@ if (mysql_num_rows($doses) > 0) {
 #$today = "";
 $today = " AND (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$vmpsdot_querydays)";
 
-$sel_hosts = "SELECT * FROM systems WHERE switch='$sw' $today";
-$hosts = mysql_query($sel_hosts) or die ("Unable to query MySQL");
+$sel_hosts = "SELECT systems.mac as mac, systems.name as name, users.username as description, vlan.color as vlan_color, port.name as port, port.id as portid
+        FROM systems 
+	LEFT JOIN vlan ON vlan.id = systems.vlan
+	LEFT JOIN users ON users.id = systems.uid
+	LEFT JOIN port ON systems.LastPort = port.id
+	LEFT JOIN switch ON port.switch = switch.id
+          WHERE switch='$sw' $today";
+
+$hosts = mysql_query($sel_hosts) or die ("Unable to query MySQL ($sel_hosts)");
+
+$dothosts .= "\n\n#2. Make nodes : hosts\n";
+$dotvmps .= "\n\n#3. Make links\n";
 if (mysql_num_rows($hosts) > 0) {
 	while ($host = mysql_fetch_array($hosts)) {
 	  $hostref = 'host'.strtr($host['mac'], ".", "e");
-	  $dothosts .= $hostref." [ label=\"".$host['name'].'\n'.$host['description'].'",style="filled",fontsize=10,fillcolor="'.get_color($host['vlan'])."\" ] \n";
+	  $dothosts .= $hostref." [ label=\"".$host['name'].'\n'.$host['description'].'",style="filled",fontsize=10,fillcolor="'.$host['vlan_color']."\" ] \n";
 
 	// 3. Make links
 	  #$portref = $switchref. 'port'. strtr($host['port'], "/", "e");
 	  $portref = 'port'. strtr($host['port'], "/", "e");
-	  $hostdose = get_dose($host['switch'],$host['port']);
+	  $hostdose = get_dose($host['portid']);
 	  if ($hostdose) {
 	    $doseref = 'dose'.strtr($hostdose, "/. -", "efgh");
 	    $dotvmps .= $doseref.'->'.$hostref." [ dir=\"none\" ] \n";
