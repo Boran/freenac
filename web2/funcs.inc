@@ -16,7 +16,7 @@
  * @author		Patrick Bizeau
  * @copyright	2006 FreeNAC
  * @license		http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version		SVN: $Id:$
+ * @version		SVN: $Id$
  * @link			http://www.freenac.net
  *
  */
