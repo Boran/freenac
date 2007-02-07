@@ -20,8 +20,9 @@
  * @author			Sean Boran (FreeNAC Core Team)
  * @copyright		2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			SVN: $Id$
+ * @version			CVS: $Id:$
  * @link				http://www.freenac.net
+ *
  *
  */
 
@@ -64,15 +65,15 @@ if (($unknown_purge) && ($unknown_purge>10)) {
 ## Delete unknown system older than 2 Months
 ## a) First list & log what we delete
 #$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
-#$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name LIKE '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
-$query="select mac,vlan,description,lastport,lastseen from systems where name like '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50";
+$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name LIKE '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
+
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
   while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
-    #printf("/opt/vmps/purge_unknowns: %s %s %s %s %s %s\n", $line[0], $line[1], $line[2], $line[3], $line[4] );
+    #printf("/opt/vmps/purge_unknowns: %s %s %s %s %s %s\n", $line[0], $line[1], $line[2], $line[3], $line[4], $line[5] );
     
-    syslog(LOG_INFO, $line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
-    reporterr('info', 'purge_unknowns: '.$line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
+    syslog(LOG_INFO, $line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] .' '. $line[5] );
+    reporterr('info', 'purge_unknowns: '.$line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] .' '. $line[5] );
   }
 
 ## b) Now actually wipe it!

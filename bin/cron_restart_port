@@ -15,9 +15,9 @@
  *
  * @package			FreeNAC
  * @author			Sean Boran (FreeNAC Core Team)
- * @copyright		2006 FreeNAC
+ * @copyright			2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			SVN: $Id$
+ * @version			CVS: $Id:$
  * @link				http://www.freenac.net
  *
  */
@@ -51,16 +51,15 @@ function restart_port($switch, $port) {
 
 debug1("cron_restart_port");
 
-$query="SELECT switch,name,comment FROM port WHERE restart_now='1'";
+$query="SELECT switch,name,location,comment FROM port WHERE restart_now='1'";
   $res = mysql_query($query);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
   while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
     #debug1("restart_port switch $line[0] $line[1]");
-    logit(            "restart_port switch $line[0] $line[1], $line[3]");
-    reporterr('info', "restart_port switch $line[0] $line[1], $line[3]");
-    $switch=v_sql_1_select("select ip from switch where id='$line[0]'");
-    restart_port($switch, $line[1]);
+    logit(            "restart_port switch $line[0] $line[1], Office:$line[2], $line[3]");
+    reporterr('info', "restart_port switch $line[0] $line[1], Office:$line[2], $line[3]");
+    restart_port($line[0], $line[1]);
 
     # Now reset the flag, since its done
     $query="UPDATE port SET restart_now='0' WHERE switch='"

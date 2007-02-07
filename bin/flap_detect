@@ -17,10 +17,11 @@
  * @author			Sean Boran (FreeNAC Core Team)
  * @copyright		2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			SVN: $Id$
+ * @version			CVS: $Id:$
  * @link				http://www.freenac.net
  *
  */
+
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
 $debug_flag1=TRUE;
@@ -62,9 +63,8 @@ function react($cnt, $switch, $port)
   db_connect();
 
   msg("Flapping count=$cnt, switch=$switch $port \n");
-  #$query="SELECT location,comment, (SELECT name FROM switch WHERE ip=switch), (SELECT notify FROM switch WHERE ip=switch) FROM inventory.port "
-  #  . "WHERE switch='$switch' AND name='$port'";
-  $query="select l.name, s.comment, s.name, s.notify from port p inner join switch s on p.switch=s.id and s.ip='$switch' and p.name='$port' inner join location l on l.id=s.location;";
+  $query="SELECT location,comment, (SELECT name FROM switch WHERE ip=switch), (SELECT notify FROM switch WHERE ip=switch) FROM inventory.port "
+    . "WHERE switch='$switch' AND name='$port'";
     #echo $query;
     $res = mysql_query($query);
     if (!$res) { die('Invalid query: ' . mysql_error()); }
@@ -126,10 +126,9 @@ function react($cnt, $switch, $port)
   // document system details
   msg("System details:\n");
   foreach ($arr2 as $mac => $vlan) {
-      $query="select s.name,s.comment,s.description,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
-      #$query="SELECT name,comment,description,office,r_ip, "
-      #  . "(SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where AssocNtAccount=description) "
-      #  . "FROM systems WHERE mac='$mac'";
+      $query="SELECT name,comment,description,office,r_ip, "
+        . "(SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where AssocNtAccount=description) "
+        . "FROM systems WHERE mac='$mac'";
         #echo $query;
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
@@ -172,10 +171,10 @@ function react($cnt, $switch, $port)
 
   foreach ($arr2 as $mac => $vlan) {
     if ($vlan != $best_vlan ) {
-       $query="select s.name,s.comment,s.description,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
-      #$query="SELECT name,comment,description,office,r_ip, "
-      #  . "(SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where AssocNtAccount=description) "
-      #  . "FROM systems WHERE mac='$mac'";
+
+      $query="SELECT name,comment,description,office,r_ip, "
+        . "(SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where AssocNtAccount=description) "
+        . "FROM systems WHERE mac='$mac'";
         #echo $query;
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
@@ -185,13 +184,13 @@ function react($cnt, $switch, $port)
       msg("Problem: $row[0] $mac, $row[5]\n");
 
       // Lookup vlan groups
-      $new_vlan_group=v_sql_1_select("SELECT vlan_group FROM vlan WHERE default_name='$best_vlan'");
-      $othervlangroup=v_sql_1_select("SELECT vlan_group FROM vlan WHERE default_name='$vlan'");
+      $new_vlan_group=v_sql_1_select("SELECT vlan_group FROM vlan WHERE value='$best_vlan'");
+      $othervlangroup=v_sql_1_select("SELECT vlan_group FROM vlan WHERE value='$vlan'");
 
       if ($othervlangroup==$new_vlan_group) {
 
         ## DO SOMETHING: switch vlan
-        $best_lan_num=v_sql_1_select("SELECT id FROM vlan WHERE default_name='$best_vlan'");
+        $best_lan_num=v_sql_1_select("SELECT id FROM vlan WHERE value='$best_vlan'");
         $query="UPDATE systems SET vlan='$best_vlan_num' WHERE mac='$mac2'";
           #echo($query ."\n");
           $res = mysql_query($query) 
@@ -227,8 +226,7 @@ function react($cnt, $switch, $port)
       msg("\n\n");
 
       msg("List of other systems recently authenticated on this port:\n");
-      #$query="SELECT mac,AuthLast,vlan_group,AuthVlan from vmpsauth WHERE AuthPort='$port' AND AuthSw='$switch' AND TIME_TO_SEC(TIMEDIFF(NOW(),AuthLast))<7500 ORDER BY AuthLast DESC ";
-      $query="select s.mac,vm.authlast,v.vlan_group,v.default_id from systems s inner join vmpsauth vm on s.id=vm.sid inner join vlan v on v.id=vm.authvlan inner join port p on p.id=vm.authport inner join switch sw on p.switch=sw.id and sw.ip='$switch' and p.name='$port' AND TIME_TO_SEC(TIMEDIFF(NOW(),vm.AuthLast))<7500 ORDER BY vm.AuthLast DESC ";
+      $query="SELECT mac,AuthLast,vlan_group,AuthVlan from vmpsauth WHERE AuthPort='$port' AND AuthSw='$switch' AND TIME_TO_SEC(TIMEDIFF(NOW(),AuthLast))<7500 ORDER BY AuthLast DESC ";
       $res = mysql_query($query, $connect);
       if (!$res) { die('Invalid query: ' . mysql_error()); }
       if (mysql_num_rows($res)==0) {
@@ -242,8 +240,7 @@ function react($cnt, $switch, $port)
 
 
       msg("List of other systems recently seen on this port:\n");
-      #$query="select name,mac,r_ip,r_timestamp,lastseen from systems WHERE port='$port' AND switch='$switch' AND TIME_TO_SEC(TIMEDIFF(NOW(),lastseen))<7500";
-      $query="select s.name,s.mac,s.r_ip,s.r_timestamp,s.lastseen from systems s inner join port p on s.lastport=p.id and p.name='$port' inner join switch sw on p.switch=sw.id and sw.ip='$switch' AND TIME_TO_SEC(TIMEDIFF(NOW(),s.lastseen))<7500";
+      $query="select name,mac,r_ip,r_timestamp,lastseen from systems WHERE port='$port' AND switch='$switch' AND TIME_TO_SEC(TIMEDIFF(NOW(),lastseen))<7500";
       $res = mysql_query($query, $connect);
       if (!$res) { die('Invalid query: ' . mysql_error()); }
       if (mysql_num_rows($res)==0) {
