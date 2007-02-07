@@ -12,12 +12,12 @@
  * modify it under the terms of the GNU General Public License as published
  * by the Free Software Foundation.
  *
- * @package		FreeNAC
- * @author		Patrick Bizeau
+ * @package	FreeNAC
+ * @author	Patrick Bizeau
  * @copyright	2006 FreeNAC
- * @license		http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version		SVN: $Id$
- * @link			http://www.freenac.net
+ * @license	http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version	SVN: $Id$
+ * @link	http://www.freenac.net
  *
  */
 
@@ -73,7 +73,10 @@ function print_resultset($res,$server){
 	$ret='';
 	while ($row=mysql_fetch_array($res)){
 		$ret.=($i%2==0)?'<tr class="light">':'<tr class="dark">';
-		$ret.='<td><a href="'.$server['PHP_SELF'].'?action=edit&mac='.$row['mac'].'">'.stripslashes($row['name']).'</a></td>'."\n";
+		$ret.='<td><a href="'.$server['PHP_SELF'].'?action=edit&id='.$row['id'].'">';
+		// if we have a name, echo the name, else just the id
+		$ret.=($row['name']!=''?stripslashes($row['name']):$row['id']);
+		$ret.='</a></td>'."\n";
 		$ret.='<td class="center">'.$row['mac'].'</td>'."\n";
 		$ret.='<td class="center">'.ucfirst($row['status']).'</td>'."\n";
 		$ret.='<td class="center" title="VLAN '.$row['vlan'].'">'.$row['vlanname'].'</td>'."\n";
@@ -114,17 +117,50 @@ function validate_webinput($value){
 // retrieves all users from the databases and returns them as a hmtl dropdownlist
 //
 function get_userdropdown($selected_user) {
-	$ret='<select name="assocntaccount">';
-	$sql='SELECT assocntaccount, surname, givenname FROM users ORDER BY surname'; // Get details for all users
+	$ret='<select name="username">';
+	$sql='SELECT id, username, surname, givenname FROM users ORDER BY surname'; // Get details for all users
 	$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
 	if (mysql_num_rows($res)>0){
 		while ($r=mysql_fetch_array($res)){
-			$ret.='<option value="'.$r['assocntaccount'].'" '.(trim(strtolower($r['assocntaccount']))==trim(strtolower($selected_user))?'selected="selected"':'').'>'.$r['surname'].' '.$r['givenname'].'</option>'."\n";
+			$ret.='<option value="'.$r['id'].'" '.($r['id']==$selected_user?'selected="selected"':'').'>'.$r['surname'].' '.$r['givenname'].'</option>'."\n";
 		}
 	}
-	$ret.='</select></td></tr>'."\n";
+	$ret.='</select>'."\n";
 	return $ret;
 }
+
+//
+// retrieves all offices from the database and returns them as a html dropdownlist
+//
+function get_officedropdown($oid){
+	$ret='<select name="office">';
+	$sql='SELECT loc.id, loc.name as office, b.name as building FROM location as loc LEFT JOIN building as b on loc.building_id=b.id ORDER BY building, office'; // Get details for all offices
+	$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+	if (mysql_num_rows($res)>0){
+		while ($r=mysql_fetch_array($res)){
+			$ret.='<option value="'.$r['id'].'" '.($r['id']==$oid?'selected="selected"':'').'>'.$r['building'].' -  '.$r['office'].'</option>'."\n";
+		}
+	}
+	$ret.='</select>'."\n";
+	return $ret;
+}
+
+//
+// retrieves the different status and returns them as a html dropdownlist
+//
+function get_status($s){
+	$ret='<select name="status">';
+	$sql='SELECT id, value FROM vstatus ORDER BY value ASC;';
+	$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+	if (mysql_num_rows($res)>0){
+		while ($r=mysql_fetch_array($res)){
+			$ret.='<option value="'.$r['id'].'" '.($s==$r['id']?'selected="selected"':'').'>'.$r['value'].'</option>'."\n";
+		}
+	}
+	$ret.='</select>'."\n";
+	return $ret;
+}
+
 
 //
 // creates an excel sheet and sends it to the browser
