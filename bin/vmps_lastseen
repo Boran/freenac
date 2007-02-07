@@ -29,7 +29,7 @@
  * @author			Sean Boran (FreeNAC Core Team)
  * @copyright		2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			CVS: $Id:$
+ * @version			SVN: $Id$
  * @link				http://www.freenac.net
  *
  */
@@ -37,7 +37,7 @@
 
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
-#$debug_flag1=TRUE;
+$debug_flag1=TRUE;
 #$debug_flag2=TRUE;
 
 require_once "funcs.inc";
@@ -84,20 +84,24 @@ function request_vmps_update() {
 }
 
 
-function patch_lookup($switch, $port) {
+function patch_lookup($port_id) {
   global $connect;
 
   ## First find office if possible and lookup users
-  $query="select von_office from patchcable where nach_switch='" . $switch . "' and nach_port='" . $port ."'";
+  $query="select p.office as office_id, l.name as location from location l inner join patchcable p where l.id=p.office and p.port='$port_id'";
+  #$query="select office from patchcable where port='" . $port_id ."'";
+  debug1($query);
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
   if (mysql_num_rows($res)==1) {
-    $resultarray=mysql_fetch_array($res, MYSQL_NUM);
-    $office=$resultarray[0];
+    $resultarray=mysql_fetch_array($res, MYSQL_ASSOC);
+    $office=$resultarray['location'];
+    $office_id=$resultarray['office_id']; 
     #debug1("patch_lookup office $office");
 
     ## Now lookup Direx users for that office
     $query="SELECT GROUP_CONCAT(Surname) as Surname from users WHERE PhysicalDeliveryOfficeName='" . $office . "'";
+    debug1($query);
     $res = mysql_query($query, $connect);
     if (!$res) { die('Invalid query: ' . mysql_error()); }
     if (mysql_num_rows($res)==1) {
@@ -108,7 +112,8 @@ function patch_lookup($switch, $port) {
   }
 
   ## Lookup all details for that switch/port from patches
-  $query="select CONCAT(von_dose,' ',von_office,' ',comment) from patchcable where nach_switch='" . $switch . "' and nach_port='" . $port ."'";
+  $query="select CONCAT(outlet,', $office, ',comment) from patchcable where port='" . $port_id . "'";
+  debug1($query);
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
@@ -202,26 +207,118 @@ do {
         $log_entry='';
         $subject='';
         $newmac_found=FALSE;
+        
+        $switch_id=0;
+        $port_id=0;
+        $vlan_id=0;
+        $system_id=0;
+
+        ## 2. Has this switch been seen before? If not add to table
+        $query="SELECT id from switch WHERE ip='" . $switch . "' ";
+        debug1("$query\n");
+        $res = mysql_query($query);
+        if (!$res) { die('Invalid query: ' . mysql_error()); }
+        if ((mysql_num_rows($res) ==0) && ! $lastseen_dryrun) {   # entry does not exist, 0 rows
+          $query="INSERT INTO switch "
+          . "SET ip='" . $switch . "', name='unknown'";
+          #.      "comment='First found: "     . $details    . "' ";
+          log("New switch: $query");
+          logit("New switch entry $switch, please update the description.");
+          reporterr('info', "New switch entry $switch, please update the description.");
+          $res = mysql_query($query);
+          if (!$res) { die('Invalid query: ' . mysql_error()); }
+          $switch_id=v_sql_1_select("select id from switch where ip='$switch'");
+        }
+        else {
+          # Remember switch name for better logging
+          $row=mysql_fetch_array($res, MYSQL_NUM);
+          $switch_id=$row[0];
+          $log_entry=$log_entry . $row[0];
+        }
+
+
+
+        ## 3. Has this Port been seen before? If not add to table
+        $query="select location.name as location, switch.name as switch, building.name as building from building right join location on building.id=location.building_id  inner join switch on location.id=switch.location and switch.id=$switch_id;";
+        $res=mysql_query($query);
+        if ($res)
+        {
+           $results=mysql_fetch_array($res,MYSQL_ASSOC);
+           $location_name=$results['location'];
+           $switch_name=$results['switch'];
+           $building_name=$results['building'];
+        }
+        else
+        {
+           $location_name='';
+           $switch_name='';
+           $building_name='';
+        }
+        
+        $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
+                
+        if (!$port_id and ! $lastseen_dryrun) 
+        {
+          // ===== entry does not exist, --> NEW PORT!
+
+          # Where is the port? See if this port is in patch table & update 'office'
+          # if not, set office to switch location.
+          $port_loc='';
+          logit("new port $port location from patch table=$location_name");
+          if (strlen($port_loc_tmp)>1) {      # we have a valid office
+            $port_loc=$location_name." ".$building_name;
+
+          } else {
+            logit("new port $port location from switch=$switch_name");
+            if (strlen($port_loc_tmp)>1) {      # we have a valid office
+              $port_loc=$location_name." ".$building_name;
+
+            } else {                            # we really have no idea where it is
+              $port_loc='unknown';
+            }
+          }
+          if (strlen($port_loc)==0)
+             $port_loc='unknown';
+          $query="INSERT INTO port SET switch='$switch_id', name='$port'";
+          logit($query);
+          logit("New port $port on sw $switch, location=$port_loc. Please update description");
+          reporterr('info', "New port $port on sw $switch, location=$port_loc. Please update description");
+          $res = mysql_query($query);
+          if (!$res) { die('Invalid query: ' . mysql_error()); }
+          $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
+        }
+        else {
+          $query="select pa.comment as patchcable_comment, po.id as port_id from port po inner join patchcable pa on pa.port=po.id and po.switch='$switch_id' and po.name='$port';";
+          debug1($query);
+          $res = mysql_query($query);
+          $result=mysql_fetch_array($res,MYSQL_ASSOC);
+          $port_id=$result['port_id'];
+          $patchcable=$result['patchcable_comment'];
+          #$subject="in $building_name, $location_name, $patchcable, port $port";
+          $subject="in $location_name, $patchcable, port $port";
+        }
+
 
         #####################################################
         ## Search the DB for this MAC & update "LastSeen" ###
+        $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan'");
+	$system_id=v_sql_1_select("select id from systems where mac='$mac2'");
         $query="UPDATE systems SET LastSeen=NOW()"
-        . ", port='" .$port . "' "
-        . ", switch='" .$switch . "' "
-        . ", LastVlan='" .$vlan . "' "
-        ." WHERE mac='" . $mac2 . "'";
-        #logit("$query");
+        . ", LastPort='" .$port_id . "' "
+        . ", LastVlan='" .$vlan_id . "' "
+        ." WHERE id='" . $system_id . "'";
+        debug1($query);
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
 
-        debug2("Records affected: " . mysql_affected_rows());
+        debug1("Records affected: " . mysql_affected_rows());
         if (mysql_affected_rows() ==0) { 
 
           # Even through no records were affected, it might have been
           # 'cos the LastSeen record was up to date, so first check to see if
           # there is an entry for this MAC.
-          $query="SELECT name from systems WHERE mac='" . $mac2 . "' ";
-          #logit("$query");
+          $query="SELECT name from systems WHERE id='" . $system_id . "' ";
+          debug1("$query");
           $res = mysql_query($query);
           if (!$res) { die('Invalid query: ' . mysql_error()); }
     
@@ -247,18 +344,18 @@ do {
                   $sms_os     =$matches[3];
                   $infnet_details="";
                   logit("Infnet PC: name=$infnet_name, NTaccount=$txx_name, $sms_os, $infnet_details");
-     
+                  $os3_id=v_sql_1_select("select id from sys_os3 where value='$sms_os'");     
                   $query="INSERT INTO systems "
                   . "SET LastSeen=NOW(), status=1, class=1,"      # active, GWP
                   .      "description='$txx_name', "   # nt account
                   .      "name='$infnet_name', "
                   .      "comment='$infnet_details', "
-                  .      "vlan='$lastseen_infnet_vlan', "
-                  .      "os3='$sms_os', "
-                  .      "port='$port', "
-                  .      "switch='$switch', "
+                  .      "vlan='$vlan_id', "
+                  .      "os3='$os3_id', "
+                  .      "lastport='$port_id', "
+                  .      "office='$location_id', "
                   .      "mac='$mac2' ";
-                  #logit("New INFNET System $mac2 on sw/port $switch/$port"); 
+                  debug1("New INFNET System $mac2 on sw/port $switch/$port"); 
                   $newmac_found=TRUE;                // used further down
               
                   $log_entry="New INFNET $mac2 ($newmac_vendor) $infnet_name, $txx_name, $infnet_details, switch ";
@@ -291,14 +388,15 @@ do {
             ## 1.2 Add new Unknown system: normal case
 
             if ($newmac_found==FALSE) { # Already added in Infnet Section?
+              $default_vlan=v_sql_1_select("select id from vlan where default_id='$set_vlan_for_unknowns'");
               $query="INSERT INTO systems "
                 . "SET LastSeen=NOW(), " 
                 .      "status='$set_status_for_unknowns', name='unknown',"
-                .      "vlan='$set_vlan_for_unknowns',"
-                .      "port='$port', switch='$switch', "
+                .      "vlan='$default_vlan',"
+                .      "lastport='$port_id', office='$location_id', "
                 .      "description='$default_user_unknown', "   # usually 'KEINE'
                 .      "mac='$mac2' ";
-              $log_entry="New unknown $mac2 ($newmac_vendor), switch ";
+              $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name ";
               #logit($log_entry);
 
               if ($lastseen_dryrun==FALSE) {
@@ -311,81 +409,12 @@ do {
           } # new mac
         }   # no system records
       }     # mac !=0
-
-
-      ## 2. Has this switch been seen before? If not add to table
-      $query="SELECT name from switch WHERE ip='" . $switch . "' ";
-      #debug1("$query\n");
-      $res = mysql_query($query);
-      if (!$res) { die('Invalid query: ' . mysql_error()); }
-      if ((mysql_num_rows($res) ==0) and ! $lastseen_dryrun) {   # entry does not exist, 0 rows
-        $query="INSERT INTO switch "
-        . "SET ip='" . $switch . "', name='unknown'";
-        #.      "comment='First found: "     . $details    . "' ";
-        #log("New switch: $query"); 
-        logit("New switch entry $switch, please update the description."); 
-        reporterr('info', "New switch entry $switch, please update the description.");
-        $res = mysql_query($query);
-        if (!$res) { die('Invalid query: ' . mysql_error()); }
-      }
-      else {
-        # Remember switch name for better logging
-        $row=mysql_fetch_array($res, MYSQL_NUM);
-        $switch_name=$row[0];
-        ## Give switch name?
-        $log_entry=$log_entry . $row[0];
-      }
-
-
-      ## 3. Has this Port been seen before? If not add to table
-      $query="SELECT location,comment from port WHERE switch='" . $switch  
-        . "' AND name='$port' ";
-      #echo "$query\n";
-      $res = mysql_query($query);
-      if (!$res) { die('Invalid query: ' . mysql_error()); }
-
-      if ((mysql_num_rows($res) ==0) and ! $lastseen_dryrun) {   
-        // ===== entry does not exist, --> NEW PORT!
-
-        # Where is the port? See if this port is in patch table & update 'office'
-        # if not, set office to switch location.
-        $port_loc='';
-        $port_loc_tmp=v_sql_1_select("SELECT von_office from patchcable where nach_switch='$switch' and nach_port='$port'");
-        logit("new port $port location from patch table=$port_loc_tmp");
-        if (strlen($port_loc_tmp)>1) {      # we have a valid office
-          $port_loc=$port_loc_tmp;
-
-        } else {
-          $port_loc_tmp=v_sql_1_select("SELECT location from switch where ip='$switch'");
-          logit("new port $port location from switch=$port_loc_tmp");
-          if (strlen($port_loc_tmp)>1) {      # we have a valid office
-            $port_loc=$port_loc_tmp;
-
-          } else {                            # we really have no idea where it is
-            $port_loc='unknown';
-          }
-        }
-
-        $query="INSERT INTO port SET switch='$switch', name='$port', location='$port_loc' ";
-        logit("New port $port on sw $switch, location=$port_loc."); 
-        reporterr('info', "New port $port on sw $switch, location=$port_loc."); 
-        $res = mysql_query($query);
-        if (!$res) { die('Invalid query: ' . mysql_error()); }
-      }
-      else {
-        # Remember port name for better logging
-        $row=mysql_fetch_array($res, MYSQL_NUM);
-        #$subject="in " . $row[0] . ", " . $row[1] . ", port $port";
-        $subject="in " . $row[0] . ", " . $row[1] . ", port $port $port_loc";
-      }
-
-
       ## Log details of new system
       if ($newmac_found===TRUE) {  
         if ($lastseen_patch_lookup==true) {
            ## lookup patch details if switch/port in patch list
            $log_entry=$log_entry . "(Patch: "
-             . patch_lookup($switch, $port) .")";
+             . patch_lookup($port_id) .")";
         }
         logit($log_entry); 
         reporterr('info', $log_entry); 
