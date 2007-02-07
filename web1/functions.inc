@@ -11,7 +11,7 @@
 
 
 $big_sel = "SELECT s.id as sid, inventory as inventory, s.mac as mac, v.default_id as vlan, v.default_name as vlanname, vstatus.value as status,
-	s.name as ComputerName, u.username as user, s.comment, s.ChangeDate, LastSeen, sysbd.name as building, 
+	s.name as ComputerName, u.username as user, s.comment, s.ChangeDate, LastSeen, LastPort, sysbd.name as building, 
 	sysloc.name as officeSoll, patchloc.name as officeIst,
 	pat.outlet as PatchSocket, patchloc.name as PatchCable,
 	p.name as port, sw.name as switch,
@@ -335,24 +335,65 @@ function get_vlan_descr($vlan) {
   };
 };
 
+function get_locationid($port) {
+  db_connect();
+  $query = "SELECT patchloc.id as patchlocid, switchloc.id as switchlocid FROM port
+                  LEFT JOIN patchcable ON patchcable.port = port.id 
+                   LEFT JOIN location patchloc ON patchloc.id = patchcable.office 
+                  LEFT JOIN switch ON switch.id = port.switch 
+                   LEFT JOIN location switchloc ON switchloc.id = switch.location WHERE port.id = '$port';";
+  $res = mysql_query($query);
+  if (mysql_num_rows($res) > 0) {
+	$loc = mysql_fetch_array($res);
+		if (($loc['patchlocid'] = '') || (!$loc['patchlocid'])) {
+			return($loc['switchlocid']);
+		} else {
+			return($loc['patchlocid']);
+		};
+	} else {
+		return(0);
+	};
+};
+
 function get_location($port) {
   db_connect();
-        $query = "SELECT location.name as office FROM port LEFT JOIN patchcable ON patchcable.port = port.id LEFT JOIN location ON location.id = patchcable.office WHERE port.id = '$port';";
-        $res = mysql_query($query);
-        if (mysql_num_rows($res) > 0) {
-                $port = mysql_fetch_array($res);
-                return($port['office']);
-        } else {
-			$query2 = "SELECT location.name as office FROM port LEFT JOIN switch ON switch.id = port.switch LEFT JOIN location ON location.id = switch.location WHERE port.id = '$port';";
-			$res2 =  mysql_query($query2);
-			if (mysql_num_rows($res2) > 0) {
-				$switch = mysql_fetch_array($res2);
-				return($switch['location']);
-			} else {
-	                return(FALSE);
-			};
-        };
+  $query = "SELECT patchloc.id as patchlocid, CONCAT(patchbd.name,' ',patchloc.name) as patchloc,
+                   switchloc.id as switchlocid, CONCAT(switchbd.name,' ',switchloc.name) as switchloc
+            FROM port
+                  LEFT JOIN patchcable ON patchcable.port = port.id 
+                   LEFT JOIN location patchloc ON patchloc.id = patchcable.office 
+                   LEFT JOIN building as patchbd ON patchbd.id = patchloc.building_id
+                  LEFT JOIN switch ON switch.id = port.switch 
+                   LEFT JOIN location switchloc ON switchloc.id = switch.location
+                   LEFT JOIN building as switchbd ON switchbd.id = switchloc.building_id
+            WHERE port.id = '$port';";
+  $res = mysql_query($query);
+  if (mysql_num_rows($res) > 0) {
+	$loc = mysql_fetch_array($res);
+		if (($loc['patchloc'] = '') || (!$loc['patchloc'])) {
+			return($loc['switchloc']);
+		} else {
+			return($loc['patchloc']);
+		};
+	} else {
+		return(0);
+	};
 };
+
+function print_location($locationid) {
+  db_connect();
+  $query = "SELECT building.name as building, location.name as office FROM location
+                LEFT JOIN building on building.id = location.building_id
+            WHERE location.id = '$locationid';";
+  $res = mysql_query($query);
+  if (mysql_num_rows($res) > 0) {
+	$loc = mysql_fetch_array($res);
+	return($loc['building'].' '.$loc['office']);
+  } else {
+	return('?');
+  };
+};
+
 
 function get_switch_name($switch_ip) {
   db_connect();

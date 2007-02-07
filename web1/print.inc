@@ -64,8 +64,8 @@ LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid'
 	$out .= '<tr><td>Class<td>'.$system['classname'].'<td>'.$system['class2name'];
 	$out .= '<tr><td>OS<td>'.$system['osname'].'<td>'.$system['os1'].' '.$system['os2'].' '.$system['os3'];
 	$out .= '<tr><td>Adresses<td>'.$system['mac'].'<td>'.$system['r_ip'];
-	$out .= '<tr><td>Home location<td>'.$system['building'].' '.$system['officeSoll'];
-	$out .= '<tr><td>Last seen<td>'.$system['officeIst'].' ('.$system['PatchSocket'].')<td>'.$system['switch'].' '.$system['port']."\t";
+	$out .= '<tr><td>Home location<td>'.print_location($system['officeSoll']);
+	$out .= '<tr><td>Last seen<td>'.print_location($system['LastPort']).' ('.$system['PatchSocket'].')<td>'.$system['switch'].' '.$system['port']."\t";
  
 // 2.2 McAfee ePO
 	if ($epo) {
@@ -150,9 +150,8 @@ function print_host_table($where) {
 				$html .= '<td>'.$row['mac'].'&nbsp;';
 				$html .= '<td>'.$row['r_ip'].'&nbsp;';
 				$html .= '<td>'.get_vlan_descr($row['vlan']).'&nbsp;'; // get_vlan_short(get_vlan_descr
-					if (! $row['building']) { $row['building'] = 'Ber-Omu93' ; };
-				$html .= '<td>'.$row['building'].'&nbsp;'.$row['office'];
-				$html .= '<td>'.get_location($row['switch'],$row['port']).'&nbsp;<td>'.$row['LastSeen'].'</font>'.'&nbsp;';
+				$html .= '<td>'.print_location($row['office']);
+				$html .= '<td>'.get_location($row['LastPort']).'&nbsp;<td>'.$row['LastSeen'].'</font>'.'&nbsp;';
 				$html .= "\n";
 			};
 			$html .= "</table>\n";
