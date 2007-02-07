@@ -288,11 +288,11 @@ do {
           $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
         }
         else {
-          $query="select pa.comment as patchcable_comment, po.id as port_id from port po inner join patchcable pa on pa.port=po.id and po.switch='$switch_id' and po.name='$port';";
+          $query="select pa.comment as patchcable_comment from port po inner join patchcable pa on pa.port=po.id and po.switch='$switch_id' and po.name='$port';";
           debug1($query);
           $res = mysql_query($query);
           $result=mysql_fetch_array($res,MYSQL_ASSOC);
-          $port_id=$result['port_id'];
+          $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
           $patchcable=$result['patchcable_comment'];
           #$subject="in $building_name, $location_name, $patchcable, port $port";
           $subject="in $location_name, $patchcable, port $port";
