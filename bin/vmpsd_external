@@ -54,8 +54,8 @@ $DRY_RUN=FALSE;                    ## testing for standaone, no network
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
 $debug_flag3=FALSE;
-$debug_flag1=TRUE;
-$debug_flag2=TRUE;
+#$debug_flag1=TRUE;
+#$debug_flag2=TRUE;
 #$debug_flag3=TRUE;
 
 define_syslog_variables();
