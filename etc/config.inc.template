@@ -39,7 +39,8 @@
                                    # the global $default_vlan will be checked.
   $detect_hubs=true;               # 'Intelligent' algorithm to resolve conflicts of several devices
                                    # on one port, i.e. an un-managed switch or hub
-  $default_vlan=0;                 # 0=Default deny, otherwise unknown devices are put on this vlan
+  $default_vlan=0;                 # 0=Default deny, otherwise unknown devices are put on this vlan (NOTE: this number points to the id field
+				   # from the vlan table, it is not the default_id.
 
 ## vmps_lastseen script:  
   $lastseen_dryrun=false;           # Test, don't update DB
