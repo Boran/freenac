@@ -38,9 +38,6 @@ use constant RLM_MODULE_NOOP=>7;
 use constant RLM_MODULE_UPDATED=>8;
 use constant RLM_MODULE_NUMCODES=>9;
 
-#Fix weird issue when calling radiusd -X from /root directory
-chdir ('/tmp');
-
 #Avoid hardcoded absolute paths for the location on this script
 $script=abs_path($0);
 @file=split(/\//,$script);
@@ -49,10 +46,13 @@ for ($i=0;$i<$slashes-2;$i++) {
    $path .= "/$file[$i]";
 }
 
+#Fix weird issue when calling radiusd -X from /root directory
+chdir ('/tmp');
+
 #Open configuration file
 open (CONFIG_FILE,"$path/etc/config.inc") or die "Couldn't open the config file";
 foreach $line (<CONFIG_FILE>) {
-   if ($line =~ /^[\s]*\$vmps_servers[\s]*=[\s]*(.*)\";/)
+   if ($line =~ /^[\s]*\$vmps_servers[\s]*=[\s]*(.*)[\"\'];/)
    {
        $vmps_servers=$1;
    }
