@@ -29,8 +29,8 @@
 
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
-#$debug_flag1=TRUE;
-#$debug_flag2=TRUE;
+$debug_flag1=TRUE;
+$debug_flag2=TRUE;
 
 require_once "funcs.inc";               # Load settings & common functions
 $catos=TRUE;

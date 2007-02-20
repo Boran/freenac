@@ -37,7 +37,7 @@
 
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
-#$debug_flag1=TRUE;
+$debug_flag1=TRUE;
 #$debug_flag2=TRUE;
 
 require_once "funcs.inc";
@@ -181,10 +181,11 @@ do {
     ## Pull out the lines that summarise connections
     $regs=array();
 
+    #if (ereg("(.*) vmpsd: +(ALLOW|DENY): (.*) -> (.*), switch (.*) port ([A-Z]?[a-z0-9\/]*){1}", $line, $regs) ) {
     #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
-    if (ereg("(.*) vmpsd: +(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
+    if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
       #echo "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n";
-      debug2("FOUND: {$regs[1]} {$regs[2]} $regs[3]");
+      debug1("FOUND: {$regs[1]} {$regs[2]} $regs[3]");
       $success=$regs[2]; 
       $mac=$regs[3]; 
       $vlan=$regs[4]; 
@@ -193,7 +194,7 @@ do {
       #$details=rtrim($regs[1] . " " . $regs[3]);
       $details="$regs[1]";
       $mac2="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
-      debug2("mac=$mac2 vlan=$vlan switch=$switch port=$port");
+      debug1("mac=$mac2 vlan=$vlan switch=$switch port=$port");
 
       if (($mac2=='0000.0000.0000') || ($mac2=='ffff.fdff.ffff') || ($mac2=='ffff.fcff.ffff') )  {
         #continue;   // an invalid record, ignore
@@ -212,10 +213,13 @@ do {
         $port_id=0;
         $vlan_id=0;
         $system_id=0;
+        $location_name='';
+        $switch_name='';
+        $buiding_name='';
 
         ## 2. Has this switch been seen before? If not add to table
-        $query="SELECT id from switch WHERE ip='" . $switch . "' ";
-        debug1("$query\n");
+        $query="SELECT id,name from switch WHERE ip='" . $switch . "' ";
+        debug1("$query");
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
         if ((mysql_num_rows($res) ==0) && ! $lastseen_dryrun) {   # entry does not exist, 0 rows
@@ -228,33 +232,29 @@ do {
           $res = mysql_query($query);
           if (!$res) { die('Invalid query: ' . mysql_error()); }
           $switch_id=v_sql_1_select("select id from switch where ip='$switch'");
+          $switch_name='unknown';
         }
         else {
           # Remember switch name for better logging
           $row=mysql_fetch_array($res, MYSQL_NUM);
           $switch_id=$row[0];
-          $log_entry=$log_entry . $row[0];
+          $switch_name=$row[1];
+          $log_entry=$log_entry . $row[1];
         }
 
 
 
         ## 3. Has this Port been seen before? If not add to table
-        $query="select location.name as location, switch.name as switch, building.name as building from building right join location on building.id=location.building_id  inner join switch on location.id=switch.location and switch.id=$switch_id;";
+        $query="select location.name as location, building.name as building from building right join location on building.id=location.building_id  inner join switch on location.id=switch.location and switch.id='$switch_id'";
+	debug1($query);
         $res=mysql_query($query);
         if ($res)
         {
            $results=mysql_fetch_array($res,MYSQL_ASSOC);
            $location_name=$results['location'];
-           $switch_name=$results['switch'];
            $building_name=$results['building'];
         }
-        else
-        {
-           $location_name='';
-           $switch_name='';
-           $building_name='';
-        }
-        
+        debug1("Switch $switch, location $location_name, building $building_name");
         $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
                 
         if (!$port_id and ! $lastseen_dryrun) 
@@ -292,73 +292,68 @@ do {
           debug1($query);
           $res = mysql_query($query);
           $result=mysql_fetch_array($res,MYSQL_ASSOC);
-          $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
           $patchcable=$result['patchcable_comment'];
-          #$subject="in $building_name, $location_name, $patchcable, port $port";
-          $subject="in $location_name, $patchcable, port $port";
         }
-
+        $subject="in $location_name, $patchcable, port $port";
 
         #####################################################
         ## Search the DB for this MAC & update "LastSeen" ###
         $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan'");
 	$system_id=v_sql_1_select("select id from systems where mac='$mac2'");
-        $query="UPDATE systems SET LastSeen=NOW()"
-        . ", LastPort='" .$port_id . "' "
-        . ", LastVlan='" .$vlan_id . "' "
-        ." WHERE id='" . $system_id . "'";
-        debug1($query);
-        $res = mysql_query($query);
-        if (!$res) { die('Invalid query: ' . mysql_error()); }
-
-        debug1("Records affected: " . mysql_affected_rows());
-        if (mysql_affected_rows() ==0) { 
-
-          # Even through no records were affected, it might have been
-          # 'cos the LastSeen record was up to date, so first check to see if
-          # there is an entry for this MAC.
-          $query="SELECT name from systems WHERE id='" . $system_id . "' ";
-          debug1("$query");
-          $res = mysql_query($query);
-          if (!$res) { die('Invalid query: ' . mysql_error()); }
-    
+        
+        if ($system_id)
+        { 
+           $query="UPDATE systems SET LastSeen=NOW()"
+           . ", LastPort='" .$port_id . "' "
+           . ", LastVlan='" .$vlan_id . "' "
+           ." WHERE id='" . $system_id . "'";
+           debug1($query);
+           $res = mysql_query($query);
+           if (!$res) { die('Invalid query: ' . mysql_error()); }
+           debug1("Records affected: " . mysql_affected_rows());
+        }
+        else
+        {
           ## 
           ##
           ## 1. Create a new entry for this MAC, disabled by default ##
           ##
-          if (mysql_num_rows($res) ==0) {   # entry does not exist, 0 rows
+           # entry does not exist, 0 rows
 
-            $newmac_vendor=lookup_vendor_mac($mac2);
+           $newmac_vendor=lookup_vendor_mac($mac2);
 
-            if ($lastseen_infnet==TRUE) {         # Enterprise only
+           if ($lastseen_sms==TRUE) 
+           {         # Enterprise only
 
-                # 1.1 Infnet PC?: See if its known on SMS, can take several secs
-                $retval='';
-                $infnet_details=syscall("$sms_infnet_mac $mac2", $retval);
+               # 1.1 SMS PC?: See if its known on SMS, can take several secs
+               $retval='';
+               $sms_details=syscall("$sms_mac $mac2", $retval);
 
-                # Enable PC and set to Infnet VLAN
-                if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$infnet_details, $matches)) {
-                  $infnet_name=$matches[1];     
+               # Enable PC and set to SMS VLAN
+               if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$sms_details, $matches))
+               {
+                  $sms_name=$matches[1];     
                   $txx_name= $default_user_unknown;         # default
                   $txx_name   =$matches[2];
                   $sms_os     =$matches[3];
-                  $infnet_details="";
-                  logit("Infnet PC: name=$infnet_name, NTaccount=$txx_name, $sms_os, $infnet_details");
+                  $sms_details="";
+                  logit("SMS PC: name=$sms_name, NTaccount=$txx_name, $sms_os, $sms_details");
                   $os3_id=v_sql_1_select("select id from sys_os3 where value='$sms_os'");     
                   $query="INSERT INTO systems "
                   . "SET LastSeen=NOW(), status=1, class=1,"      # active, GWP
                   .      "description='$txx_name', "   # nt account
-                  .      "name='$infnet_name', "
-                  .      "comment='$infnet_details', "
+                  .      "name='$sms_name', "
+                  .      "comment='$sms_details', "
                   .      "vlan='$vlan_id', "
                   .      "os3='$os3_id', "
                   .      "lastport='$port_id', "
                   .      "office='$location_id', "
                   .      "mac='$mac2' ";
-                  debug1("New INFNET System $mac2 on sw/port $switch/$port"); 
+                  debug1($query);
+                  debug1("New SMS System $mac2 on sw/port $switch/$port"); 
                   $newmac_found=TRUE;                // used further down
               
-                  $log_entry="New INFNET $mac2 ($newmac_vendor) $infnet_name, $txx_name, $infnet_details, switch ";
+                  $log_entry="New SMS $mac2 ($newmac_vendor) $sms_name, $txx_name, $sms_details, switch ";
 
                   if ($lastseen_dryrun==FALSE) {
                     $res = mysql_query($query);
@@ -373,21 +368,24 @@ do {
                   #logit("Symced new user $txx_name");
 
                   // Document the user's details in the alert
-                  $query="SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where AssocNtAccount='$txx_name'";
-                    $res = mysql_query($query);
-                    if (!$res) { die('Invalid query: ' . mysql_error()); }
-                    list($infnet_details)=mysql_fetch_array($res);
+                  $query="SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where username='$txx_name'";
+                  $res = mysql_query($query);
+                  if (!$res) { die('Invalid query: ' . mysql_error()); }
+                  list($sms_details)=mysql_fetch_array($res);
 
-                } else {
-                  $infnet_name='unknown infnet';     
-                  $infnet_details="sms_infnet_mac: error";     
-                }
-            }   # if infnet
+               }
+               else 
+               {
+                  $sms_name='unknown sms';     
+                  $sms_details="sms_mac: error";     
+               }
+           }   # if sms
             
 
-            ## 1.2 Add new Unknown system: normal case
+           ## 1.2 Add new Unknown system: normal case
 
-            if ($newmac_found==FALSE) { # Already added in Infnet Section?
+           if ($newmac_found==FALSE) 
+           { # Already added in SMS Section?
               $default_vlan=v_sql_1_select("select id from vlan where default_id='$set_vlan_for_unknowns'");
               $query="INSERT INTO systems "
                 . "SET LastSeen=NOW(), " 
@@ -399,16 +397,26 @@ do {
               $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name ";
               #logit($log_entry);
 
-              if ($lastseen_dryrun==FALSE) {
+              if ($lastseen_dryrun==FALSE) 
+              {
                 $res = mysql_query($query);
                 if (!$res) { die('Invalid query: ' . mysql_error()); }
                 $newmac_found=TRUE;
               }
-            }  # if $newmac for non-infnet
+           }  # if $newmac for non-sms
 
-          } # new mac
         }   # no system records
-      }     # mac !=0
+      }
+
+      ## Record info 
+      if (!$vlan_id)
+         $vlan_id=0; 
+      $query="update port set last_activity=NOW(), last_vlan='".$vlan_id."' where id='$port_id'";
+      debug1($query);
+      $res = mysql_query($query);
+      if (!$res) { die('Invalid query: ' . mysql_error()); }
+      debug1("Records affected: " . mysql_affected_rows());
+      
       ## Log details of new system
       if ($newmac_found===TRUE) {  
         if ($lastseen_patch_lookup==true) {
@@ -419,11 +427,11 @@ do {
         logit($log_entry); 
         reporterr('info', $log_entry); 
 
-        if ($lastseen_infnet==FALSE) {
-          notify2($switch_name, $log_entry, "VMPS alert $subject"); 
+        if ($lastseen_sms==FALSE) {
+          notify2($switch_name, $log_entry, "NAC alert $subject"); 
 
-        } else if ($lastseen_infnet_notify==TRUE) { # Only alert if set
-          notify2($switch_name, $log_entry, "VMPS alert $subject"); 
+        } else if ($lastseen_sms_notify==TRUE) { # Only alert if set
+          notify2($switch_name, $log_entry, "NAC alert $subject"); 
         }
 
       }

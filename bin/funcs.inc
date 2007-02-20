@@ -187,8 +187,8 @@ function cv_input($str){
 }
 
 function snmp_restart_port($switch, $port) {
-  global $lastseen_infnet_restart;
-  if ($lastseen_infnet_restart===TRUE) {
+  global $lastseen_sms_restart;
+  if ($lastseen_sms_restart===TRUE) {
      $answer=syscall("/opt/vmps/bin/restart_port $switch $port");
      debug1($answer);
      logit("restart_port for GWP: $answer");
@@ -355,9 +355,9 @@ function normalise_mac($old_mac) {
 //
 // Insert a new user, if not already in the Users table.
 // 
-function insert_user ($AssocNtAccount) {
+function insert_user ($username) {
     ## Is this user already in out "users" table?
-    $query="SELECT username from users WHERE username='$AssocNtAccount' ";
+    $query="SELECT username from users WHERE username='".$username."' ";
       debug2("$query");
       $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
 
@@ -367,13 +367,13 @@ function insert_user ($AssocNtAccount) {
       ## TBD: Is this new user in our organisation? We should
       ##      really only set manual_direx_sync for "foreign" users.
       $query="INSERT INTO users SET LastSeenDirectory=now(), manual_direx_sync='1', "
-        .      "username='$AssocNtAccount'";
+        .      "username='".$username."'";
       #$query="INSERT INTO users SET LastSeenDirectory=now(),  "
-      #  .      "username='$AssocNtAccount'";
+      #  .      "username='".$username."'";
       debug2("$query");
       $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
 
-      $str = "New user added for Direx: $AssocNtAccount" ;
+      $str = "New user added for Directory: $username" ;
         debug2($str);
         reporterr('info', $str);
     }

@@ -23,8 +23,8 @@
  */
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
-#$debug_flag1=TRUE;
-#$debug_flag2=TRUE;
+$debug_flag1=TRUE;
+$debug_flag2=TRUE;
 
 $subject="VMPS flapping";
 require_once "funcs.inc";               # Load settings & common functions
@@ -127,10 +127,6 @@ function react($cnt, $switch, $port)
   msg("System details:\n");
   foreach ($arr2 as $mac => $vlan) {
       $query="select s.name,s.comment,s.description,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
-      #$query="SELECT name,comment,description,office,r_ip, "
-      #  . "(SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where AssocNtAccount=description) "
-      #  . "FROM systems WHERE mac='$mac'";
-        #echo $query;
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
       $row=mysql_fetch_array($res, MYSQL_NUM);
@@ -173,10 +169,6 @@ function react($cnt, $switch, $port)
   foreach ($arr2 as $mac => $vlan) {
     if ($vlan != $best_vlan ) {
        $query="select s.name,s.comment,s.description,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
-      #$query="SELECT name,comment,description,office,r_ip, "
-      #  . "(SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where AssocNtAccount=description) "
-      #  . "FROM systems WHERE mac='$mac'";
-        #echo $query;
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
       $row=mysql_fetch_array($res, MYSQL_NUM);

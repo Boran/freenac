@@ -176,7 +176,10 @@ function do_something($query)			//Let's do something with our structure
    $queries=$query['number'];   		//How many queries we have?
    $messages=$query['messages'];   		//How many messages?
    for ($i=0;$i<$queries;$i++)
-        execute_query($query['query'][$i]);   	//Execute the queries
+   {
+      #echo $query['query'][$i]."\n";  
+      execute_query($query['query'][$i]);   	//Execute the queries
+   }
    for ($i=0;$i<$messages;$i++)
         debug1($query['message'][$i]);   	//And display the messages
 }
@@ -495,21 +498,21 @@ function check_existent($data) 	//This function will check info concerning one h
          {
             $res=execute_query("select s.id as id from services s inner join protocols p on s.protocol=p.protocol and p.name='".$remove_prot[$i]."' and s.port='".$remove_port[$i]."';");
             $result=mysql_fetch_array($res,MYSQL_ASSOC);
-            $query=sprintf("delete from nac_openports where sid='%s' and service='%s';",$sid,$result['id']);
+            $query=sprintf("delete from nac_openports where sid='%s' and service='%s';",$id,$result['id']);
             update_queries($query,'q');
          }
          for ($i=0;$i<$add_counter;$i++)	//And the queries for the new open ports
          {
             $res=execute_query("select s.id as id from services s inner join protocols p on s.protocol=p.protocol and p.name='".$add_prot[$i]."' and s.port='".$add_port[$i]."';");
             $result=mysql_fetch_array($res,MYSQL_ASSOC); 
-            $query=sprintf("insert into nac_openports (sid,service,banner,timestamp) values ('%s','%s','%s','%s');",$sid,$result['id'],$add_banner[$i],$timestamp);
+            $query=sprintf("insert into nac_openports (sid,service,banner,timestamp) values ('%s','%s','%s','%s');",$id,$result['id'],$add_banner[$i],$timestamp);
             update_queries($query,'q');
          }
 	 for ($i=0;$i<$update_counter;$i++)
 	 {
             $res=execute_query("select s.id as id from services s inner join protocols p on s.protocol=p.protocol and p.name='".$update_prot[$i]."' and s.port='".$update_port[$i]."';");
             $result=mysql_fetch_array($res,MYSQL_ASSOC);            
-            $query=sprintf("update nac_openports set banner='%s',timestamp='%s' where host='%d' and service='%s';",$update_banner[$i],$timestamp,$sid,$result['id']);
+            $query=sprintf("update nac_openports set banner='%s',timestamp='%s' where sid='%d' and service='%s';",$update_banner[$i],$timestamp,$id,$result['id']);
 	    update_queries($query,'q');
 	 }
          if ($add_counter)
@@ -550,40 +553,42 @@ function execute_query($query)
 
 function add_entry($data)	//A new host in our network that needs to be added to the database
 {
+   $new=false;
    if ((!isset($data))||(!is_array($data)))
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
    $timestamp=date('Y-m-d H:i:s');
    $res=mysql_query("select id from systems where r_ip='".$data['ip']."' limit 1;");
    $result=mysql_fetch_array($res,MYSQL_ASSOC);
    $sid=$result['id'];
-   $query=sprintf("insert into nac_hostscanned (sid,ip,hostname,os,timestamp) values('%s','%s','%s','%s','%s');",$sid,$data['ip'],strtolower($data['hostname']),$data['os'],$timestamp);
+   
+   #Let's check if it is really a new device, if not, do an update
+   $res=mysql_query("select * from nac_hostscanned where sid='".$sid."'");
+   if (mysql_num_rows($res)==0)
+   {
+      $new=true;
+      $query=sprintf("insert into nac_hostscanned (sid,ip,hostname,os,timestamp) values('%s','%s','%s','%s','%s');",$sid,$data['ip'],strtolower($data['hostname']),$data['os'],$timestamp);
+   }
+   else
+   {
+      $query=sprintf("update nac_hostscanned set ip='%s', hostname='%s', os='%s', timestamp='%s' where sid='%s';",$data['ip'],strtolower($data['hostname']),$data['os'],$timestamp,$sid);
+      $new=false;
+   }
+
    $res=execute_query($query);
    if ($res)
    {
-      update_queries("Host ".$data['ip']."(".$data['hostname'].") added to the database\n",'m');
+      if ($new)
+         update_queries("Host ".$data['ip']."(".$data['hostname'].") added to the database\n",'m');
+      else
+         update_queries("Host ".$data['ip']."(".$data['hostname'].") has been updated\n",'m');
       $query=sprintf("select id from nac_hostscanned where ip='%s' and hostname='%s' and os='%s' and timestamp='%s';",$data['ip'],$data['hostname'],$data['os'],$timestamp);
       $res=execute_query($query);
       if ($res)
       {
          $result=mysql_fetch_array($res, MYSQL_NUM);
          $id=$result[0];
-         for ($i=0;$i<$data['ports'];$i++)   //And the open ports of this new host
-         {
-            $protocol=$data['port'][$i]['protocol'];
-            $port=$data['port'][$i]['portid'];
-            $banner=$data['port'][$i]['description'];
-            $res=mysql_query("select s.id from services s inner join protocols p on s.port='$port' and s.protocol=p.protocol and p.name like '$protocol';");
-            $result=mysql_fetch_row($res,MYSQL_ASSOC);
-            $ser_id=$result['id'];
-            
-            check_service($data['ip'],$port,$protocol,$banner);
-            
-            $query=sprintf("insert into nac_openports (sid,service,banner,timestamp) values ('%s','%s','%s','%s');",$sid,$ser_id,$banner,$timestamp);
-            execute_query($query); 
-         }
+         check_existent($data);
       }
-      update_queries($data['ports']." ports open on host ".$data['ip']."(".$data[
-'hostname'].")",'m'); 
    }
    return($queries);
 }
@@ -788,7 +793,7 @@ function get_ips()	//This function will get some ips to scan
             $net=bindec(str_pad(substr($address,0,$network[$i]['netmask']),32,0));
             $broadcast=bindec(str_pad(substr($address,0,$network[$i]['netmask']),32,1));
             $host=bindec(ip_to_bin($devices['ip'][$l]));
-            if (($host>$net)&&($host<$broadcast))
+            if (($host>=$net)&&($host<$broadcast))
                $candidate++;
          }
          $there=0;

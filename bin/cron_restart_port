@@ -24,7 +24,7 @@
 
 
 $debug_flag1=FALSE;
-#$debug_flag1=TRUE;
+$debug_flag1=TRUE;
 
 require_once 'funcs.inc';
 
