@@ -12,7 +12,7 @@
 
 $big_sel = "SELECT s.id as sid, inventory as inventory, s.mac as mac, v.default_id as vlan, v.default_name as vlanname, vstatus.value as status,
 	s.name as ComputerName, u.username as user, s.comment, s.ChangeDate, LastSeen, LastPort, sysbd.name as building, 
-	sysloc.name as officeSoll, patchloc.name as officeIst,
+	CONCAT(sysbd.name,' ',sysloc.name) as officeSoll, patchloc.name as officeIst,
 	pat.outlet as PatchSocket, patchloc.name as PatchCable,
 	p.name as port, sw.name as switch,
 	s.class as class, c1.value as classname,

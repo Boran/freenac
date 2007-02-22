@@ -24,7 +24,7 @@ function print_host($mac) {
 
 // 1.3 Open ports
 # TODO : get nmap_id out : not used anymore
-	$nmap_id = get_nmap_id($mac);
+	$nmap_id = get_nmap_id($sid);
 	if ($nmap_id) {
 		$scan = TRUE;
 		$sel = "SELECT * FROM nac_hostscanned WHERE id = '$nmap_id';";
@@ -64,8 +64,8 @@ LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid'
 	$out .= '<tr><td>Class<td>'.$system['classname'].'<td>'.$system['class2name'];
 	$out .= '<tr><td>OS<td>'.$system['osname'].'<td>'.$system['os1'].' '.$system['os2'].' '.$system['os3'];
 	$out .= '<tr><td>Adresses<td>'.$system['mac'].'<td>'.$system['r_ip'];
-	$out .= '<tr><td>Home location<td>'.print_location($system['officeSoll']);
-	$out .= '<tr><td>Last seen<td>'.print_location($system['LastPort']).' ('.$system['PatchSocket'].')<td>'.$system['switch'].' '.$system['port']."\t";
+	$out .= '<tr><td>Home location<td>'.$system['officeSoll'];
+	$out .= '<tr><td>Last seen<td>'.get_location($system['LastPort']).' ('.$system['PatchSocket'].')<td>'.$system['switch'].' '.$system['port']."\t";
  
 // 2.2 McAfee ePO
 	if ($epo) {
