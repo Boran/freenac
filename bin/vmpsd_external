@@ -54,8 +54,8 @@ $DRY_RUN=FALSE;                    ## testing for standaone, no network
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
 $debug_flag3=FALSE;
-$debug_flag1=TRUE;
-$debug_flag2=TRUE;
+#$debug_flag1=TRUE;
+#$debug_flag2=TRUE;
 #$debug_flag3=TRUE;
 
 define_syslog_variables();
@@ -90,12 +90,12 @@ function get_port_status($switch, $port, $mac, $new_vlan, $lastvlan)
   if ($new_vlan==0) {
     return($new_vlan);
   }
-  logit("new_vlan: $new_vlan, last_vlan: $lastvlan");
+  debug2("get_port_status: new_vlan: $new_vlan, last_vlan: $lastvlan");
   // Compare 'last' valns and that in the DB for this MAC
   $new_vlan_group=v_sql_1_select("SELECT vlan_group FROM vlan WHERE id='$new_vlan'");
-  debug2("SELECT vlan_group FROM vlan WHERE id='$new_vlan'");
+  debug2("get_port_status: SELECT vlan_group FROM vlan WHERE id='$new_vlan'");
   $last_vlan_group=v_sql_1_select("SELECT vlan_group FROM vlan WHERE id='$lastvlan'");
-  debug2("SELECT vlan_group FROM vlan WHERE id='$lastvlan'");
+  debug2("get_port_status: SELECT vlan_group FROM vlan WHERE id='$lastvlan'");
   if ($last_vlan_group==$new_vlan_group) {
     $result=$lastvlan;   # Stay with the existing vlan, to preserve connectivity
     logit("get_port_status: requested $lastvlan, DB says $new_vlan but they are in the same group.");
@@ -113,7 +113,7 @@ function get_port_status($switch, $port, $mac, $new_vlan, $lastvlan)
      . " AuthVlan!='" .$new_vlan. "' AND "
      . " AuthPort='" . $port_id . "' ORDER BY AuthLast DESC";
 
-   debug2($query);
+   debug2("get_port_status: ".$query);
     $res = mysql_query($query, $connect);
     if (!$res) { die('Invalid query: ' . mysql_error()); }
 
@@ -192,13 +192,13 @@ function decide($port, $switch, $mac, $lastvlan)
      return($result);
   }
   $lastvlan=v_sql_1_select("select id from vlan where default_id='$lastvlan' limit 1");
-  debug2("select id from vlan where default_id='$lastvlan' limit 1");
+  debug2("decide: select id from vlan where default_id='$lastvlan' limit 1");
   ## Look for a system with this mac, AND, that is "active". Ignore inactives.
   #$vlanByGroup="(SELECT vlan_group FROM vlan WHERE id=vlan)";
   #$query="SELECT name,description,vlan,status,$vlanByGroup FROM systems WHERE mac='" 
   $query="SELECT name,description,vlan,status FROM systems WHERE mac='" 
     . $mac . "' AND status=1";
-  logit($query);
+  debug2("decide: ".$query);
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
@@ -211,7 +211,7 @@ function decide($port, $switch, $mac, $lastvlan)
     if ($use_port_default_vlan==true) {
       logit("decide: check for port default Vlan");
       $query="SELECT p.default_vlan FROM port p inner join switch s on p.switch=s.id and s.ip='$switch' and p.name='$port'";
-      debug2($query);
+      debug2("decide: ".$query);
       $res = mysql_query($query, $connect);
       if (!$res) { die('Invalid query: ' . mysql_error()); }
       if (mysql_num_rows($res)==1) {
@@ -274,15 +274,15 @@ function decide($port, $switch, $mac, $lastvlan)
       debug1("decide: No hub checking, use vlan $result");
      }
      #Assignation of vlan by switch location
-     if ($result>0)
+     if (($result>0)&&($vlan_by_switch_location))
      {
         #$vlan_id=v_sql_1_select("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch'");
         #debug1("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch';");
         $vlan_id=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.ip='$switch'");
-        debug1("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.ip='$switch'");
+        debug1("decide: select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.ip='$switch'");
         if ($vlan_id)
         {
-           logit("Exception. Assigning VLAN by switch location");
+           logit("decide: Exception. Assigning VLAN by switch location");
            $result=$vlan_id;
         }
      }
@@ -293,7 +293,7 @@ function decide($port, $switch, $mac, $lastvlan)
     $result=0;
   }
   if ($result>0)
-     $result=v_sql_1_select("select default_id from vlan where id='$result'");
+     $result=v_sql_1_select("select default_name from vlan where id='$result' limit 1");
   logit("decide: $name, $description, vlan result=$result on switch $switch $port");
   #debug1("decide: $name, $description, vlan result=$result");
   return($result);
@@ -316,8 +316,8 @@ function dryrun() {
   #$port='Fa0/14'; $switch='193.5.222.1'; $mac='000d.561b.00ec'; $lastvlan='Clients';
   $port='Fa0/14'; $switch='193.5.222.1'; $mac='0000.0000.9999'; $lastvlan='Clients';
   $DecidedVlan=decide($port, $switch, $mac, $lastvlan);
-      if ($DecidedVlan > 0) {             ## lookup vlan name
-
+      if ((strlen($DecidedVlan) > 0) && ($DecidedVlan != '0')) {             ## lookup vlan name
+/*
         $query="SELECT default_name FROM vlan WHERE default_id='" . $DecidedVlan . "'";
         debug2($query);
         logit($query);
@@ -328,7 +328,8 @@ function dryrun() {
           debug1("ALLOW $VlanName - $DecidedVlan");
         } else {
           debug1("DENY");
-        }
+        }*/
+         debug1("ALLOW $VlanName - $DecidedVlan");
       } else {
         debug1("DENY");
       }
@@ -381,24 +382,27 @@ while ($in && $out) {         // keep waiting on stdin
       #debug2("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
 
       $DecidedVlan=decide($port, $switch, $mac, $lastvlan);
-      debug1("DecidedVlan=$DecidedVlan");
+      #debug2("DecidedVlan=$DecidedVlan");
      
-      if ($DecidedVlan > 0) {             ## lookup vlan name
+      if ((strlen($DecidedVlan) > 0) && ($DecidedVlan != '0')) {             ## lookup vlan name
 
-        $query="SELECT default_name FROM vlan WHERE default_id='" . $DecidedVlan . "' limit 1";
+        /*$query="SELECT default_name FROM vlan WHERE default_id='" . $DecidedVlan . "' limit 1";
         debug2($query);
         $res = mysql_query($query, $connect);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
         if (mysql_num_rows($res)==1) {
           list($VlanName)=mysql_fetch_array($res, MYSQL_NUM);
           debug2("ALLOW $VlanName - $DecidedVlan");
-          fputs($out, "ALLOW $VlanName\n");
+        #fputs($out, "ALLOW $VlanName\n");
 
-        } else {
+        }
+        else {
           debug2("DENY");
           fputs($out, "DENY\n");
-        }
-
+        }*/
+        $VlanName=$DecidedVlan;
+        debug2("ALLOW $VlanName - $DecidedVlan");
+        fputs($out, "ALLOW $VlanName\n");
       } else {
         debug2("DENY");
         fputs($out, "DENY\n");
