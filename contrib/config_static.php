@@ -1,19 +1,21 @@
 <?php
 include_once('../web1/config.inc');
 include_once('../web1/functions.inc');
-include_once('config_switch.inc');
+#include_once('config_switch.inc');
 db_connect();
 
-$sel = "select distinct(switch) from port where default_vlan > 0;";
+$sel = "select * from switch;"; 
 
 $res = mysql_query($sel) or die("Unable to make query");
+$write = TRUE;
 
 if (mysql_num_rows($res) < 1) { die("No switch in the DB !?"); };
 
 while ($switch = mysql_fetch_array($res)) {
-
-	$switch_ip = $switch['switch'];
-	$switch_name = get_switch_name($switch_ip);
+	echo $switch['name']."\n";
+	$switch_id = $switch['id'];
+	$switch_ip = $switch['ip'];
+	$switch_name = $switch['name'];
 	$script_file = "../web1/tmp/$switch_name";
 
 	$script = '#!/usr/bin/expect -f'."\n";
@@ -63,8 +65,8 @@ while ($switch = mysql_fetch_array($res)) {
 
 
 	// now, let's query all ports
-	$selp = "SELECT * FROM port WHERE switch='$switch_ip' AND default_vlan > 0;";
-	$resp = mysql_query($selp) or die("Unable to make query");
+	$selp = "SELECT * FROM port WHERE switch=$switch_id AND default_vlan > 1;";
+	$resp = mysql_query($selp) or die("Unable to make query ($selp)\n");
 	if (mysql_num_rows($resp) > 0) {
 		while ($port = mysql_fetch_array($resp)) {
 			$script .= 'send "interface '.$port['name'].'\n"'."\n";
