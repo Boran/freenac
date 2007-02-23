@@ -59,8 +59,10 @@ function logit($msg) {
   }
 }
 
-## reporterr3: write key events to naclog which is visible from the GUI
-function reporterr($level, $msg)
+## log2db: write key events to naclog which is visible from the GUI
+##         This should NOT be called from a secondary server, i.e.
+##         avoid it in vmpsd_external
+function log2db($level, $msg)
 {
   global $connect;
   $msg=rtrim($msg);
@@ -69,7 +71,7 @@ function reporterr($level, $msg)
     #$query="INSERT DELAYED INTO naclog "
     $query="INSERT INTO naclog "
       . "SET what='" . mysql_real_escape_string($msg )  . "', "
-      . "host='"     . mysql_real_escape_string($_SERVER"HOSTNAME"]) . "', "
+      . "host='"     . mysql_real_escape_string($_SERVER["HOSTNAME"]) . "', "
       . "priority='$level' ";
     #echo "$query\n";
     $res = mysql_query($query, $connect);
@@ -81,8 +83,8 @@ function reporterr($level, $msg)
 }
 
 
-## reporterr3: write to naclog if $debug_flag3
-function reporterr3($msg)
+## log2db3: write to naclog if $debug_flag3
+function log2db3($msg)
 {
   global $connect, $debug_flag3;
   $level='debug';
@@ -381,7 +383,7 @@ function insert_user ($username) {
 
       $str = "New user added for Directory: $username" ;
         debug2($str);
-        reporterr('info', $str);
+        log2db('info', $str);
     }
 }
 

@@ -228,7 +228,7 @@ do {
           #.      "comment='First found: "     . $details    . "' ";
           log("New switch: $query");
           logit("New switch entry $switch, please update the description.");
-          reporterr('info', "New switch entry $switch, please update the description.");
+          log2db('info', "New switch entry $switch, please update the description.");
           $res = mysql_query($query);
           if (!$res) { die('Invalid query: ' . mysql_error()); }
           $switch_id=v_sql_1_select("select id from switch where ip='$switch'");
@@ -282,7 +282,7 @@ do {
           $query="INSERT INTO port SET switch='$switch_id', name='$port'";
           logit($query);
           logit("New port $port on sw $switch, location=$port_loc. Please update description");
-          reporterr('info', "New port $port on sw $switch, location=$port_loc. Please update description");
+          log2db('info', "New port $port on sw $switch, location=$port_loc. Please update description");
           $res = mysql_query($query);
           if (!$res) { die('Invalid query: ' . mysql_error()); }
           $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
@@ -425,7 +425,7 @@ do {
              . patch_lookup($port_id) .")";
         }
         logit($log_entry); 
-        reporterr('info', $log_entry); 
+        log2db('info', $log_entry); 
 
         if ($lastseen_sms==FALSE) {
           notify2($switch_name, $log_entry, "NAC alert $subject"); 

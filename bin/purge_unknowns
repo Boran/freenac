@@ -72,7 +72,7 @@ $query="select mac,vlan,description,lastport,lastseen from systems where name li
     #printf("/opt/vmps/purge_unknowns: %s %s %s %s %s %s\n", $line[0], $line[1], $line[2], $line[3], $line[4] );
     
     syslog(LOG_INFO, $line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
-    reporterr('info', 'purge_unknowns: '.$line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
+    log2db('info', 'purge_unknowns: '.$line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
   }
 
 ## b) Now actually wipe it!
@@ -80,7 +80,7 @@ $query="DELETE from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(N
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
-reporterr('info', 'purge_unknowns: completed');
+log2db('info', 'purge_unknowns: completed');
 syslog(LOG_INFO, 'completed');
 
 closelog();

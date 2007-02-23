@@ -190,11 +190,11 @@ for ($i = 0; $i < count($if_list); $i++){
    if ($port_index >0) {
      if (get_port_status($port_index, $switch) ==='') {
        logit("Cannot get port status $port on switch $switch");
-       reporterr('info',"Cannot get port status $port on switch $switch");
+       log2db('info',"Cannot get port status $port on switch $switch");
      } else {
        restart_port($port_index, $switch);
        logit("Port successfully restarted $port on switch $switch");
-       reporterr('info',"Port successfully restarted $port on switch $switch");
+       log2db('info',"Port successfully restarted $port on switch $switch");
      }
   
    } else {

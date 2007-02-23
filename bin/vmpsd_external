@@ -32,6 +32,9 @@
  *              So send debugging output to syslog, not stdout. Or just start
  *              directly from the commandline to check for classical
  *              PHP syntax problems.
+ *              Do not log to the DB either (with log2db()), because this program
+ *              can also run on a secondary and should NOT write to any other tables
+ *              than vmpsauth, which is not replicated.
  *
  * PHP version 5
  *
@@ -219,7 +222,7 @@ function decide($port, $switch, $mac, $lastvlan)
          if (strlen($port_default_vlan)>0) {    # make sure its not null
            $decided=true;
            $result=$port_default_vlan;
-           reporterr('info', "Allow $mac, use port_default_vlan $result for $switch $port");
+           #log2db('info', "Allow $mac, use port_default_vlan $result for $switch $port");
          }
       }
     }
@@ -227,9 +230,9 @@ function decide($port, $switch, $mac, $lastvlan)
     ## c) Check for default Vlan $default_vlan
     if ($decided==false) {
       $result=$default_vlan; 
-      logit("decide: use default vlan <$default_vlan>");
       if ($result > 0) {
-        reporterr('info', "Allow $mac default_vlan $result for $switch $port");
+        logit("decide: use default vlan <$default_vlan>");
+        #log2db('info', "Allow $mac default_vlan $result for $switch $port");
       }
     } 
 
@@ -252,7 +255,7 @@ function decide($port, $switch, $mac, $lastvlan)
     #if ($status==0) {
     #  logit("decide: $mac is known but Status=Inactive");
     #  $result=0;
-    #  reporterr('info', "decide: $mac is known but Status=Inactive");
+    #  log2db('info', "decide: $mac is known but Status=Inactive");
     #  return($result);
     #}
 
@@ -289,7 +292,7 @@ function decide($port, $switch, $mac, $lastvlan)
 
   } else if (mysql_num_rows($res)>1) {
     logit("decide: Deny, Duplicates for $mac in Database");
-    reporterr('info', "DENY $mac on $switch, $port, DUPLICATE MACs: please remove!");
+    #log2db('info', "DENY $mac on $switch, $port, DUPLICATE MACs: please remove!");
     $result=0;
   }
   if ($result>0)
@@ -347,7 +350,7 @@ require_once "funcs.inc";
 ob_start("callback");         // see call back function above
 logit("Connect to DB" );
 db_connect();
-reporterr3("Connect to DB" );
+#log2db3("Connect to DB" );
 
 // Create a temp table for Authentication information
 

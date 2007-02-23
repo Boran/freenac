@@ -49,7 +49,7 @@ global $router_mac_ip_update_from_dns;
 
 if ( empty($core_routers) ) {   // no results, error?
    logit("no routers specified in core_routers variable in config.inc");
-   reporterr('info',"no routers specified in core_routers variable in config.inc");
+   log2db('info',"no routers specified in core_routers variable in config.inc");
    exit -1;
 }
 
@@ -82,7 +82,7 @@ foreach (split(' ', $core_routers) as $router) {
  if ( count($results) === 0 ) {   // no results, error?
    logit("No results retrieved from router $router: SNMP errors?");
    debug2($results[$i]);
-   #reporterr('info',"No results retrieved from router $router: SNMP errors?");
+   #log2db('info',"No results retrieved from router $router: SNMP errors?");
  }
 
  // go though each pair and update the SYSTEMS table
@@ -147,7 +147,7 @@ foreach (split(' ', $core_routers) as $router) {
  }
 
  # Don't write to the GUI logging table any more, its too noisy/frequent
- #reporterr('info',"Update $count_updates mac/ip tables from router $router");
+ #log2db('info',"Update $count_updates mac/ip tables from router $router");
  logit("Update $count_updates mac/ip tables from $router");
 }
 

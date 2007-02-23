@@ -84,7 +84,7 @@ else
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 if ($flagscannow)
-   reporterr('info',"port_scan finished normally. ".$var['equipments']." hosts scanned");
+   log2db('info',"port_scan finished normally. ".$var['equipments']." hosts scanned");
 
 function check_requirements()  //Checks for required functions and tables structure
 {
@@ -101,8 +101,8 @@ function check_requirements()  //Checks for required functions and tables struct
       check_and_abort("Function syscall not defined in funcs.inc\n",0);
    if (!in_array('normalise_mac',$functions))
       check_and_abort("Function normalise_mac not defined in funcs.inc\n",0);
-   if (!in_array('reporterr',$functions))
-      check_and_abort("Function reporterr not defined in funcs.inc\n",0);
+   if (!in_array('log2db',$functions))
+      check_and_abort("Function log2db not defined in funcs.inc\n",0);
    if (!isset($which_nmap))
       check_and_abort("Var \$which_nmap not defined in port_scan.inc\n",0);
    if (!isset($scan_directory))
@@ -152,7 +152,7 @@ function message($string)
       if ($output_to_syslog===TRUE)
       {
          logit($string);
-         //reporterr('info',$string);
+         //log2db('info',$string);
       }   
       else
          echo $string;
@@ -619,8 +619,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       message("port_scan ended abnormally.\n");
       debug1($message);
       debug1("port_scan ended abnormally.\n");
-      //reporterr('err',$message);
-      //reporterr('err',"port_scan ended abnormally.");
+      //log2db('err',$message);
+      //log2db('err',"port_scan ended abnormally.");
       exit();
    }
    else
@@ -630,8 +630,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       message("port_scan ended abnormally.\n");
       debug1($message);
       debug1("port_scan ended abnormally.\n");
-      //reporterr('err',$message);
-      //reporterr('err',"port_scan ended abnormally.");
+      //log2db('err',$message);
+      //log2db('err',"port_scan ended abnormally.");
       exit();
    }
 }
@@ -687,7 +687,7 @@ function get_ips()	//This function will get some ips to scan
          $query="update systems set scannow=0 where r_ip='".$result['r_ip']."';";
          execute_query($query);
          logit('Nmap scan-now of ' . $result['r_ip'] . ' started');
-         reporterr('info','Nmap scan-now of ' . $result['r_ip'] . ' started');
+         log2db('info','Nmap scan-now of ' . $result['r_ip'] . ' started');
       }
    }
    else if ($argc>=2)
@@ -839,7 +839,7 @@ function get_ips()	//This function will get some ips to scan
                {
                   debug1($rejected_ip." doesn't meet criteria specified in subnets table\n");
                   logit($rejected_ip." doesn't meet criteria specified in subnets table\n");
-		  reporterr('info',$rejected_ip." doesn't meet criteria specified in subnets table");
+		  log2db('info',$rejected_ip." doesn't meet criteria specified in subnets table");
                }
             }
       }
@@ -902,7 +902,7 @@ function parse_scanfile($scan_file,$list)
             {
                debug1($list['ip'][$i]." is down\n");
                logit($list['ip'][$i]." is down\n");
-               reporterr('info',$list['ip'][$i]." is down");
+               log2db('info',$list['ip'][$i]." is down");
             }
             if ($flagscannow) //Lets set os=Unreachable to those devices which are present in the nac_hostscanned table
             {
@@ -1009,7 +1009,7 @@ function parse_scanfile($scan_file,$list)
       {
          debug1($down." is down\n");
          logit($down." is down\n");
-         reporterr('info',$down." is down");
+         log2db('info',$down." is down");
       }
       for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
       {
