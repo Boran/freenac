@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "Monitor /var/log/messages for key vmps messages..."
+tail -f /var/log/messages |egrep -v "Debug1:|Debug2|nothing else conflicting " | egrep "vmpsd_external|vmps_lastseen"

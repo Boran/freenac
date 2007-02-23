@@ -51,15 +51,17 @@ function restart_port($switch, $port) {
 
 debug1("cron_restart_port");
 
-$query="SELECT switch,name,comment FROM port WHERE restart_now='1'";
+#$query="SELECT switch,name,comment FROM port WHERE restart_now='1'";
+$query="SELECT switch.name as switchname, switch.ip as switchip,port.name,port.comment FROM port INNER JOIN switch on port.switch=switch.id WHERE restart_now='1'";
   $res = mysql_query($query);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
   while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
     #debug1("restart_port switch $line[0] $line[1]");
-    logit(            "restart_port switch $line[0] $line[1], $line[3]");
-    reporterr('info', "restart_port switch $line[0] $line[1], $line[3]");
-    $switch=v_sql_1_select("select ip from switch where id='$line[0]'");
+    logit(            "restart_port switch $line[0] $line[1], $line[2], $line[3], $line[4]");
+    reporterr('info', "restart_port switch $line[0] $line[1], $line[2], $line[3], $line[4]");
+    #$switch=v_sql_1_select("select ip from switch where id='$line[0]'");
+    $switch=$line[1];
     restart_port($switch, $line[1]);
 
     # Now reset the flag, since its done

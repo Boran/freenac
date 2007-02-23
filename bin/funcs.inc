@@ -1,6 +1,6 @@
 <?php
 /**
- * /opt/nac/bin/dump_ports
+ * /opt/nac/bin/funcs.inc
  *
  * Long description for file:
  * common PHP functions used by several scripts
@@ -13,9 +13,9 @@
  *
  * @package			FreeNAC
  * @author			Sean Boran (FreeNAC Core Team)
- * @copyright		2006 FreeNAC
+ * @copyright		2007 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			CVS: $Id:$
+ * @version			SVN: $Id$
  * @link				http://www.freenac.net
  *
  */
@@ -59,14 +59,17 @@ function logit($msg) {
   }
 }
 
+## reporterr3: write key events to naclog which is visible from the GUI
 function reporterr($level, $msg)
 {
   global $connect;
+  $msg=rtrim($msg);
   if (strlen($msg)>0 ) {
     db_connect();                 // just in case its not connected
-    #$query="INSERT DELAYED INTO guilog "
-    $query="INSERT INTO guilog "
+    #$query="INSERT DELAYED INTO naclog "
+    $query="INSERT INTO naclog "
       . "SET what='" . mysql_real_escape_string($msg )  . "', "
+      . "host='"     . mysql_real_escape_string($_SERVER"HOSTNAME"]) . "', "
       . "priority='$level' ";
     #echo "$query\n";
     $res = mysql_query($query, $connect);
@@ -74,9 +77,11 @@ function reporterr($level, $msg)
   }
 
   // To view recent entries:
-  // select * from vmpslog ORDER BY datetime DESC LIMIT 5;
+  // select * from naclog ORDER BY datetime DESC LIMIT 5;
 }
 
+
+## reporterr3: write to naclog if $debug_flag3
 function reporterr3($msg)
 {
   global $connect, $debug_flag3;
@@ -84,8 +89,8 @@ function reporterr3($msg)
   $msg=rtrim($msg);
   if (($debug_flag3==TRUE) && (strlen($msg)>0) ) {
     db_connect();                 // just in case its not connected
-    #$query="INSERT INTO guilog "
-    $query="INSERT DELAYED INTO guilog "
+    #$query="INSERT INTO naclog "
+    $query="INSERT DELAYED INTO naclog "
       . "SET what='" . $msg   . "', "
       . "priority='" . $level . "' ";
     #echo "$query\n";
@@ -93,6 +98,7 @@ function reporterr3($msg)
     if (!$res) { die('Cannot write to vmplog table: ' . mysql_error()); }
   }
 }
+
 
 function db_connect()
 {
