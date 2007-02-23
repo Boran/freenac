@@ -1,7 +1,7 @@
 
 _____________ Install checklist: FreeNAC Master       _______________
 
-master_server_install.txt                      Last Update: 25.10.06/SB
+master_server_install.txt                   Last Update: 23.02.2007/SB
 ______________________________________________________________________
 
 
@@ -20,12 +20,12 @@ Note also that a virtaul machine is available on FreeNAC.net, if this all sounds
 complicated.
 
 
-1. UNIX preparation
+1. UNIX/Linux preparation
 ===================
 see unix_install.txt
 	
 	
-2. Installing Suse packages
+2. Installing OS (Suse) packages
 ===========================
 see unix_install.txt
 
@@ -213,8 +213,15 @@ Install first the graphics support needed by the web1
     AddType application/x-httpd-php-source .phps     
   
 
-Database
-========
+
+____________________________________________________________________________
+
+      Initial Configuration
+____________________________________________________________________________
+      
+      
+Database rights
+===============
 There are 4 mysql users needed for accessing the database. 
 A. Local daemon user for PHP scripts: inventwrite@localhost
 B. A user for the remote Delphi Windows GUI: inventwrite@'%' 
@@ -226,78 +233,101 @@ D. The Web1 GUI has a specific user%localhost, by default called "readonly".
 E. The Web2 GUI has a specific user%localhost, by default called "webwrite".
 
 Local daemon use for PHP scripts (set the user/pw in /opt/nac/config.inc):
-  grant SELECT,INSERT,UPDATE    ON inventory.*       to inventwrite@localhost IDENTIFIED by 'PASSWORD2';
+  grant SELECT,INSERT,UPDATE        ON opennac.*       to inventwrite@localhost IDENTIFIED by 'PASSWORD2';
   SET PASSWORD FOR inventwrite@localhost = OLD_PASSWORD('PASSWORD2');
-  grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@localhost;
-  grant CREATE TEMPORARY TABLES ON inventory.*        to inventwrite@localhost;
-  grant ALL                     ON inventory.vmpsauth to inventwrite@localhost;
-
+  
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.systems to inventwrite@localhost;
+  grant CREATE TEMPORARY TABLES     ON opennac.*        to inventwrite@localhost;
+  grant ALL                         ON opennac.vmpsauth to inventwrite@localhost;
+  
 Remote delphi Windows GUI use. See also the vmps.ini file on the Windows client.
-  grant SELECT,INSERT        ON inventory.*       to inventwrite@'%' IDENTIFIED by 'PASSWORD1';
+  grant SELECT,INSERT               ON opennac.*       to inventwrite@'%' IDENTIFIED by 'PASSWORD1';
   SET PASSWORD FOR inventwrite@'%' = OLD_PASSWORD('PASSWORD1');
-  grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@'%';
-  grant SELECT,INSERT,UPDATE ON inventory.users   to inventwrite@'%' ;
-  grant SELECT,INSERT,UPDATE,DELETE ON inventory.patchcable to inventwrite@'%';
-  grant SELECT,INSERT,UPDATE ON inventory.port    to inventwrite@'%' ;
-  grant SELECT,UPDATE        ON inventory.oper    to inventwrite@'%' ;
-  grant SELECT,UPDATE        ON inventory.switch  to inventwrite@'%' ;
-  grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
-  grant SELECT,INSERT,UPDATE ON inventory.sys_class to inventwrite@'%' ;
-  grant SELECT,INSERT,UPDATE ON inventory.sys_class2 to inventwrite@'%' ;
-  grant SELECT,INSERT,UPDATE ON inventory.sys_os to inventwrite@'%';
-  grant SELECT,INSERT,UPDATE,DELETE ON inventory.nac_openports to inventwrite@'%' ;
+
+  grant SELECT,UPDATE               ON opennac.oper    to inventwrite@'%' ;
+  grant SELECT,UPDATE               ON opennac.config  to inventwrite@'%' ; 
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.building to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.location to inventwrite@'%' ;    
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.port    to inventwrite@'%' ;   
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.switch  to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlan    to inventwrite@'%' ;  
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.systems to inventwrite@'%';
+  grant SELECT,INSERT,UPDATE,DELTE  ON opennac.users   to inventwrite@'%' ;  
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.patchcable to inventwrite@'%';  
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlanswitch to inventwrite@'%' ;  
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.cabletype  to inventwrite@'%' ;    
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_class to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_class2 to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os        to inventwrite@'%';
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os1       to inventwrite@'%';
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os2       to inventwrite@'%';
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os3       to inventwrite@'%';      
 
 The read-only webgui Web1 needs "read" access and by default uses a user 
 named 'readonly'. See also /opt/nac/web1/config.inc.  
-  grant SELECT       ON inventory.* to readonly@'localhost' IDENTIFIED by 'PASSWORD1';
+  grant SELECT       ON opennac.* to readonly@'localhost' IDENTIFIED by 'PASSWORD1';
 
 The webgui Web2 needs "read-write" access and by default uses a user 
-  grant SELECT,INSERT        ON inventory.*       to webwrite@'localhost' IDENTIFIED by 'PASSWORD1';
+  grant SELECT,INSERT        ON opennac.*       to webwrite@'localhost' IDENTIFIED by 'PASSWORD1';
   SET PASSWORD FOR webwrite@'localhost' = OLD_PASSWORD('PASSWORD1');
-  grant SELECT,UPDATE ON inventory.systems to webwrite@'localhost' ;
-  grant SELECT               ON inventory.users   to webwrite@'localhost' ;
-  grant SELECT,              ON inventory.patchcable to webwrite@'localhost' ;
-  grant SELECT,              ON inventory.port    to webwrite@'localhost' ;
-  grant SELECT               ON inventory.oper    to webwrite@'localhost' ;
-  grant SELECT               ON inventory.switch  to webwrite@'localhost' ;
-  grant SELECT               ON inventory.vlan    to webwrite@'localhost' ;
-  grant SELECT,INSERT,UPDATE ON inventory.sys_class to webwrite@'localhost' ;
-  grant SELECT,INSERT,UPDATE ON inventory.sys_os to webwrite@'localhost';
-  grant SELECT               ON inventory.nac_openports to webwrite@'localhost' ;
+  grant SELECT,UPDATE        ON opennac.systems to webwrite@'localhost' ;
+  grant SELECT               ON opennac.users   to webwrite@'localhost' ;
+  grant SELECT,              ON opennac.patchcable to webwrite@'localhost' ;
+  grant SELECT,              ON opennac.port    to webwrite@'localhost' ;
+  grant SELECT               ON opennac.oper    to webwrite@'localhost' ;
+  grant SELECT               ON opennac.switch  to webwrite@'localhost' ;
+  grant SELECT               ON opennac.vlan    to webwrite@'localhost' ;
+  grant SELECT,INSERT,UPDATE ON opennac.sys_class to webwrite@'localhost' ;
+  grant SELECT,INSERT,UPDATE ON opennac.sys_os to webwrite@'localhost';
+  grant SELECT               ON opennac.nac_openports to webwrite@'localhost' ;
 
 
-Then, you need to populate the following tables :
+Populate tables
+===============
+Then, you need to populate the following tables. Since v2.2 the DB schema is more normalised, so 
+you need to be much more careful: indices are used everywhere. Its recommended that you read
+the Schema documentation first.
+
+The easiest was to do the following is from the Windows GUI.
 
 A. switches : at the beginning, you just need to insert your test switch(es) :
+	# V2.1:
 	INSERT INTO switch(ip,name,location) VALUES ('192.168.123.11','switch11','5th floor');
+	# TBD: V2.2
 
 B. ports : this is optional as it will be populated once new machine are connecting.
    However, it is interesting to pre-populate the field to ease the transition. By setting the "default_vlan" field to the actual vlan configured on this port, you can get the new (unknown) hosts on the same vlan (see config.inc).
-
+	# V2.1:
 	INSERT INTO port(switch,name,location,default_vlan) VALUES ('192.168.254.11','Fa/0/2','5 B','123');
+	# TBD: V2.2	
 
 C. users : this contains all your users. It is probably better to regularly update this table by pulling data from a directory (ActiveDirectory: see optional modules below)
-
+	# V2.1:
 	INSERT INTO users(AssocNtAccount,Surname,GivenName,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,Mobile) VALUES ("username","Jean","Doe","jean.doe@foo.ch","Building B","5 B2","0797704803);
+	# TBD: V2.2
+	
+D. The vlan table is a list for vlans, number, descritions.
+   The vlan index is used to refer to a vlan from the systems table.
+   
+E. Optionally: The Operating System, Classifciation, Building, Location tables.
 
 
 
-4. FreeNAC install part #1:
-===========================
-Create a config.inc from a template and set some options:
+config.inc:
+===========
+Create a config.inc from a template and set especially the DB connection parameters:
   cp /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc
   vi /opt/nac/etc/config.inc
 
 
-At this stage The DB is working and PHP should be access to the DB, and the
-messages logged trough syslog to '/var/log/messages'.
-
-To test this, you can execute '/opt/nac/bin/purge_unknowns" and verify the content of syslog with `tail /var/log/messages`.
-You should see a line with the following content 'vmps_purge_unknowns: completed'
+At this stage The DB should be working and PHP should be able to access the DB, and the
+messages logged through syslog to '/var/log/messages'.
 
 
-5. FreeNAC install part #2:
-===========================
+
+
+Starting the NAC daemons:
+=========================
 Start the vmps daemon, by creating a startup file and starting the service:
 
   cp /opt/nac/contrib/startup_init.d/vmps /etc/init.d/vmps
