@@ -1,15 +1,20 @@
-_____________ Mysql Slave re-sync checklist __________________________
+______________________________________________________________________
                                                
-slave_mysql_sync.txt                          Last Update: 19.7.06/SB
+slave_mysql_sync.txt                          Last Update: 22.2.07/SB
 ______________________________________________________________________
 
 
 1. Introduction
 ================
+This document explains how to setup MySQL replication between master and slaves.
+
 Reference.http://dev.mysql.com/doc/refman/5.0/en/replication-howto.html
 Replace the following below:
-		SERVER2.DOMAIN                 the FQDN of your slave
-		REPL_PASSWD                    Replication password
+  SERVER2.DOMAIN       the FQDN of your slave
+  repl                 Replication username
+  REPL_PASSWD          Replication password
+  opennac              Name of your database (this was 'inventory' prior to NAC v2.2).
+
 
 
 2. Master: enable replication
@@ -33,63 +38,63 @@ We'll use "vmps2" to mean the slave, and "vmps1" to mean the master.
 0) vmps2
 stop slave;
 
-1) Master vmps1: Lock tables, note log position, restart
+1) Master vmps1: 
+   Lock tables, note log position, restart
 
-FLUSH TABLES WITH READ LOCK;
+  mysql> FLUSH TABLES WITH READ LOCK;
 
-vmps1:/mysqldata[11]$ 
-tar cvf inventory.tar inventory
+  vmps1:/mysqldata[11]$ 
+  tar cvf opennac.tar opennac
 
-mysql> SHOW MASTER STATUS;
-+------------------------+----------+--------------+------------------+
-| File                   | Position | Binlog_Do_DB | Binlog_Ignore_DB |
-+------------------------+----------+--------------+------------------+
-| vmps1-bin.000027       | 12717436 |              |                  |
-+------------------------+----------+--------------+------------------+
+  mysql> SHOW MASTER STATUS;
+  +------------------------+----------+--------------+------------------+
+  | File                   | Position | Binlog_Do_DB | Binlog_Ignore_DB |
+  +------------------------+----------+--------------+------------------+
+  | vmps1-bin.000027       | 12717436 |              |                  |
 
-==> take note of the position
+  ==> take note of the position
 
-UNLOCK TABLES;
+  mysql> UNLOCK TABLES;
 
 
 2) Slave vmps2:
 
-- stop mysql
-rcmysql stop
+  # stop mysql
+  rcmysql stop
 
-- Copy DB tar file from master & extract:
-   mv inventory inventory.$$
-   scp vmps1:/mysql/inventory.tar .
-   tar xvf inventory.tar
-   chmod 770 inventory; chmod g+s inventory; chown -R mysql:mysql inventory;
+  # Copy DB tar file from master & extract:
+   mv opennac opennac.$$
+   scp vmps1:/mysql/opennac.tar .
+   tar xvf opennac.tar
+   chmod 770 opennac; chmod g+s opennac; chown -R mysql:mysql opennac;
 
-- Configure slave: start daemon with slave off
-  /usr/local/mysql/bin/mysqld --user=mysql --skip-slave-start --log-warnings
+  # Configure slave: start daemon with slave off
+    /usr/local/mysql/bin/mysqld --user=mysql --skip-slave-start --log-warnings
 
-Start mysql client:
+  Start mysql client:
 	reset slave;
 
-# CHANGE MASTER, replace XXXX, YYYY and 'file_name': 
-  MASTER_PASSWORD='YYYY', MASTER_LOG_FILE='file_name', MASTER_LOG_POS=XXXX;
+  # CHANGE MASTER, replace XXXX, YYYY, ZZZZ and 'FILE_NAME': 
+    CHANGE MASTER TO MASTER_HOST='XXXX', MASTER_USER='repl',
+      MASTER_PASSWORD='YYYY', MASTER_LOG_FILE='FILE_NAME', MASTER_LOG_POS=ZZZ;
   
-- Start replication:
+  # Start replication:
 	START SLAVE;
 	show slave status \G;
 
-- Check the log position with that on the master:
+  # Check the log position with that on the master:
 	show master status;
 
---- Create a new vmpsauth table, which is the only local table:
-CREATE TABLE inventory.`vmpsauth` ( `mac` varchar(30) NOT NULL default '', `AuthLast` datetime default NULL, `AuthPort` varchar(20) default NULL, `AuthSw` varchar(20) default NULL, `vlan_group` int(11) default NULL, `AuthVlan` int(11) default NULL, PRIMARY KEY (`mac`) ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='List of VMPS authenticated Computers' ;
+  ### Create a new vmpsauth table, which is the only local table:
+    CREATE TABLE opennac.`vmpsauth` ( `mac` varchar(30) NOT NULL default '', `AuthLast` datetime default NULL, `AuthPort` varchar(20) default NULL, `AuthSw` varchar(20) default NULL, `vlan_group` int(11) default NULL, `AuthVlan` int(11) default NULL, PRIMARY KEY (`mac`) ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='List of VMPS authenticated Computers' ;
 
-- Also check the slave mysql log for errors.
+  # Also check the slave mysql log for errors.
 
-- If all looks fine, stop the slave and start it normally:
-
-   rcmysql stop
-   rcmysql start
-   rcvmps start
-   tail -f /var/log/messages | grep vmpsd_external
+  # If all looks fine, stop the slave and start it normally:
+    rcmysql stop
+    rcmysql start
+    rcvmps start
+    tail -f /var/log/messages | grep vmpsd_external
 
 
 
@@ -110,7 +115,7 @@ slave and skipping the SQL Query causing the problem:
   
 It now skips to the next error:
   Slave_SQL_Running: No
-  Last_Error: Error 'Unknown table 'inventory.v_1'' on query. Default database: 'inventory'. Query: 'DROP   VIEW v_1'
+  Last_Error: Error 'Unknown table 'opennac.v_1'' on query. Default database: 'opennac'. Query: 'DROP   VIEW v_1'
 
 To get through these difficult queries, it may be necessary to repeat the above.
   
@@ -118,6 +123,7 @@ To get through these difficult queries, it may be necessary to repeat the above.
 More reading:
   http://dev.mysql.com/doc/refman/5.0/en/set-global-sql-slave-skip-counter.html
   http://dev.mysql.com/doc/refman/5.1/en/replication-options.html
+
 
 
 4. Monitoring replication
