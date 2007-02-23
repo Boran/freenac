@@ -90,7 +90,8 @@ Waking up in
 SSL Connection Established
 Debug:  main:
 Debug: +(peap|eap|tls):
-Debug: +(rlm_eap)
+Debug: +(rlm_eap|TLS_|eaptls_|mschap2|radius_xlat|rlm_mschap)
+Info: rlm_eap_mschapv2
 
 
 
