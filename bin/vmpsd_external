@@ -180,7 +180,7 @@ function decide($port, $switch, $mac, $lastvlan)
 {
 # $return: 0= DENY, >=0 is Vlan number
 #
-  global $connect, $default_vlan, $lastseen_infnet, $use_port_default_vlan, 
+  global $connect, $default_vlan, $lastseen_infnet, $use_port_default_vlan,$vlan_by_switch_location, 
          $detect_hubs;
   $result=0;         // Deny
   $decided=false;
@@ -277,7 +277,7 @@ function decide($port, $switch, $mac, $lastvlan)
       debug1("decide: No hub checking, use vlan $result");
      }
      #Assignation of vlan by switch location
-     if (($result>0)&&($vlan_by_switch_location))
+     if (($result>0)&&($vlan_by_switch_location===true))
      {
         #$vlan_id=v_sql_1_select("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch'");
         #debug1("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch';");
