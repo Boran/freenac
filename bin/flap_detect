@@ -23,8 +23,8 @@
  */
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
-$debug_flag1=TRUE;
-$debug_flag2=TRUE;
+#$debug_flag1=TRUE;
+#$debug_flag2=TRUE;
 
 $subject="VMPS flapping";
 require_once "funcs.inc";               # Load settings & common functions
@@ -142,19 +142,19 @@ function react($cnt, $switch, $port)
     #msg("\nACTION: Only one system $mac stormed on this port, DECISION: automatically restart port\n\n\n");
     ## TBD: we could query the auth table for others, and use that to count vlans & decide?
     snmp_restart_port($port, $switch);
-    reporterr('warn', "$email_subject: automatically restart port since $mac constantly re-authenticating");
+    log2db('warn', "$email_subject: automatically restart port since $mac constantly re-authenticating");
     
 
   } else if ( count($arr1) < 2 ) {   // only one vlan
     $email_alert=false;      # wasn't a big problem, so syslog but no email alert
     logit("ACTION: Only one vlan storming on this port, restart port $port on $switch");
     #msg("\nACTION: There is only one vlan involved, its probably a false, alert: just a heavily used port?. Use your intuition, restarting the port now, this may help. \n\n\n");
-    reporterr('warn', "$email_subject: automatically restart port to try and stop flapping");
+    log2db('warn', "$email_subject: automatically restart port to try and stop flapping");
     snmp_restart_port($port, $switch);
 
   } else if ( count($arr2) < 3 ) {   // only 1 or two systems
     msg("\nACTION: There is less than three systems on this port, so no recommendation made on how to solve the flapping. Use your intuition. Restarting the port now, this may help. \n\n\n");
-    reporterr('warn', "$email_subject: automatically restart port to try and stop flapping");
+    log2db('warn', "$email_subject: automatically restart port to try and stop flapping");
     snmp_restart_port($port, $switch);
 
   } else {
@@ -195,12 +195,12 @@ function react($cnt, $switch, $port)
 
         #echo("DECISION: Change $mac vlan to $best_vlan - $best_vlan_num since $best_vlan and $vlan are in the same group $othervlangroup\n");
         msg("==> DECISION: automatically changing $mac vlan to $best_vlan  - $best_vlan_num since $best_vlan and $vlan are in the same group $othervlangroup\n");
-        reporterr('warn', "$email_subject: automatically changing $mac to $best_vlan - $best_vlan_num since $best_vlan and $vlan are in the same group $othervlangroup");
+        log2db('warn', "$email_subject: automatically changing $mac to $best_vlan - $best_vlan_num since $best_vlan and $vlan are in the same group $othervlangroup");
 
       } else {
         #echo("DECISION: Disable $mac since $best_vlan and $vlan are not in the same group ($new_vlan_group-$othervlangroup)\n");
         msg("\n==> RECOMMENDATION: Disable $mac since $best_vlan and $vlan are not in the same group ($new_vlan_group-$othervlangroup)\n");
-        reporterr('warn', "$email_subject: RECOMMENDATION emailed to superuser: Disable $mac since $best_vlan and $vlan are not in the same group");
+        log2db('warn', "$email_subject: RECOMMENDATION emailed to superuser: Disable $mac since $best_vlan and $vlan are not in the same group");
       }
 
     } else {

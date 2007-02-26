@@ -89,7 +89,7 @@ if( $test ) {
 }
 else {
 	db_connect();
-	reporterr('info', 'Starting user synchronistation with Active Directory');
+	log2db('info', 'Starting user synchronistation with Active Directory');
 	$users = query_AD();
 	if( $users ) { fill_db($users); }	# if $users is empty this indicates that there's been an error connecting to the AD
 	else {
@@ -238,7 +238,7 @@ function fill_db($users) {
 		}
 		
 	}
-	reporterr('info', "Active Directory synchronisation completed. $inserts new users inserted and $updates users updated.");
+	log2db('info', "Active Directory synchronisation completed. $inserts new users inserted and $updates users updated.");
 }
 
 

@@ -69,10 +69,11 @@ function log2db($level, $msg)
   if (strlen($msg)>0 ) {
     db_connect();                 // just in case its not connected
     #$query="INSERT DELAYED INTO naclog "
-    $query="INSERT INTO naclog "
-      . "SET what='" . mysql_real_escape_string($msg )  . "', "
-      . "host='"     . mysql_real_escape_string($_SERVER["HOSTNAME"]) . "', "
-      . "priority='$level' ";
+    $query="insert into naclog set what='".mysql_real_escape_string($msg)."', host='".mysql_real_escape_string($_SERVER['HOSTNAME'])."', priority='".$level."'";
+    #$query="INSERT INTO naclog "
+    #  . "SET what='" . mysql_real_escape_string($msg )  . "', "
+    #  . "host='"     . mysql_real_escape_string($_SERVER["HOSTNAME"]) . "', "
+    #  . "priority='$level' ";
     #echo "$query\n";
     $res = mysql_query($query, $connect);
     if (!$res) { die('Cannot write to vmplog table: ' . mysql_error()); }

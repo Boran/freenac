@@ -195,7 +195,7 @@ function decide($port, $switch, $mac, $lastvlan)
      return($result);
   }
   $lastvlan=v_sql_1_select("select id from vlan where default_id='$lastvlan' limit 1");
-  debug2("decide: select id from vlan where default_id='$lastvlan' limit 1");
+  debug2("decide: query select id from vlan where default_id='$lastvlan' limit 1");
   ## Look for a system with this mac, AND, that is "active". Ignore inactives.
   #$vlanByGroup="(SELECT vlan_group FROM vlan WHERE id=vlan)";
   #$query="SELECT name,description,vlan,status,$vlanByGroup FROM systems WHERE mac='" 

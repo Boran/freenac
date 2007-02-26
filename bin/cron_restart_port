@@ -24,7 +24,7 @@
 
 
 $debug_flag1=FALSE;
-$debug_flag1=TRUE;
+#$debug_flag1=TRUE;
 
 require_once 'funcs.inc';
 
@@ -57,20 +57,18 @@ $query="SELECT switch.name as switchname, switch.ip as switchip,port.name,port.c
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
   while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
-    #debug1("restart_port switch $line[0] $line[1]");
     logit(            "restart_port switch $line[0] $line[1], $line[2], $line[3], $line[4]");
-    reporterr('info', "restart_port switch $line[0] $line[1], $line[2], $line[3], $line[4]");
+    log2db('info', "restart_port switch $line[0] $line[1], $line[2], $line[3], $line[4]");
     #$switch=v_sql_1_select("select ip from switch where id='$line[0]'");
     $switch=$line[1];
     restart_port($switch, $line[1]);
-
-    # Now reset the flag, since its done
-    $query="UPDATE port SET restart_now='0' WHERE switch='"
-      .$line[0] ."' AND name='"  .$line[1] ."'";
-      debug1($query);
-      $res2 = mysql_query($query, $connect);
-      if (!$res2) { die('Invalid query: ' . mysql_error()); }
   }
+
+# Now reset the flag, since its done
+$query="UPDATE port SET restart_now='0' ";
+  debug1($query);
+  $res2 = mysql_query($query, $connect);
+  if (!$res2) { die('Invalid query: ' . mysql_error()); }
 
 mysql_close($connect);
 ?>

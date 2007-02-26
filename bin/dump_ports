@@ -22,7 +22,7 @@
  */
 
 
-$debug_flag1=TRUE;
+$debug_flag1=FALSE;
 
 require_once "funcs.inc";
 
@@ -63,7 +63,7 @@ if ($debug_flag1) { $query=$query . " LIMIT 10"; }
   }
 
 
-#reporterr('info', 'dump_ports: completed');
+#log2db('info', 'dump_ports: completed');
 syslog(LOG_INFO, 'completed');
 if ($mail_user!=="") {
   mail($mail_user, "VMPS /opt/vmps/dump_ports", $msg);
