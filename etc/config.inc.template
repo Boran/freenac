@@ -42,6 +42,7 @@
   $default_vlan=0;                 # 0=Default deny, otherwise unknown devices are put on this vlan (NOTE: this number points to the id field
 				   # from the vlan table, it is not the default_id.
   $vlan_by_switch_location=false;  # Assignation of vlan by switch location
+  $check_for_expired=false;        # Enable verification of expired devices
 
 ## vmps_lastseen script:  
   $lastseen_dryrun=false;           # Test, don't update DB
