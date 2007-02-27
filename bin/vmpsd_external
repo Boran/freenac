@@ -199,7 +199,7 @@ function decide($port, $switch, $mac, $lastvlan)
   ## Look for a system with this mac, AND, that is "active". Ignore inactives.
   #$vlanByGroup="(SELECT vlan_group FROM vlan WHERE id=vlan)";
   #$query="SELECT name,description,vlan,status,$vlanByGroup FROM systems WHERE mac='" 
-  $query="SELECT id,name,description,vlan,status,expiry FROM systems WHERE mac='" 
+  $query="SELECT id,name,description,vlan,status,expiry,r_ip FROM systems WHERE mac='" 
     . $mac . "' AND status=1";
   debug2("decide: ".$query);
   $res = mysql_query($query, $connect);
@@ -249,7 +249,7 @@ function decide($port, $switch, $mac, $lastvlan)
   // Normal case: one entry exists  //
   //
   } else if (mysql_num_rows($res)==1) {
-    list($sid,$name, $description, $vlan, $status,$expiry)=mysql_fetch_array($res, MYSQL_NUM);
+    list($sid,$name, $description, $vlan, $status,$expiry,$r_ip)=mysql_fetch_array($res, MYSQL_NUM);
 
     # a) Is this System Enabled? [Too difficult to handle for now]
     #if ($status==0) {
@@ -280,9 +280,9 @@ function decide($port, $switch, $mac, $lastvlan)
      if (($result>0)&&($vlan_by_switch_location===true))
      {
         #$vlan_id=v_sql_1_select("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch'");
-        #debug1("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch';");
+        #debug2("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch';");
         $vlan_id=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.ip='$switch'");
-        debug1("decide: select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.ip='$switch'");
+        debug2("decide: select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.ip='$switch'");
         if ($vlan_id)
         {
            logit("decide: Exception. Assigning VLAN by switch location");
@@ -329,9 +329,10 @@ function decide($port, $switch, $mac, $lastvlan)
     #log2db('info', "DENY $mac on $switch, $port, DUPLICATE MACs: please remove!");
     $result=0;
   }
+  $switch_name=v_sql_1_select("select name from switch where ip='".$switch."' limit 1");
   if ($result>0)
      $result=v_sql_1_select("select default_name from vlan where id='$result' limit 1");
-  logit("decide: $name, $description, vlan result=$result on switch $switch $port");
+  logit("decide: $name($r_ip), $description, vlan result=$result on switch $switch_name($switch) $port");
   #debug1("decide: $name, $description, vlan result=$result");
   return($result);
 }
