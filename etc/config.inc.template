@@ -55,6 +55,8 @@
   $set_status_for_unknowns="0";     # 0=disabled, 1=enabled: often set to during the 'learning phase' and 0 afterwards.
   $lastseen_patch_lookup=false;     # Lookup Patchcable details in Alerts
                                     # set false by default since most people don't use the patch table
+  $sms_device="SMS PC";             # Text to display in the alert when an unknown SMS device connects
+ 
 
 ## Binding with FreeRadius
   $vmps_servers = "localhost";	    #Several VMPS servers to query. If one fails, go and query to the next one. List has to be delimited by commas

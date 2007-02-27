@@ -350,10 +350,10 @@ do {
                   .      "office='$location_id', "
                   .      "mac='$mac2' ";
                   debug1($query);
-                  debug1("New SMS System $mac2 on sw/port $switch/$port"); 
+                  debug1("New $sms_device System $mac2 on sw/port $switch/$port"); 
                   $newmac_found=TRUE;                // used further down
               
-                  $log_entry="New SMS $mac2 ($newmac_vendor) $sms_name, $txx_name, $sms_details, switch ";
+                  $log_entry="New $sms_device $mac2 ($newmac_vendor) $sms_name, $txx_name, $sms_details, switch ";
 
                   if ($lastseen_dryrun==FALSE) {
                     $res = mysql_query($query);
