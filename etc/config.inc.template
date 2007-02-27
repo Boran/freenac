@@ -43,6 +43,8 @@
 				   # from the vlan table, it is not the default_id.
   $vlan_by_switch_location=false;  # Assignation of vlan by switch location
   $check_for_expired=false;        # Enable verification of expired devices
+  $disable_expired_devices=false;  # Disable expired devices
+  $email_alert_expired_devices=false;   #Send an email when an expired device connects?
 
 ## vmps_lastseen script:  
   $lastseen_dryrun=false;           # Test, don't update DB
