@@ -182,8 +182,8 @@ do {
     $regs=array();
     #if (ereg("(.*) vmpsd: +(ALLOW|DENY): (.*) -> (.*), switch (.*) port ([A-Z]?[a-z0-9\/]*){1}", $line, $regs) ) {
     #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
-    #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
-    if (ereg("(.*) vmpsd: (ALLOW|DENY): (.{12}) -> (.+), switch (.{1,15}) port (.{1,9})",$line, $regs) ) {
+    if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
+    #if (ereg("(.*) vmpsd: (ALLOW|DENY): (.{12}) -> (.+), switch (.{1,15}) port (.{1,9})",$line, $regs) ) {
       #echo "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n";
       debug1("FOUND: {$regs[1]} {$regs[2]} $regs[3]");
       $success=$regs[2]; 
