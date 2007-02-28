@@ -111,18 +111,18 @@ MYSQL: create directories, links, users, setting permissions
 
 
 MYSQL: Install an initial set of empty FreeNAC tables for the 
-  'inventory' database, backing up the existing tables first:
+  'opennac' database, backing up the existing tables first:
     cd /mysqldata
     mv mysql mysql.$$
     mv inventory inventory.$$  
-    cp /opt/nac/contrib/inventory_sample.tar.gz .
-    tar xvzf inventory_sample.tar.gz
+    cp /opt/nac/contrib/opennac_db.tar.gz .
+    tar xvzf opennac_db.tar.gz
   
   Start mysql, check that its OK:
     rcmysql start  
     check /mysqldata/localhost.err for errors.
   Login to sql and look at a few tables:
-    mysql inventory
+    mysql opennac
   		show tables;
   		select * from ports;
 
