@@ -1,0 +1,67 @@
+!vmps domain <domain-name>
+! The VMPS domain must be defined.
+!vmps mode { open | secure }
+! The default mode is open.
+!vmps fallback <vlan-name>
+!vmps no-domain-req { allow | deny }
+!
+! The default value is allow.
+
+vmps domain mydomain
+vmps mode open
+vmps fallback --NONE--
+vmps no-domain-req deny
+
+!
+!MAC Addresses
+!
+vmps-mac-addrs
+!
+! address <addr> vlan-name <vlan_name> 
+!
+
+! netreg extension - default vlan
+address 0010.a49f.30e1 vlan-name --DEFAULT--
+! disabled - no access
+address 0010.a49f.30e2 vlan-name --NONE--
+! vlan TEST restricted
+address 0010.a49f.30e3 vlan-name TEST
+! vlan TEST1 unrestricted
+address 0010.a49f.30e4 vlan-name TEST1
+
+!
+!Port Groups
+!
+!vmps-port-group <group-name>
+! default-vlan <vlan-name>
+! fallback-vlan <vlan-name>
+! device <device-id> { port <port-name> | all-ports }
+!
+
+vmps-port-group myswitch
+  default-vlan	VLAN1
+  fallback-vlan VLAN2
+  device 10.0.0.1 port 2/4
+  device 10.0.0.2 all-ports
+
+!
+!
+!VLAN groups
+!
+!vmps-vlan-group <group-name>
+! vlan-name <vlan-name>
+!
+
+vmps-vlan-group myvlans
+  vlan-name TEST
+
+!
+!VLAN port Policies
+!
+!vmps-port-policies {vlan-name <vlan_name> | vlan-group <group-name> }
+! { port-group <group-name> | device <device-id> port <port-name> }
+!
+
+vmps-port-policies vlan-group myvlans
+  port-group myswitch
+

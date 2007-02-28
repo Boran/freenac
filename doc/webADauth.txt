@@ -1,0 +1,108 @@
+#User authentication in the AD 
+
+#Tested with Apache 2.2.2 on Suse Linux 10.0 (FreeNAC VM)
+
+#Dependencies: openssl,openssl-devel, ldapcpplib, ldapcpplib-devel, openldap2-client, openldap2-devel,apr, apr-util
+
+   #OpenSSL:
+	yast -i openssl
+
+   #OpenSSL-devel:
+	yast -i openssl-devel
+
+   #LDAPcpp_lib:
+	yast -i ldapcpplib
+
+   #LDAPcpp_lib_devel:
+	yast -i ldapcpplib-devel
+
+   #OpenLDAP2-client:
+	yast -i openldap2-client
+
+   #OpenLDAP2-devel:
+	yast -i openldap2-devel
+
+   #APR:
+      #Download Apache Portable Runtime (http://apr.apache.org) to /opt/install and uncompress
+	cd /opt/install
+	tar xvzf apr-1.2.8.tar.gz
+	cd /opt/install/apr-1.2.8
+
+      #Build
+	./configure --prefix=/usr/local/apache2
+	make
+	make install
+
+
+   #APR_util
+      #Download APR-util (http://apr.apache.org) to /opt/install and uncompress
+	cd /opt/install
+	tar xvzf apr-util-1.2.8.tar.gz
+	cd /opt/install/apr-util-1.2.8
+
+      #Build
+	./configure --with-apr=/usr/local/apache2 --prefix=/usr/local/apache2 --with-ldap
+	make
+	make install
+
+      #Note: /usr/local/apache2 is a symbolic link to /usr/local/apache-2.2.2
+
+
+#Compile Apache with LDAP support
+	cd /opt/install/httpd-2.2.2
+	./configure --enable-so --with-ldap --enable-ldap --enable-authnz-ldap --enable-ssl --prefix=/usr/local/apache-2.2.2 --with-apr=/usr/local/apache2 --with-apr-util=/usr/local/apache2
+	make
+	make install
+   
+   #To display the list of compiled in modules type
+	httpd -l
+
+   #The one we are interested in is mod_authnz_ldap
+   #If such module is in the list returned by httpd -l we are ready to configure Apache
+
+
+#Configure Apache to authenticate against AD
+	cd /usr/local/apache2/conf
+
+   #Edit the config file httpd.conf to perform the authentication
+   
+   #Generic sample configuration. This example shows the content of the directory only to users registered in the AD
+   
+   Alias /web2 /opt/nac/web2
+   <Directory "/opt/nac/web2/">
+	Options All ExecCGI -Indexes
+	Order deny,allow
+	Allow from all
+	AuthzLDAPAuthoritative off
+	AuthType Basic
+	AuthBasicProvider ldap
+	AuthUserFile /dev/null
+	AuthName "Sensitive Zone"
+	AuthLDAPBindDN cn=Administrator,cn=Users,dc=safeguard,dc=test
+	AuthLDAPBindPassword password
+	AuthLDAPURL "ldap://server.domain.com/cn=Users,dc=domain,dc=com?sAMAccountName?sub?(objectClass=*)"
+	require valid-user
+   </Directory>
+
+   #Notes:
+	#AuthLDAPBindDN is an optional DN used to bind to the server when searching for entries. 
+	#If not provided, mod_authnz_ldap will use an anonymous bind.
+	
+	#AuthLDAPBindPassword is a bind password to use in conjunction with the bind DN.
+	#AuthLDAPBindDN and AuthLDAPBindDN should only be used if no anonymous bind is allowed.
+
+	#To show the page to only certain user(s), substitute
+	#require valid-user
+	#with
+	#require ldap-user user1(,user2,user3)
+
+	#To display the page to the Administrators group, substitute
+	#require valid-user
+	#with
+	#require ldap-group cn=Administrators,cn=Builtin,dc=domain,dc=com
+
+	#AuthzLDAPAuthoritative prevents other authentication modules from authenticating the user if this one fails.
+	#Set to off if this module should let other authentication modules attempt to authenticate the user, 
+	#should authentication with this module fail.
+
+   #For more information about mod_authnz_ldap please see http://httpd.apache.org/docs/2.2/mod/mod_authnz_ldap.html

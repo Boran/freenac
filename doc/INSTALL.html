@@ -1,0 +1,217 @@
+<h1>FreeNAC Installation (2.1)</h1>
+
+This describes a basic installation on a generic Linux host.
+
+<h2>Prerequisites</h2>
+
+<table border=1 cellspacing=0>
+<tr>
+<th>Name
+<th>Website
+<th>Used by
+<th>Version (min.)
+<th>Options needed
+
+<tr>
+<th>FreeTDS
+<td>www.freetds.org
+
+<tr>
+<th>libxml2
+<td>xmlsoft.org
+<td>[DX]
+<td>2.6.22
+
+<tr>
+<th>jpgraph
+<td>www.aditus.nu/jpgraph/ 
+<td>[W1]
+<td>2.0
+
+<tr>
+<th>graphviz
+<td>www.graphviz.org
+<td>[W1]
+<td>
+
+<tr>
+<th>Apache
+<td>www.apache.org
+<td>[W1], [W2]
+<td>2.0
+
+<tr valign=top>
+<th>PHP
+<td>www.php.net
+<td>[CO]
+<td>5.1.0
+<td>
+<li>pcntl, posix [CO] 
+<li>gd [W1]
+<li>xml [DX]
+<li>sybase [??]
+<li>mssql [??]
+<li>simplexml [PS]
+
+
+<tr>
+<th>nmap
+<td>www.insecure.org
+<td>[PS]
+<td>4.10
+
+</table>
+<h2>Installation</h2>
+<h3>Paths</h3>
+Path are currently fixed. If you move files around, you will need to check that nothing is broken.
+Important path are :
+<li><tt>'/opt/nac'</tt> : nac home
+<li><tt>'/var/log/messages'</tt> : the log files from which vmps messages are read 
+
+<h3>Core</h3>
+<ol>
+<li>Download the latest version from www.freenac.net
+<li>Untar this file in the /opt directory
+
+
+<li><h4>MySQL</h4>
+<ol>
+<li>Untar <tt>/opt/nac/contrib/inventory_sample.tar.gz</tt> in your MySQL data directory (usually <tt>/var/lib/mysql</tt>).
+<br>Caution : it will create a new directory/database called "inventory" and may erase already existing files
+<li>Restart mysql daemon
+<li><i>Optional : you can now check that the database is correctly insatlled by connecting to mysql and selecting all from ports ("SELECT * FROM ports;")</i>
+<li>Grant rights for the local core scripts :<br>
+<pre>
+grant SELECT,INSERT,UPDATE        ON inventory.*       to inventwrite@localhost IDENTIFIED by 'PASSWORD2';
+SET PASSWORD FOR inventwrite@localhost = OLD_PASSWORD('PASSWORD2');
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@localhost;
+grant CREATE TEMPORARY TABLES ON inventory.*        to inventwrite@localhost;
+grant ALL                     ON inventory.vmpsauth to inventwrite@localhost;
+</pre>
+<li>Grant rights for the windows GUI :<br>
+<pre>
+grant SELECT,INSERT        ON inventory.*       to inventwrite@'%' IDENTIFIED by 'PASSWORD1';
+SET PASSWORD FOR inventwrite@'%' = OLD_PASSWORD('PASSWORD1');
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.systems to inventwrite@'%';
+grant SELECT,INSERT,UPDATE ON inventory.users   to inventwrite@'%' ;
+grant SELECT,INSERT,UPDATE,DELETE ON inventory.patchcable to inventwrite@'%';
+grant SELECT,INSERT,UPDATE ON inventory.port    to inventwrite@'%' ;
+grant SELECT,UPDATE        ON inventory.oper    to inventwrite@'%' ;
+grant SELECT,UPDATE        ON inventory.switch  to inventwrite@'%' ;
+grant SELECT,UPDATE        ON inventory.vlan    to inventwrite@'%' ;
+grant SELECT,INSERT,UPDATE ON inventory.sys_class to inventwrite@'%' ;
+grant SELECT,INSERT,UPDATE ON inventory.sys_os to inventwrite@'%';
+</pre>
+<li>Grand read-only access for the reporting GUI :</br>
+<pre>
+grant SELECT,INSERT        ON inventory.*       to readonly@'%' IDENTIFIED by 'PASSWORDn';
+SET PASSWORD FOR readonly@'%' = OLD_PASSWORD('PASSWORDn');
+grant SELECT ON inventory.systems to readonly@'%';
+grant SELECT ON inventory.users   to readonly@'%' ;
+grant SELECT ON inventory.patchcable to readonly@'%';
+grant SELECT ON inventory.port    to readonly@'%' ;
+grant SELECT ON inventory.oper    to readonly@'%' ;
+grant SELECT ON inventory.switch  to readonly@'%' ;
+grant SELECT ON inventory.vlan    to readonly@'%' ;
+grant SELECT ON inventory.sys_class to readonly@'%' ;
+grant SELECT ON inventory.sys_os to readonly@'%';
+</pre>
+<li>Populate the 'vlan' table where id and value are respectively the VLAN ID and VLAN Name
+<li>Populate the 'switch' table
+</ol>
+<li><h4>Configuration files</h4>
+Copy & edit the following files according to your environment.
+<ol>
+<li>cp /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc<br>
+<li>cp /opt/nac/web1/config.inc.template /opt/nac/web/config.inc<br>
+</ol>
+<li><h4>Init scripts</h4>
+<ol>
+<li>Copy the init scripts : <br>
+'cp /opt/nac/contrib/startup_init.d/vmps /etc/init.d'<br>
+'cp /opt/nac/contrib/startup_init.d/vmps_lastseen /etc/init.d'<br>
+'chmod 755 /etc/init.d/vmps /etc/init.d/vmps_lastseen'
+<li>Start both daemons : <br>
+'/etc/init.d/vmps start && /etc/init.d/vmps_lastseen start'
+<li><i>Optional : you can now check that both daemons are working : '</i><br>
+<tt>ps ax | grep 'vmps'</tt> :
+<pre>
+ 4113 pts/2    S      0:00 /opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external -l 0x0804
+ 4114 pts/2    S      0:00 /usr/bin/php -f /opt/nac/bin/vmpsd_external
+ 4118 ?        Ss     0:00 /usr/bin/php -f /opt/nac/bin/vmps_lastseen
+ 4119 ?        Ss     0:00 /usr/bin/php -f /opt/nac/bin/vmps_lastseen
+ 6958 pts/2    S+     0:00 grep vmps
+</pre>
+<li>Configure your init system so that both scripts are started (chkconfig on suse, rc-update on gentoo, ...)
+</ol>
+<li><h4>Cron jobs</h4>
+<br>
+Here's the standard list of cronjobs - for explanations, see 'nac_components.txt' 
+<pre>
+0 1 26 * *      /opt/nac/bin/purge_unknowns  
+30 6-22 * * *   /opt/nac/bin/monitor_allows.sh
+*/4 * * * *     /opt/nac/bin/flap_detect
+0 3 * * 1-5     /opt/nac/bin/dump_ports
+*/6 * * * *     /opt/nac/bin/router_mac_ip
+*/5 8-18 * * *  /opt/nac/bin/port_scan --scannow
+0 11 * * 6      /opt/nac/bin/port_scan
+</pre>
+
+
+<li><h4>Web interface (1)</h4>
+<ol>
+<li>Add the following to your apache configuration. In most case, you can do that by creating a file called '/etc/apache2/conf.d/vmps.conf'
+<pre>
+Alias /vmps /opt/nac/web1
+&lt;Directory /opt/nac/web1/>
+    Options none
+    Order deny,allow
+    #allow from 127.0.0.1
+    #allow from 10.85.
+    allow from all
+&lt;/Directory>
+</pre>
+<li>Don't forget to protect access to this interface with directives or with htaccess files.
+<li>Create a temporary directory '/opt/nac/web1/tmp' and make it writable by the apache daemon.<br>
+<pre>
+mkdir /opt/nac/web1/tmp
+chown $APACHE_USER:$APACHE_GROUP /opt/nac/web1/tmp
+chmod 750 /opt/nac/web1/tmp
+</pre>
+</ol>
+
+
+</ol>
+
+
+<h3>Switch configuration</h3>
+On IOS switches, you need to configure the following :
+<li>Main configuration<br>
+<tt>vmps server A.B.C.D</tt> for the VMPS server(s) you have<br>
+<tt>vmps reconfirm</tt> recommended reconfirm time
+
+<li>Interfaces<br>
+<tt>switchport access vlan dynamic</tt>
+
+<h2>Annex</h2>
+<h3>Feature list</h3>
+<p>Covered and tested by the current version of this manual 
+<li>vmpsd
+<li>vmps_lastseen
+<li>default vlan
+<li>web1
+
+<p>Not covered by this manual
+<li>mysql clustering (hotcopy)
+
+<h3>Components</h3>
+<pre>
+[CO] = Core
+[W1] = Web Interface 1
+[W2] = Web Interface 2
+[MS] = MS-SQL Data source
+[DX] = Direx
+[MC] = McAfee
+[HC] = hotcopy (mysql cluster)
+[PS] = portscan (nmap)
+</pre>

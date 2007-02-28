@@ -1,0 +1,513 @@
+#!/bin/sh
+#
+# name    : /secure/rotate_log
+#
+# History :  
+#       Original release 0.8 from Steven C. Simmons
+#
+#	Changes by Sean Boran:
+#       <1> May.11'93 
+#	<2> Nov.29'93 Use gzip instead of compress
+#       <2bis> Dec.13'93 defined path to gzip
+#       <3> Oct.20'96 : Removed warning "Missing backup log....Continuing"
+#       <4> Nov.15'99 : Set defaults, remove logcheck offsets.
+#       <5> Dec.16'99 : Send Kill -1 AFTER creating new empty log
+#       <6> Feb.26'01 : chown path, use .gz not .Z
+#       <7> Aug.11'01 : define PATH for gzip
+#       <8> Jan.21'02 : Restart syslog with pid file in many locations
+#       <9> Mar.11'05 : Who handling, add PID for syslog-ng
+#
+# Function:  see also man page.
+#
+# Shell script to rotate a log.  Usage:
+#
+# rotate_log log [ -L src_dir ] [ -n n ] [ -c ] [-s] [ -B backup_dir ]
+#	[ -b backup_name ] [ -m mode ] [ -o owner ] [ -g group ]
+#	[ -M mode ] [ -O owner ] [ -G group ] [ -e prolog_cmd ]
+#	[ -E postlog_cmd ] logfile
+#
+# where the switches mean:
+#
+#  -L	Name of the directory 'log' is found in.
+#  -n	Number of backup copies to keep.
+#  -s	Skip empty logs.
+#  -c   Compress the backup copy.
+#  -B   Dir to keep the backup copies in.
+#  -b   Name of backup copy. 
+#  -m   Mode of new log.
+#  -o   Owner of new log (only root can use this option).
+#  -g   Group of new log (only root can use this option).
+#  -M   Mode of backup copy.
+#  -O   Owner of backup copy (only root can use this option).
+#  -G   Group of backup copy (only root can use this option).
+#  -e	Command to be executed immediately before copying the logfile.
+#  -E	Command to be executed immediately after copying the logfile.
+#
+# Stylistic note -- any error that says 'Unexpected error' means I
+# thought this particular error can't happen.
+#
+# This program is Copyright 1989, Steven C. Simmons.  It may be freely
+# redistributed provided this notice remains intact and any changes you
+# make are clearly marked as such.
+#
+# $Source: /var/filewatcher/archive/secure/rotate_log,v $
+#
+# $Revision: 1.12 $
+#
+# $Author: root $	$Date: 2005/04/18 06:01:09 $
+#
+# $State: Exp $	$Locker:  $
+#
+# $Log: rotate_log,v $
+# Revision 1.12  2005/04/18 06:01:09  root
+# *** empty log message ***
+#
+# Revision 1.2  2005/04/17 13:24:06  root
+# *** empty log message ***
+#
+# Revision 1.1  2005/03/11 10:30:41  root
+# Initial revision
+#
+# Revision 0.8  91/08/02  19:01:20  scs
+# Corrected error in paraterization of chmod/chgrp/chown.  Didn't
+# this get fixed once before?
+# 
+# Revision 0.7  91/04/30  22:10:10  scs
+# Added -s switch.
+# 
+# Revision 0.6  91/04/27  16:16:59  scs
+# Fixed bug with -b/-n combo losing arguements.  Patch supplied by
+# Michael Bredeweg (...clif!comnet!mike).
+# 
+# Revision 0.5  91/04/03  19:49:00  scs
+# Parameterized locations of chmod, chgrp, chown.
+# ###################################################################3
+
+SCRIPT=`basename $0`
+#
+# PATH: to allow this script to run on several machines, I define a
+#       a PATH to be able to find gzip. <7>
+PATH="/usr/bin:/bin:/usr/local/bin"; export PATH
+#
+#  Commonly used commands
+#
+#COMPRESS=""
+COMPRESS="gzip ";
+MV=/bin/mv
+CP=/bin/cp
+CHMOD=/bin/chmod
+CHOWN=/bin/chown
+CHGRP=/bin/chgrp
+#
+#  Assign default values as needed <4>
+#
+#SOURCE_DIR=""
+SOURCE_DIR="/var/log/"
+SOURCE_NAME=""
+BACKUP_NAME=""
+BACKUP_DIR=""
+BACKUP_COUNT="3"
+SOURCE_MODE="640"
+SOURCE_OWNER=""
+SOURCE_GROUP=""
+BACKUP_MODE="440"
+BACKUP_OWNER=""
+BACKUP_GROUP=""
+#SKIP_FLAG="false"
+SKIP_FLAG="true"
+
+# Restart syslog properly <8> <9>
+if [ -x /bin/pkill ] ; then
+  CMD_AFTER="`/bin/pkill -1 syslogd; /bin/pkill -1 syslogd-ng;`"
+elif [ -f /etc/syslog.pid ] ; then
+  CMD_AFTER="kill -1 `cat /etc/syslog.pid`"
+elif [ -f /var/run/syslog.pid ] ; then
+  CMD_AFTER="kill -1 `cat /var/run/syslog.pid`"
+elif [ -f /var/run/syslog-ng.pid ] ; then
+  CMD_AFTER="kill -1 `cat /var/run/syslog-ng.pid`"
+else
+  CMD_AFTER="`pkill -1 syslogd; pkill -1 syslogd-ng`"
+fi
+
+#
+#  Basic switch parsing.  Right now, this forces us to use whitespace
+#  between switch char and actual execution.  Whenever we get data
+#  for a switch, errorcheck it immediately.
+#
+while [ "$#" -gt "0" ] ; do
+	case $1 in
+	-L )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires a directory name.  Aborting."
+			exit 0
+		fi
+		if [ -w "${2}" -a -d "${2}" ] ; then
+			:
+		else
+			echo "${SCRIPT}: Sorry, you cannot modify the directory ${2}.  Aborting."
+			exit 0
+		fi
+		SOURCE_DIR="${2}/"
+		shift
+		;;
+	-b )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires a backup name.  Aborting."
+			exit 0
+
+		fi
+		BACKUP_NAME="$2"
+		shift
+		;;
+	-B )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires a directory name.  Aborting."
+			exit 0
+		fi
+		if [ -w "${2}" -a -d "${2}" ] ; then
+			:
+		else
+			echo "${SCRIPT}: Sorry, you cannot create files in ${DIR}.  Aborting."
+			exit 0
+		fi
+		BACKUP_DIR="${2}/"
+		shift
+		;;
+	-n )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires a backup count.  Aborting."
+			exit 0
+		fi
+		if echo $2 | grep '[^0-9]' > /dev/null 2>&1 ; then
+			echo "${SCRIPT}: The backup count ($2) must be a positive number.  Aborting."
+			exit 0
+		fi
+		if [ $2 -eq 0 ] ; then
+			echo "${SCRIPT}: The backup count ($2) must be greater than zero.  Aborting."
+			exit 0
+		fi
+		BACKUP_COUNT="$2"
+		shift
+		;;
+	-s )	SKIP_FLAG="true"
+		;;
+#	-c )	COMPRESS="compress -f"
+#	-c )	COMPRESS="compress" [cmc]
+	-c )	COMPRESS="gzip -S .gz " # use gzip but with .Z <2>
+		;;
+	-m )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires a permissions mode.  Aborting."
+			exit 0
+		fi
+		SOURCE_MODE="$2"
+		shift
+		;;
+	-M )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires a permissions mode.  Aborting."
+			exit 0
+		fi
+		BACKUP_MODE="$2"
+		shift
+		;;
+	-o )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires the name of the new owner.  Aborting."
+			exit 0
+		fi
+		if grep '^${2}:' < /etc/passwd > /dev/null 2>&1 ; then
+			echo "${SCRIPT}: No such login id as $2.  Aborting."
+			exit 0
+		fi
+		SOURCE_OWNER="$2"
+		shift
+		;;
+	-O )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires the name of the new owner.  Aborting."
+			exit 0
+		fi
+		if grep '^${2}:' < /etc/passwd > /dev/null 2>&1 ; then
+			echo "${SCRIPT}: No such login id as $2.  Aborting."
+			exit 0
+		fi
+		BACKUP_OWNER="$2"
+		shift
+		;;
+	-g )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires the name of the new group.  Aborting."
+			exit 0
+		fi
+		if grep '^${2}:' < /etc/group > /dev/null 2>&1 ; then
+			echo "${SCRIPT}: No such group as $2.  Aborting."
+			exit 0
+		fi
+		SOURCE_GROUP="$2"
+		shift
+		;;
+	-G )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires the name of the new group.  Aborting."
+			exit 0
+		fi
+		if grep '^${2}:' < /etc/group > /dev/null 2>&1 ; then
+			echo "${SCRIPT}: No such group as $2.  Aborting."
+			exit 0
+		fi
+		BACKUP_GROUP="$2"
+		shift
+		;;
+	-e )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires a command to be executed.  Aborting."
+			exit 0
+		fi
+		CMD_BEFORE="${2}"
+		shift
+		;;
+	-E )	if [ "$2" = "" ] ; then
+			echo "${SCRIPT}: The $1 switch requires a command to be executed.  Aborting."
+			exit 0
+		fi
+		CMD_AFTER="${2}"
+		shift
+		;;
+	-* )	echo "${SCRIPT}: No such switch as $1.  Aborting."
+		exit 0
+		;;
+	* )	if [ "${SOURCE_NAME}" != "" ] ; then
+			echo "${SCRIPT}: You must specify only one log file.  Aborting."
+			exit 0
+		else
+			SOURCE_NAME=$1
+		fi
+		;;
+	esac
+	shift
+done
+if [ "${SOURCE_NAME}" = "" ] ; then
+	echo "${SCRIPT}: You must specify a log file.  Aborting."
+	exit 0
+fi
+#
+#  Do sanity checks
+#
+#  If he specified a source directory or backup directory, the source
+#  and backup file names cannot contain a slash.
+#
+if [ "${SOURCE_DIR}" != "" ] ; then
+	if echo $SOURCE_NAME | grep / > /dev/null ; then
+		cat << EOF
+${SCRIPT}: If you specify a source directory (eg, -L ${SOURCE_DIR}),
+then the log file name (${SOURCE_NAME}) must be a simple file name,
+ie, not containing any slashes.  Aborting.
+EOF
+		exit 0
+	fi
+	#
+	#  If they don't explicitly select a backup directory but the
+	#  do specify a log directory, use the same for both.
+	#
+	if [ "${BACKUP_DIR}" = "" ] ; then
+		BACKUP_DIR="${SOURCE_DIR}"
+	fi
+fi
+if [ "${BACKUP_DIR}" != "" ] ; then
+	if echo $BACKUP_NAME | grep / > /dev/null ; then
+		cat << EOF
+${SCRIPT}: If you specify a backup directory (eg, -B ${BACKUP_DIR}),
+then the backup log name (${BACKUP_NAME}) must be a simple file name,
+ie, not containing any slashes.  Aborting.
+EOF
+		exit 0
+	fi
+fi
+#
+#  Make sure we can mod the directory where the log is.
+#
+if [ -w `dirname "${SOURCE_NAME}"` ] ;  then
+	:
+else
+	cat << EOF
+${SCRIPT}: Sorry, you do not have permission to move/rename the
+log file (file '`basename ${SOURCE_NAME}`', directory '`dirname ${SOURCE_NAME}`').  Aborting.
+EOF
+	exit 0
+fi
+#
+#  Make sure we can read/write the log itself.
+#
+SOURCE_PATH="${SOURCE_DIR}${SOURCE_NAME}"
+if [ -w "${SOURCE_PATH}" -a -r "${SOURCE_PATH}" ] ; then
+	:
+else
+	echo "${SCRIPT}: Sorry, you do not have permission to read and modify"
+	echo "the file '${SOURCE_PATH}'.  Aborting."
+	exit 0
+fi
+#
+#  If the log is empty and the skip flag (-s) is set, do nothing.
+#
+if [ "${SKIP_FLAG}" = "true" ] ; then
+	set `wc -c ${SOURCE_PATH}`
+	if [ 0 = $1 ] ; then
+		exit 0
+	fi
+fi
+#
+#  Make sure root operations are only run by root
+#
+if [ "${BACKUP_OWNER}" != "" -o "${SOURCE_OWNER}" != "" -o "${BACKUP_GROUP}" != "" -o "${SOURCE_GROUP}" != "" ]
+then
+	#set `who am i`
+	#if [ "root" != "$1" ] ; then
+	# won't work via remote SSH <9>
+	if [ "root" != "$USER" ] ; then
+		echo "${SCRIPT}: Sorry, you can only change owner or group if you are root."
+		echo "Aborting."
+		exit 0
+	fi
+fi
+#
+#  Build the list of backup names, in reverse order.  Make them
+#  full pathnames.
+#
+if [ "${BACKUP_NAME}" = "" ] ; then
+	BACKUP_NAME="${SOURCE_NAME}"
+fi
+while expr $BACKUP_COUNT \> 0 > /dev/null ; do
+	BACKUP_COUNT=`expr $BACKUP_COUNT - 1`
+	BACKUP_FILES="${BACKUP_FILES} ${BACKUP_DIR}${BACKUP_NAME}.${BACKUP_COUNT}"
+done
+#
+#  Rotate the existing backups.  Assume no change in permissions, etc.
+#
+set ${BACKUP_FILES}
+if [ "${1}" = "" ] ; then
+	echo "${SCRIPT}: unexpected error in using backup list.  Aborting."
+	exit 0
+fi
+OLDEST="${1}"
+NEXT="${1}"
+shift
+while [ "$1" != "" ] ; do
+	NEXT="${1}"
+	rm -f "${OLDEST}" "${OLDEST}.gz"
+	if [ -f "${NEXT}" ] ; then
+		${MV} "${NEXT}" "${OLDEST}"
+	elif [ -f "${NEXT}.gz" ] ; then
+		${MV} "${NEXT}.gz" "${OLDEST}.gz"
+	else
+		# <3> sb, 17.10.96: remove this pesky warning:
+		#echo "${SCRIPT}: Missing backup log ${NEXT} or ${NEXT}.gz.  Continuing."
+		:
+	fi
+	OLDEST="${NEXT}"
+	shift
+done
+#
+#  Copy the current log to be the first backup.  Use full pathnames
+#  as appropriate.
+#
+if [ "${SOURCE_DIR}" != "" ] ; then
+	if cd "${SOURCE_DIR}" ; then
+		:
+	else
+		echo "${SCRIPT}: unexpected error in command 'cd ${SOURCE_DIR}'.  Aborting."
+		exit 0
+	fi
+fi
+rm -f "${NEXT}" "${NEXT}.gz"
+if [ "${CMD_BEFORE}" != "" ] ; then
+	${CMD_BEFORE}
+fi
+if ${MV} "${SOURCE_NAME}" "${NEXT}" ; then
+	:
+else
+	echo "${SCRIPT}: unexpected error making first backup.  Aborting."
+	exit 0
+fi
+
+# Delete old log, create new empty one
+# MAke sure this happens before sending HUP to syslog <5>
+rm -f "${SOURCE_NAME}" "${SOURCE_NAME}".gz
+if cat > "${SOURCE_NAME}" < /dev/null ; then
+	:
+else
+	echo "${SCRIPT}: unexpected error emptying log file.  Continuing."
+fi
+
+#
+#  Set ownership and permission on the log as requested.
+#
+if [ "${SOURCE_MODE}" != "" ] ; then
+	if ${CHMOD} ${SOURCE_MODE} "${SOURCE_NAME}" ; then
+		:
+	else
+		echo "${SCRIPT}: unexpected error executing command '${CHMOD} ${SOURCE_MODE} ${SOURCE_NAME}'."
+		echo "Aborting."
+		exit 0
+	fi
+fi
+if [ "${SOURCE_OWNER}" != "" ] ; then
+	if ${CHOWN} ${SOURCE_OWNER} "${SOURCE_NAME}" ; then
+		:
+	else
+		echo "${SCRIPT}: unexpected error executing command '${CHOWN} ${SOURCE_OWNER} ${SOURCE_NAME}'."
+		echo "Aborting."
+		exit 0
+	fi
+fi
+if [ "${SOURCE_GROUP}" != "" ] ; then
+	if ${CHGRP} ${SOURCE_GROUP} "${SOURCE_NAME}" ; then
+		:
+	else
+		echo "${SCRIPT}: unexpected error executing command '${CHGRP} ${SOURCE_GROUP} ${SOURCE_NAME}'."
+		echo "Aborting."
+		exit 0
+	fi
+fi
+
+# Typically a HUP signal is sent to syslog here
+if [ "${CMD_AFTER}" != "" ] ; then
+	${CMD_AFTER}
+        ## <4>
+        if [ -f ${SOURCE_NAME}.offset ] ; then
+          #echo "Reset logcheck offset"
+          rm -f ${SOURCE_NAME}.offset
+        fi
+fi
+
+
+#
+#  Set ownerships and permissions as requested on the backed up log.
+#  Note that the compress must come last in this sequence.
+#
+if [ "${BACKUP_MODE}" != "" ] ; then
+	if ${CHMOD} ${BACKUP_MODE} "${NEXT}" ; then
+		:
+	else
+		echo "${SCRIPT}: unexpected error executing command '${CHMOD} ${BACKUP_MODE} ${NEXT}'."
+		echo "Aborting."
+		exit 0
+	fi
+fi
+if [ "${BACKUP_OWNER}" != "" ] ; then
+	if ${CHOWN} ${BACKUP_OWNER} "${NEXT}" ; then
+		:
+	else
+		echo "${SCRIPT}: unexpected error executing command '${CHOWN} ${BACKUP_OWNER} ${NEXT}'."
+		echo "Aborting."
+		exit 0
+	fi
+fi
+if [ "${BACKUP_GROUP}" != "" ] ; then
+	if ${CHGRP} ${BACKUP_GROUP} "${NEXT}" ; then
+		:
+	else
+		echo "${SCRIPT}: unexpected error executing command '${CHGRP} ${BACKUP_GROUP} ${NEXT}'."
+		echo "Aborting."
+		exit 0
+	fi
+fi
+if [ "${COMPRESS}" != "" ] ; then
+	if ${COMPRESS} "${NEXT}" ; then
+		:
+	else
+		echo "${SCRIPT}: unexpected error executing command '${COMPRESS} ${NEXT}'."
+		echo "Aborting."
+		exit 0
+	fi
+fi
+#eof

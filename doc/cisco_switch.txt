@@ -1,0 +1,76 @@
+Introduction
+------------
+This document discuss several topics on the day to day usange of VMPS on Cisco switches.
+For specifc IOS and CATOS commands for configuring and troubleshooting, see sw_config_ios.txt and sw_config_catos.txt.
+
+
+
+
+VMPS “retry” switch parameter
+-----------------------------
+Since Version 2, the VMPS server works with a live SWL database, and also have “intelligent hub detection” (meaning it tried to detect and ping all devices already on a hub), this mean that Authentication is much slower than Version 1 (seconds instead of mill seconds).
+
+This can lead to the switch getting impatient, sending several requests and logging MACNOTRECONFIRMED messages, especially when reconfirming all ports each hour. One solution is to increase the vmps restart count from the standard 3, to say, 10.
+
+The following is an extract from http://www.cisco.com/warp/public/473/157.html#topic1-3
+  “Troubleshooting Connectivity Between the VMPS Client and the VMPS 
+  When there is a loss of connectivity between a VMPS client and a VMPS, the VMPS reconfirmation might fail and produce the DVLAN-2-MACNOTRECONFIRMED error message. The port will lose its DVLAN assignment, as in this example:
+     %DVLAN-2-MACNOTRECONFIRMED:Mac [00-00-f4-11-11-0f] is not reconfirmed
+     %DVLAN-1-DENYHOST:Host 00-00-11-11-11-0f denied on port 3/10
+     
+  VMPS reconfirmation occurs when the VMPS client asks the VMPS if the dynamic port assignments are correct and if the correct MAC addresses have been assigned to the right ports. By default, this happens about every 60 minutes. Issue a show vmps command on the VMPS client to determine the VMPS reconfirmation time.
+  If the connectivity between the VMPS client and VMPS is intermittent (some data gets lost along the way) then you can try to increase the VMPS retry interval on the VMPS client, as a workaround. Issue the set vmps server retry command. By default, the VMPS client will try three times. In an environment with intermittent connectivity, when you increase the VMPS retry interval, you give the client more chances to connect to the VMPS before it gives up and VLAN membership fails.”
+
+Cam” timeouts on “silent” servers
+=================================
+“After the host transmits and the VMPS client receives a valid response from the VMPS server, the VMPS client Catalyst enables the interface in the correct VLAN. If the client sits idle for a while causing the bridge aging timer to expire for the entry, the Catalyst returns the port to an unassigned state.” 
+So 
+  a) “silent” servers, (or printers for example) would be disconnected from the network if they did not transmit packets at least every 5 minutes! 
+  
+  b) If the VMPS daemon died during the night, users would not be able to login in the morning. (Of course this can be mitigated by monitoring the vmps process too).
+  
+The aging timer (or CAM: content addressable memory) can be viewed on CatOS switches with: 
+  sh cam agingtime     (The default value is 300 seconds).
+
+This timeout can be increased to several hours. This increases the risk of arp flooding (we think), but this is a low risk on internal network, where we would be expected to confront aggressive attack?
+
+==> It is recommended to set a value like 12 hours for dynamic/VMPS ports. This is important for switches that have servers/printers that may not send out any packets for several minutes or hours.
+
+CatOS: 
+  # The value can be set in seconds and per vlan. It needs to be set for each VLAN, for example on VLAN 4:
+  show cam agingtime VLAN_NR
+  set cam agingtime VLAN_NR XXX  (secs, e.g. 24h=86400, 12h=43200)
+
+IOS:
+  arp mac-address-table aging-time XXX  (secs)
+
+
+Its also important to use logcheck or a similar tool, to watch for unusual Switch syslog entries, especially floods.
+
+
+
+
+Example of migrating Switches to use a new VMPS server
+------------------------------------------------------
+Assuming we had two previous VMPS servers 192.168.245.18 and 192.168.245.19, and we now wish to change the switches to use a new server 192.168.245.40.
+
+Then logon on to the switches and do the following. Monitoring: watch the syslog entries on the vmps server, the updating of the “last seen” times and “Server log” in the Windows GUI.
+
+CATOS:
+  set vmps server   192.168.245.40
+  clear vmps server 192.168.245.19
+  clear vmps server 192.168.245.18
+  reconfirm vmps
+  sho vmps
+
+IOS:
+  conf t 
+  vmps server     192.168.245.40
+  no vmps server  192.168.245.18
+  no vmps server  192.168.245.19
+  end
+  vmps reconfirm
+  sho vmps
+
+
+

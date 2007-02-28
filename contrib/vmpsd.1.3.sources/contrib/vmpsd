@@ -1,0 +1,102 @@
+#!/bin/sh
+#
+# chkconfig: - 91 35
+# description: Starts and stops the vmpsd daemon \
+#
+# pidfile: /var/run/vmpsd.pid
+# config:  /etc/vlan.db
+
+
+# Source function library.
+if [ -f /etc/init.d/functions ] ; then
+  . /etc/init.d/functions
+elif [ -f /etc/rc.d/init.d/functions ] ; then
+  . /etc/rc.d/init.d/functions
+else
+  exit 0
+fi
+
+# Avoid using root's TMPDIR
+unset TMPDIR
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+[ ${NETWORKING} = "no" ] && exit 0
+
+# Check that vlan.db exists.
+[ -f /etc/vlan.db ] || exit 0
+
+# Check that we can write to it... so non-root users stop here
+[ -w /etc/vlan.db ] || exit 0
+
+
+RETVAL=0
+
+
+start() {
+        KIND="VMPSD"
+	echo -n $"Starting $KIND services: "
+	daemon /usr/local/bin/vmpsd
+	RETVAL=$?
+	echo
+	echo
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/vmpsd || \
+	   RETVAL=1
+	return $RETVAL
+}	
+
+stop() {
+        KIND="VMPSD"
+	echo -n $"Shutting down $KIND services: "
+	killproc vmpsd
+	RETVAL=$?
+	echo
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/vmpsd
+	echo ""
+	return $RETVAL
+}	
+
+restart() {
+	stop
+	start
+}	
+
+reload() {
+        echo -n $"Reloading vlan.db file: "
+	killproc vmpsd -HUP
+	RETVAL=$?
+	echo
+	return $RETVAL
+}	
+
+rhstatus() {
+	status vmpsd
+}	
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  restart)
+  	restart
+	;;
+  reload)
+  	reload
+	;;
+  status)
+  	rhstatus
+	;;
+  condrestart)
+  	[ -f /var/lock/subsys/vmpsd ] && restart || :
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart|reload|status|condrestart}"
+	exit 1
+esac
+
+exit $?

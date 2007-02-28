@@ -1,0 +1,30 @@
+Program file headers:
+
+/**
+ * filename.php
+ *
+ * Long description for file:
+ * Some words about the functionality the file provides, it’s dependencies and so on… 
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package                 FreeNAC
+ * @author                    Sean Boran (FreeNAC Core Team)
+ * @copyright                2006 FreeNAC
+ * @license                   http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version                   CVS: $Id:$
+ * @link                        http://www.freenac.net
+ *
+ */
+
+Other coding conventions:
+- use two spaces when indenting
+- comment your code
+- always use version control, preferable SVN, but RCS is OK for initial testing
+
+Other naming conventions:
+- TBD

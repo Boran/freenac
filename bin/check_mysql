@@ -1,0 +1,36 @@
+#!/bin/sh
+ #
+ #  check_mysql 
+ # Long description for file:
+ # MySQL loses its UNIX socket sometimes, so restart it the hard way.
+ # Typically run from cron:
+ #  0 7,14 * * 1-5  /secure/check_mysql
+ #
+ # LICENSE: This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public License as published
+ # by the Free Software Foundation.
+ #
+ # @package			FreeNAC
+ # @author			Sean Boran (FreeNAC Core Team)
+ # @copyright		2006 FreeNAC
+ # @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ # @version			SVN: $Id$
+ # @link				http://www.freenac.net
+ #
+ ####################
+
+if [ ! -S /tmp/mysql.sock ] ; then
+  echo "Mysql socket has disappeared, so lets restart it"
+  rcmysqld stop
+  killall  mysqld
+  killall  safe_mysqld
+  rcmysqld start
+
+  ps -ef | grep mysql
+  echo " "
+  echo "$0 : finished "
+  
+#else 
+  #echo "Mysql socket exists, no action taken"
+fi
+

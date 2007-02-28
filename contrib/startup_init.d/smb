@@ -1,0 +1,101 @@
+#! /bin/sh
+# Copyright (c) 1999-2004 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Lars Mueller <lmuelle@suse.de>
+#
+# /etc/init.d/smb
+#   and its symbolic link
+# /usr/sbin/rcsmb
+#
+### BEGIN INIT INFO
+# Provides:       smb
+# Required-Start: $network $remote_fs syslog
+# X-UnitedLinux-Should-Start: cupsd winbind nmb
+# Required-Stop:
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Description:    Samba SMB/CIFS file and print server
+### END INIT INFO
+
+SMBD_BIN="/opt/samba/sbin/smbd"
+#SMB_CONF="/etc/samba/smb.conf"
+SMB_CONF="/opt/samba/lib/smb.conf"
+#PID_FILE="/var/run/samba/smbd.pid"
+PID_FILE="/opt/samba/var/locks/smbd.pid"
+
+. /etc/rc.status
+rc_reset
+
+# Check for missing binary
+if [ ! -x ${SMBD_BIN} ]; then
+	echo -n >&2 "Samba SMB daemon, ${SMBD_BIN} is not installed. "
+	rc_status -s
+	exit 5
+fi
+
+# be extra carefull cause connection fail if TMPDIR is not writeable
+export TMPDIR="/var/tmp"
+
+case "$1" in
+	start)
+		echo -n "Starting Samba SMB daemon "
+		if [ ! -f ${SMB_CONF} ]; then
+			echo -n >&2 "Samba configuration file, ${SMB_CONF} does not exist. "
+			rc_status -s
+			exit 6
+		fi
+		checkproc -p ${PID_FILE} ${SMBD_BIN}
+		case $? in
+			0) echo -n "- Warning: daemon already running. " ;;
+			1) echo -n "- Warning: ${PID_FILE} exists. " ;;
+		esac
+		startproc -p ${PID_FILE} ${SMBD_BIN} -D -s ${SMB_CONF}
+		rc_status -v
+		;;
+	stop)
+		echo -n "Shutting down Samba SMB daemon "
+		checkproc -p ${PID_FILE} ${SMBD_BIN} || \
+			echo -n " Warning: daemon not running. "
+		killproc -p ${PID_FILE} -t 10 ${SMBD_BIN}
+		rc_status -v
+		;;
+	try-restart|condrestart)
+		if test "$1" = "condrestart"; then
+			echo "${attn} Use try-restart ${done}(LSB)${attn} rather than condrestart ${warn}(RH)${norm}"
+		fi
+		$0 status
+		if test $? = 0; then
+			$0 restart
+		else 
+			rc_reset
+		fi
+		rc_status
+		;;
+	restart)
+		$0 stop
+		$0 start
+		rc_status
+		;;
+	force-reload|reload)
+		echo -n "Reloading Samba SMB daemon "
+		checkproc -p ${PID_FILE} ${SMBD_BIN} && \
+			touch ${PID_FILE} || \
+			echo -n >&2 " Warning: daemon not running. "
+		killproc -p ${PID_FILE} -HUP ${SMBD_BIN}
+		rc_status -v
+		;;
+	status)
+		echo -n "Checking for Samba SMB daemon "
+		checkproc -p ${PID_FILE} ${SMBD_BIN}
+		rc_status -v
+		;;
+	probe)
+		test ${SMB_CONF} -nt ${PID_FILE} && echo reload
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe}"
+		exit 1
+		;;
+esac
+rc_exit

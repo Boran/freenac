@@ -1,0 +1,47 @@
+Interpreting Logcheck Results
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+Only experience will tell you what is a problem and what is a mistake. 
+Generally though you can assume that accidents don't repeat themselves 
+and do not manifest themselves in unusual ways through normal use of 
+system resources. If you have a hacker probing your system you can take
+a couple of stances:
+
+1) Ghandi
+2) Atila the Hun
+
+The Ghandi administrator just lets by-gones be by-gones and allows 
+the person causing a problem to simply go away, this is a pretty 
+good idea to follow and prevents provoking the hacker into doing 
+something nasty like a denial of service attack.
+
+The Atila the Hun administrator takes all actions seriously and 
+defensively, they may try to find the hacker, or may set up 
+automated tools to find out who the person is as the attack is in 
+progress all while paging the administrator to notify them of 
+trouble. This I think is excessive, for one, any system 
+connected to the Internet should at least have good enough 
+security to fend off an attack for a few hours. Personally, I'd 
+rather be doing something else at 3AM than answering a page 
+by my firewall for an attack that is going to fail anyway.
+
+Typically you want to fall somewhere in between the two types. You 
+should be passive for the more mundane probers and ankle-biters. 
+Simply put, they aren't worth the time and energy to find. The more 
+aggressive attackers should probably be dealt with through either 
+denied hosts lists, or router filters. In the more aggressive 
+stages I will also notify the system administrator of the site and 
+the host-master for the domain of the problem and include a cut of the 
+log file showing the infraction. 
+
+Most importantly, DON'T OVER-REACT!! It is not necessary to flame 
+a sysadmin of a site that has a hacker coming from it. A nice and 
+polite note will usually be OK and will solve the problem! I prefer 
+to let the site admins know that an account is being used for the 
+activity because chances are good that the same account was hacked 
+from them. 
+
+-- Craig
+
+crowland@psionic.com
+

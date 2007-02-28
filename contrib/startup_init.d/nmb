@@ -1,0 +1,106 @@
+#! /bin/sh
+# Copyright (c) 2002-2004 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# Author: Lars Mueller <lmuelle@suse.de>
+#
+# /etc/init.d/nmb
+#   and its symbolic link
+# /usr/sbin/rcnmb
+#
+### BEGIN INIT INFO
+# Provides:       nmb
+# Required-Start: $network syslog
+# Required-Stop:
+# Default-Start:  3 5
+# Default-Stop:   0 1 2 6
+# Description:    Samba NetBIOS naming service over IP
+### END INIT INFO
+
+NMBD_BIN="/opt/samba/sbin/nmbd"
+NMBD_NAMELIST="/opt/samba/var/lib/samba/namelist.debug"
+#SMB_CONF="/etc/samba/smb.conf"
+SMB_CONF="/opt/samba/lib/smb.conf"
+PID_FILE="/opt/samba/var/locks/nmbd.pid"
+
+
+. /etc/rc.status
+rc_reset
+
+# Check for missing binary
+if [ ! -x ${NMBD_BIN} ]; then
+	echo -n >&2 "Samba NMB daemon, ${NMBD_BIN} is not installed. "
+	rc_status -s
+	exit 5
+fi
+
+case "$1" in
+	start)
+		echo -n "Starting Samba NMB daemon "
+		if [ ! -f ${SMB_CONF} ]; then
+			echo -n >&2 "Samba configuration file, ${SMB_CONF} does not exist. "
+			rc_status -s
+			exit 6
+		fi
+		checkproc -p ${PID_FILE} ${NMBD_BIN}
+		case $? in
+			0) echo -n "- Warning: daemon already running. " ;;
+			1) echo -n "- Warning: ${PID_FILE} exists. " ;;
+		esac
+		startproc -p ${PID_FILE} ${NMBD_BIN} -D -s ${SMB_CONF}
+		rc_status -v
+		;;
+	stop)
+		echo -n "Shutting down Samba NMB daemon "
+		checkproc -p ${PID_FILE} ${NMBD_BIN} || \
+			echo -n " Warning: daemon not running. "
+		killproc -p ${PID_FILE} -t 10 ${NMBD_BIN}
+		rc_status -v
+		;;
+	try-restart|condrestart)
+		if test "$1" = "condrestart"; then
+			echo "${attn} Use try-restart ${done}(LSB)${attn} rather than condrestart ${warn}(RH)${norm}"
+		fi
+		$0 status
+		if test $? = 0; then
+			$0 restart
+		else 
+			rc_reset
+		fi
+		rc_status
+		;;
+	restart)
+		$0 stop
+		$0 start
+		rc_status
+		;;
+	force-reload)
+		$0 try-restart
+		rc_status
+		;;
+	reload)
+		echo -n "Reloading Samba NMB daemon "
+		rc_failed 3
+		rc_status -v
+		;;
+	dump-nmbd)
+		echo -n "Dump Samba NMB daemon namelists to ${NMBD_NAMELIST}. "
+		checkproc -p ${PID_FILE} ${NMBD_BIN} || \
+			echo -n " Warning: daemon not running. "
+		killproc -p ${PID_FILE} -HUP ${NMBD_BIN}
+		rc_status -v
+		;;
+	status)
+		echo -n "Checking for Samba NMB daemon "
+		checkproc -p ${PID_FILE} ${NMBD_BIN}
+		rc_status -v
+		;;
+	probe)
+		test ${SMB_CONF} -nt ${PID_FILE} && echo restart
+		;;
+	*)
+		echo "Usage: $0 {start|stop|status|try-restart|restart|force-reload|reload|probe|dump-nmbd}"
+		exit 1
+		;;
+esac
+rc_exit

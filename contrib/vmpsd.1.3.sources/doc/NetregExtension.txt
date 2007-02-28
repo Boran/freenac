@@ -1,0 +1,40 @@
+Normally 'netreg' is done w/ DHCP, where a device gets an address in a
+non-internet-connected network for registration, and gets a normal address
+once registered.  This also means the device probably gets an address in a
+different address space if it moves around a large network (say from one
+building to another); in other words, many network designs are tied
+geographically, where a given address space is always in a given building.
+
+The normal operation of Cisco VMPS ties a mac to a vlan, so that whereever
+that device is plugged in within the VTP domain, it's always on the same vlan.
+This is useful for some purposes, but for combining netreg w/ VMPS, it didn't
+work the way I wanted.  So I've extended port groups so you can have:
+
+vmps-port-group netreg1
+ default-vlan NormalVlan
+ fallback-vlan RegisterVlan
+ device 10.10.10.10 port Fa0/11
+ device 10.10.10.11 all-ports
+vmps-port-group netreg2
+ default-vlan NormalVlan1
+ fallback-vlan RegisterVlan2
+ device 10.10.10.10 all-ports
+
+And address entries like this:
+
+ address 50a0.2460.c452 --DEFAULT--
+
+Where "--DEFAULT--" is a magic vlan name meaning 'this address goes on the
+default vlan'.  Thus, the geographical mapping of address space is maintained.
+
+Note that when searching for a specific port, it looks for the specific port
+first (Fa0/11), then 'all-ports'; thus it's easy to make 3 ports 'exceptions'.
+(See 10.10.10.10 above).
+
+Also:
+If an address has a real vlan name instead of "--DEFAULT--", it will get
+that vlan.
+If an address has "--DEFAULT--", but there's no default defined, it gets
+the the per-port-group fallback if defined, otherwise the global fallback vlan.
+
+David L. Parsley, <parsley@linuxjedi.org> 6-18-2004

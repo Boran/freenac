@@ -1,0 +1,8 @@
+
+
+A way to test performance:
+
+set $count to 200 in ./vqpcli.pl
+
+./vqpcli.pl -s 192.168.245.40 -v ctcs -w 192.168.245.71 -i '2/22' -m '0000.0000.9999' -c sec230
+

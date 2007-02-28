@@ -1,0 +1,41 @@
+File: php_notest.txt
+
+This is a loose gatering of a few notes that may come in handy..
+See "master_server_install.txt" for the current method we use for building PHP.
+
+
+
+Access MS-SQL from PHP
+----------------------
+There seem to be several ways to do this.
+Basically two libraries:
+
+1) odbtp    odbtp.sourceforge.net
+   cd /opt/install
+   wget http://puzzle.dl.sourceforge.net/sourceforge/odbtp/odbtp-1.1.4.tar.gz
+   tar xvzf odbtp-1.1.4.tar.gz
+   cd odbtp-1.1.4/
+   ./configure --prefix=/opt/odbtp
+   make install
+  
+   Then compile PHP with:   --with-odbtp-mssql=/opt/odbtp
+   ==> Could not get this to work at all.
+   
+ 2) Compile FreeTDS
+   cd /opt/install
+   wget http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz
+   tar xvzf freetds-0.64RC2.tar.gz
+   cd freetds-0.64RC2
+   ./configure --prefix=/opt/freetds --enable-msdblib
+   make install
+
+Then there are seveal ways to tell PHP use to FreeTDS:
+a) pdo: havn't tried this yet --with-pdo-dblib=/opt/freetds
+b) compiling with --with-sybase=/opt/freetds, but I had timeout problems on some queries.
+c) --with-mssql=/opt/freetds  : This is what I'm currently using
+
+  
+PHP to try for the furture
+============================   
+  # --with-openssl-dir   --with-pdo-dblib=/opt/freetds   http://ch2.php.net/pdo
+  #  --with-pdo-mysql=XX

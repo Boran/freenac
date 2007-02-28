@@ -1,0 +1,109 @@
+Network Switch Configuration & Tips for Cisco IOS
+
+# Initially, Switches must be configured to send a copy of syslog messages, and given the name of the vmps servers, where it can send requests for dynamic port assignment.
+# See also http://www.cisco.com/en/US/products/hw/switches/ps607/products_configuration_guide_chapter09186a008007eba3.html#xtocid164834.
+
+
+# Configuring VMPS :
+  conf t 
+  no vmps server 192.168.245.41
+  vmps server 192.168.245.40
+  vmps reconfirm 120
+  end
+
+  show vmps
+
+# Re-authenticate all current connections
+  vmps reconfirm
+
+# Re-authenticate all current connection, by emptying the MAC table. Note that the previous “vmps reconfirm” will not re-allow systems that were previously denied. For that we need to clear the MAC table:
+  clear mac-address-table dynamic
+
+# Enable VMPS on port fa0/2:
+  conf t
+  int fa0/2
+  switchport access vlan dynamic
+
+#(Re-)enable static Vlan 8 on port fa0/2:
+  conf t
+  int fa0/2
+  switchport access vlan 8
+
+  # The switch tries to contact a server 3 times by default, before stopping. This value can be programmed on the switch (to a maximum of 10):
+  vmps retry 5
+
+  # The switch reconfirms by default every 60 minutes, make 2hr:
+  vmps reconfirm 120
+
+#Other commands
+  show vmps stat
+  clear vmps statistics
+  
+  
+  show vlan
+
+
+
+SNMP v3 setup (from 'immi')
+---------------------------
+To use authentication and encryption with SNMP and also restriction by access-list who can access my device. 
+For SNMP write I enabled only limited part of SNMP tree (.1.3.6.1.2), read is open. 
+
+1. Cisco Switch part in config mode:
+
+  snmp-server group secure v3 priv
+  snmp-server group secure v3 priv read secure-ro write secure-wr access 1
+  snmp-server view secure-ro internet included
+  snmp-server view secure-wr mgmt included
+  snmp-server user snmpusr secure v3 auth md5 cisco123 priv des56 cisco123
+
+  access-list 1 permit host x.x.x.x
+  access-list 1 deny any log 
+
+# then you can check  
+  VMPSclient#sho run | incl snmp
+  snmp-server group secure v3 priv read secure-ro write secure-wr access 1
+  snmp-server view secure-ro internet included
+  snmp-server view secure-wr mgmt included
+  snmp-server location /CZ/PRG/ROOM249
+  snmp-server contact CallMe ext.: xxxx
+  VMPSclient
+
+  VMPSclient#sho snmp group
+  groupname: secure                           security model:v3 priv
+  readview : secure-ro                        writeview: secure-wr               
+  notifyview: <no notifyview specified>
+  row status: active      access-list: 1
+
+  VMPSclient#sho snmp user
+  User name: snmpusr
+  Engine ID: 8000000903000014A86637C0
+  storage-type: nonvolatile        active
+  Authentication Protocol: MD5
+  Privacy Protocol: DES
+  Group-name: secure 
+  
+# two examples for check if it is working:
+  snmpwalk -v 3 -u snmpusr -l authPriv -a MD5 -A cisco123 -x DES -X cisco123 172.16.1.1 system
+  snmpwalk -v 3 -u snmpusr -l authPriv -a MD5 -A cisco123 -x DES -X cisco123 172.16.1.1 sysUpTime   
+  
+2. Then modify the default SNMP values on Freenac server, it is in /usr/share/snmp/snmp.conf:
+  vmpssrv:~ # cat /usr/share/snmp/snmp.conf
+  (comments are erased)
+  defversion 3
+  defsecurityname snmpusr
+  defsecuritylevel authPriv
+  defauthtype MD5
+  defauthpassphrase cisco123
+  defprivtype DES
+  defprivpassphrase cisco123
+
+  To test, snmpwalk 172.16.1.1 system  
+  
+3. Modify /opt/nac/etc/config.inc
+  (just part for port reset)
+    ## restart_port
+    # $snmpwalk="/usr/bin/snmpwalk -v 1 -c public";    # SNMP Read community
+    # $snmpset ="/usr/bin/snmpset  -v 1 -c private";   # SNMP Write community
+    $snmpset ="/usr/bin/snmpset";            # SNMP Write community
+    $snmpwalk="/usr/bin/snmpwalk";         # SNMP Read community   

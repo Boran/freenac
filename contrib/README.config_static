@@ -1,0 +1,24 @@
+The config_static.php script will create a series of scripts that will reconfigure the ports in "static" mode.
+It will browse the current known port and configure the access vlan to the actual default_vlan defined in the port database.
+The script will be created in the /opt/nac/web1/tmp directory.
+
+On the NAC server, it requires expect to be installed.
+
+
+On the switches, it requires the new aaa model with privielge 15 users and telnet access
+
+Sample configuration :
+!
+aaa new-model
+aaa authentication login default local
+aaa authorization exec default local
+!
+username ADMINUSER  privilege 15 password 0 ADMINPASSWORD
+!
+
+You'll also need to edit the config_static.php to reflect your admin user/password.
+
+It is currently has the following limitations :
+- Cisco 2950, 2940, 3500XL, 3750 (other may also work, but not tested)
+- Using telnet (could be adapted to ssh)
+- Common username/password for all

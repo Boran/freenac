@@ -1,0 +1,38 @@
+_____ 'patchcable' documentation _________________
+
+This document should grow to document the patchcable feature.
+
+
+The patchcable documents not just LAN cabling, but also telephone and point-to-point patches. Its reflects the information of cableguy normally keeps in Excel sheets. On the Windows GUI, we also allow exports to Excel, which can then be printed out and stuck inside the wring cabinets. 
+
+Field names in German, sorry, I've not yet renamed them to english. the 'patchcable' is about the only table left with german references.
+
+
+
+Field name Meaning
+-----------------------------
+von_geb_sch from - building - wiring closet
+von_he_doesn from - unit - socket
+von_dose from - socket
+nach_other to - other
+
+visum signature
+bis_wann until when is it needed' i.e. expiry date 
+
+
+CREATE TABLE `patchcable` (
+  `von_geb_sch` varchar(30) NOT NULL default '',
+  `von_he_dosen` varchar(30) NOT NULL default '',
+  `von_dose` varchar(30) NOT NULL default '',
+  `von_office` varchar(30) NOT NULL default '',
+  `von_user` varchar(20) NOT NULL default '',
+  `nach_network` varchar(10) NOT NULL default '0',
+  `nach_switch` varchar(30) NOT NULL default '',
+  `nach_port` varchar(30) NOT NULL default '',
+  `nach_other` varchar(30) NOT NULL default '',
+  `comment` varchar(255) NOT NULL default '',
+  `lastchange` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `visum` varchar(100) NOT NULL default '',
+  `bis_wann` date default NULL,
+  PRIMARY KEY  (`von_geb_sch`,`von_he_dosen`,`von_dose`,`nach_other`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='Patch cables from Office Sockets to Port Switches'

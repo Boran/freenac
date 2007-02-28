@@ -1,0 +1,79 @@
+#!/usr/bin/php -f
+<?php
+ /**
+ * /opt/nac/contrib/fill_services
+ *
+ * Long description for file:
+ * Fill the tables nac_servicestcp and nac_servicesudp which are needed 
+ * for the port_scan script to tell if a service is running in its 
+ * default port (assigned by IANA).
+ * The script reads two text files which are services_nmap.txt and 
+ * services_long.txt. The former file comes from the release 4.11 
+ * of nmap. The latter is from http://www.graffiti.com/services 
+ * Why reading two files? 
+ * services_long.txt has way more service definitions and that'd be enough,
+ * but that list is kind of old, and also to be nmap consistent (since 
+ * port_scan is based on it), we feed to the database how nmap recognizes 
+ * that service. This gives fewer false alarms.
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package                     FreeNAC
+ * @author                      Héctor Ortiz (FreeNAC Core Team)
+ * @copyright                   2006 FreeNAC
+ * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ *. @version                    CVS: $Id:$
+ * @link                                http://www.freenac.net
+ *
+ */
+
+include_once "../bin/funcs.inc";
+$datos=file_get_contents("services_long.txt");
+$choro=explode("\n",$datos); //Split by lines
+$cosas=count($choro)-1; //Number of lines
+for ($i=0;$i<$cosas;$i++)
+{
+   $descripcion=explode("#",$choro[$i]); //Separate using # as a separator
+   $rollo=trim($descripcion[1]);
+   $linea=preg_replace('/\s+/',":::",$descripcion[0]); //A dummy separator instead of having spaces
+   $linea=explode(":::",$linea); //And split this line using this separator
+   $servicio=trim($linea[0]); //Service
+   $puerto=(int)trim($linea[1]); //Port
+   $protocolo=trim($linea[2]); //Protocol
+   db_connect();
+   if (strcmp($protocolo,"tcp")==0) //Lets feed the data
+      $query=sprintf("INSERT INTO nac_servicestcp VALUES('%d','%s','%s');",$puerto,$servicio,$rollo);
+   else if(strcmp($protocolo,"udp")==0)
+      $query=sprintf("INSERT INTO nac_servicesudp VALUES('%d','%s','%s');",$puerto,$servicio,$rollo);   
+   $res=mysql_query($query);
+   if (!$res)
+   { echo mysql_error()."\n"; }
+}
+
+$datos=file_get_contents("services_nmap.txt"); //Do the same with the other file
+$choro=explode("\n",$datos);
+$cosas=count($choro)-1;
+for ($i=0;$i<$cosas;$i++)
+{
+   $descripcion=explode("#",$choro[$i]);
+   $rollo=trim($descripcion[1]);
+   $linea=preg_replace('/\s+/',":::",$descripcion[0]);
+   $linea=explode(":::",$linea);
+   $servicio=trim($linea[0]);
+   $puerto=(int)trim($linea[1]);
+   $protocolo=trim($linea[2]);
+   db_connect();
+   if (strcmp($protocolo,"tcp")==0)
+      $query=sprintf("update nac_servicestcp set service='%s' where port='%d';",$servicio,$puerto);
+   else if(strcmp($protocolo,"udp")==0)
+      $query=sprintf("update nac_servicesudp set service='%s' where port='%d';",$servicio,$puerto);
+   $res=mysql_query($query);
+   if (!$res)
+   { echo mysql_error()."\n"; }
+}
+echo "\nDONE\n";
+?>

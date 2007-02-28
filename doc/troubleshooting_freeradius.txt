@@ -1,0 +1,9 @@
+
+
+  tail -f /usr/local/var/log/radius/radius.log|egrep "User-Name|Exec-Program output"
+  tcpdump -i eth0 -n host 10.0.0.1    (IP=Access Point)
+  tail /usr/local/var/log/radius/radius.log
+  tail /opt/samba/var/log.nmbd
+  tail /opt/samba/var/log.smbd
+  tail /opt/samba/var/log.winbindd
+  tail /opt/samba/var/log.wb-DOMAINANME
