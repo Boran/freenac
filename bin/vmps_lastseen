@@ -180,10 +180,10 @@ do {
     ## Nov 26 11:34:29 dnag2 vmpsd: [ID 922485 local6.info] ALLOW: 000f1f44e801 -> secHH230, switch 192.168.245.71 port 2/37
     ## Pull out the lines that summarise connections
     $regs=array();
-
     #if (ereg("(.*) vmpsd: +(ALLOW|DENY): (.*) -> (.*), switch (.*) port ([A-Z]?[a-z0-9\/]*){1}", $line, $regs) ) {
     #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
-    if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
+    #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
+    if (ereg("(.*) vmpsd: (ALLOW|DENY): (.{12}) -> (.+), switch (.{1,15}) port (.{1,9})",$line, $regs) ) {
       #echo "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n";
       debug1("FOUND: {$regs[1]} {$regs[2]} $regs[3]");
       $success=$regs[2]; 
@@ -194,6 +194,7 @@ do {
       #$details=rtrim($regs[1] . " " . $regs[3]);
       $details="$regs[1]";
       $mac2="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
+      
       debug1("mac=$mac2 vlan=$vlan switch=$switch port=$port");
 
       if (($mac2=='0000.0000.0000') || ($mac2=='ffff.fdff.ffff') || ($mac2=='ffff.fcff.ffff') )  {
@@ -257,7 +258,7 @@ do {
         debug1("Switch $switch, location $location_name, building $building_name");
         $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
                 
-        if (!$port_id and ! $lastseen_dryrun) 
+        if ((!$port_id && ! $lastseen_dryrun) && (strlen($port)<10))
         {
           // ===== entry does not exist, --> NEW PORT!
 
@@ -280,7 +281,7 @@ do {
           if (strlen($port_loc)==0)
              $port_loc='unknown';
           $query="INSERT INTO port SET switch='$switch_id', name='$port'";
-          logit($query);
+          debug1($query);
           logit("New port $port on sw $switch, location=$port_loc. Please update description");
           log2db('info', "New port $port on sw $switch, location=$port_loc. Please update description");
           $res = mysql_query($query);
