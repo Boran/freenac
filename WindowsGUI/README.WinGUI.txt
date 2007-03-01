@@ -6,16 +6,43 @@ Description:
   This is issue will probably be solved by replacing it with a WebGUI, depending on the Team 
   resources (contributions are welcome).
 
-  Copyright (C) 2006 Swisscom, FreeNAC Core Team, Sean Boran, http://www.FreeNAC.net
+  Copyright (C) 2007 Swisscom, FreeNAC Core Team, Sean Boran, http://www.FreeNAC.net
   
+Using this GUI on the Online FreeNAC database
+---------------------------------------------
+  1. Download vmps.exe from http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/
+  2. Download the demo config file vmps.xml from
+     http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/demo1
+  3. Then save these in a directory, e.g. c:\nac., and start it. 
+  
+  This will try to connected via the Internet to the FreeNAC demo database, which 
+  is re-initiailised automatically every hour. 
+  Note: this will not run behind a corporate proxying firewall, 
+        port 3306/mysql needs to be open outgoing.
+        
+        
+Using this GUI on the FreeNAC Virtual Machine
+---------------------------------------------
+  1. Download vmps.exe and vmps.xml from 
+     http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/     
+  2. Then save these in a directory, e.g. c:\nac..
+  3. Configure vmps.xml with a text edit such as 'wordpad'
+     - Change the IP address of the server to corresponding to the FreeNAC VM 
+  4. Start the NAC GUI by double clicking on the vmps.exe.
 
-Installation:
+ 
+Full  Installation:
+-------------------
   1. Copy vmps.exe and vmps.xml to a folder on your Windows PC or a Network Share, e.g. c:\nac.
+  
   2. Configure vmps.xml with a text edit such as 'wordpad'
     - Change the IP address of the server
-    - Create a key containing an SQL username/password, with rights to access the NAC database.
-      If you use an SQL username/password other than the demo one, if will need to be changed 
-      on the mysql side, and on the windows side.
+    
+  3.  Configure the SQL username/password key, to access the NAC database. This
+      will need to be changed on the mysql side, and on the windows side.
+      On the mysql server grant the rights to a user as in /opt/nac/doc/master_server_install.txt.
+      
+      Next, create a key containing an SQL username/password.
       You generate a new key by:
     
       a) Starting the GUI vmps.exe
@@ -25,17 +52,7 @@ Installation:
       e) Restart the GUI, and press "Connect"
 
 
-Using this GUI on the Online FreeNAC database
----------------------------------------------
-  1. Download vmps.exe from http://svn.sourceforge.net/viewvc/opennac/branches/2.1/WindowsGUI/
-  2. Download the demo config file vmps.xml from
-     http://svn.sourceforge.net/viewvc/opennac/branches/2.1/WindowsGUI/demo1
-  3. Then save these in a directory, and start it. 
-  
-  This will try to connected via the Internet to the FreeNAC demo database, which 
-  is re-initiailised automatically every hour. 
-  Note: this will not run behind a corporate proxying firewall, 
-        port 3306/mysql needs to be open outgoing.
+
 
 
 CHANGE HISTORY:  
@@ -67,6 +84,10 @@ v1.2.0.108/24.01.07/SB:
   - Change grids in Change and Server log
   - Improved edit-User ComboBox to show key zuser details
   - Add Filter by Switch to the Ports page  
+  
+v2.2.0.113/23.02.07/SB:   
+  Rewrite for completely new DB scheam NAC V2.2, add new tables.
+  Migrate most grids to the cxGrid from DeveloperExpress, enables export to Excel.
 
 
 	
