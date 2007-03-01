@@ -1,0 +1,27 @@
+#Installing the db
+
+#Go to the contrib directory
+nac:/ # cd /opt/nac/contrib
+
+#Untar the file which contains the db
+nac:/opt/nac/contrib # tar xvzf opennac_db.tar.gz
+
+#Open the mysql client
+nac:/opt/nac/contrib # mysql
+
+#and create the database opennac 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 3635 to server version: 5.0.22-log
+
+Type 'help;' or '\h' for help. Type '\c' to clear the buffer.
+
+mysql>create database opennac;
+Query OK, 1 row affected (0.09 sec)
+
+mysql> quit
+Bye
+nac:/opt/nac/contrib # mysql opennac < tables.sql
+nac:/opt/nac/contrib # mysql opennac < values.sql
+
+#And you are done. Check doc/master_server_install.txt and doc/master_server_config.txt to grant permissions on the tables generated. 
+
