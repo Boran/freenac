@@ -25,7 +25,7 @@
 // MySQL DB settings for all scripts
 $dbhost="localhost";
 $dbname="opennac";
-$dbuser="inventwrite";			# this user needs write access to the DB
+$dbuser="webwrite";			# this user needs write access to the DB
 $dbpass="PASSWORD1";			# keep this secret!
 
 // Variable setup

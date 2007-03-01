@@ -28,7 +28,7 @@
   $dbhost="localhost";
   $dbname="opennac";
   $dbuser="inventwrite";
-  $dbpass="PASSWORD1";              # keep this secret!
+  $dbpass="PASSWORD2";              # keep this secret!
 
 ## Debug 
   $debug_to_syslog=true;          # Daemons: Debug also to syslog?
