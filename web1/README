@@ -2,12 +2,12 @@ NAC Web1 Interface
 
 
 _____________________ NAC Web1 GUI: Installation notes _____________________
-// Download the software to /opt/nac/web1 (unstable) or /opt/nac2.1/web1 (stable branch)
+// Download the software to /opt/nac/web1 (unstable) or /opt/nac2.2/web1 (stable branch)
    They are probably there already from a tarball or SVN.
 
 // Create a temporary directory, writeable by the Apache user
 // [This may already be there, if so, check the permissions]
-  cd /opt/nac2.1/web1
+  cd /opt/nac2.2/web1
   mkdir tmp
   chown wwwrun tmp      [or chown daemon tmp, depends on the apache user]
   // note : on certain suse versions, the apache user is daemon, adapt according to your distro

@@ -7,8 +7,7 @@ A diagram of components mentionend below is available: http://svn.sourceforge.ne
 
 
 _________ MySQL database_________________________________
-The MySQL table schemas is shown at:
-http://www.freenac.net/pages/schemadb_2.1/Default.html
+The MySQL table schemas will be soon shown on http://www.freenac.net
 
 The systems table is the main VMPS table, all other tables are lookups or for logging. 
 

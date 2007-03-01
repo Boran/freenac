@@ -1,4 +1,22 @@
-________ CHANGE Version 2.1 ___________
+________ CHANGE Version 2.2 ___________
+
+---- Changes from V2.1 RC3 to V2.2 RC1
+
+   Complete restructuring of the db schema
+   Adaptation of scripts to work with this new db schema
+   New db name is opennac
+   Docs changed
+
+---- Changes from V2.1 RC2 to V2.1 RC3
+
+   Added some features to some scripts
+   Added new scripts
+   Modified configuration scripts to add new vars for the new scripts
+   Fixed a php include problem for all the scripts
+   Changes to the db schema
+   Enhancements made to the GUIs
+   Added sample configuration files for FreeRadius, Samba, Kerberos
+   More documentation 
 
 ---- Changes from V2.1 RC1 to V2.1 RC2
 

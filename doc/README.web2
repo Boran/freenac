@@ -38,9 +38,9 @@ _________Configure_________
 
 	// MySQL DB settings for all scripts
 	$dbhost="localhost";
-	$dbname="inventory";
+	$dbname="opennac";
 	$dbuser="inventwrite";		# this user needs write access to the DB
-	$dbpass="inventpass";           # keep this secret!
+	$dbpass="PASSWORD1";           # keep this secret!
 
 	// Variable setup
 	$entityname='MyCompany';	# name of your company

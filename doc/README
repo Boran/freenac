@@ -1,6 +1,6 @@
 _______________________ FreeNAC README _____________________________
 
-This is Version 2.1 RC3 of FreeNAC, Release  2007.01.26
+This is Version 2.2 RC1 of FreeNAC, Release  2007.03.01
 
 To install please see master_server_install.txt and master_server_config.txt
 
@@ -8,13 +8,21 @@ Check our website http://www.freenac.net for news about our project
 
 
 
-Upgrade from RC2 to RC3
+
 
 To check the list of changes in your system without actually changing anything, do:
 
 svn status -u
 
-__________________________Changes from RC2 to RC3______________________________________
+__________________________Changes from 2.1 RC3 to 2.2 RC1__________________________________
+
+   Complete restructuring of the db schema
+   Adaptation of scripts to work with this new db schema
+   New db name is opennac
+   Docs changed
+
+
+__________________________Changes from 2.1 RC2 to RC3______________________________________
 
 *** Configuration files
 

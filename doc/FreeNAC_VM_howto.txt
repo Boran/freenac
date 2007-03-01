@@ -1,4 +1,4 @@
-Using the FreeNAC 2.1 rc2 virtual machine
+Using the FreeNAC virtual machine
 
 This virtual machine includes support for 802.1x which provides for stronger security. User authentication is performed against a windows domain controller so ensure you have one in place. If you don't, you can still enjoy of a fully functional LAN Access Control since it is already configured to do so. The 802.1X default configuration is intended to allow you to authenticate users against Active Directory, and then validate devices and assign them a VLAN. 
 

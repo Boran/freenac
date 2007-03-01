@@ -41,38 +41,26 @@ How to install:
 Install OpenNAC
 Then in MySQL add the next tables to the inventory database if they are not already there
 
-create table nac_netsallowed (
-    id int unsigned not null unique auto_increment,
-    network varchar(30),
-    primary key (id));
+Create table nac_hostscanned (
+	sid Int(11) NOT NULL,
+	id Int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	ip Varchar(15) NOT NULL,
+	hostname Varchar(80),
+	os Varchar(80),
+	timestamp Datetime,
+	UNIQUE (sid),
+ unique id (id),
+ Primary Key (id)) ENGINE = MyISAM
+ROW_FORMAT = Dynamic;
 
-create table nac_openports (
-   port int unsigned not null, 
-   protocol enum('tcp','udp') not null,
-   host int unsigned not null,
-   banner varchar(128), 
-   timestamp datetime);
-
-create table nac_hostscanned (
-   id int unsigned not null unique auto_increment, 
-   mac varchar(15) not null default 'NULL',
-   ip varchar(15),
-   hostname varchar(80),
-   os varchar(80),
-   timestamp datetime default null,
-   PRIMARY KEY(id,mac,ip)); 
-
-create table nac_servicestcp ( 
-   port int unsigned unique not null, 
-   service varchar(30), 
-   description varchar(128), 
-   primary key(port));
-
-create table nac_servicesudp ( 
-   port int unsigned unique not null, 
-   service varchar(30), 
-   description varchar(128), 
-   primary key(port));
+Create table nac_openports (
+	id Int(11) NOT NULL AUTO_INCREMENT,
+	sid Int(10) NOT NULL,
+	service Int NOT NULL,
+	banner Varchar(128),
+	timestamp Datetime,
+ Primary Key (id)) ENGINE = MyISAM
+ROW_FORMAT = Dynamic;
 
 Check if the scannow field exists in the systems table. If not, then
 alter table systems add column scannow tinyint(4) default 0;
@@ -82,15 +70,14 @@ If you prefer doing it by hand, then
 update systems set scannow=1 where ...;
  
 And then you grant rights to these tables with
-grant SELECT,INSERT,UPDATE,DELETE ON inventory.nac_openports to inventwrite@'%';
-grant SELECT,INSERT,UPDATE ON inventory.nac_hostscanned to inventwrite@'%';
-grant SELECT ON inventory.nac_servicestcp to inventwrite@'%';
-grant SELECT ON inventory.nac_servicesudp to inventwrite@'%';
+grant SELECT,INSERT,UPDATE,DELETE ON opennac.nac_openports to inventwrite@'%';
+grant SELECT,INSERT,UPDATE ON opennac.nac_hostscanned to inventwrite@'%';
+grant SELECT ON opennac.services to inventwrite@'%';
 
-***Important: You need to specify first in nac_netsallowed the networks that you want to scan.
+***Important: You need to specify first in subnets the networks that you want to scan.
 
-Then run the fill_services script in order to populate the services tables
-/opt/nac/contrib/fill_services
+You'll find a mysql script to generate the new db schema and its default values at
+/opt/nac/contrib/opennac_db.tar.gz
 
 Rename port_scan.inc.template to port_scan.inc
 cp /opt/nac/etc/port_scan.inc.template /opt/nac/etc/port_scan.inc
@@ -116,9 +103,7 @@ Files and directories required:
 /opt/nac/funcs.inc
 /opt/nac/scan/
 /opt/nac/doc/README.port_scan
-/opt/nac/contrib/fill_services
-/opt/nac/contrib/services_long.txt
-/opt/nac/contrib/services_nmap.txt
+/opt/nac/contrib/opennac_db.tar.gz
 
 How to run it:
 -------------
@@ -128,4 +113,4 @@ If you want to run it by hand just type:
 Bugs:
 -----
 Please report them in our Development forum:
-http://www.opennac.net/phpBB2/
+http://www.freenac.net/phpBB2/viewforum.php?f=2

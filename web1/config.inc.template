@@ -18,7 +18,7 @@ include('functions.inc');
   $dbhost = 'localhost';
   $dbuser = 'readonly';    # 
   $dbpass = 'PASSWORD1';
-  $dbname = 'inventory';
+  $dbname = 'opennac';
 
 ## vmpsdot.php
   $vmpsdot_querydays=60;   # Show devices seen in last XX days
