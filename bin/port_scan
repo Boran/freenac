@@ -131,7 +131,7 @@ function check_requirements()  //Checks for required functions and tables struct
    $query="describe protocols;";
    $res=execute_query($query);
    check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
-   $tmp=syscall($which_nmap." --version | grep nmap");
+   $tmp=syscall($which_nmap." --version | grep -i nmap");
    $tmp=explode(" ",$tmp);
    $nmap_string=$tmp[0];
    $nmap_version=$tmp[2];
