@@ -35,7 +35,7 @@ while ( !feof($fd) ) {
     $line=trim($line);           # remove whitespace
     #print "Original:#$line#\n";
 
-    $query="INSERT INTO vmpslog "
+    $query="INSERT INTO guilog "
       . "SET what='" . $line . "', "
       . "priority='info' ";
     $res = mysql_query($query);
