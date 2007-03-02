@@ -245,23 +245,23 @@ Remote delphi Windows GUI use. See also the vmps.ini file on the Windows client.
   SET PASSWORD FOR inventwrite@'%' = OLD_PASSWORD('PASSWORD1');
 
   grant SELECT,UPDATE               ON opennac.oper    to inventwrite@'%' ;
-  grant SELECT,UPDATE               ON opennac.config  to inventwrite@'%' ; 
+  grant SELECT,UPDATE               ON opennac.config  to inventwrite@'%' ;
   grant SELECT,INSERT,UPDATE,DELETE ON opennac.building to inventwrite@'%' ;
-  grant SELECT,INSERT,UPDATE,DELETE ON opennac.location to inventwrite@'%' ;    
-  grant SELECT,INSERT,UPDATE,DELETE ON opennac.port    to inventwrite@'%' ;   
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.location to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.port    to inventwrite@'%' ;
   grant SELECT,INSERT,UPDATE,DELETE ON opennac.switch  to inventwrite@'%' ;
-  grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlan    to inventwrite@'%' ;  
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlan    to inventwrite@'%' ;
   grant SELECT,INSERT,UPDATE,DELETE ON opennac.systems to inventwrite@'%';
-  grant SELECT,INSERT,UPDATE,DELTE  ON opennac.users   to inventwrite@'%' ;  
-  grant SELECT,INSERT,UPDATE,DELETE ON opennac.patchcable to inventwrite@'%';  
-  grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlanswitch to inventwrite@'%' ;  
-  grant SELECT,INSERT,UPDATE,DELETE ON opennac.cabletype  to inventwrite@'%' ;    
+  grant SELECT,INSERT,UPDATE,DELETE  ON opennac.users   to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.patchcable to inventwrite@'%';
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlanswitch to inventwrite@'%' ;
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.cabletype  to inventwrite@'%' ;
   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_class to inventwrite@'%' ;
   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_class2 to inventwrite@'%' ;
   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os        to inventwrite@'%';
   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os1       to inventwrite@'%';
   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os2       to inventwrite@'%';
-  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os3       to inventwrite@'%';      
+  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os3       to inventwrite@'%';
 
 The read-only webgui Web1 needs "read" access and by default uses a user 
 named 'readonly'. See also /opt/nac/web1/config.inc.  
@@ -303,7 +303,7 @@ B. ports : this is optional as it will be populated once new machine are connect
 
 C. users : this contains all your users. It is probably better to regularly update this table by pulling data from a directory (ActiveDirectory: see optional modules below)
 	# V2.1:
-	INSERT INTO users(AssocNtAccount,Surname,GivenName,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,Mobile) VALUES ("username","Jean","Doe","jean.doe@foo.ch","Building B","5 B2","0797704803);
+	INSERT INTO users(Username,Surname,GivenName,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,Mobile) VALUES ("username","Jean","Doe","jean.doe@foo.ch","Building B","5 B2","0797704803);
 	# TBD: V2.2
 	
 D. The vlan table is a list for vlans, number, descritions.
