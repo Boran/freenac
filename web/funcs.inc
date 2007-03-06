@@ -1,0 +1,735 @@
+<?php
+/**
+ * /opt/nac/bin/funcs.inc
+ *
+ * Long description for file:
+ * common PHP functions used by several scripts
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2007 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			SVN: $Id$
+ * @link				http://www.freenac.net
+ *
+ */
+
+chdir(dirname(__FILE__));
+set_include_path("./");
+require_once "./config.inc";
+
+function db_connect($username,$password)
+{
+  global $connect, $dbhost, $dbname;
+
+  $connect=mysql_connect($dbhost, $username, $password)
+     or die("Could not connect to mysql: " . mysql_error());
+  mysql_select_db($dbname, $connect) or die("Could not select database")
+     or die("Could not select DB: " . mysql_error());;
+}
+
+function ismemberof($username,$group)
+{
+   global $ad_server,$ad_user,$ad_password;
+   $counter=0;
+   $ad=ldap_connect($ad_server);
+   if ($ad)
+   {
+      if (ldap_bind($ad,$ad_user,$ad_password))
+      {
+         $dn='cn=Users,'.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
+         $attributes=array('memberOf');
+         $filter='(sAMAccountName='.$username.')';
+         $group='cn='.$group.','.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
+         $result=ldap_search($ad,$dn,$filter,$attributes);
+         if ($result)
+         {
+            $entries=ldap_get_entries($ad,$result);
+            if ($entries['count']==1)
+            {
+               $groups=$entries[0]['memberof']['count'];
+               if ($groups>0)
+               {
+                  for ($i=0;$i<$groups;$i++)
+                  {
+                     if (strcasecmp($entries[0]['memberof'][$i],$group) == 0)
+                        $counter++;
+                  }
+               }
+            }
+         }
+      }
+      else
+      {
+         echo 'Unable to bind to LDAP server with given credentials';
+      }
+      ldap_close($ad);
+   }
+   else
+   {
+      echo 'Unable to connect to LDAP server';
+   }
+   if ($counter>0)
+      return true;
+   else
+      return false;
+}
+
+function user_rights($username)
+{
+   global $dbuser,$dbpass;
+   db_connect($dbuser,$dbpass);
+   $query='select * from guirights order by code desc;';
+   $res=mysql_query($query);
+   $rights=-1;
+   while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
+   {
+      if ( ! empty($result['ad_group']))
+         if (ismemberof($username,$result['ad_group']))
+         {
+            $rights<$result['code'] ? $rights=$result['code'] : $result['code']=$rights;
+            break;
+         }
+   }
+   return $rights;
+}
+
+function print_header($entityname, $xls_output){
+	if (!defined(HEADER)){
+		$ret='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+		<html xmlns="http://www.w3.org/1999/xhtml">
+		<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<title>FreeNAC @'.$entityname.'</title>
+		<link href="bw.css" rel="stylesheet" type="text/css" />
+		</head>
+
+		<body>
+		<table class="bw" width="1000" border="0">
+		  <tr>
+			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
+		  </tr>
+		  <tr>
+			<td class="center"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a>';
+		if ($xls_output){
+			$ret.=' | <a href="'.$_SERVER['PHP_SELF'].'?action=export">Export</a>';
+		}
+		$ret.='</td>
+		  </tr>
+		</table>
+		';
+		define('HEADER',true); // The header is out
+		return $ret;
+	}
+
+}
+
+//
+// Print page footer (if not already done)
+//
+function print_footer(){
+	if(!defined(FOOTER)){
+		$ret='</table></body></html>';
+		define('FOOTER',true);
+		return $ret;
+	}
+}
+
+//
+// Print the lookup results
+//
+function print_resultset($res,$server){
+	$ret='';
+	while ($row=mysql_fetch_array($res)){
+		$ret.=($i%2==0)?'<tr class="light">':'<tr class="dark">';
+		$ret.='<td><a href="'.$server['PHP_SELF'].'?action=edit&mac='.$row['mac'].'">'.stripslashes($row['name']).'</a></td>'."\n";
+		$ret.='<td class="center">'.$row['mac'].'</td>'."\n";
+		$ret.='<td class="center">'.ucfirst($row['status']).'</td>'."\n";
+		$ret.='<td class="center" title="VLAN '.$row['vlan'].'">'.$row['vlanname'].'</td>'."\n";
+		$ret.='<td class="center">'.($row['lastvlan']!=''?$row['lastvlan']:'&nbsp;').'</td>'."\n";
+		$ret.='<td class="center" title="'.$row['surname'].' '.$row['givenname'].'">'.$row['user'].'</td>'."\n";
+		$ret.='<td class="center">'.$row['port'].'</td>'."\n";
+		$ret.='<td class="center">'.$row['lastseen'].'</td>'."\n";
+		$ret.='<td class="center" title="'.$row['switchip'].'">'.$row['switch'].'</td>'."\n";
+		$ret.='<td class="center">'.($row['lastip']!=''?$row['lastip']:'&nbsp;').'</td>'."\n";
+		$ret.='</tr>'."\n";
+		$i++;
+	}
+	return $ret;
+}
+
+//
+// validates webinput
+// if the variable is an array recursevly call the 
+// function for each value
+//
+function validate_webinput($value){
+	if (is_array($value)){
+		array_map('validate_webinput',$value);
+	}
+	else {
+		if (get_magic_quotes_gpc()) {
+			$value = stripslashes($value);
+		}
+		if (!is_numeric($value)){
+			mysql_real_escape_string($value);
+		}
+	}
+	return trim($value);
+}
+
+
+//
+// retrieves all users from the databases and returns them as a hmtl dropdownlist
+//
+function get_userdropdown($selected_user) {
+	$ret='<select name="assocntaccount">';
+	$sql='SELECT assocntaccount, surname, givenname FROM users ORDER BY surname'; // Get details for all users
+	$res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+	if (mysql_num_rows($res)>0){
+		while ($r=mysql_fetch_array($res)){
+			$ret.='<option value="'.$r['assocntaccount'].'" '.(trim(strtolower($r['assocntaccount']))==trim(strtolower($selected_user))?'selected="selected"':'').'>'.$r['surname'].' '.$r['givenname'].'</option>'."\n";
+		}
+	}
+	$ret.='</select></td></tr>'."\n";
+	return $ret;
+}
+
+//
+// creates an excel sheet and sends it to the browser
+// input: $result (must be a mysql query result)
+//
+function create_xls($result){
+	$fields = mysql_num_fields($result);
+	// create a new workbook
+	$xls = new Spreadsheet_Excel_Writer();
+	
+	// format head row
+	$head =& $xls->addFormat();
+	$head->setBold();
+	$head->setAlign('center');
+
+	// send HTTP headers
+	$xls->send('freenac.xls');
+
+	// create a worksheet
+	$sheet =& $xls->addWorksheet('FreeNAC');
+
+	// iterate trough the result set
+	$r=0; // row
+	$c=0; // column
+	for ($c=0; $c < $fields; $c++) {
+		$sheet->writeString(0, $c, ucfirst(mysql_field_name($result, $c)), $head);
+	}
+	while ($row=mysql_fetch_row($result)){
+		$r++;
+		for ($c=0; $c < $fields; $c++) {
+			$sheet->write($r, $c, $row[$c]);
+		}
+	}
+	// send the file
+	$xls->close();
+}
+
+
+?>
+<?php
+#
+#  functions.inc
+#
+#  2006.05.25/Sean Boran: Production
+#  2006.01.24/Thomas Dagonnier: First prototype
+#
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+####################################
+
+
+$big_sel = "SELECT s.id as sid, inventory as inventory, s.mac as mac, v.default_id as vlan, v.default_name as vlanname, vstatus.value as status,
+	s.name as ComputerName, u.username as user, s.comment, s.ChangeDate, LastSeen, LastPort, sysbd.name as building, 
+	CONCAT(sysbd.name,' ',sysloc.name) as officeSoll, patchloc.name as officeIst,
+	pat.outlet as PatchSocket, patchloc.name as PatchCable,
+	p.name as port, sw.name as switch,
+	s.class as class, c1.value as classname,
+	s.class2 as class2, c2.value as class2name,
+	os.value as os, os.value as osname, os1.value as os1, os2.value as os2, os3.value as os3
+FROM systems s
+LEFT JOIN vstatus ON vstatus.id = s.status
+LEFT JOIN vlan v ON v.id = s.LastVlan
+LEFT JOIN port p ON p.id = s.LastPort
+LEFT JOIN switch sw ON sw.id = p.switch
+LEFT JOIN patchcable pat ON pat.port = p.id
+	LEFT JOIN location as patchloc ON patchloc.id = pat.office
+LEFT JOIN users u ON u.id = s.uid
+LEFT JOIN sys_class c1 ON c1.id = s.class
+LEFT JOIN sys_class2 c2 ON c2.id = s.class2
+LEFT JOIN sys_os os ON os.id = s.os
+LEFT JOIN sys_os1 os1 ON os1.id = s.os1
+LEFT JOIN sys_os2 os2 ON os2.id = s.os2
+LEFT JOIN sys_os3 os3 ON os3.id = s.os3
+LEFT JOIN location sysloc ON sysloc.id = s.office
+	LEFT JOIN building sysbd ON sysbd.id = sysloc.building_id";
+
+
+function vmps_header()
+{
+  echo '<p ALIGN=CENTER><a href="./index.html">NAC Menu</a></p>';
+}
+
+function vmps_footer()
+{
+  echo '<p ALIGN=CENTER><a href="./index.html">NAC Menu</a></p>';
+}
+
+
+
+function debug1($msg) {
+  global $debug_flag1, $debug_to_syslog;
+  $msg=rtrim($msg);
+  if (($debug_flag1==TRUE) && (strlen($msg)>0) ) {
+    if ($debug_to_syslog===TRUE) {
+      syslog(LOG_INFO, "Debug1: $msg");
+    } else {
+      echo "Debug1: $msg<br>";
+    }
+  }
+}
+function debug2($msg) {
+  global $debug_flag2, $debug_to_syslog;
+  $msg=rtrim($msg);
+  if (($debug_flag2==TRUE) && (strlen($msg)>0) ) {
+    if ($debug_to_syslog===TRUE) {
+      syslog(LOG_INFO, "Debug2: $msg");
+    } else {
+      echo "Debug2: $msg<br>";
+    }
+  }
+}
+
+function get_nmap_id($sid) {
+   global $readuser,$readpass;
+   db_connect($readuser,$readpass);
+        $sel = "SELECT id FROM nac_hostscanned WHERE sid='".$sid."';";
+        $res = mysql_query($sel)  or die ("Unable to query MySQL ($sel)");
+        $num = mysql_num_rows($res);
+
+        if ($num > 0) {
+                $mac = mysql_fetch_array($res);
+                return($mac[0]);
+        } else {
+                return(FALSE);
+        };
+};
+
+function get_nmap_os($nmap_ip) {
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+        $sel = "SELECT os FROM nac_hostscanned WHERE id='$nmap_ip';";
+        $res = mysql_query($sel)  or die ("Unable to query MySQL ($sel)");
+        $num = mysql_num_rows($res);
+
+        if ($num > 0) {
+                $os = mysql_fetch_array($res);
+                return($os[0]);
+        } else {
+                return(FALSE);
+        };
+};
+
+function get_nmap_mac($id) {
+
+};
+
+
+// not used
+function validate_input($string) {
+  rtrim($string,' ');
+  if (stristr($string, ' ') OR stristr($string,';')) {
+    return(-1);
+  } else {
+    $input = mysql_real_escape_string($string);
+    return($input);
+  };
+};
+
+function display_os_select($selected) {
+  global $connect;
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass); 
+
+  $query = "SELECT * FROM sys_os ORDER BY value ASC;";
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
+
+  $html .= '<option value="">(any)</option>';
+
+  if (mysql_num_rows($res) > 0) {
+	  while ($os = mysql_fetch_array($res)) {
+	    if ($os['value'] != '') {
+	      $html .= "<option ";
+		  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+	      $html .= "value=\"". $os['id']. '">';
+	      $html .= $os['value']. '</option>';
+	    };
+	  };
+  };
+  return($html);
+};
+
+function display_class_select($selected) {
+  global $connect;
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+
+  $query = "SELECT * FROM sys_class ORDER BY id ASC;";
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
+
+  $html .= '<option value="">(any)</option>';
+  if (mysql_num_rows($res) > 0) {
+	  while ($os = mysql_fetch_array($res)) {
+	    if ($os['value'] != '') {
+	      $html .= "<option ";
+		  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+	      $html .= "value=\"". $os['id']. '">';
+	      $html .= $os['value']. '</option>';
+	    };
+	  };
+  };
+  return($html);
+};
+
+  
+function display_class2_select($selected) {
+  global $connect;
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+
+  $query = "SELECT * FROM sys_class2 ORDER BY id ASC;";
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
+
+  $html .= '<option value="">(any)</option>';
+  if (mysql_num_rows($res) > 0) {
+  while ($os = mysql_fetch_array($res)) {
+    if ($os['value'] != '') {
+      $html .= "<option ";
+          if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+      $html .= "value=\"". $os['id']. '">';
+      $html .= $os['value']. '</option>';
+    };
+  };
+  };
+  return($html);
+};  
+
+
+function display_vlan_select($selected) {
+  global $connect;
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+
+  $query = "SELECT * FROM vlan ORDER BY id ASC;";
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
+
+  $html .= '<option value="">(any)</option>';
+  if (mysql_num_rows($res) > 0) {
+  while ($os = mysql_fetch_array($res)) {
+    if ($os['value'] != '') {
+      $html .= "<option ";
+	  if (($selected == $os['id']) && $selected != '') { $html .= "selected "; };
+      $html .= "value=\"". $os['vlan_description']. '">';
+      $html .= $os['value']. '</option>';
+    };
+  };
+  };
+  return($html);
+};
+
+function display_uid_select($selected) {
+  global $connect;
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+
+  $query = "SELECT * FROM users ORDER BY Surname ASC;";
+  $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
+
+  $html .= '<option value="">(any)</option>';
+  if (mysql_num_rows($res) > 0) {
+  while ($user = mysql_fetch_array($res)) {
+    if ($user['Surname'] != '') {
+      $html .= "<option ";
+	  if (($selected == $user['id']) && $selected != '') { $html .= "selected "; };
+	  $html .= "value=\"". $user['id']. '">';
+      $html .= $user['Surname']. ' '. $user['GivenName'].', ';
+      $html .= $user['Department']. '</option>';
+    };
+  };
+  };
+  return($html);
+};
+
+
+function get_user_email($username) {
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+  $query = "SELECT rfc822mailbox FROM users WHERE id = '$username'; ";
+  $res = mysql_query($query)  or die ("Unable to query MySQL ($query)");
+  $user = mysql_fetch_array($res);
+
+  return($user[0]);
+};
+
+function get_user_name($username) {
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+  $query = "SELECT * FROM users WHERE id = '$username'; ";
+  $res = mysql_query($query)  or die ("Unable to query MySQL ($query)");
+  if (mysql_num_rows($res) > 0) {
+  $user = mysql_fetch_array($res);
+	  $name = $user['Surname'].' '.$user['GivenName'].', '.$user['Department'];
+	  return($name);
+  } else {
+	  return($username);
+  };
+};
+
+function get_vlan_color($vlan) {
+/*
+  if (($vlan < 2) || ($vlan > 900)) { return('#CCCCCC'); };
+  if ($vlan < 500)                    { return('#FFCC66'); };
+  if ($vlan == 501)                       { return ('#CC33FF'); };
+  if ($vlan == 520 )                       { return ('#C0C0C0');};
+  if ($vlan == 521 )                       { return ('#99CCFF');};
+  if ($vlan == 522 )                       { return ('#99FF99');};
+  if ($vlan == 523 )                       { return ('#FFFF99');};
+  if (($vlan == 524) || ($vlan == 525)) { return('#9966CC'); };
+  if ($vlan == 526)                     { return ('#99CC66');};
+  if ($vlan > 580)                    	{ return('#FF9933'); };
+// if ($vlan == )			{ return ('#');
+*/
+  return('#FFFFFF');
+};
+
+function format_mac($macdouble) {
+  $numbers = explode(':',$macdouble);
+
+  $dot=1;
+  foreach($numbers as $value) {
+    $mac .= $value;
+    if ($dot == 1) {
+      $dot = 0;
+
+    } else {
+      $dot = 1;
+      $mac .= '.';
+    }
+  };
+  $mac = rtrim($mac,'.');
+  return($mac);
+};
+
+function reformat_mac($macdot) {
+  $numbers = explode('.',$macdot);
+
+  $value = $numbers[0].$numbers[1].$numbers[2];
+  for ($i=0; $i <= 6; $i++) {
+	$mac .= substr($value,$i*2,2).':';
+  };
+
+  $mac = rtrim($mac,':.');
+  return($mac);
+
+
+};
+
+function get_vlan_descr($vlan) {
+  if ($vlan) {
+   global $readuser,$readpass;
+   db_connect($readuser,$readpass);
+    $query = "SELECT vlan_description FROM vlan WHERE id = $vlan";
+    //echo $query;
+    $descr = mysql_fetch_array(mysql_query($query));
+    return($descr[0]);
+
+  } else {
+    return('N/A');
+  };
+};
+
+function get_locationid($port) {
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+  $query = "SELECT patchloc.id as patchlocid, switchloc.id as switchlocid FROM port
+                  LEFT JOIN patchcable ON patchcable.port = port.id 
+                   LEFT JOIN location patchloc ON patchloc.id = patchcable.office 
+                  LEFT JOIN switch ON switch.id = port.switch 
+                   LEFT JOIN location switchloc ON switchloc.id = switch.location WHERE port.id = '$port';";
+  $res = mysql_query($query);
+  if (mysql_num_rows($res) > 0) {
+	$loc = mysql_fetch_array($res);
+		if (($loc['patchlocid'] = '') || (!$loc['patchlocid'])) {
+			return($loc['switchlocid']);
+		} else {
+			return($loc['patchlocid']);
+		};
+	} else {
+		return(0);
+	};
+};
+
+function get_location($port) {
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+  $query = "SELECT patchloc.id as patchlocid, CONCAT(patchbd.name,' ',patchloc.name) as patchloc,
+                   switchloc.id as switchlocid, CONCAT(switchbd.name,' ',switchloc.name) as switchloc
+            FROM port
+                  LEFT JOIN patchcable ON patchcable.port = port.id 
+                   LEFT JOIN location patchloc ON patchloc.id = patchcable.office 
+                   LEFT JOIN building as patchbd ON patchbd.id = patchloc.building_id
+                  LEFT JOIN switch ON switch.id = port.switch 
+                   LEFT JOIN location switchloc ON switchloc.id = switch.location
+                   LEFT JOIN building as switchbd ON switchbd.id = switchloc.building_id
+            WHERE port.id = '$port';";
+  $res = mysql_query($query);
+  if (mysql_num_rows($res) > 0) {
+	$loc = mysql_fetch_array($res);
+		if (($loc['patchloc'] = '') || (!$loc['patchloc'])) {
+			return($loc['switchloc']);
+		} else {
+			return($loc['patchloc']);
+		};
+	} else {
+		return(0);
+	};
+};
+
+function print_location($locationid) {
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+  $query = "SELECT building.name as building, location.name as office FROM location
+                LEFT JOIN building on building.id = location.building_id
+            WHERE location.id = '$locationid';";
+  $res = mysql_query($query);
+  if (mysql_num_rows($res) > 0) {
+	$loc = mysql_fetch_array($res);
+	return($loc['building'].' '.$loc['office']);
+  } else {
+	return('?');
+  };
+};
+
+
+function get_switch_name($switch_ip) {
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+        $query = "SELECT name FROM switch WHERE ip = '$switch_ip';";
+        $res = mysql_query($query);
+        if (mysql_num_rows($res) > 0) {
+                $port = mysql_fetch_array($res);
+                return($port[0]);
+        } else {
+                return(FALSE);
+        };
+};
+
+function strip_datversion($long_version) {
+	$list=explode('.',$long_version);
+	$short_version = $list[2];
+	return($short_version);
+};
+
+function get_datversions() {
+	$query = "SELECT DISTINCT(DATVersion) FROM EpoComputerProperties ORDER BY DATVersion DESC;";
+	$res = mysql_query($query);
+	if (mysql_num_rows($res) > 0) {
+		while ($row = mysql_fetch_array($res)) {
+			$short_version = strip_datversion($row[0]);
+			if ($short_version > 0) {
+				$datversions[$i] = $short_version;
+				$i++;
+			};
+		};
+		return($datversions);
+	} else {
+		return(FALSE);
+	};
+};
+
+
+function get_latestdat() {
+	$query = "SELECT MAX(DATVersion) FROM EpoComputerProperties;";
+	$res = mysql_query($query);
+	if (mysql_num_rows($res) > 0) {
+		$row = mysql_fetch_array($res);
+		$short_version = strip_datversion($row[0]);
+		return($short_version);
+	} else {
+		return(0);
+	};
+};
+
+function display_dat_select() {
+  global $connect;
+  global $readuser,$readpass;
+   db_connect($readuser,$readpass);
+
+  $datversions = get_datversions();
+  $latestdat = get_latestdat();
+
+  $html .= '<option value="">(any)</option>';
+
+  foreach ($datversions as $key => $mversion) {
+	  if ($key == 1) { $html .= '<option value="outdated">(Older than '.$latestdat.')</option>'; };
+      $html .= "<option ";
+	  if (($selected == $mversion) && $selected != '') { $html .= "selected "; };
+      $html .= "value=\"". $mversion. '">';
+      $html .= $mversion. '</option>';
+  };
+  return($html);
+
+};
+
+function get_actual_value($mac,$fieldname) {
+	global $connect;
+	global $readuser,$readpass;
+        db_connect($readuser,$readpass);
+	$sel = "SELECT $fieldname FROM systems WHERE mac = '$mac';";
+	$res = mysql_query($sel);
+	$list = mysql_fetch_array($res);
+	return($list[0]);
+
+};
+function get_lastseen($mac) {
+	global $big_sel;
+	$switch = get_switch_name(get_actual_value($mac,'switch'));
+	$port = get_actual_value($mac,'port');
+	
+	$sel = $big_sel ." WHERE s.mac='$mac'";
+
+	$system = mysql_fetch_array(mysql_query($sel));
+
+	$users = get_users($system['officeIst']);
+
+	$lastseen = array("time" => $system['LastSeen'],
+					  "switch" => $system['switch'].' '.$system['port'].' ('.$system['swlocation'].')', 
+					  "patch" => $system['officeIst'].' ('.$system['PatchSocket'].')',
+					  "users" => $users );
+
+	return($lastseen);
+
+};
+
+function get_users($office) {
+	$sel = "SELECT Surname, Givenname, Department FROM users WHERE PhysicalDeliveryOfficeName = '$office';";
+	$res = mysql_query($sel);
+	while ($usr = mysql_fetch_array($res)) {
+		$users[] = $usr['Surname'].' '.$usr['Givenname'].', '.$usr['Department'];
+
+	};
+	return($users);
+};
+?>
