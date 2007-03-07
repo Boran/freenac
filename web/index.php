@@ -18,4 +18,12 @@ else if ($rights==1)
    echo "</head>\n";
    echo "</html>\n";
 }
+else
+{
+   echo "\t<title>Access denied</title>\n";
+   echo "</head>\n";
+   echo "<body>\n";
+   echo "<h1>ACCESS DENIED</h1>\n";
+   echo "</body>\n";
+}
 ?>
