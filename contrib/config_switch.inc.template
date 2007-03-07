@@ -1,0 +1,7 @@
+<?php
+## Access to switch for configuration
+        $switch_default_access = 'telnet'; 
+        $switch_user = 'SWITCHUSER';
+        $switch_password = 'PASSWORD';
+        $switch_enable_password = $switch_password;
+?>

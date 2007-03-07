@@ -16,7 +16,7 @@ while ($switch = mysql_fetch_array($res)) {
 	$switch_id = $switch['id'];
 	$switch_ip = $switch['ip'];
 	$switch_name = $switch['name'];
-	$script_file = "../web1/tmp/static_$switch_name";
+	$script_file = "../web1/tmp/auth_$switch_name";
 
 	$script = '#!/usr/bin/expect -f'."\n";
 	$script .= 'set timeout -1\n\n'."\n";
@@ -42,13 +42,13 @@ while ($switch = mysql_fetch_array($res)) {
 		$script .= 'else { ' . $ssh_connect . '}' . "\n";
 	}
 	else {
-		$script .= 'if { $argc > 0 &&  [lindex $argv 0] eq "-s" } {' . $ssh_connect . '}' . "\n";
+		$script = 'if { $argc > 0 &&  [lindex $argv 0] eq "-s" } {' . $ssh_connect . '}' . "\n";
 		$script .= 'else { ' . $telnet_connect . '}' . "\n";
 	}
-*/		
-	$script = "# connect to switch $switch_name to configure ports to static"."\n";
+*/
+	$script .= "# connect to switch to configure ports according to their auth_profile"."\n";		
 	$script .=  $telnet_connect."\n";
-	
+
 	// change to privilege level 15 if necessary
 	$script .= "expect {\n";
 	$script .= "\t" . '"' . $switch_name . '>$" { send "ena\n"; expect "Password: $"; send "' . $switch_enable_password . '\n"; expect "' . $switch_name . '#$"}' . "\n";
@@ -60,6 +60,7 @@ while ($switch = mysql_fetch_array($res)) {
 	$script .= 'send "conf t\n"'."\n";
 
 
+
 	// the two prompts we should expect 
 	$expect_cmd = 'expect "'.$switch_name;
 	$expect_config = $expect_cmd.'(config)#$"'."\n";
@@ -68,20 +69,44 @@ while ($switch = mysql_fetch_array($res)) {
 
 
 	// now, let's query all ports
- $selp = "SELECT port.name as name, auth_profile.method as method, auth_profile.config as config ,default_vlan.default_id as default_vlan, last_vlan.default_id as last_vlan
-    FROM port 
-         LEFT JOIN auth_profile ON auth_profile.id = port.auth_profile
-         LEFT JOIN vlan default_vlan ON default_vlan.id = port.default_vlan
-         LEFT JOIN vlan last_vlan ON last_vlan.id = port.last_vlan
-    WHERE switch=$switch_id;";
-	
+#	$selp = "SELECT * FROM port WHERE switch=$switch_id AND default_vlan > 1;";
+	$selp = "SELECT port.name as name, auth_profile.method as method, auth_profile.config as config ,default_vlan.default_id as default_vlan, last_vlan.default_id as last_vlan
+                 FROM port 
+                     LEFT JOIN auth_profile ON auth_profile.id = port.auth_profile
+                     LEFT JOIN vlan default_vlan ON default_vlan.id = port.default_vlan
+                     LEFT JOIN vlan last_vlan ON last_vlan.id = port.last_vlan
+		 WHERE switch=$switch_id;";
 	$resp = mysql_query($selp) or die("Unable to make query ($selp)\n");
 	if (mysql_num_rows($resp) > 0) {
 		while ($port = mysql_fetch_array($resp)) {
 			$script .= 'send "interface '.$port['name'].'\n"'."\n";
 			$script .= $expect_config_if;
-			$script .= 'send "sw ac vl '.$port['default_vlan'].'\n"'."\n";
-       			$script .= $expect_config_if;
+			if ($port['config'] == 'trunk') {
+				$script .= '# skip port : trunk '."\n";
+			};
+			if ($port['config'] == 'static') {
+				$script .= '# skip port : trunk '."\n";
+/*
+				if ($port['last_vlan'] > 1) {
+					$script .= 'send "sw ac vl '.$port['last_vlan'].'\n"'."\n";
+				} else {
+					$script .= 'send "sw ac vl '.$port['default_vlan'].'\n"'."\n";
+				};
+       				$script .= $expect_config_if;
+*/
+			} elseif ($port['config'] == 'dynamic') {
+				 $script .= 'send "sw ac vl dynamic \n"'."\n";
+ 				 $script .= $expect_config_if;
+			} else { // dot1x or other multiline config
+				$script .=  'send "no sw ac vl \n"'."\n"; // evtl. check if last_vlan should be used TODO
+                                $script .= $expect_config_if;
+				$lines = explode("\n",$port['config']);
+				foreach ($lines as $line) {
+					$line = rtrim($line);
+					$script .= 'send "sw ac vl '.$line.'\n"'."\n";
+					$script .= $expect_config_if;
+				};
+			};
 			$write = TRUE;
 		};
 	};
