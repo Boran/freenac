@@ -273,7 +273,7 @@ The webgui Web2 needs "read-write" access and by default uses a user
   grant SELECT,UPDATE        ON opennac.systems to webwrite@'localhost' ;
   grant SELECT               ON opennac.users   to webwrite@'localhost' ;
   grant SELECT               ON opennac.patchcable to webwrite@'localhost' ;
-  grant SELECT               ON opennac.port    to webwrite@'localhost' ;
+  grant SELECT,UPDATE        ON opennac.port    to webwrite@'localhost' ;
   grant SELECT               ON opennac.oper    to webwrite@'localhost' ;
   grant SELECT               ON opennac.switch  to webwrite@'localhost' ;
   grant SELECT               ON opennac.vlan    to webwrite@'localhost' ;
