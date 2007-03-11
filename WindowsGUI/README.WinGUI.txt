@@ -2,11 +2,20 @@ __________ Free NAC Windows GUI  ___________
 
 Description:
   This Windows Executable can be used to connect to the NAC Database and manage it.
+  
+  Copyright (C) 2007 Swisscom, FreeNAC Core Team, Sean Boran, http://www.FreeNAC.net
+
+License  
   We cannot provide source code at the moment as its proprietary, but you can use it for free.
-  This is issue will probably be solved by replacing it with a WebGUI, depending on the Team 
+  You may not charge other for this tool, and must always preserve this file and the CHANGELOG if
+  copying.
+  
+  The OpenSource issue will probably be solved by replacing it with a WebGUI, depending on the Team 
   resources (contributions are welcome).
 
-  Copyright (C) 2007 Swisscom, FreeNAC Core Team, Sean Boran, http://www.FreeNAC.net
+
+  
+  
   
 Using this GUI on the Online FreeNAC database
 ---------------------------------------------
@@ -51,43 +60,21 @@ Full  Installation:
       d) Copy the value of the 'generated key' filed to the 'auth' field in vmps.xml
       e) Restart the GUI, and press "Connect"
 
+   
+   4. Ensure the settings in the 'config' DB table are correct.
+      To enable all features, set value=1:
+        update config set value='1' WHERE name='StaticInvEnabled';
+        update config set value='1' WHERE name='NmapEnabled';
+        update config set value='1' WHERE name='AntiVirusEnabled';
+        update config set value='1' WHERE name='PatchCableEnabled';  
+        
+      To enable the DEMO company setting in vmps.xml to work:                  
+        update config set value='1' WHERE name='DemoMode';  
+      normally this is 0, meaning that a company called DEMO will not work. 
+      If it is=1, the DEMO company is allowed in vmps.xml and the user is given administrator access!        
 
 
-
-
-CHANGE HISTORY:  
---------------
-v1.2.0.100: fix 'scannow' button, remove error message when writing patchtable.
-v1.2.0.101/30.10.06/SB: Deleted systems were not correctly logged, Delection of changes to vlans in Edit Tab improved. For DEMO company allow Admin access for all users.
-v1.2.0.101/30.10.06/SB: Handling of locates with '/' and not '.' for date seperators.
-v1.2.0.102/10.11.06/SB: fix history log timestamps for some timezones, and add the demodb/vmps.xml
-v1.2.0.103/24.11.06/SB: 
-	Allow the port default vlan to be changed. 
-	Add Queries for expired user, expired systems. Add button to export entire table to excel.
-	Sources: delete old components taPorts, taSystems.
-v1.2.0.103/4.12.06/SB: 	
-  History field was accidentally read-only. Edit tab: make user lookups much faster via a dedicated query.
-  Query tab: add Anti-Virus out of date
-  Query tab: add the actual query SQL to the bottom of each query.  
-  Allow vlans, switchs, ports, lookups rows to be deleted by an admin.
-v1.2.0.104/18.12.06/SB: 	
-  Remove references to old 'oper' table. Remove 'user' column from patch cables tab.  
-  Add a PatchCable column to the Overview tab, added an 'unmanaged' status to the Edit/Overvew tabs
-v1.2.0.105/21.12.06/SB: 	  
-  IP address visible in the Edit tab again. Record port restarts
-  in the Change History. Remove some unneeded warnings.
-v1.2.0.108/24.01.07/SB: 	  
-  Add PatchCableEnabled to vmps.xml, which hides or shows relevant Tabs/fields.
-  Performance: optimise queries, start reduced from 30 to 3 secs. To view Users on an office
-   on the Ports Tab, doubleclick.
-  Install DeveloperExpress tools for delphi and start using their improved components
-  - Change grids in Change and Server log
-  - Improved edit-User ComboBox to show key zuser details
-  - Add Filter by Switch to the Ports page  
-  
-v2.2.0.113/23.02.07/SB:   
-  Rewrite for completely new DB scheam NAC V2.2, add new tables.
-  Migrate most grids to the cxGrid from DeveloperExpress, enables export to Excel.
+See also the CHANGELOG.txt
 
 
 	
