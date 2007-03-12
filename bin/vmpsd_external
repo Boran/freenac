@@ -213,7 +213,7 @@ function decide($port, $switch, $mac, $lastvlan)
     ## b) Check for default Vlan for port
     if ($use_port_default_vlan==true) {
       logit("decide: check for port default Vlan");
-      $query="SELECT p.default_vlan FROM port p inner join switch s on p.switch=s.id and s.ip='$switch' and p.name='$port' and p.default_vlan!='2';";
+      $query="SELECT p.default_vlan FROM port p inner join switch s on p.switch=s.id and and p.name='$port' and p.default_vlan!='2';";
       debug2("decide: ".$query);
       $res = mysql_query($query, $connect);
       if (!$res) { die('Invalid query: ' . mysql_error()); }
