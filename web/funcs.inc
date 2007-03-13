@@ -36,9 +36,9 @@ function db_connect($username,$password)
 
 function ismemberof($username,$group)
 {
-   global $ad_server,$ad_user,$ad_password,$ad_base;
+   global $ad_server,$ad_user,$ad_password,$ad_base,$ad_port;
    $counter=0;
-   $ad=ldap_connect($ad_server);
+   $ad=ldap_connect($ad_server,$ad_port);
    if ($ad)
    {
       if (ldap_bind($ad,$ad_user,$ad_password))
