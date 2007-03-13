@@ -33,6 +33,7 @@
 ## LDAP coniguration settings (Active Directory)
 ## ad_user_sync
   $ad_server = '192.168.0.1';                                                  # Domain controller
+  $ad_port = '389';				# Port 389 for domain-level lookup. Port 3268 for Global Catalog
   $ad_user = 'cn=administrator,cn=users,dc=domain,dc=com';    # AD user with read privileges on AD
   $ad_password = 'password';                                                                                # AD users's password
   $ad_base = 'cn=users,dc=domain,dc=com'					# Base DN under which user information is stored
