@@ -36,17 +36,19 @@ function db_connect($username,$password)
 
 function ismemberof($username,$group)
 {
-   global $ad_server,$ad_user,$ad_password;
+   global $ad_server,$ad_user,$ad_password,$ad_base;
    $counter=0;
    $ad=ldap_connect($ad_server);
    if ($ad)
    {
       if (ldap_bind($ad,$ad_user,$ad_password))
       {
-         $dn='cn=Users,'.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
+         #$dn='cn=Users,'.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
+         $dn=$ad_base;
          $attributes=array('memberOf');
          $filter='(sAMAccountName='.$username.')';
-         $group='cn='.$group.','.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
+         #$group='cn='.$group.','.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
+         #$group='cn='.$group.','.$dn;
          $result=ldap_search($ad,$dn,$filter,$attributes);
          if ($result)
          {
