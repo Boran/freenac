@@ -111,7 +111,7 @@ function query_AD() {
 	
 	logit('Querying user information from AD');
 	
-	$connect = ldap_connect($ad_server) or logit('Could not connect to Active Directory, ' . ldap_error($connect));
+	$connect = ldap_connect($ad_server,$ad_port) or logit('Could not connect to Active Directory, ' . ldap_error($connect));
 	$bind = ldap_bind($connect, $ad_user, $ad_password) or logit('Could not bind to Active Directory, ' . ldap_error($connect));
 
 	#$filter = "objectClass=person";	# There might be objects of other classes around (e.g. groups) we don't want to fetch
