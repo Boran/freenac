@@ -128,6 +128,7 @@
 ## LDAP coniguration settings (Active Directory)
 ## ad_user_sync
   $ad_server = 'dc.test.xx';		# Domain controller
+  $ad_port = '389';		#Port 389 is for domain-level lookups, use 3268 to use a global catalog
   $ad_user = 'cn=administrator,cn=users,dc=test,dc=xx';	# AD user with read privileges on AD
   $ad_password = '';			# AD users's password
   $ad_base_user_dn = array('cn=users,dc=test,dc=xx');	# List with base DNs under which user information is stored

@@ -107,15 +107,15 @@ else {
 
 # Query AD and return assoc. array
 function query_AD() {
-	global $ad_server, $ad_user, $ad_password, $ad_base_user_dn, $exchange;
+	global $ad_server, $ad_user, $ad_password, $ad_base_user_dn, $ad_port, $exchange;
 	
 	logit('Querying user information from AD');
 	
 	$connect = ldap_connect($ad_server) or logit('Could not connect to Active Directory, ' . ldap_error($connect));
 	$bind = ldap_bind($connect, $ad_user, $ad_password) or logit('Could not bind to Active Directory, ' . ldap_error($connect));
 
-	$filter = "objectClass=person";	# There might be objects of other classes around (e.g. groups) we don't want to fetch
-
+	#$filter = "objectClass=person";	# There might be objects of other classes around (e.g. groups) we don't want to fetch
+	$filter = "(&(objectClass=person)(!(objectClass=computer)))"; #We don't want computers either
 	# AD attribute names 
 	# username: sAMAccountName
 	# prename: givenName
@@ -137,7 +137,9 @@ function query_AD() {
 	
 	# loop through all dn with user information and fetch data
 	foreach( $ad_base_user_dn as $base_dn ) {
-		$results = ldap_list($connect, $base_dn, $filter, $fetch_attributes) or logit('Could not retrieve data, ' . ldap_error($connect));
+		#$results = ldap_list($connect, $base_dn, $filter, $fetch_attributes) or logit('Could not retrieve data, ' . ldap_error($connect));
+ 		//ldap_list performs the query only on one level, ldap_search searches through the whole tree
+                $results = ldap_search($connect, $base_dn, $filter, $fetch_attributes) or logit('Could not retrieve data, ' . ldap_error($connect));
 		$info = array_merge($info, ldap_get_entries($connect, $results)) or logit('Could not get entries, ' . ldap_error($connect));
 	}
 	
