@@ -46,7 +46,7 @@ function ismemberof($username,$group)
          #$dn='cn=Users,'.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
          $dn=$ad_base;
          $attributes=array('memberOf');
-         $filter='(sAMAccountName='.$username.')';
+         $filter='(&(sAMAccountName='.$username.')(objectClass=person))';
          #$group='cn='.$group.','.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
          #$group='cn='.$group.','.$dn;
          $result=ldap_search($ad,$dn,$filter,$attributes);
