@@ -23,7 +23,6 @@
 ## Enterprise config options
 #require_once "/opt/nac/enterprise/config_en.inc";
 
-
 ## MySQL DB settings for all scripts
   $dbhost="localhost";
   $dbname="opennac";
@@ -32,6 +31,7 @@
 
 ## LDAP coniguration settings (Active Directory)
 ## ad_user_sync
+  $ad_auth=false;				# Controls whether or not enable AD authentication in the Web GUI
   $ad_server = '192.168.0.1';                                                  # Domain controller
   $ad_port = '389';				# Port 389 for domain-level lookup. Port 3268 for Global Catalog
   $ad_user = 'cn=administrator,cn=users,dc=domain,dc=com';    # AD user with read privileges on AD
