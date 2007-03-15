@@ -56,6 +56,7 @@ if ($argc!=2)
 if (!file_exists($argv[1]))
    die("File doesn't exist");
 $file=fopen(trim($argv[1]),'r');
+
 if ($file)
 {
    $inserted=0;
@@ -82,24 +83,25 @@ if ($file)
       {
          if ($vlan)
          {
-            if (is_string($vlan))
-               $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan';");
-            else if (is_int($vlan))
+            $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan';");
+            if (is_numeric($vlan))
                $vlan_id=v_sql_1_select("select id from vlan where default_id='$vlan';");
+            else if (is_string($vlan))
+               $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan';");
             else $vlan_id=1;
             if (!$vlan_id)
             {
-               if (is_string($vlan))
+               if (is_numeric($vlan))
+                  $query="insert into vlan set default_id='$vlan'";
+               else if (is_string($vlan))
                   $query="insert into vlan set default_name='$vlan';";
-               else if (is_int($vlan))
-                  $query="insert into vlan set default_id='$vlan';
                $res=mysql_query($query);
                if ($res)
                {
-                  if (is_string($vlan))
-                     $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan';");
-                  else if (is_int($vlan))
+                  if (is_numeric($vlan))
                      $vlan_id=v_sql_1_select("select id from vlan where default_id='$vlan';");
+                  else if (is_string($vlan))
+                     $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan';");
                   $inserted_vlans++;
                }
                else $vlan_id=1;
@@ -146,7 +148,7 @@ if ($file)
          if (!$ip||!ereg("([12]?[0-9]?[0-9]{1}\.){3}([12]?[0-9]?[0-9]{1})",$ip))
             $ip='';
          
-         $s_id=v_sql_1_select("select id from systems where mac='$mac';");
+         $sid=v_sql_1_select("select id from systems where mac='$mac';");
          if (!$sid)
          {
             $query="insert into systems set mac='$mac',name='$hostname',uid='$user_id',vlan='$vlan_id',comment='$comment',status=1,office='$location_id',inventory='$inventory',history='$history';";
@@ -157,7 +159,7 @@ if ($file)
          }
          else
          {
-            $query="update systems set name='$hostname',status=1,uid='$user_id',vlan='$vlan_id',comment='$comment',status=1,office='$location_id',inventory='$inventory',history='$history' where mac='$mac';
+            $query="update systems set name='$hostname',status=1,uid='$user_id',vlan='$vlan_id',comment='$comment',status=1,office='$location_id',inventory='$inventory',history='$history' where mac='$mac';";
             $res=mysql_query($query);
             if ($res)
                $updated++;
@@ -167,6 +169,12 @@ if ($file)
       else
          echo "Discarding $mac\n";
    }
+   echo "Inserted $inserted new devices\n";
+   echo "Updated $updated devices\n";
+   echo "Inserted $inserted_users new users\n";
+   echo "Inserted $inserted_vlans new vlans\n";
+   echo "Inserted $inserted_locations new locations\n";
+ 
 }
 else 
    echo "There was a problem reading the file\n";
