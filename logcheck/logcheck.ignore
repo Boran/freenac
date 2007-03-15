@@ -94,4 +94,6 @@ Debug: +(rlm_eap|TLS_|eaptls_|mschap2|radius_xlat|rlm_mschap)
 Info: rlm_eap_mschapv2
 
 
-
+## Debugging 
+Debug1:.*
+Debug2:.*

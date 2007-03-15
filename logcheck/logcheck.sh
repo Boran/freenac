@@ -64,7 +64,7 @@ DEBUG=0
 ## Alerts are reported via email.
 ## set recipients and title of email:
 #SYSADMIN=root
-SYSADMIN=nactest
+SYSADMIN=nac
 tool="FreeNAC logcheck"
 
 umask 077
