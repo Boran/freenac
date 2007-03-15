@@ -308,8 +308,9 @@ function decide($port, $switch, $mac, $lastvlan)
              $result=0;
              if ($disable_expired_devices===true)
              {
-                $query="update systems set status='0' where id=$sid"; #Disable expired device
+                $query="update systems set status='7' where id=$sid"; #Disable expired device
                 logit("decide: Expired device $mac has been disabled. Expiration date: $expiry");
+                log2db('info',"decide: Expired device $mac has been disabled. Expiration date: $expiry");
                 $res = mysql_query($query, $connect);
                 if (!$res) { die('Invalid query: ' . mysql_error()); }
              }
