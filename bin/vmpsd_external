@@ -266,7 +266,7 @@ function decide($port, $switch, $mac, $lastvlan)
     # c) Are other systems active on this port?
     #    Are they on the same Vlan?
     #    If not, can we assign that Vlan too? (check group)?
-    if ($expiry&&((strcmp(trim($expiry),"0000-00-00 00:00:00"))==0))
+    if ($expiry&&(((strcmp(trim($expiry),"0000-00-00 00:00:00"))==0)||(strcmp(trim($expiry),"0000-00-00"))==0))
        $expiry=false;
     logit("decide: Request for ($switch,$port) $name($mac), $description, vlan=$vlan");
     if ($detect_hubs==true) {
