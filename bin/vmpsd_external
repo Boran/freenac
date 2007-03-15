@@ -295,15 +295,7 @@ function decide($port, $switch, $mac, $lastvlan)
         if ($expiry)
         {
           $timestamp=date('Y-m-d H:i:s');
-          $temp=explode(' ',$timestamp);
-          $time_info_1=explode(':',$temp[1]);
-          $date_info_1=explode('-',$temp[0]);
-          $temp=explode(' ',$expiry);
-          $time_info_2=explode(':',$temp[1]);
-          $date_info_2=explode('-',$temp[0]);
-          $time1=mktime((int)$time_info_1[0],(int)$time_info_1[1],(int)$time_info_1[2],(int)$date_info_1[1],(int)$date_info_1[2],(int)$date_info_1[0]);
-          $time2=mktime((int)$time_info_2[0],(int)$time_info_2[1],(int)$time_info_2[2],(int)$date_info_2[1],(int)$date_info_2[2],(int)$date_info_2[0]);
-          $time=$time2-$time1;
+          $time=time_diff($timestamp,$expiry);
           if ($time<0)
           {
              $result=0;

@@ -24,6 +24,20 @@ chdir(dirname(__FILE__));
 set_include_path("./:../");
 require_once "etc/config.inc";
 
+function time_diff($date1,$date2)  //Returns the difference between 2 dates in secs
+{
+   $temp=explode(' ',$date1);
+   $time_info_1=explode(':',$temp[1]);
+   $date_info_1=explode('-',$temp[0]);
+   $temp=explode(' ',$date2);
+   $time_info_2=explode(':',$temp[1]);
+   $date_info_2=explode('-',$temp[0]);
+   $time1=mktime((int)$time_info_1[0],(int)$time_info_1[1],(int)$time_info_1[2],(int)$date_info_1[1],(int)$date_info_1[2],(int)$date_info_1[0]);
+   $time2=mktime((int)$time_info_2[0],(int)$time_info_2[1],(int)$time_info_2[2],(int)$date_info_2[1],(int)$date_info_2[2],(int)$date_info_2[0]);
+   $time=$time2-$time1;
+   return $time;
+}
+
 function debug1($msg) {
   global $debug_flag1, $debug_to_syslog;
   $msg=rtrim($msg);
