@@ -266,7 +266,8 @@ function decide($port, $switch, $mac, $lastvlan)
     # c) Are other systems active on this port?
     #    Are they on the same Vlan?
     #    If not, can we assign that Vlan too? (check group)?
-
+    if ($expiry&&((strcmp(trim($expiry),"0000-00-00 00:00:00"))==0))
+       $expiry=false;
     logit("decide: Request for ($switch,$port) $name($mac), $description, vlan=$vlan");
     if ($detect_hubs==true) {
       debug1("decide: Check for hubs..");
@@ -306,20 +307,19 @@ function decide($port, $switch, $mac, $lastvlan)
           if ($time<0)
           {
              $result=0;
-             $device_name=v_sql_1_select("select name from systems where id='$sid'");
              if ($disable_expired_devices===true)
              {
                 $query="update systems set status='7' where id=$sid"; #Disable expired device
-                logit("decide: Expired device $device_name($mac) has been disabled. Expiration date: $expiry");
-                log2db('info',"decide: Expired device $device_name($mac) has been disabled. Expiration date: $expiry");
+                logit("decide: Expired device $name($mac) has been refused network access and its status has been set to killed. Expiration date: $expiry");
+                log2db('info',"Expired device $name($mac) has been refused network access and its status has been set to killed. Expiration date: $expiry");
                 $res = mysql_query($query, $connect);
                 if (!$res) { die('Invalid query: ' . mysql_error()); }
              }
             if ($email_alert_expired_devices===true)
             {
-               $log_entry="Device $device_name($mac) with expiration date $expiry has expired already";
+               $log_entry="Device $name($mac) with expiration date $expiry has been refused network access ";
                if ($disable_expired_devices===true)
-                  $log_entry.=" and has been killed.";
+                  $log_entry.=" and its status has been set to killed.";
                notify2($switch_name, $log_entry, "NAC alert: expired device");
             } 
           }
