@@ -143,6 +143,74 @@ function print_footer(){
 	}
 }
 
+function header_read()
+{
+   global $entityname;
+   if (!defined(HEADER))
+   {
+      $ret='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+            <html xmlns="http://www.w3.org/1999/xhtml">
+            <head>
+               <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+               <title>FreeNAC @'.$entityname.'</title>
+               <link href="../bw.css" rel="stylesheet" type="text/css" />
+            </head>
+            <body>';
+      define('HEADER',true);
+      return $ret;
+   }
+}
+
+function main_stuff()
+{
+   $text=<<<EOF
+   <table class="bw" border="0" align="center" width="500">
+   <tr height="80">
+      <td>&nbsp;</td>
+   </tr>
+   <tr valign="top">
+      <td>
+
+EOF;
+   return $text;
+}
+
+function read_footer()
+{
+   $text=<<<EOF
+      <p ALIGN=CENTER><a href="./index.php">NAC Menu</a></p>
+      </td>
+   </tr>
+   </table>
+   </body>
+   </html>
+EOF;
+   return $text;
+}
+
+function user_tooltip($username) {
+  global $readuser,$readpass;
+  db_connect($readuser,$readpass);
+  $query = "SELECT * FROM users WHERE username = '$username'; ";
+  $res = mysql_query($query)  or die ("Unable to query MySQL");
+
+  $user = mysql_fetch_array($res);
+
+  //$text = $user['GivenName'].' '.$user['Surname'].', '.$user['Department']." (";
+  $text .= $user['HouseIdentifier'].' '.$user['PhysicalDeliveryOfficeName']." / ";
+
+  // Shorter tel number for INO
+  if (stristr($user['TelephoneNumber'],'31-342')) {
+    $user['TelephoneNumber'] = str_replace(' ','',substr($user['TelephoneNumber'],strlen($user['TelephoneNumber'])-7,7));
+  };
+
+  $text .= $user['TelephoneNumber']. " / ";
+  $text .= $user['Mobile'];
+  //."\n";
+
+  return($text);
+};
+
 //
 // Print the lookup results
 //

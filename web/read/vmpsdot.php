@@ -62,6 +62,7 @@ function get_dose($port) {
 
 function get_patch($port) {
   $sel = "SELECT outlet,location.name as location FROM patchcable LEFT JOIN location ON location.id = patchcable.office WHERE port='$port';";
+  echo $sel;
   $res = mysql_query($sel) or die ("Unable to query MySQL ($sel)");
   if (mysql_num_rows($sel) > 0) {
 	  list($dose,$location) = mysql_fetch_array($res);

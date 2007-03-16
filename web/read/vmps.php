@@ -26,6 +26,8 @@ define_syslog_variables();
 openlog("nac.web1", LOG_PID, LOG_LOCAL5);
 
 
+$sw='';
+
 function print_switch_sel() {
   global $db;
   global $sw;
@@ -66,26 +68,47 @@ function print_dot_sel() {
 };
 	
 
-//-------------- main () -------------------
-echo '<head><title>NAC: query devices per switch</title></head><body>';
-vmps_header();
-db_connect($readuser,$readpass);
+function vmps_stuff()
+{
+   global $readuser,$readpass,$sw,$vmpsdot_querydays;
+   //-------------- main () -------------------
+   db_connect($readuser,$readpass);
+   echo "<br>";
+   echo "List all ports used on the specified switch in the last $vmpsdot_querydays days, and which end-devices were seen on each port. For each end device, the node name and assocated user is shown.<br>";
+   echo "<br>";
+   echo "<form method=get action=\"$PHP_SELF\">\n";
+   echo "Select a switch from the list:<br>";
+   echo print_switch_sel();
+   //echo print_dot_sel();
+   echo "<input type=\"submit\" name=\"submit\" value=\"View\">\n</form>\n";
+   
+   #$sw=$_REQUEST['sw'];
+   $sw=validate_webinput($_REQUEST['sw']);
+   if ($sw) {
+     debug1("Calling vmpsdot.php?sw=$sw");
+     echo "<img src=\"vmpsdot.php?sw=$sw\" border=0>";
+   };
+}
 
-echo "<br>";
-echo "List all ports used on the specified switch in the last $vmpsdot_querydays days, and which end-devices were seen on each port. For each end device, the node name and assocated user is shown.<br>";
-echo "<br>";
-echo "<form method=get action=\"$PHP_SELF\">\n";
-echo "Select a switch from the list:<br>";
-echo print_switch_sel();
-//echo print_dot_sel();
-echo "<input type=\"submit\" name=\"submit\" value=\"View\">\n</form>\n";
-
-#$sw=$_REQUEST['sw'];
-$sw=validate_webinput($_REQUEST['sw']);
-if ($sw) {
-  debug1("Calling vmpsdot.php?sw=$sw");
-  echo "<img src=\"vmpsdot.php?sw=$sw\" border=0>";
-};
-
-vmps_footer();
+if ($ad_auth===true)
+{
+   $rights=user_rights($_SERVER['AUTHENTICATE_SAMACCOUNTNAME']);
+   if ($rights>=1)
+   {
+      echo header_read();
+      echo main_stuff();
+      echo "<hr /><br />";
+      vmps_stuff();
+      echo read_footer();
+   }
+   else echo "<h1>ACCESS DENIED</h1>";
+}
+else
+{
+   echo header_read();
+   echo main_stuff();
+   echo "<hr /><br />";
+   vmps_stuff();
+   echo read_footer();
+}
 ?>

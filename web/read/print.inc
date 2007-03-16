@@ -120,7 +120,7 @@ function print_host_table($where) {
 			$html .= "<tr><th>OS<td>Nmap<td>ePO<th>Hostname<th>Owner<th>Inventory<th>MAC<th>Last IP<th>VLAN<th>Standard<br>location<th colspan=2>LastSeen\n";
 			while ($row = mysql_fetch_array($mysql_res,MYSQL_ASSOC)) {
 				$html .= '<tr bgcolor="'.get_vlan_color($row['vlan']).'">';
-				$html .= '<td align=center><img src="os/'.$row['os'].'.gif" border=0>';
+				$html .= '<td align=center><img src="../images/'.$row['os'].'.gif" border=0>';
 // extra details
 				$mac = $row['mac'];
 				$sid = $row['id'];
@@ -129,7 +129,7 @@ function print_host_table($where) {
 
 				$html .= '<td align=center>';
 
-				$sel_epo = "SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'";
+                                $sel_epo = "SELECT * FROM EpoComputerProperties WHERE NetAddress = '$mac'";
 				$res_epo = mysql_query($sel_epo) or die ("Unable to query MySQL ($sel_epo)");
 				if (mysql_num_rows($res_epo) > 0) { $html .= 'X'; } else { $html .= '&nbsp;'; };
 				
@@ -138,11 +138,11 @@ function print_host_table($where) {
 				$html .= $row['name'].'</a></b>';
 // owner => email link
 				$html .= '<td>';
-				  if ($row['description']) {
-					$html .= '<a href="mailto:'.get_user_email($row['description']).'" ';
-					$html .= 'title="'.user_tooltip($row['description']).'" ';
-					//$html .= '>'.$row['description']."</a>\n";
-					$html .= '>'.get_user_name($row['description'])."</a>\n";
+				  if ($row['uid']) {
+					$html .= '<a href="mailto:'.get_user_email($row['uid']).'" ';
+					$html .= 'title="'.user_tooltip($row['uid']).'" ';
+					//$html .= '>'.$row['uid']."</a>\n";
+					$html .= '>'.get_user_name($row['uid'])."</a>\n";
 				  } else {
 					$html .= '<i>Unknown</i>';
 				  };

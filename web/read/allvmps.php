@@ -17,30 +17,53 @@ require_once('../config.inc');
 // include functions
 require_once('../funcs.inc');
 
-echo '<head><title>NAC - all switches</title></head><body>';
-vmps_header();
-db_connect($readuser,$readpass);
+function allvmps_stuff()
+{
+   global $readuser,$readpass,$vmpsdot_querydays;
+   db_connect($readuser,$readpass);
+   echo "<br>";
+   echo "List all ports used on all switches in the last $vmpsdot_querydays days, and which end-devices were seen on each port. For each end device, the node name and assocated user is shown.<br>";
+   echo "<br>";
 
-echo "<br>";
-echo "List all ports used on all switches in the last $vmpsdot_querydays days, and which end-devices were seen on each port. For each end device, the node name and assocated user is shown.<br>";
-echo "<br>";
+   $sel = "SELECT sw.id as id, sw.name as name, location.name as location, sw.ip as ip FROM switch sw LEFT JOIN location ON location.id = sw.location";
+   $res = mysql_query($sel) or die('Query failed: ' . mysql_error());
 
-$sel = "SELECT sw.id as id, sw.name as name, location.name as location, sw.ip as ip FROM switch sw LEFT JOIN location ON location.id = sw.location";
-$res = mysql_query($sel) or die('Query failed: ' . mysql_error());
-
-echo '<table cellspacing=0 cellpadding=5 border=1>';
-while ($swi = mysql_fetch_array($res)) {
-  if (($swi['ip'] == '0.0.0.0') || ($swi['ip'] == '') || (stristr($swi['ip'],'0.0.0'))) {
+   echo '<table cellspacing=0 cellpadding=5 border=1>';
+   while ($swi = mysql_fetch_array($res)) {
+     if (($swi['ip'] == '0.0.0.0') || ($swi['ip'] == '') || (stristr($swi['ip'],'0.0.0'))) {
 	echo '<!-- Not grpahed : '.$swi['name']. ' ('. $swi['location']. " / ". $swi['ip']." -->";
-   } else {
-    echo "<tr><th align=left>". 
+     } else {
+       echo "<tr><th align=left>". 
        $swi['name']. ' ('. 
        $swi['location']. " / ".
        $swi['ip']." )\n";
-    echo "<br><img src=\"vmpsdot.php?sw=". $swi['id']. "\" border=0>\n";
+       echo "<br><img src=\"vmpsdot.php?sw=". $swi['id']. "\" border=0>\n";
+     };
    };
-};
-echo '</table>';
+   echo '</table>';
+}
 
-vmps_footer();
+
+if ($ad_auth===true)
+{
+   $rights=user_rights($_SERVER['AUTHENTICATE_SAMACCOUNTNAME']);
+   if ($rights>=1)
+   {
+      echo header_read();
+      echo main_stuff();
+      echo "<hr /><br />";
+      allvmps_stuff();
+      echo read_footer();
+   }
+   else echo "<h1>ACCESS DENIED</h1>";
+}
+else
+{
+   echo header_read();
+   echo main_stuff();
+   echo "<hr /><br />";
+   allvmps_stuff();
+   echo read_footer();
+}
+
 ?>
