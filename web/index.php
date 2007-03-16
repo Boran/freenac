@@ -54,7 +54,7 @@ else
    echo "          <a href=\"./read/index.php\">Read-only web interface</a><br /><br />\n";
    echo "      </td>\n";
    echo "   </tr>\n";
-   echo "</table\n";
+   echo "</table>\n";
    echo "</body>\n";
    echo "</html>\n";
 }
