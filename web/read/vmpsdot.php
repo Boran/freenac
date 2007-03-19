@@ -24,7 +24,8 @@ require_once('../config.inc');
 require_once('../funcs.inc');
 
 
-$dot_file="tmp/vmps.dot";
+# Need to specify exact path:
+$dot_file=dirname(__FILE__) . "/tmp/vmps.dot";
 define_syslog_variables();
 openlog("vmpsdot", LOG_PID, LOG_LOCAL5);
 
@@ -107,6 +108,7 @@ $sel_dose = "SELECT patchcable.outlet as outlet, location.name as location, port
                        LEFT JOIN location ON location.id = patchcable.office
                    WHERE switch.id = $sw AND patchcable.outlet != '';";
 
+debug2($sel_dose);
 $doses = mysql_query($sel_dose) or die ("Unable to query MySQL ($sel_dose)");
 if (mysql_num_rows($doses) > 0) {
 	while ($dose = mysql_fetch_array($doses)) {
@@ -164,19 +166,29 @@ $dot .= "\n}\n";
 
 $cmd = "$dottype $dot_file -Tpng ";
 
+error_reporting(E_ERROR|E_WARNING|E_PARSE|E_NOTICE);
 // write the dotfile
 if ($debug_flag2===true) {
+  debug2("DOT command would be: $cmd");
+  debug2("DOT file contents would be: $dot");
   echo "<b>\n$cmd\n</b>\n<hr>\n";
   echo "<pre>$dot</pre>";
 
 } else {
-  $dotfile = fopen("tmp/vmps.dot", "w");
-  fwrite($dotfile,$dot);
-  fclose($dotfile);
-  debug2("tmp/vmps.dot written"); 
-  debug1($cmd);
-  passthru($cmd);
-  //exec("rm tmp/vmps.dot > /dev/null");
+  #$dotfile = fopen("$dot_file", "w");
+  debug1("open $dot_file"); 
+  if ( ($dotfile = fopen("$dot_file", "w") ) == FALSE ) {
+    logit("vmpsdot.php: Cannot open $dot_file for writing ");
+    debug1("vmpsdot.php: Cannot open $dot_file for writing ");
+    echo "Cannot open $dot_file for writing ";
+  } else { 
+    fwrite($dotfile,$dot);
+    fclose($dotfile);
+    debug1("tmp/vmps.dot written"); 
+    debug1($cmd);
+    passthru($cmd);
+    //exec("rm tmp/vmps.dot > /dev/null");
+  }
 };
 
 //echo $dot;

@@ -23,7 +23,7 @@ require_once('../config.inc');
 require_once('../funcs.inc');
 
 define_syslog_variables();
-openlog("nac.web1", LOG_PID, LOG_LOCAL5);
+openlog("nac.web.read", LOG_PID, LOG_LOCAL5);
 
 
 $sw='';
