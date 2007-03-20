@@ -5,13 +5,13 @@ ________ CHANGE Version 2.2 ___________
 Key changes:
  o Database redesign: improved keys, field names and table names will allow the DB
    to better grow with time and ensure better data consistency.
-   There were for example, location as text fields in several tables. There are now 
+   There were for example, locations as text fields in several tables. There are now 
    lookups into a location table which in turn looks into a building table.
    Many new empty base tables for the enterprise edition were added.
    -- See the drawing db_schema_v2.2.jpg in the doc directory.
    
  o The server scripts, Web and Windows GUI have been adapted to suit the new schema.
- o New db name is by default 'opennac' and can be changed it was 'inventory' before.    
+ o The new db name is by default 'opennac' (and can be changed); it was 'inventory' before.    
  o Many cosmetic changes to the Windows Gui
  o End-devices: add an expiry date, set in the Windows GUI, checked in vmpsd_external
  o Ports: record the last vlan used, and when.
