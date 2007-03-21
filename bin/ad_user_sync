@@ -134,7 +134,6 @@ function query_AD() {
 	}
 
 	$info = array();
-	
 	# loop through all dn with user information and fetch data
 	foreach( $ad_base_user_dn as $base_dn ) {
 		#$results = ldap_list($connect, $base_dn, $filter, $fetch_attributes) or logit('Could not retrieve data, ' . ldap_error($connect));
@@ -170,7 +169,23 @@ function fill_db($users) {
 		if( $exchange ) {
 			$department = $i['department'][0];
 			$rfc822mailbox = $i['mail'][0];
-			$physical_delivery_office_name = $i['physicaldeliveryofficename'][0]; 
+                        $physical_delivery_office_name=mysql_real_escape_string($i['physicaldeliveryofficename'][0]);
+                        if (!empty($physical_delivery_office_name))
+                        {
+                           $location_id=v_sql_1_select("select id from location where name like '$physical_delivery_office_name';");
+                           if (!$location_id)
+                           {
+                              $query="insert into location set name='$physical_delivery_office_name';";
+                              $res=mysql_query($query);
+                              if ($res)
+                              {
+                                 $location_id=v_sql_1_select("select id from location where name like '$physical_delivery_office_name';");
+                              }
+                              else
+                                 $location_id=1;
+                           }
+                        }
+                        else $location_id=1;
 			$telephone_number = $i['telephonenumber'][0];
 			$mobile = $i['mobile'][0];
 			debug1("Exchange attributes: $department|$rfc822mailbox|$physical_delivery_office_name|$telephone_number|$mobile");
@@ -190,13 +205,14 @@ function fill_db($users) {
 			if( mysql_num_rows($entry_exists) > 0 ) {	# does entry alread exist? then update ....
 				debug1("$account exists already, will update it");
 				if( $exchange ) {
-					$update_query = sprintf("UPDATE users SET Surname = '%s', GivenName = '%s', department = '%s', rfc822mailbox = '%s', physicalDeliveryOfficeName = '%s', telephoneNumber = '%s', mobile = '$mobile', LastSeenDirectory = NOW() WHERE username = '%s'",
+					$update_query = sprintf("UPDATE users SET Surname = '%s', GivenName = '%s', department = '%s', rfc822mailbox = '%s', physicalDeliveryOfficeName = '%s', telephoneNumber = '%s', mobile = '$mobile', LastSeenDirectory = NOW(),location='%s' WHERE username = '%s'",
 						mysql_real_escape_string($surname),
 						mysql_real_escape_string($given_name),
 						mysql_real_escape_string($department),
 						mysql_real_escape_string($rfc822mailbox),
-						mysql_real_escape_string($physical_delivery_office_name),
+						$physical_delivery_office_name,
 						mysql_real_escape_string($telephone_number),
+                                                $location_id,
 						mysql_real_escape_string($account)
 					);
 				}
@@ -214,15 +230,16 @@ function fill_db($users) {
 			else {	# ... otherwise insert it
 				debug1("$account dosen't exist yet, will insert it");
 				if( $exchange ) {
-					$insert_query = sprintf("INSERT INTO users (username, Surname, GivenName, department, rfc822mailbox, physicalDeliveryOfficeName, telephoneNumber, mobile, LastSeenDirectory) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', NOW())",
+					$insert_query = sprintf("INSERT INTO users (username, Surname, GivenName, department, rfc822mailbox, physicalDeliveryOfficeName, telephoneNumber, mobile, LastSeenDirectory,location) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', NOW(),'%s')",
 						mysql_real_escape_string($account),
 						mysql_real_escape_string($surname),
 						mysql_real_escape_string($given_name),
 						mysql_real_escape_string($department),
 						mysql_real_escape_string($rfc822mailbox),
-						mysql_real_escape_string($physical_delivery_office_name),
+						$physical_delivery_office_name,
 						mysql_real_escape_string($telephone_number),
-						mysql_real_escape_string($mobile)
+						mysql_real_escape_string($mobile),
+						$location_id
 					);
 				}
 				else {
