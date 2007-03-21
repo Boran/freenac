@@ -219,7 +219,7 @@ do {
         $buiding_name='';
 
         ## 2. Has this switch been seen before? If not add to table
-        $query="SELECT id,name from switch WHERE ip='" . $switch . "' ";
+        $query="SELECT id,name,comment from switch WHERE ip='" . $switch . "' ";
         debug1("$query");
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
@@ -240,6 +240,7 @@ do {
           $row=mysql_fetch_array($res, MYSQL_NUM);
           $switch_id=$row[0];
           $switch_name=$row[1];
+          $switch_comment=$row[2];
           $log_entry=$log_entry . $row[1];
         }
 
@@ -256,7 +257,16 @@ do {
            $building_name=$results['building'];
         }
         debug1("Switch $switch, location $location_name, building $building_name");
-        $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
+        $query="select id,comment from port where switch='$switch_id' and name='$port'";
+        debug1($query);
+        $res=mysql_query($query);
+        if (!res) { die('Invalid  query: '.mysql_error()); }
+        else
+        {
+           $row=mysql_fetch_array($res,MYSQL_NUM);
+           $port_id=$row[0];
+           $port_comment=$row[1];
+        }
                 
         if ((!$port_id && ! $lastseen_dryrun) && (strlen($port)<10)&&(!empty($port)))
         {
@@ -295,7 +305,10 @@ do {
           $result=mysql_fetch_array($res,MYSQL_ASSOC);
           $patchcable=$result['patchcable_comment'];
         }
-        $subject="in $location_name, $patchcable, port $port";
+        if (!empty($patchcable))
+           $subject="in $location_name, $patchcable, port $port";
+        else
+           $subject="in $location_name, $patchcable, port $port $port_comment";
 
         #####################################################
         ## Search the DB for this MAC & update "LastSeen" ###
@@ -395,7 +408,10 @@ do {
                 .      "lastport='$port_id', office='$location_id', "
                 .      "description='$default_user_unknown', "   # usually 'KEINE'
                 .      "mac='$mac2' ";
-              $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name ";
+            if (!empty($patchcable))
+               $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name ";
+            else
+               $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name($switch_comment)";
               #logit($log_entry);
 
               if ($lastseen_dryrun==FALSE) 
