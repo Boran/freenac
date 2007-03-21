@@ -305,7 +305,7 @@ do {
           $result=mysql_fetch_array($res,MYSQL_ASSOC);
           $patchcable=$result['patchcable_comment'];
         }
-        if (!empty($patchcable))
+        if (!empty($patchcable)||$lastseen_patch_lookup)
            $subject="in $location_name, $patchcable, port $port";
         else
            $subject="in $location_name, $patchcable, port $port $port_comment";
@@ -408,7 +408,7 @@ do {
                 .      "lastport='$port_id', office='$location_id', "
                 .      "description='$default_user_unknown', "   # usually 'KEINE'
                 .      "mac='$mac2' ";
-            if (!empty($patchcable))
+            if (!empty($patchcable)||$lastseen_patch_lookup)
                $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name ";
             else
                $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name($switch_comment)";
