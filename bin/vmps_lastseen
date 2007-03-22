@@ -267,8 +267,9 @@ do {
            $port_id=$row[0];
            $port_comment=$row[1];
         }
-                
-        if ((!$port_id && ! $lastseen_dryrun) && (strlen($port)<10)&&(!empty($port)))
+         
+        if ((!$port_id && ! $lastseen_dryrun) && (strlen($port)<10)&&(!empty($port)))       
+        #if ((!$port_id && ! $lastseen_dryrun) && (strlen($port)<10)&&(!empty($port))&&(ereg("(^([A-Z][a-z] ?)?[0-9]+\/[0-9]+)",$port)))
         {
           // ===== entry does not exist, --> NEW PORT!
 
