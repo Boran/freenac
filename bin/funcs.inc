@@ -27,7 +27,7 @@ require_once "etc/config.inc";
 function is_field_active($field)
 {
    $temp=v_sql_1_select("select value from config where name like '$field';");
-   if ((!empty($temp))&&(strcmp(trim($temp),"true")==0))
+   if (!empty($temp)&&((strcmp(trim($temp),"true")==0)||(strcmp(trim($temp),"1")==0)))
       return true;
    else
       return false;
