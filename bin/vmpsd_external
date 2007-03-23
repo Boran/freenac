@@ -267,7 +267,8 @@ function decide($port, $switch, $mac, $lastvlan)
   //
   } else if (mysql_num_rows($res)==1) {
     list($sid,$name, $description, $vlan, $status,$expiry,$r_ip)=mysql_fetch_array($res, MYSQL_NUM);
-
+    if ($status==0)
+       return($default_vlan);
     # a) Is this System Enabled? [Too difficult to handle for now]
     #if ($status==0) {
     #  logit("decide: $mac is known but Status=Inactive");
