@@ -314,7 +314,7 @@ do {
         #####################################################
         ## Search the DB for this MAC & update "LastSeen" ###
         $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan'");
-        $query="select id, status, expiry from systems where mac='$mac2'";
+        $query="select id, status, name, expiry from systems where mac='$mac2'";
         $res=mysql_query($query);
         if ($res)
         {
@@ -322,6 +322,7 @@ do {
            $system_id=$row['id'];
            $expiry=$row['expiry'];
            $status=$row['status'];
+           $name=$row['name'];
         }
         else die('Invalid query: '.mysql_error);
         
