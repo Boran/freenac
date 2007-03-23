@@ -24,6 +24,36 @@ chdir(dirname(__FILE__));
 set_include_path("./:../");
 require_once "etc/config.inc";
 
+function is_field_active($field)
+{
+   $temp=v_sql_1_select("select value from config where name like '$field';");
+   if ((!empty($temp))&&(strcmp(trim($temp),"true")==0))
+      return true;
+   else
+      return false;
+}
+
+function is_vm($mac)
+{
+   $counter=0;
+   $parts=explode(".",$mac);
+   $temp_mac=$parts[0].$parts[1].$parts[2];
+   $query="select mac from ethernet where vendor like '%vmware%';";
+   $res=mysql_query($query);
+   if ($res)
+   {
+      $rows=mysql_fetch_array($res,MYSQL_ASSOC);
+      foreach($rows as $cell)
+         if (stristr($temp_mac,$cell)===true)
+            $counter++;
+   }
+   if ($counter>0)
+      return true;
+   else return false;
+}
+
+
+
 function time_diff($date1,$date2)  //Returns the difference between 2 dates in secs
 {
    $temp=explode(' ',$date1);

@@ -181,9 +181,9 @@ do {
     ## Pull out the lines that summarise connections
     $regs=array();
     #if (ereg("(.*) vmpsd: +(ALLOW|DENY): (.*) -> (.*), switch (.*) port ([A-Z]?[a-z0-9\/]*){1}", $line, $regs) ) {
-    #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
+    if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)$", $line, $regs) ) {
     #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
-    if (ereg("(.*) vmpsd: (ALLOW|DENY): (.{12}) -> (.{0,30}), switch (.{8,15}) port (.{1,9})",$line, $regs) ) {
+    #if (ereg("(.*) vmpsd: (ALLOW|DENY): (.{12}) -> (.{0,30}), switch (.{8,15}) port (.{1,9})",$line, $regs) ) {
       #echo "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n";
       debug1("FOUND: {$regs[1]} {$regs[2]} $regs[3]");
       $success=$regs[2]; 
@@ -314,18 +314,58 @@ do {
         #####################################################
         ## Search the DB for this MAC & update "LastSeen" ###
         $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan'");
-	$system_id=v_sql_1_select("select id from systems where mac='$mac2'");
+        $query="select id, status, expiry from systems where mac='$mac2'";
+        $res=mysql_query($query);
+        if ($res)
+        {
+           $row=mysql_fetch_array($res,MYSQL_ASSOC);
+           $system_id=$row['id'];
+           $expiry=$row['expiry'];
+           $status=$row['status'];
+        }
+        else die('Invalid query: '.mysql_error);
         
         if ($system_id)
         { 
-           $query="UPDATE systems SET LastSeen=NOW()"
-           . ", LastPort='" .$port_id . "' "
-           . ", LastVlan='" .$vlan_id . "' "
-           ." WHERE id='" . $system_id . "'";
-           debug1($query);
-           $res = mysql_query($query);
-           if (!$res) { die('Invalid query: ' . mysql_error()); }
-           debug1("Records affected: " . mysql_affected_rows());
+            if ($check_for_expired===true)			//Are we going to disable expired devices?
+            {
+               if ($expiry&&(strcmp(trim($expiry),"0000-00-00 00:00:00")==0))	//Ignore null dates
+                  $expiry=false;
+               if ($expiry)
+               {
+                  $timestamp=date('Y-m-d H:i:s');				//Out timestamp
+                  $time=time_diff($timestamp,$expiry);				//Difference in seconds from our current time & expiration for that device
+                  if ($time<0)							//It has expired
+                  {
+                     if ($disable_expired_devices===true)			//Disable it
+                     {
+                        $query="update systems set status='7',lastseen=NOW(),lastport='$port_id' where id='$system_id'"; #Disable expired device
+                        logit("decide: Expired device $name($mac) has been refused network access and its status has been set to killed. Expiration date: $expiry");
+                        log2db('info',"Expired device $name($mac) has been refused network access and its status has been set to killed. Expiration date: $expiry");
+                        $res = mysql_query($query, $connect);
+                        if (!$res) { die('Invalid query: ' . mysql_error()); }
+                     }
+                     if ($email_alert_expired_devices===true)			//Send an email
+                     {
+                        $log_entry="Device $name($mac) with expiration date $expiry has been refused network access ";
+                        if ($disable_expired_devices===true)
+                           $log_entry.=" and its status has been set to killed.";
+                        notify2($switch_name, $log_entry, "NAC alert: expired device");
+                     } 
+                  }
+               }
+            }
+            else 
+            { 
+               $query="UPDATE systems SET LastSeen=NOW()"
+               . ", LastPort='" .$port_id . "' "
+               . ", LastVlan='" .$vlan_id . "' "
+               ." WHERE id='" . $system_id . "'";
+               debug1($query);
+               $res = mysql_query($query);
+               if (!$res) { die('Invalid query: ' . mysql_error()); }
+               debug1("Records affected: " . mysql_affected_rows());
+            }
         }
         else
         {
@@ -403,12 +443,12 @@ do {
            { # Already added in SMS Section?
               $default_vlan=v_sql_1_select("select id from vlan where default_id='$set_vlan_for_unknowns'");
               $query="INSERT INTO systems "
-                . "SET LastSeen=NOW(), " 
-                .      "status='$set_status_for_unknowns', name='unknown',"
-                .      "vlan='$default_vlan',"
-                .      "lastport='$port_id', office='$location_id', "
-                .      "description='$default_user_unknown', "   # usually 'KEINE'
-                .      "mac='$mac2' ";
+                 . "SET LastSeen=NOW(), " 
+                 .      "status='$set_status_for_unknowns', name='unknown',"
+                 .      "vlan='$default_vlan',"
+                 .      "lastport='$port_id', office='$location_id', "
+                 .      "description='$default_user_unknown', "   # usually 'KEINE'
+                 .      "mac='$mac2' ";
             if ($lastseen_patch_lookup&&!empty($patchcable))
                $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name ";
             else

@@ -181,7 +181,7 @@ function decide($port, $switch, $mac, $lastvlan)
 # $return: 0= DENY, >=0 is Vlan number
 #
   global $connect, $default_vlan, $lastseen_infnet, $use_port_default_vlan,$vlan_by_switch_location, 
-         $check_for_expired,$disable_expired_devices,$email_alert_expired_devices,$detect_hubs;
+         $check_for_expired,$disable_expired_devices,$email_alert_expired_devices,$detect_hubs,$vlan_for_killed;
   $result=0;         // Deny
   $decided=false;
 
@@ -199,8 +199,7 @@ function decide($port, $switch, $mac, $lastvlan)
   ## Look for a system with this mac, AND, that is "active". Ignore inactives.
   #$vlanByGroup="(SELECT vlan_group FROM vlan WHERE id=vlan)";
   #$query="SELECT name,description,vlan,status,$vlanByGroup FROM systems WHERE mac='" 
-  $query="SELECT id,name,description,vlan,status,expiry,r_ip FROM systems WHERE mac='" 
-    . $mac . "' AND status=1";
+  $query="SELECT id,name,description,vlan,status,expiry,r_ip FROM systems WHERE mac='$mac'";
   debug2("decide: ".$query);
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
@@ -226,6 +225,24 @@ function decide($port, $switch, $mac, $lastvlan)
          }
       }
     }
+
+    ##Virtual machines
+
+    ##Here we ask first if we should check if the device is a virtual machine, and then, if it is, lets assignate the lastvlan of the last
+    ##system active on that port. 
+    if (is_field_active("vm_lan_like_host")&&is_vm($mac))
+    {
+       $query="select s.mac as mac,s.lastvlan as lastvlan from systems s inner join port p on s.lastport=p.id inner join switch sw on p.switch=sw.id and p.name='$port' and sw.ip='$switch' where date_sub(curdate(), interval 2 hour) <= s.lastseen order by lastseen desc limit 1;";
+       $res=mysql_query($query);   			#Query for the lastvlan active on that port within the past 2 hours
+       if ($res)
+       {
+          $row=mysql_fetch_array($res,MYSQL_ASSOC);
+          $result=$row['lastvlan']; 			 #Assign lastvlan of last device
+          $decided=true;            			 #We have decided alread
+          logit("decide: VM detected. Assigning vlan $result");
+       }
+    }
+
 
     ## c) Check for default Vlan $default_vlan
     if ($decided==false) {
@@ -290,6 +307,8 @@ function decide($port, $switch, $mac, $lastvlan)
            $result=$vlan_id;
         }
      }
+     if (($status==7)&&($check_for_expired===true))
+        $result=$vlan_for_killed;
      if (($result>0)&&($check_for_expired===true))
      {
         if ($expiry)
@@ -297,24 +316,7 @@ function decide($port, $switch, $mac, $lastvlan)
           $timestamp=date('Y-m-d H:i:s');
           $time=time_diff($timestamp,$expiry);
           if ($time<0)
-          {
-             $result=0;
-             if ($disable_expired_devices===true)
-             {
-                $query="update systems set status='7' where id=$sid"; #Disable expired device
-                logit("decide: Expired device $name($mac) has been refused network access and its status has been set to killed. Expiration date: $expiry");
-                log2db('info',"Expired device $name($mac) has been refused network access and its status has been set to killed. Expiration date: $expiry");
-                $res = mysql_query($query, $connect);
-                if (!$res) { die('Invalid query: ' . mysql_error()); }
-             }
-            if ($email_alert_expired_devices===true)
-            {
-               $log_entry="Device $name($mac) with expiration date $expiry has been refused network access ";
-               if ($disable_expired_devices===true)
-                  $log_entry.=" and its status has been set to killed.";
-               notify2($switch_name, $log_entry, "NAC alert: expired device");
-            } 
-          }
+             $result=$vlan_for_killed;
         }
      }
 
@@ -324,10 +326,7 @@ function decide($port, $switch, $mac, $lastvlan)
     $result=0;
   }
   $switch_name=v_sql_1_select("select name from switch where ip='".$switch."' limit 1");
-  if ($result>0)
-     $result=v_sql_1_select("select default_name from vlan where id='$result' limit 1");
   logit("decide: $name($r_ip), $description, vlan result=$result on switch $switch_name($switch) $port");
-  #debug1("decide: $name, $description, vlan result=$result");
   return($result);
 }
 
@@ -413,31 +412,18 @@ while ($in && $out) {         // keep waiting on stdin
       debug1("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
       #debug2("GOT: $domain, $switch, $port, $lastvlan, $mac\n");
 
-      $DecidedVlan=decide($port, $switch, $mac, $lastvlan);
+      #$DecidedVlan=decide($port, $switch, $mac, $lastvlan);
       #debug2("DecidedVlan=$DecidedVlan");
-     
-      if ((strlen($DecidedVlan) > 0) && ($DecidedVlan != '0')) {             ## lookup vlan name
-
-        /*$query="SELECT default_name FROM vlan WHERE default_id='" . $DecidedVlan . "' limit 1";
-        debug2($query);
-        $res = mysql_query($query, $connect);
-        if (!$res) { die('Invalid query: ' . mysql_error()); }
-        if (mysql_num_rows($res)==1) {
-          list($VlanName)=mysql_fetch_array($res, MYSQL_NUM);
-          debug2("ALLOW $VlanName - $DecidedVlan");
-        #fputs($out, "ALLOW $VlanName\n");
-
-        }
-        else {
-          debug2("DENY");
-          fputs($out, "DENY\n");
-        }*/
-        $VlanName=$DecidedVlan;
-        debug2("ALLOW $VlanName - $DecidedVlan");
-        fputs($out, "ALLOW $VlanName\n");
-      } else {
-        debug2("DENY");
-        fputs($out, "DENY\n");
+      $result=decide($port, $switch, $mac, $lastvlan);
+      $DecidedVlan=v_sql_1_select("select default_name from vlan where id='$result' limit 1");
+      if ((!empty($DecidedVlan))&&($DecidedVlan!='0'))
+      {
+         fputs($out, "ALLOW $DecidedVlan\n");
+      }
+      else
+      {
+         debug2("DENY");
+         fputs($out, "DENY\n");
       }
       ob_flush();               # log buffered outputs
       flush();

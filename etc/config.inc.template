@@ -43,8 +43,7 @@
 				   # from the vlan table, it is not the default_id.
   $vlan_by_switch_location=false;  # Assignation of vlan by switch location
   $check_for_expired=false;        # Enable verification of expired devices
-  $disable_expired_devices=false;  # Disable expired devices
-  $email_alert_expired_devices=false;   #Send an email when an expired device connects?
+  $vlan_for_killed=0;		   # Vlan were killed devices will be put on
 
 ## vmps_lastseen script:  
   $lastseen_dryrun=false;           # Test, don't update DB
@@ -56,6 +55,8 @@
   $lastseen_patch_lookup=false;     # Lookup Patchcable details in Alerts
                                     # set false by default since most people don't use the patch table
   $sms_device="SMS PC";             # Text to display in the alert when an unknown SMS device connects
+  $disable_expired_devices=false;  # Disable expired devices
+  $email_alert_expired_devices=false;   #Send an email when an expired device connects?
  
 
 ## Binding with FreeRadius
