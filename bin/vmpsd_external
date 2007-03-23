@@ -181,7 +181,7 @@ function decide($port, $switch, $mac, $lastvlan)
 # $return: 0= DENY, >=0 is Vlan number
 #
   global $connect, $default_vlan, $lastseen_infnet, $use_port_default_vlan,$vlan_by_switch_location, 
-         $check_for_expired,$disable_expired_devices,$email_alert_expired_devices,$detect_hubs,$vlan_for_killed;
+         $check_for_expired,$detect_hubs,$vlan_for_killed;
   $result=0;         // Deny
   $decided=false;
 
