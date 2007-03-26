@@ -57,8 +57,8 @@ $DRY_RUN=FALSE;                    ## testing for standaone, no network
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
 $debug_flag3=FALSE;
-#$debug_flag1=TRUE;
-#$debug_flag2=TRUE;
+$debug_flag1=TRUE;
+$debug_flag2=TRUE;
 #$debug_flag3=TRUE;
 
 define_syslog_variables();
@@ -233,12 +233,13 @@ function decide($port, $switch, $mac, $lastvlan)
     if (is_field_active("vm_lan_like_host")&&is_vm($mac))
     {
        $query="select s.mac as mac,s.lastvlan as lastvlan from systems s inner join port p on s.lastport=p.id inner join switch sw on p.switch=sw.id and p.name='$port' and sw.ip='$switch' where date_sub(curdate(), interval 2 hour) <= s.lastseen order by lastseen desc limit 1;";
+       debug2("decide: $query");
        $res=mysql_query($query);   			#Query for the lastvlan active on that port within the past 2 hours
        if ($res)
        {
           $row=mysql_fetch_array($res,MYSQL_ASSOC);
           $result=$row['lastvlan']; 			 #Assign lastvlan of last device
-          $decided=true;            			 #We have decided alread
+          $decided=true;            			 #We have decided already
           logit("decide: VM detected. Assigning vlan $result");
        }
     }

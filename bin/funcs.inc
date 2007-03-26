@@ -27,7 +27,8 @@ require_once "etc/config.inc";
 function is_field_active($field)
 {
    $temp=v_sql_1_select("select value from config where name like '$field';");
-   if (!empty($temp)&&((strcmp(trim($temp),"true")==0)||(strcmp(trim($temp),"1")==0)))
+   debug2("is_field_active: select value from config where name like '$field';");
+   if (!empty($temp)&&((strcmp(trim($temp),"true")==0)||($temp==1)))
       return true;
    else
       return false;
@@ -39,13 +40,15 @@ function is_vm($mac)
    $parts=explode(".",$mac);
    $temp_mac=$parts[0].$parts[1].$parts[2];
    $query="select mac from ethernet where vendor like '%vmware%';";
+   debug2("is_vm: $query");
    $res=mysql_query($query);
    if ($res)
    {
-      $rows=mysql_fetch_array($res,MYSQL_ASSOC);
-      foreach($rows as $cell)
-         if (stristr($temp_mac,$cell)===true)
+      while ($rows=mysql_fetch_array($res,MYSQL_ASSOC))
+      {
+         if (stripos($temp_mac,$rows['mac'])!==FALSE)
             $counter++;
+      }
    }
    if ($counter>0)
       return true;
