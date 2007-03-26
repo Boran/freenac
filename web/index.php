@@ -46,7 +46,7 @@ else
    echo "<body>\n";
    echo "<table class=\"bw\" border=\"0\" align=\"center\" width=\"500\">\n";
    echo "   <tr height=\"80\">\n";
-   echo "      <td>&nbsp;</td>\n";
+   echo "      <td><a href=\"/nac\"><img src=\"images/logo_small.png\" border=\"0\" /></a></td>\n";
    echo "   </tr>\n";
    echo "   <tr valign=\"top\">\n";
    echo "      <td align=\"center\">\n";

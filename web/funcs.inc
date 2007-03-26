@@ -116,10 +116,11 @@ function print_header($entityname, $xls_output){
 		<body>
 		<table class="bw" width="1000" border="0">
 		  <tr>
+			<td><a href="/nac"><img src="../images/logo_small.png" border="0" /></a></td>
 			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
 		  </tr>
 		  <tr>
-			<td class="center"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a>';
+			<td class="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a>';
 		if ($xls_output){
 			$ret.=' | <a href="'.$_SERVER['PHP_SELF'].'?action=export">Export</a>';
 		}
@@ -167,7 +168,7 @@ function main_stuff()
    $text=<<<EOF
    <table class="bw" border="0" align="center" width="500">
    <tr height="80">
-      <td>&nbsp;</td>
+      <td><a href="/nac"><img src="../images/logo_small.png" border="0" /></a></td>
    </tr>
    <tr valign="top">
       <td>
