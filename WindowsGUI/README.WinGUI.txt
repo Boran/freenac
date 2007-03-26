@@ -13,12 +13,11 @@ License
   The OpenSource issue will probably be solved by replacing it with a WebGUI, depending on the Team 
   resources (contributions are welcome).
 
-
   
   
   
-Using this GUI on the Online FreeNAC database
----------------------------------------------
+Using this GUI on the Demo Online FreeNAC database
+--------------------------------------------------
   1. Download vmps.exe from http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/
   2. Download the demo config file vmps.xml from
      http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/demo1
@@ -30,15 +29,32 @@ Using this GUI on the Online FreeNAC database
         port 3306/mysql needs to be open outgoing.
         
         
-Using this GUI on the FreeNAC Virtual Machine
+        
+Using this GUI on the FreeNAC Virtual Machine (demo database)
+---------------------------------------------
+A test dataset is availbale in the 'nacdemo' db, delivered with the VM.
+This is useful for trying out the GUI, and learning how it works by studying
+the example data.
+  1. Download vmps.exe and vmps.xml from 
+     http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/     
+  2. Then save these in a directory, e.g. c:\nac.demo
+  3. Configure vmps.xml with a text edit such as 'wordpad'
+     - Change the IP address of the server to corresponding to the FreeNAC VM 
+     - Change the database="nacdemo" to use the test dataset      
+  4. Start the NAC GUI by double clicking on the vmps.exe.
+  
+  
+          
+Using this GUI on the FreeNAC Virtual Machine (live database)
 ---------------------------------------------
   1. Download vmps.exe and vmps.xml from 
      http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/     
-  2. Then save these in a directory, e.g. c:\nac..
+  2. Then save these in a directory, e.g. c:\nac
   3. Configure vmps.xml with a text edit such as 'wordpad'
      - Change the IP address of the server to corresponding to the FreeNAC VM 
   4. Start the NAC GUI by double clicking on the vmps.exe.
 
+ 
  
 Full  Installation:
 -------------------
@@ -46,6 +62,7 @@ Full  Installation:
   
   2. Configure vmps.xml with a text edit such as 'wordpad'
     - Change the IP address of the server
+     - Change the database="opennac" to use the live dataset        
     
   3.  Configure the SQL username/password key, to access the NAC database. This
       will need to be changed on the mysql side, and on the windows side.
@@ -71,7 +88,7 @@ Full  Installation:
       To enable the DEMO company setting in vmps.xml to work:                  
         update config set value='1' WHERE name='DemoMode';  
       normally this is 0, meaning that a company called DEMO will not work. 
-      If it is=1, the DEMO company is allowed in vmps.xml and the user is given administrator access!        
+      If it is=1, and the DEMO company is set in vmps.xml, then the user is given administrator access!        
 
 
 See also the CHANGELOG.txt
