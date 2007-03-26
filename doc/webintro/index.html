@@ -1,0 +1,98 @@
+<html>
+<head>
+   <link href="styles.css" rel="stylesheet" type="text/css" />
+   <title>FreeNAC virtual machine RC1</title>
+<body>
+<table width="60%" align="center">
+   <tr>
+      <td align="center">
+         <p>
+            <img src="logo_small.png">
+            <br />
+            <br />
+         </p>
+      </td>
+   </tr>
+   <tr>
+      <td align="center" id="text">
+         <h2>Take Control of your LAN with FreeNAC!</h2>
+      </td>
+   </tr>
+   <tr>
+      <td>
+         <p align="justify" id="text">FreeNAC provides easy-to-use Virtual LAN assignment, LAN access control (for all kinds of network devices such as
+            Servers, Workstations, Printers, IP-Phone, Webcams...), live inventory and allows documentation of Patch Cabling.<br />
+            FreeNAC aims to be the OpenSource product of choice for LAN Access Control.
+         </p>
+      </td>
+   </tr>
+   <tr>
+      <td id="text">
+          Now you just need to point your switches to this virtual machine (see
+         <a href="http://svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/cisco_switch.txt?view=markup">cisco_switch.txt</a>).
+      </td>
+   </tr>
+   <tr>
+      <td id="text">
+         <h4>GUIs</h4>
+         In this VM are included one web GUI and one Windows GUI which will allow you to interact with the system:
+         <ul>
+            <a href="/nac">Web GUI interface</a> <br />
+            configured according to <a href="http://svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/README.web2?view=markup">README.web2</a>.<br /><br />
+            To configure web authentication using the Windows Domain Controller read this
+            <a href="http://svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/webADauth.txt?view=markup">HOW-TO</a> and set the variable <br /><br />
+            <code>
+            $ad_auth=true;
+            </code><br /><br /> in <i>/opt/nac/web/config.inc</i>.<br /><br />
+            Download the
+            <a href="https://svn.sourceforge.net/svnroot/opennac/branches/2.2/WindowsGUI/vmps.exe">Windows GUI</a>, its
+            <a href="https://svn.sourceforge.net/svnroot/opennac/branches/2.2/WindowsGUI/vmps.xml">configuration file</a> and see
+            <a href="http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/README.WinGUI.txt?view=markup">how to use it</a>.
+         </ul>
+      </td>
+   </tr>
+   <tr>
+      <td id="text">
+         <h4>802.1X</h4>
+            This VM comes also with support for 802.1X authentication using the Windows Domain Controller. To set it up, please read this
+            <a href="http://svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/FreeNAC_VM_howto.txt?view=markup">HOW-TO</a>.<br /><br />
+            Help about how to configure your switches to work with 802.1X can be found in
+            <a href="http://svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/sw_802.1x_tests.txt?view=markup">sw_802.1x_tests.txt</a>.
+      </td>
+   </tr>
+   <tr>
+      <td><hr width="60%"></td>
+   </tr>
+   <tr>
+      <td align="justify" id="text">
+         You are using FreeNAC 2.2 RC1, which contains revision 614 from <a href="http://svn.sourceforge.net/viewvc/opennac">our subversion repository.</a>
+         <br /><br />
+         The operating system is Suse Linux 10 and includes:
+         <ul>
+            <li>FreeNAC 2.2 RC1</li>
+            <li>Apache 2.2.2</li>
+            <li>MySQL 5.0.22</li>
+            <li>PHP 5.2.0</li>
+            <li>LibXML 2.6.22</li>
+            <li>Samba 3.0.23c</li>
+            <li>FreeRadius 1.1.4</li>
+         </ul>
+         The installation was done according to <a href="http://svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/master_server_install.txt?view=markup">
+         master_server_install.txt</a> and <a href="http://svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/master_server_config.txt?view=markup">
+         master_server_config.txt</a>.<br /><br />
+         To get the latest revision (bug fixes) from the release 2.2 RC1, in the directory <i>/opt/nac</i> just type:
+         <pre>svn update</pre>
+         If you have problems, please let us know through our 
+         <a href="http://www.freenac.net/phpBB2/viewforum.php?f=4"> Support Forum</a>.<br /><br />
+         Have fun!<br /><br />
+         <b>The FreeNAC team</b>
+      </td>
+   </tr>
+   <tr>
+      <td align="center" id="tiny">
+         &copy;&nbsp;FreeNAC 2007
+      </td>
+   </tr>
+</table>
+</body>
+</html>
