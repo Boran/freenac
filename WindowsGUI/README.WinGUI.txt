@@ -32,7 +32,7 @@ Using this GUI on the Demo Online FreeNAC database
         
 Using this GUI on the FreeNAC Virtual Machine (demo database)
 ---------------------------------------------
-A test dataset is availbale in the 'nacdemo' db, delivered with the VM.
+A test dataset is available in the 'nacdemo' db, delivered with the VM.
 This is useful for trying out the GUI, and learning how it works by studying
 the example data.
   1. Download vmps.exe and vmps.xml from 
@@ -42,6 +42,10 @@ the example data.
      - Change the IP address of the server to corresponding to the FreeNAC VM 
      - Change the database="nacdemo" to use the test dataset      
   4. Start the NAC GUI by double clicking on the vmps.exe.
+  
+  Note if you do not have the VM, the demo DB is in SVN:
+  http://svn.sourceforge.net/viewvc/*checkout*/opennac/branches/2.2/contrib/nacdemo_db.tgz
+
   
   
           

@@ -1,0 +1,38 @@
+CHANGE HISTORY:  
+--------------
+v1.2.0.100: fix 'scannow' button, remove error message when writing patchtable.
+v1.2.0.101/30.10.06/SB: Deleted systems were not correctly logged, Delection of changes to vlans in Edit Tab improved. For DEMO company allow Admin access for all users.
+v1.2.0.101/30.10.06/SB: Handling of locates with '/' and not '.' for date seperators.
+v1.2.0.102/10.11.06/SB: fix history log timestamps for some timezones, and add the demodb/vmps.xml
+v1.2.0.103/24.11.06/SB: 
+	Allow the port default vlan to be changed. 
+	Add Queries for expired user, expired systems. Add button to export entire table to excel.
+	Sources: delete old components taPorts, taSystems.
+v1.2.0.103/4.12.06/SB: 	
+  History field was accidentally read-only. Edit tab: make user lookups much faster via a dedicated query.
+  Query tab: add Anti-Virus out of date
+  Query tab: add the actual query SQL to the bottom of each query.  
+  Allow vlans, switchs, ports, lookups rows to be deleted by an admin.
+v1.2.0.104/18.12.06/SB: 	
+  Remove references to old 'oper' table. Remove 'user' column from patch cables tab.  
+  Add a PatchCable column to the Overview tab, added an 'unmanaged' status to the Edit/Overvew tabs
+v1.2.0.105/21.12.06/SB: 	  
+  IP address visible in the Edit tab again. Record port restarts
+  in the Change History. Remove some unneeded warnings.
+v1.2.0.108/24.01.07/SB: 	  
+  Add PatchCableEnabled to vmps.xml, which hides or shows relevant Tabs/fields.
+  Performance: optimise queries, start reduced from 30 to 3 secs. To view Users on an office
+   on the Ports Tab, doubleclick.
+  Install DeveloperExpress tools for delphi and start using their improved components
+  - Change grids in Change and Server log
+  - Improved edit-User ComboBox to show key user details
+  - Add Filter by Switch to the Ports page  
+  
+v2.2.0.119/12.03.07/SB:   
+  Rewrite for completely new DB schema NAC V2.2, add new tables.
+  Migrate most grids to the cxGrid from DeveloperExpress, enables export to Excel.
+  Use 'config' table for settings, see above.
+  
+v2.2.0.220/26.03.07/SB:  
+  Reporting: add many many columns to AllSystems report, allow column selection, better handling
+    in full screen mode. Improve vlan lookup in Edit Tab. Remove invalid vlan warning.
