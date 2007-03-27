@@ -52,7 +52,9 @@ if ($flagscannow)
 
 message("Doing port_scan to sytems... Please wait...\n");
 debug1("port_scan started");
-$scan_results=$scan_directory."/scan.xml";   	//Scan file
+$file_timestamp=date('Y-m-d H:i:s');
+$file_timestamp=str_replace(' ','-',$file_timestamp);
+$scan_results=$scan_directory."/scan-$file_timestamp.xml";   	//Scan file
 debug1("Scan file: $scan_results");		//Parameters from port_scan.inc
 debug1("Nmap flags: $nmap_flags");
 if (($what_units_time<0)||($what_units_time>6)||($what_units_time==2))
@@ -81,6 +83,8 @@ if ($var['equipments']>0)
    do_inventory($var);				//Check against database	
 else
    $var['equipments']=0;
+
+syscall("rm $scan_results");
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 if ($flagscannow)
@@ -598,6 +602,7 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
    global $which_nmap;
    syscall("touch ".$xml_file);	//Just to avoid an error while running from cron
    $scan=$which_nmap." ".$nmap_flags." -oX ".$xml_file." ";
+   echo "$scan\n";
    $list=get_ips();		//We need some IPs to scan
    for ($i=0;$i<$list['counter'];$i++) //Put those ips in a string
    {
@@ -613,8 +618,10 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
 
 function check_and_abort($message,$resource)	//This function checks if there is a problem with an important query and aborts. It is also used to abort the script because we want to do it
 {
+   global $scan_results;
    if (!is_resource($resource))		//Let's abort just for fun
    {
+      syscall("rm $scan_results");
       message($message);
       message("port_scan ended abnormally.\n");
       debug1($message);
@@ -626,6 +633,7 @@ function check_and_abort($message,$resource)	//This function checks if there is 
    else
    if (mysql_num_rows($resource) == 0)	//No results from our query so there is no point in continuing execution
    {
+      syscall("rm $scan_results");
       message($message);
       message("port_scan ended abnormally.\n");
       debug1($message);
