@@ -596,7 +596,7 @@ function add_entry($data)	//A new host in our network that needs to be added to 
 function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specified in the file "port_scan.inc" and the location for our XML file
 {
    global $which_nmap;
-   syscall("rm ".$xml_file.";touch ".$xml_file);	//Just to avoid an error while running from cron
+   syscall("touch ".$xml_file);	//Just to avoid an error while running from cron
    $scan=$which_nmap." ".$nmap_flags." -oX ".$xml_file." ";
    $list=get_ips();		//We need some IPs to scan
    for ($i=0;$i<$list['counter'];$i++) //Put those ips in a string
