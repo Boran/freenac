@@ -41,7 +41,7 @@ function print_header($entityname, $xls_output){
 			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
 		  </tr>
 		  <tr>
-			<td class="center"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a>';
+			<td class="center"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns (Last 24h)</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a>';
 		if ($xls_output){
 			$ret.=' | <a href="'.$_SERVER['PHP_SELF'].'?action=export">Export</a>';
 		}
