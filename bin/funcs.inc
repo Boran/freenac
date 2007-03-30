@@ -23,6 +23,7 @@
 chdir(dirname(__FILE__));
 set_include_path("./:../");
 require_once "etc/config.inc";
+require_once "etc/policies.inc";
 
 function is_field_active($field)
 {

@@ -224,8 +224,11 @@ do {
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
         if ((mysql_num_rows($res) ==0) && ! $lastseen_dryrun) {   # entry does not exist, 0 rows
+          $switch_name=gethostbyaddr($switch);
+          if (strcasecmp($switch_name,$switch)==0)
+             $switch_name='unknown';
           $query="INSERT INTO switch "
-          . "SET ip='" . $switch . "', name='unknown'";
+          . "SET ip='" . $switch . "', name='".$switch_name."'";
           #.      "comment='First found: "     . $details    . "' ";
           log("New switch: $query");
           logit("New switch entry $switch, please update the description.");
@@ -233,7 +236,6 @@ do {
           $res = mysql_query($query);
           if (!$res) { die('Invalid query: ' . mysql_error()); }
           $switch_id=v_sql_1_select("select id from switch where ip='$switch'");
-          $switch_name='unknown';
         }
         else {
           # Remember switch name for better logging
