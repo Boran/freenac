@@ -11,5 +11,7 @@ exludefile=/opt/nac/contrib/rdiff.exclude
 
 ignores='statistics|SourceFiles|MirrorFiles|NewFiles|DeletedFiles|ChangedFiles|IncrementFiles|IncrementFileSize|EndTime|ChangedMirrorSize|MirrorFileSize'
 
-rdiff-backup  --exclude-other-filesystems --exclude-globbing-filelist $exludefile --print-statistics $* 2>&1 | egrep -v $ignores
+rdiff-backup  --exclude-globbing-filelist $exludefile --print-statistics $* 2>&1 | egrep -v $ignores
+#--exclude-other-filesystems
+
 
