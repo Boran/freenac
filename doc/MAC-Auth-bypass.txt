@@ -1,23 +1,54 @@
 MAC-Auth-Bypass
 
-MAC authentication bypass is an alternative to 802.1X that allows network access to devices (such as printers and IP phones) that do not have the 802.1X supplicant capability. MAC authentication bypass uses the MAC address of the connecting device to grant or deny network access.
+MAC authentication bypass is an alternative to 802.1X that allows network access to devices
+ (such as printers and IP phones) that do not have the 802.1X supplicant capability. 
+MAC authentication bypass uses the MAC address of the connecting device to grant or 
+deny network access.
 
 MAC-Authentication bypass in FreeRadius, using FreeNAC as backend works as follows:
 
-When a device connects to the switch, the connecting device normally sends an "Access-Request" packet to the switch, which is  then forwarded to the Authentication Server, in our case, FreeRadius. Then the Authentication server asks for more information from the connecting device in form of Access-Challenges. This process continues until the Radius server has enough information (Radius attributes) to make a decision. After requesting all required Access-Challenges from the connecting device, FreeRadius will give back to the switch an Access-Accept or an Access-Reject response, where this decision will be enforced. 
+When a device connects to the switch, the connecting device normally sends an "Access-Request"
+packet to the switch, which is  then forwarded to the Authentication Server, in our case, 
+FreeRadius. Then the Authentication server asks for more information from the connecting device
+in form of Access-Challenges. This process continues until the Radius server has enough 
+information (Radius attributes) to make a decision. After requesting all required 
+Access-Challenges from the connecting device, FreeRadius will give back to the switch an 
+Access-Accept or an Access-Reject response, where this decision will be enforced. 
 
-An 802.1x capable device selects the authentication type that will be used to perform authentication by means of a Radius attribute. Checking this Radius attribute, FreeRadius will know how to authenticate the username, for example, using Samba, MySQL, LDAP, etc. 
+An 802.1x capable device selects the authentication type that will be used to perform 
+authentication by means of a Radius attribute. Checking this Radius attribute, FreeRadius will
+know how to authenticate the username, for example, by using Samba, MySQL, LDAP, etc. 
 
-When a non-802.1x-capable device connects to the switch, the switch detects that one of its links is up and waits for packets which will then be forwarded to FreeRadius. If during a certain amount of time the switch hasn't received any packets, it will start authentication of the connecting device using its MAC address as the username. FreeRadius will then generate a VMPS request for FreeNAC, and FreeNAC will say if the device is authorized or not and where to place it.
+When a non-802.1x-capable device connects to the switch, the switch detects that one of its links
+is up and waits for packets which will then be forwarded to FreeRadius. If during a certain amount
+of time the switch hasn't received any packets, it will start authentication of the connecting
+device using its MAC address as the username. FreeRadius will then generate a VMPS request for 
+FreeNAC, and FreeNAC will say if the device is authorized or not and where to place it.
 
-In FreeNAC, we use a module called rad2vmps which performs the translation of a RADIUS request into a VMPS request which is then sent to the VMPS server. rad2vmps is a modification to the original script vqpcli.pl part of the OpenVMPS distribution. Vqpcli.pl makes VMPS requests to a VMPS server and outputs the decision taken by the VMPS server. 
+In FreeNAC, we use a module called rad2vmps which performs the translation of a RADIUS request into
+a VMPS request which is then sent to the VMPS server. rad2vmps is a modification to the original 
+script vqpcli.pl part of the OpenVMPS distribution. Vqpcli.pl makes VMPS requests to a VMPS server
+and outputs the decision taken by the VMPS server. 
 
-In the authorize section of FreeRadius, rad2vmps retrieves the needed parameters from the RADIUS request to make a VMPS request, (e.g. Switch IP, MAC address, etc). When a request reaches FreeRadius and no authentication type has been specified, rad2vmps will output the required attributes to call for MAC-Authentication bypass.
+In the authorize section of FreeRadius, rad2vmps retrieves the needed parameters from the RADIUS
+request to make a VMPS request, (e.g. Switch IP, MAC address, etc). When a request reaches 
+FreeRadius and no authentication type has been specified, rad2vmps will output the required 
+attributes to call for MAC-Authentication bypass.
 
-In the Authentication section of FreeRadius, the authentication type corresponding to this request will be used. For example, if in the request the authentication type was specified to MSCHAP, MSCHAP authentication will be called. For MAC-Authentication bypass, it is here where we create our VMPS request and send it to the VMPS server.
+In the Authentication section of FreeRadius, the authentication type corresponding to this 
+request will be used. For example, if in the request the authentication type was specified
+to MSCHAP, MSCHAP authentication will be called. For MAC-Authentication bypass, it is here
+where we create our VMPS request and send it to the VMPS server.
 
-After we know who the user is (authenticate section), we assign the device the vlan where it belongs to. For all authentication types but MAC-Authentication bypass, it is here where we create our VMPS request and send it to the VMPS server. If a MAC-Authentication bypass was done, the code in this section won't be executed.
+After we know who the user is (authenticate section), we assign the device the vlan where it
+belongs to. For all authentication types but MAC-Authentication bypass, it is here where
+we create our VMPS request and send it to the VMPS server. If a MAC-Authentication bypass was 
+done, the code in this section is ignored.
 
-So, basically, the difference between a MAC-authentication bypass and the rest of the authentication types, is where we send the VMPS request. For MAC-Authentication bypass, the request is sent in the Authenticate part, and for the rest in the Post-Auth section. This allows for authenticating the user before authenticating her device. 
+So, basically, the difference between a MAC-authentication bypass and the rest of the authentication
+types is where we send the VMPS request. For MAC-Authentication bypass, the request is sent 
+in the Authenticate part, and for the rest in the Post-Auth section. This allows for authenticating
+the user before authenticating her device. 
 
-Authenticating both username and device is more secure than authenticating only the device, but in cases where this is not possible, MAC-Authentication bypass is used.
+Authenticating both username and device is more secure than authenticating only the device, 
+but in cases where this is not possible, MAC-Authentication bypass is used.
