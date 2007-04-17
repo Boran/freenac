@@ -36,3 +36,7 @@ v2.2.0.119/12.03.07/SB:
 v2.2.0.220/26.03.07/SB:  
   Reporting: add many many columns to AllSystems report, allow column selection, better handling
     in full screen mode. Improve vlan lookup in Edit Tab. Remove invalid vlan warning.
+    
+v2.2.0.222/17.04.07/SB: 
+  Reporting: Add 'DNS naming report' (for INO/DEMO only since its still a beta report)
+  Serverlog: fix sort order. About Box: clean up, add link to website. 
