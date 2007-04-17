@@ -113,7 +113,8 @@ function restart_port($port_index, $switch)
 {
   global $snmpset, $debug_flag1, $debug_flag2;
   $result='';
-
+  $up=false;
+  $down=false;
   // use index to check port status
   if ($port_index>0 ) {
     # Example
@@ -123,27 +124,42 @@ function restart_port($port_index, $switch)
     $cmd="$snmpset $switch ifAdminStatus.$port_index integer 2";  // down
     debug2($cmd);
     $answer=explode("\n", syscall($cmd));    
-    for ($j = 0; $j < count($answer); $j++){
-      if ( strlen($answer[$j]) >1 ) {
-        debug1($answer[$j]);
-        #logit($answer[$j]);
-      }
+    if (stripos($answer[0],"timeout")!==false)
+       $down=false;
+    else
+    {
+       $down=true;
+       for ($j = 0; $j < count($answer); $j++){
+          if ( strlen($answer[$j]) >1 ) {
+             debug1($answer[$j]);
+             #logit($answer[$j]);
+         }
+       }
     }
     #get_port_status($port_index, $switch);
 
     // up
     $cmd="$snmpset $switch ifAdminStatus.$port_index integer 1";  // up
     debug2($cmd);
-    $answer=explode("\n", syscall($cmd));    
-    for ($j = 0; $j < count($answer); $j++){
-      if ( strlen($answer[$j]) >0 ) {
-        debug1($answer[$j]);
-        #logit($answer[$j]);
-      }
+    $answer=explode("\n", syscall($cmd));
+    if (stripos($answer[0],"timeout")!==false)
+       $up=false;
+    else
+    {
+       $up=true;
+       for ($j = 0; $j < count($answer); $j++){
+          if ( strlen($answer[$j]) >0 ) {
+             debug1($answer[$j]);
+             #logit($answer[$j]);
+          }
+       }
     }
     #get_port_status($port_index, $switch);
 
   }  // if index>0
+  if ($down&&$up)
+     return true;
+  else return false;
 
 }    // function
 
@@ -192,9 +208,16 @@ for ($i = 0; $i < count($if_list); $i++){
        logit("Cannot get port status $port on switch $switch");
        log2db('info',"Cannot get port status $port on switch $switch");
      } else {
-       restart_port($port_index, $switch);
-       logit("Port successfully restarted $port on switch $switch");
-       log2db('info',"Port successfully restarted $port on switch $switch");
+       if (restart_port($port_index, $switch))
+       {
+          logit("Port successfully restarted $port on switch $switch");
+          log2db('info',"Port successfully restarted $port on switch $switch");
+       }
+       else
+       {
+          logit("Port $port on switch $switch couldn't be restarted");
+          log2db('info',"Port $port on switch $switch couldn't be restarted");
+       }
      }
   
    } else {
