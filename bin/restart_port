@@ -139,22 +139,25 @@ function restart_port($port_index, $switch)
     #get_port_status($port_index, $switch);
 
     // up
-    $cmd="$snmpset $switch ifAdminStatus.$port_index integer 1";  // up
-    debug2($cmd);
-    $answer=explode("\n", syscall($cmd));
-    if (stripos($answer[0],"timeout")!==false)
-       $up=false;
-    else
+    if ($down)
     {
-       $up=true;
-       for ($j = 0; $j < count($answer); $j++){
-          if ( strlen($answer[$j]) >0 ) {
-             debug1($answer[$j]);
-             #logit($answer[$j]);
+       $cmd="$snmpset $switch ifAdminStatus.$port_index integer 1";  // up
+       debug2($cmd);
+       $answer=explode("\n", syscall($cmd));
+       if (stripos($answer[0],"timeout")!==false)
+          $up=false;
+       else
+       {
+          $up=true;
+          for ($j = 0; $j < count($answer); $j++){
+             if ( strlen($answer[$j]) >0 ) {
+                debug1($answer[$j]);
+                #logit($answer[$j]);
+             }
           }
        }
+       #get_port_status($port_index, $switch);
     }
-    #get_port_status($port_index, $switch);
 
   }  // if index>0
   if ($down&&$up)
