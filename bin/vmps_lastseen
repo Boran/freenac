@@ -330,6 +330,14 @@ do {
         
         if ($system_id)
         { 
+            $query="UPDATE systems SET LastSeen=NOW()"
+               . ", LastPort='" .$port_id . "' "
+               . ", LastVlan='" .$vlan_id . "' "
+               ." WHERE id='" . $system_id . "'";
+            debug1($query);
+            $res = mysql_query($query);
+            if (!$res) { die('Invalid query: ' . mysql_error()); }
+            debug1("Records affected: " . mysql_affected_rows());
             if ($check_for_expired===true)			//Are we going to disable expired devices?
             {
                if ($expiry&&(strcmp(trim($expiry),"0000-00-00 00:00:00")==0))	//Ignore null dates
@@ -357,17 +365,6 @@ do {
                      } 
                   }
                }
-            }
-            else 
-            { 
-               $query="UPDATE systems SET LastSeen=NOW()"
-               . ", LastPort='" .$port_id . "' "
-               . ", LastVlan='" .$vlan_id . "' "
-               ." WHERE id='" . $system_id . "'";
-               debug1($query);
-               $res = mysql_query($query);
-               if (!$res) { die('Invalid query: ' . mysql_error()); }
-               debug1("Records affected: " . mysql_affected_rows());
             }
         }
         else
