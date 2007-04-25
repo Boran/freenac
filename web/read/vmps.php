@@ -92,7 +92,7 @@ function vmps_stuff()
 
 if ($ad_auth===true)
 {
-   $rights=user_rights($_SERVER['AUTHENTICATE_SAMACCOUNTNAME']);
+   $rights=user_rights($_SERVER['AUTHENTICATE_USERPRINCIPALNAME']);
    if ($rights>=1)
    {
       echo header_read();

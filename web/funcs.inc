@@ -36,24 +36,34 @@ function db_connect($username,$password)
 
 function ismemberof($username,$group)
 {
-   global $ad_server,$ad_user,$ad_password,$ad_base,$ad_port;
+   ## This function says whether a username in the form user@domain.com is belongs to the AD group specified
+   global $ad_server,$ad_user,$ad_password,$ad_port,$ad_base;
    $counter=0;
    $ad=ldap_connect($ad_server,$ad_port);
    if ($ad)
    {
       if (ldap_bind($ad,$ad_user,$ad_password))
       {
-         #$dn='cn=Users,'.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
-         $dn=$ad_base;
-         $attributes=array('memberOf');
-         $filter='(&(sAMAccountName='.$username.')(objectClass=person))';
-         #$group='cn='.$group.','.substr($ad_user,stripos($ad_user,'dc'),(strlen($ad_user)-stripos($ad_user,'dc')));
-         #$group='cn='.$group.','.$dn;
-         $result=ldap_search($ad,$dn,$filter,$attributes);
+         if ($ad_port==3268) 		## Global catalog is more flexible. 
+                             		## In the event that we have more than one domain, 
+                             		## the username gives us the domain name 
+                             		## where we should look at.
+         {
+            ## Build the DN out of the username
+            $dn=explode('@',$username);
+            $temp_dn=str_replace('.',',DC=',$dn[1]);
+            $dn='DC='.$temp_dn;
+         }
+         else
+            ## We are using a domain-level lookup, so in this case we need to know where the user information is 
+            $dn=$ad_base;
+         $attributes=array('memberOf');  ## We are interested only in the memberOf attribute
+         $filter='(&(userPrincipalName='.$username.')(objectClass=person))'; ## Retrieve info only for this specific username
+         $result=ldap_search($ad,$dn,$filter,$attributes);   ## Do the search
          if ($result)
          {
             $entries=ldap_get_entries($ad,$result);
-            if ($entries['count']==1)
+            if ($entries['count']==1)    ## We should have only one result
             {
                $groups=$entries[0]['memberof']['count'];
                if ($groups>0)
@@ -61,7 +71,7 @@ function ismemberof($username,$group)
                   for ($i=0;$i<$groups;$i++)
                   {
                      if (strcasecmp($entries[0]['memberof'][$i],$group) == 0)
-                        $counter++;
+                        $counter++;  	## Username is a member of the group
                   }
                }
             }
@@ -84,6 +94,7 @@ function ismemberof($username,$group)
 }
 
 function user_rights($username)
+#This function outputs the rights associated to the username
 {
    global $dbuser,$dbpass;
    db_connect($dbuser,$dbpass);
