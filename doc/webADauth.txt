@@ -78,9 +78,11 @@
 	AuthBasicProvider ldap
 	AuthUserFile /dev/null
 	AuthName "Sensitive Zone"
-	AuthLDAPBindDN cn=Administrator,cn=Users,dc=safeguard,dc=test
+	AuthLDAPBindDN cn=Administrator,cn=Users,dc=domain,dc=com
 	AuthLDAPBindPassword password
-	AuthLDAPURL "ldap://server.domain.com/cn=Users,dc=domain,dc=com?sAMAccountName?sub?(objectClass=*)"
+	#AuthLDAPURL "ldap://server.domain.com/cn=Users,dc=domain,dc=com?sAMAccountName?sub?(objectClass=*)"
+        ## Note: The attribute sAMAccountName is no longer supported by the Web GUI, instead use the following line
+        AuthLDAPURL "ldap://server.domain.com/cn=Users,dc=domain,dc=com?userPrincipalName?sub?(objectClass=*)"
 	require valid-user
    </Directory>
 
@@ -105,4 +107,30 @@
 	#Set to off if this module should let other authentication modules attempt to authenticate the user, 
 	#should authentication with this module fail.
 
+  # If you have more than one domain, you should be using global catalog.
+  # Global catalog uses port 3268. Global Catalog is a read only copy of selected attributes of all the Active Directory servers within 
+  # the Active Directory forest. Querying the Global Catalog allows all the domains to be queried in a single query, without the query 
+  # spanning servers over potentially slow links.
+  #
+  # To distinguish users between domains, an identifier called a User Principal Name (UPN) can be added to a user's entry in the directory. 
+  # This UPN usually takes the form of the user's account name, followed by the domain components of the particular domain, 
+  # for example somebody@nz.somedomain.com.
+  
+  # The following in a sample configuration for a server which needs to authenticate users in different domains
+  Alias /web2 /opt/nac/web2
+   <Directory "/opt/nac/web2/">
+        Options All ExecCGI -Indexes
+        Order deny,allow
+        Allow from all
+        AuthzLDAPAuthoritative off
+        AuthType Basic
+        AuthBasicProvider ldap
+        AuthUserFile /dev/null
+        AuthName "Sensitive Zone"
+        AuthLDAPBindDN cn=Administrator,cn=Users,dc=domain,dc=com
+        AuthLDAPBindPassword password
+        AuthLDAPURL "ldap://server.domain.com:3268/?userPrincipalName?sub?(objectClass=*)"
+        require valid-user
+   </Directory>
+ 
    #For more information about mod_authnz_ldap please see http://httpd.apache.org/docs/2.2/mod/mod_authnz_ldap.html
