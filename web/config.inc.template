@@ -36,6 +36,7 @@
   $ad_port = '3268';				# Port 389 for domain-level lookup. Port 3268 for Global Catalog
   $ad_user = 'cn=administrator,cn=users,dc=domain,dc=com';    # AD user with read privileges on AD
   $ad_password = 'password';                                                                                # AD users's password
+  $ad_base ='cn=Users,dc=domain,dc=com';		# Base DN under which user information is stored
 
 ### Write GUI
 // MySQL DB settings for all scripts
