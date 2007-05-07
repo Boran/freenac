@@ -5,7 +5,7 @@
  * Long description for file:
  *
  * This file defines the Settings class which is a Singleton
- * used to hold global variables stored in the configuration files.
+ * used to hold global variables stored in the configuration files and running script.
  *
  * CONSTRUCTOR SUMMARY:
  * *	private __construct(array $var_list, array $exclude_list);
