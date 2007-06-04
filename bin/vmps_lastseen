@@ -419,7 +419,6 @@ do {
                   debug1($query);
                   debug1("New $sms_device System $mac2 on sw/port $switch/$port"); 
                   $newmac_found=TRUE;                // used further down
-	          $uid=v_sql_1_select("select id from users where username like '$txx_name'");              
                   $log_entry="New $sms_device $mac2 ($newmac_vendor) $sms_name, $txx_name, $sms_details, switch ";
 
                   if ($lastseen_dryrun==FALSE) {
