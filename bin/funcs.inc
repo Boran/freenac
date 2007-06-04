@@ -245,7 +245,8 @@ function cv_input($str){
 function snmp_restart_port($switch, $port) {
   global $lastseen_sms_restart;
   if ($lastseen_sms_restart===TRUE) {
-     $answer=syscall("/opt/vmps/bin/restart_port $switch $port");
+     #TBD: call the PHP functions directly, get rid of this absolute path!
+     $answer=syscall("/opt/nac/bin/restart_port $switch $port");
      debug1($answer);
      logit("restart_port for GWP: $answer");
   }
