@@ -23,20 +23,40 @@ v1.2.0.108/24.01.07/SB:
   Add PatchCableEnabled to vmps.xml, which hides or shows relevant Tabs/fields.
   Performance: optimise queries, start reduced from 30 to 3 secs. To view Users on an office
    on the Ports Tab, doubleclick.
-  Install DeveloperExpress tools for delphi and start using their improved components
   - Change grids in Change and Server log
   - Improved edit-User ComboBox to show key user details
   - Add Filter by Switch to the Ports page  
+  Install DeveloperExpress tools for delphi and start using their improved components.
+  Moved all DB components to a 'data module'  
+  
   
 v2.2.0.119/12.03.07/SB:   
   Rewrite for completely new DB schema NAC V2.2, add new tables.
   Migrate most grids to the cxGrid from DeveloperExpress, enables export to Excel.
   Use 'config' table for settings, see above.
   
-v2.2.0.220/26.03.07/SB:  
+v2.2.0.120/26.03.07/SB:  
   Reporting: add many many columns to AllSystems report, allow column selection, better handling
     in full screen mode. Improve vlan lookup in Edit Tab. Remove invalid vlan warning.
     
-v2.2.0.222/17.04.07/SB: 
+v2.2.0.122/17.04.07/SB: 
   Reporting: Add 'DNS naming report' (for INO/DEMO only since its still a beta report)
   Serverlog: fix sort order. About Box: clean up, add link to website. 
+  
+v2.2.0.127/5.06.07/SB:  
+  Vlan and most other tabs: add export to excel.
+  Ports: make GUI faster through optional patch lookup, add VlanAuth column
+         and some color coding of columns.
+  Edit-LastSeen: add Switch comment 
+  Edit-LastSeen: add desired & last vlan. Add layer 3 last seen date
+  Config: Add a config table for changing some server-side settings
+  Users: add GuiVlanRights field: this is a CSV list of vlan indices.
+    If it is set for the user starting the GUI, then only this list of vlans is visible in the edit
+    tab. This is to simplifyy for 1st level support, and to limit the access to more sensitive vlans.
+  Code: 
+   o move all DB queries, datasources, connections to a new Datamodule, 
+     for better maintenance.
+   o Migrate to MyDAC5 and SDAC4 libraries (from corelabs).
+  Speed: Only load the ports, giu, naclog, patch, tables when the tab in clicked on, to
+         make initial loading faster.
+  
