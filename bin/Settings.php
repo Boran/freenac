@@ -52,13 +52,14 @@
  * @link                        http://www.freenac.net
  *
  */
+include_once('funcs.inc');
 
 class Settings
 {
    private $props=array();
    private static $instance;
    
-   private function __construct($var_list,$exclude_list)
+   /*private function __construct($var_list,$exclude_list)
    {
       //Returns an array containing all defined variables without the $exclude_list vars
       //$exclude_list supports REGEX
@@ -95,13 +96,51 @@ class Settings
          }
          $this->props=$temp2;
       }
+   }*/
+
+   private function __construct()
+   {
+      // Returns an array containing all variables defined in the config table
+      db_connect();
+      $query="select * from config";						//Query
+      $res=mysql_query($query);
+      if ($res)
+      {
+         while ($result=mysql_fetch_array($res, MYSQL_ASSOC))			
+         {
+            switch ($result['type'])						//Now doing casts
+            {
+               case 'integer':$temp[$result['name']]=(integer)$result['value'];
+                  break;
+               case 'boolean':
+                  {
+                     if (strcasecmp($temp[$result['name']],'true')==0)
+                        $temp[$result['name']]=(boolean)true;
+                     else
+                        $temp[$result['name']]=(boolean)false;
+                  }
+                  break;
+               case 'float':$temp[$result['name']]=(float)$result['value'];
+                  break;
+               case 'double':$temp[$result['name']]=(double)$result['value'];
+                  break;
+               case 'string':$temp[$result['name']]=(string)$result['value'];
+                  break;
+               case 'array':$temp[$result['name']][]=$result['value'];
+                  break;
+            }
+         }
+         $this->props=$temp;							//Et voila, return it
+      }
+      else
+         return;								//Nothing to return
    }
 
-   public static function getInstance(array $vars=array(),array $list=array('GLOBALS','^_','^HTTP'))
+   public static function getInstance()
    {
       if (empty(self::$instance))						//Is there an instance of this class?
       {
-         self::$instance=new Settings($vars,$list);				//No, then create it
+         self::$instance=new Settings();					//No, then create it
       }
       return self::$instance;							//Yes
    }
