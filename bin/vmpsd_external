@@ -345,12 +345,12 @@ function decide($port, $switch, $mac, $lastvlan)
          debug1("decide: No hub checking, use vlan $result");
         }
         #Assignation of vlan by switch location
-        if (($result>0)&&($vlan_by_switch_location===true))
+        if (($result>0)&&($vlan_by_switch_location))
         {
            #$vlan_id=v_sql_1_select("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch'");
            #debug2("select v.id from vlan v inner join vlanswitch vs on v.id=vs.vid inner join switch s on s.ip='$switch';");
-           $vlan_id=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.ip='$switch'");
-           debug2("decide: select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.ip='$switch'");
+           $vlan_id=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.id=vs.swid where s.ip='$switch'");
+           debug2("decide: select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id inner join switch s on s.id=vs.swid where s.ip='$switch'");
            if ($vlan_id)
            {
               logit("decide: Exception. Assigning VLAN by switch location");
