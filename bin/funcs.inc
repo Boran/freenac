@@ -170,6 +170,102 @@ function syscall($command){
    }
 }
 
+function array_isearch($str,$array)                     //Search the array for a given value and return its key
+{
+   foreach($array as $k => $v)
+   {
+      if (strcasecmp($v,$str)==0)
+      {
+         return $k;
+      }
+   }
+   return false;
+}
+
+function array_find_key($str,$array,$token,$number)     //Search the array for a given key and return its value, but using tokenizers
+{
+   foreach($array as $k => $v)
+   {
+      if (strcasecmp(str_get_last($k,$token,$number),str_get_last($str,$token,$number))==0)
+      {
+         return $v;
+      }
+   }
+   return false;
+}
+
+function array_find_value($str,$array,$token,$number)   //Search the array for a given value and return it, but using tokenizers
+{
+   foreach($array as $k => $v)
+   {
+      if (strcasecmp(str_get_last($v,$token,$number),str_get_last($str,$token,$number))==0)
+      {
+         return $v;
+      }
+   }
+   return false;
+}
+
+
+function str_get_last($string,$token,$number)           //Return the last parts of a tokenized string
+{
+   $temp=explode($token,$string);
+   $tokens=count($temp);
+   for ($i=$tokens-$number;$i<$tokens;$i++)
+      $final.=$token.$temp[$i];
+   return $final;
+}
+
+function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC address is on a certain port using SNMP
+{
+   global $snmp_ro;                                     //Read Only community
+
+   $macs_on_vlan=@snmprealwalk($switch,"$snmp_ro@$vlan",'1.3.6.1.2.1.17.4.3.1.1');      //Obtain MAC address table
+   if (empty($macs_on_vlan))
+   {
+      logit("Couldn't establish communication with $switch using the SNMP_RO community.");
+      return false;
+   }
+   $macs_on_vlan=array_map("remove_type",$macs_on_vlan);
+   $macs_on_vlan=array_map("normalise_mac",$macs_on_vlan);
+   $mac_on=array_isearch($mac,$macs_on_vlan);                                           //Is this MAC in this switch?
+   if (empty($mac_on))
+      return false;                                                                     //No, return
+
+   $bridge_port_number=@snmprealwalk($switch,"$snmp_ro@$vlan",'1.3.6.1.2.1.17.4.3.1.2'); //Yes, get bridge port number for vlan
+   if (empty($bridge_port_number))
+      return false;
+   $bridge_port_number=array_map("remove_type",$bridge_port_number);
+   $bridge_port=array_find_key($mac_on,$bridge_port_number,'.',5);                      //Where is this MAC?
+   if (empty($bridge_port))
+      return false;
+
+   $map_bridge_port=@snmprealwalk($switch,"$snmp_ro@$vlan","1.3.6.1.2.1.17.1.4.1.2");   //Map the bridge port to the ifIndex
+   if (empty($map_bridge_port))
+      return false;
+   $map_bridge_port=array_map("remove_type",$map_bridge_port);
+   $map_bridge=array_find_value($bridge_port,$map_bridge_port,'.',1);                   //Get the one that is of interest to us
+   if (empty($map_bridge))
+      return false;
+
+   $port_names=@snmprealwalk($switch,"$snmp_ro@$vlan","1.3.6.1.2.1.31.1.1.1.1");        //Get the name of the interfaces
+   if (empty($port_names))
+      return false;
+   $port_names=array_map("remove_type",$port_names);
+   $port_learnt=array_find_key($map_bridge,$port_names,'.',1);                          //What is the port name of this interface?
+   if (strcmp($port_learnt,$port)==0)                                                   //Is this name equal to the one we provided??
+      return true;                                                                      //Yes, the MAC is on this port
+   else
+      return false;                                                                     //No, MAC is not using this port
+}
+
+function ping_mac2($mac,$switch,$port,$vlan)
+{
+   if (is_mac_on_port($mac,$switch,$port,$vlan))
+      return true;
+   else
+      return false;
+}
 
 function ping_mac($mac)
 # Return: true=Ping successful
