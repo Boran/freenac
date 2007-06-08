@@ -216,6 +216,13 @@ function str_get_last($string,$token,$number)           //Return the last parts 
    return $final;
 }
 
+function remove_type($element)                          //Remove the type of one element and leave only the value
+{
+   $temp=explode(':',$element);
+   $element=trim($temp[1]);
+   return trim($element,'"');
+}
+
 function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC address is on a certain port using SNMP
 {
    global $snmp_ro;                                     //Read Only community
@@ -226,6 +233,7 @@ function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC add
       logit("Couldn't establish communication with $switch using the SNMP_RO community.");
       return false;
    }
+   
    $macs_on_vlan=array_map("remove_type",$macs_on_vlan);
    $macs_on_vlan=array_map("normalise_mac",$macs_on_vlan);
    $mac_on=array_isearch($mac,$macs_on_vlan);                                           //Is this MAC in this switch?
