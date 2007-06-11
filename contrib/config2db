@@ -59,7 +59,7 @@ function get_comment($var)
       return;
 }
 
-function exclude(array $var_list,array $exclude_list=array('GLOBALS','^_','^HTTP','dbhost','dbname','dbuser','dbpass','argc','argv','snmp_ro','snmp_rw','switch_user','switch_password','switch_enable_password'))
+function exclude(array $var_list,array $exclude_list=array('GLOBALS','^_','^HTTP','dbhost','dbname','dbuser','dbpass','argc','argv','snmp_ro','snmp_rw','.*user$','.*password$','.*pass$','snmpwalk','snmpset','router_snmpwalk','server[12]','logit_to_stdout','os_hostname','.*_sms_mac_.*','vmps_monitor_restart','mail_domain','vmps_servers','maildomain'))
 {
    //Returns an array containing all defined variables without the $exclude_list vars
    //$exclude_list supports REGEX
