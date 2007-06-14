@@ -252,7 +252,7 @@ function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC add
    if (empty($map_bridge_port))
       return false;
    $map_bridge_port=array_map("remove_type",$map_bridge_port);
-   $map_bridge=array_find_value($bridge_port,$map_bridge_port,'.',1);                   //Get the one that is of interest to us
+   $map_bridge=array_find_key($bridge_port,$map_bridge_port,'.',1);                   //Get the one that is of interest to us
    if (empty($map_bridge))
       return false;
 
