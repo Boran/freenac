@@ -22,7 +22,15 @@
 
 chdir(dirname(__FILE__));
 set_include_path("./:../");
-require_once "etc/config.inc";
+
+function __autoload($classname)
+{
+   require_once "$classname.php";
+}
+
+require_once 'etc/config.inc';
+
+$conf=Settings::getInstance();
 
 function is_field_active($field)
 {
@@ -72,10 +80,10 @@ function time_diff($date1,$date2)  //Returns the difference between 2 dates in s
 }
 
 function debug1($msg) {
-  global $debug_flag1, $debug_to_syslog;
+  global $debug_flag1, $conf;
   $msg=rtrim($msg);
   if (($debug_flag1==TRUE) && (strlen($msg)>0) ) {
-    if ($debug_to_syslog===TRUE) {
+    if ($conf->debug_to_syslog) {
       syslog(LOG_INFO, "Debug1: $msg");
     } else {
       echo "Debug1: $msg\n";
@@ -84,10 +92,10 @@ function debug1($msg) {
 }
 
 function debug2($msg) {
-  global $debug_flag2, $debug_to_syslog;
+  global $debug_flag2, $conf;
   $msg=rtrim($msg);
   if (($debug_flag2==TRUE) && (strlen($msg)>0) ) {
-    if ($debug_to_syslog===TRUE) {
+    if ($conf->debug_to_syslog) {
       syslog(LOG_INFO, "Debug2: $msg");
     } else {
       echo "Debug2: $msg\n";
@@ -101,7 +109,7 @@ function logit($msg) {
   syslog(LOG_INFO, "$msg");
 
   # Write a message on stdout too?
-  if ($logit_to_stdout===TRUE) {
+  if ($logit_to_stdout) {
     echo "logit: $msg";
   }
 }
@@ -170,6 +178,163 @@ function syscall($command){
    }
 }
 
+function remove_type($element)                          //Remove the type of one element and leave only the value
+{
+   $temp=explode(':',$element);
+   $element=trim($temp[1]);
+   return trim($element,'"');
+}
+
+function ping_mac2($mac,$switch,$port,$vlan)
+{
+   if (is_mac_on_port($mac,$switch,$port,$vlan))
+      return true;
+   else
+      return false;
+}
+
+function ping_mac($mac)
+# Return: true=Ping successful
+{
+  db_connect();
+  global $connect;
+  logit("FUNCTION PING_MAC");
+  $query="SELECT r_ip from systems "
+        . " WHERE mac='" . $mac . "'";
+        #echo("$query\n");
+        $res= mysql_query($query, $connect);
+        if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+   $rowcount=mysql_num_rows($res);
+
+   if ($rowcount==1) {
+     list($ip)=mysql_fetch_array($res, MYSQL_NUM);
+     if (strlen($ip)<8) {
+       debug2("Invalid IP - $ip for mac $mac");
+       return(false); 
+     }
+     #debug2("ping $ip - $mac");
+     logit("ping $ip - $mac");
+
+     // ping for max 1 sec, make sure it does not sty running/hung
+     #$answer=syscall("ping -c 1 -w 1 $ip");
+     /*
+	 $answer=syscall("ping -c 3 -w 1 $ip");
+     syscall("killall ping");
+     /*if ( preg_match("/0 received,/m", $answer) ) {
+       #echo "Ping Error: $answer\n";
+       logit("Ping Error no answer: $answer");
+       return false;
+
+     } else if ( preg_match("/\d+ received,/m", $answer) ) {
+       #echo "Ping OK\n";
+       logit("Ping OK: $answer");
+       #logit("Ping OK");
+       return true;
+
+     } else {
+       #echo "Ping Error: $answer\n";
+       logit("Ping Error: $answer");
+       return false;
+     }*/
+	$answer=ping($ip);
+	if ($answer){
+		logit("Ping OK: $answer");
+		return true;
+	}
+	else {
+		logit("Ping Error");
+		return false;
+	}
+
+   } else {   #
+     logit("No IP found for $mac");
+     return false;
+   }
+}
+
+function ping($host) {
+    $package = "\x08\x00\x19\x2f\x00\x00\x00\x00\x70\x69\x6e\x67";
+	$total_time = false;
+
+    /* create the socket, the last '1' denotes ICMP */   
+    $socket = socket_create(AF_INET, SOCK_RAW, 1);
+   
+    /* set socket receive timeout to 1 second */
+    socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
+   
+    /* connect to socket */
+    socket_connect($socket, $host, null);
+   
+    /* record start time */
+    list($start_usec, $start_sec) = explode(" ", microtime());
+    $start_time = ((float) $start_usec + (float) $start_sec);
+   
+    socket_send($socket, $package, strlen($package), 0);
+   
+    if(@socket_read($socket, 255)) {
+        list($end_usec, $end_sec) = explode(" ", microtime());
+        $end_time = ((float) $end_usec + (float) $end_sec);
+   
+        $total_time = $end_time - $start_time;
+    }
+	socket_close($socket);
+	return $total_time;
+}
+
+
+// function to change german umlauts into ue, oe, etc.
+// http://ch2.php.net/iconv
+function cv_input($str){
+     $out = "";
+     for ($i = 0; $i<strlen($str);$i++){
+           $ch= ord($str{$i});
+           switch($ch){
+               case 195: $out .= "";break;   
+               case 164: $out .= "ae"; break;
+               case 188: $out .= "ue"; break;
+               case 182: $out .= "oe"; break;
+               case 132: $out .= "Ae"; break;
+               case 156: $out .= "Ue"; break;
+               case 150: $out .= "Oe"; break;
+               default : $out .= chr($ch) ;
+           }
+     }
+     return $out;
+}
+
+function snmp_restart_port($switch, $port) {
+  global $lastseen_sms_restart;
+  if ($lastseen_sms_restart) {
+     $answer=syscall("/opt/vmps/bin/restart_port $switch $port");
+     debug1($answer);
+     logit("restart_port for GWP: $answer");
+  }
+}
+
+
+function lookup_vendor_mac($mac) {
+  global $connect;
+
+  $mac = preg_replace('/-|\.|\s/', '', $mac);        #remove space, dash, dots
+  $mac="$mac[0]$mac[1]$mac[2]$mac[3]$mac[4]$mac[5]"; # Keep first 6 digits
+  $query="SELECT vendor from ethernet WHERE mac='" . $mac . "' ";
+  #debug1("$query\n");
+  $res = mysql_query($query, $connect);
+  if (!$res) { die('Invalid query: ' . mysql_error()); }
+
+  if (mysql_num_rows($res) ==0) {
+    $result='unknown';      # no entry
+    #debug1("Etherner vendor not found");
+
+  } else {
+    $resultarray=mysql_fetch_array($res, MYSQL_NUM);
+    $result=$resultarray[0];
+  }
+  #debug1("Ethernet vendor=$result");
+  return $result;
+}
+
 function array_isearch($str,$array)                     //Search the array for a given value and return its key
 {
    foreach($array as $k => $v)
@@ -216,13 +381,6 @@ function str_get_last($string,$token,$number)           //Return the last parts 
    return $final;
 }
 
-function remove_type($element)                          //Remove the type of one element and leave only the value
-{
-   $temp=explode(':',$element);
-   $element=trim($temp[1]);
-   return trim($element,'"');
-}
-
 function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC address is on a certain port using SNMP
 {
    global $snmp_ro;                                     //Read Only community
@@ -233,7 +391,6 @@ function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC add
       logit("Couldn't establish communication with $switch using the SNMP_RO community.");
       return false;
    }
-   
    $macs_on_vlan=array_map("remove_type",$macs_on_vlan);
    $macs_on_vlan=array_map("normalise_mac",$macs_on_vlan);
    $mac_on=array_isearch($mac,$macs_on_vlan);                                           //Is this MAC in this switch?
@@ -267,146 +424,33 @@ function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC add
       return false;                                                                     //No, MAC is not using this port
 }
 
-function ping_mac2($mac,$switch,$port,$vlan)
-{
-   if (is_mac_on_port($mac,$switch,$port,$vlan))
-      return true;
-   else
-      return false;
-}
-
-function ping_mac($mac)
-# Return: true=Ping successful
-{
-  db_connect();
-  global $connect;
-
-  $query="SELECT r_ip from systems "
-        . " WHERE mac='" . $mac . "'";
-        #echo("$query\n");
-        $res= mysql_query($query, $connect);
-        if (!$res) { die('Invalid query: ' . mysql_error()); }
-
-   $rowcount=mysql_num_rows($res);
-
-   if ($rowcount==1) {
-     list($ip)=mysql_fetch_array($res, MYSQL_NUM);
-     if (strlen($ip)<8) {
-       debug2("Invalid IP - $ip for mac $mac");
-       return(false); 
-     }
-     #debug2("ping $ip - $mac");
-     logit("ping $ip - $mac");
-
-     // ping for max 1 sec, make sure it does not sty running/hung
-     #$answer=syscall("ping -c 1 -w 1 $ip");
-     $answer=syscall("ping -c 3 -w 1 $ip");
-     syscall("killall ping");
-     if ( preg_match("/0 received,/m", $answer) ) {
-       #echo "Ping Error: $answer\n";
-       logit("Ping Error no answer: $answer");
-       return false;
-
-     } else if ( preg_match("/\d+ received,/m", $answer) ) {
-       #echo "Ping OK\n";
-       logit("Ping OK: $answer");
-       #logit("Ping OK");
-       return true;
-
-     } else {
-       #echo "Ping Error: $answer\n";
-       logit("Ping Error: $answer");
-       return false;
-     }
-
-   } else {   #
-     logit("No IP found for $mac");
-     return false;
-   }
-}
-
-
-// function to change german umlauts into ue, oe, etc.
-// http://ch2.php.net/iconv
-function cv_input($str){
-     $out = "";
-     for ($i = 0; $i<strlen($str);$i++){
-           $ch= ord($str{$i});
-           switch($ch){
-               case 195: $out .= "";break;   
-               case 164: $out .= "ae"; break;
-               case 188: $out .= "ue"; break;
-               case 182: $out .= "oe"; break;
-               case 132: $out .= "Ae"; break;
-               case 156: $out .= "Ue"; break;
-               case 150: $out .= "Oe"; break;
-               default : $out .= chr($ch) ;
-           }
-     }
-     return $out;
-}
-
-function snmp_restart_port($switch, $port) {
-  global $lastseen_sms_restart;
-  if ($lastseen_sms_restart===TRUE) {
-     #TBD: call the PHP functions directly, get rid of this absolute path!
-     $answer=syscall("/opt/nac/bin/restart_port $switch $port");
-     debug1($answer);
-     logit("restart_port for GWP: $answer");
-  }
-}
-
-
-function lookup_vendor_mac($mac) {
-  global $connect;
-
-  $mac = preg_replace('/-|\.|\s/', '', $mac);        #remove space, dash, dots
-  $mac="$mac[0]$mac[1]$mac[2]$mac[3]$mac[4]$mac[5]"; # Keep first 6 digits
-  $query="SELECT vendor from ethernet WHERE mac='" . $mac . "' ";
-  #debug1("$query\n");
-  $res = mysql_query($query, $connect);
-  if (!$res) { die('Invalid query: ' . mysql_error()); }
-
-  if (mysql_num_rows($res) ==0) {
-    $result='unknown';      # no entry
-    #debug1("Etherner vendor not found");
-
-  } else {
-    $resultarray=mysql_fetch_array($res, MYSQL_NUM);
-    $result=$resultarray[0];
-  }
-  #debug1("Ethernet vendor=$result");
-  return $result;
-}
-
-
 
 ## old: delete later #############
 function mailit($switch, $msg) {
   ## These should be set in config.inc
-  global $maildomain, $mail_user;
+  global $conf;
 
-  if ($mail_user!=="") {
-    debug1("Sending email alert to $mail_user");
-    mail($mail_user, "VMPS alert on $switch", $msg);
+  if ($conf->mail_user!=="") {
+    debug1("Sending email alert to ".$conf->mail_user);
+    mail($conf->mail_user, "VMPS alert on $switch", $msg);
   }
   # Send an email to super user, for the relevant switch
   # each switch has its own email alias "vmps.SWITCH@domain"
-  if ($maildomain!=="0" ) {
-    debug1("Sending email alert to vmps.$switch@$maildomain");
-    mail("vmps.$switch@$maildomain", "VMPS notification on $switch", $msg);
+  if ($conf->maildomain!=="0" ) {
+    debug1("Sending email alert to vmps.$switch@".$conf->maildomain);
+    mail("vmps.$switch@".$conf->maildomain, "VMPS notification on $switch", $msg);
   }
 }
 
 function notify2($switch, $msg, $subject) {
-  global $connect, $mail_user;
+  global $connect, $conf;
   db_connect();
 
   ## 1. Sent email to sysadmin 
-  if ($mail_user!=="") {    # usually for root
-    debug1("Sending email alert to $mail_user");
+  if ($conf->mail_user!=="") {    # usually for root
+    debug1("Sending email alert to ".$conf->mail_user);
     #mail($mail_user, "VMPS alert on $switch", $msg);
-    mail($mail_user, $subject, $msg);
+    mail($conf->mail_user, $subject, $msg);
   }
 
   ## 2. Lookup notify list for that switch, email them too.
@@ -426,12 +470,12 @@ function notify2($switch, $msg, $subject) {
 }
 
 function notify($switch, $msg) {
-  global $connect, $mail_user;
+  global $connect, $conf;
   db_connect();
 
-  if ($mail_user!=="") {    # usually for root
-    debug1("Sending email alert to $mail_user");
-    mail($mail_user, "VMPS alert on $switch", $msg);
+  if ($conf->mail_user!=="") {    # usually for root
+    debug1("Sending email alert to ".$conf->mail_user);
+    mail($conf->mail_user, "VMPS alert on $switch", $msg);
   }
 
   $query="select notify from switch WHERE name='" . $switch . "'";
