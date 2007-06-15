@@ -51,21 +51,21 @@ openlog("vmps_purge_unknowns", LOG_PID,  LOG_LOCAL5);
 ## basic validity checks to make sure we don't wipe systems by accident!!
 ## Ensure purge at least 10 days old.
 ## variable is in config.inc
-if (($unknown_purge) && ($unknown_purge>10)) {
-  #echo("variable unknown_purge= $unknown_purge\n");
-  syslog(LOG_INFO, "unknown purge days= $unknown_purge");
+if (($conf->unknown_purge) && ($conf->unknown_purge>10)) {
+  #echo("variable unknown_purge= ".$conf->unknown_purge."\n");
+  syslog(LOG_INFO, "unknown purge days= ".$conf->unknown_purge);
 
 } else {
-  syslog(LOG_INFO, "invalid variable unknown_purge, value= $unknown_purge");
-  echo("purge_unknowns: invalid variable unknown_purge, value= $unknown_purge\n");
+  syslog(LOG_INFO, "invalid variable unknown_purge, value= ".$conf->unknown_purge);
+  echo("purge_unknowns: invalid variable unknown_purge, value= ".$conf->unknown_purge."\n");
   exit -1;
 }
 
 ## Delete unknown system older than 2 Months
 ## a) First list & log what we delete
-#$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
-#$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name LIKE '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
-$query="select mac,vlan,description,lastport,lastseen from systems where name like '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50";
+#$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50"; 
+#$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name LIKE '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50"; 
+$query="select mac,vlan,description,lastport,lastseen from systems where name like '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50";
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
   while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
@@ -76,7 +76,7 @@ $query="select mac,vlan,description,lastport,lastseen from systems where name li
   }
 
 ## b) Now actually wipe it!
-$query="DELETE from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-$unknown_purge LIMIT 50"; 
+$query="DELETE from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50"; 
   $res = mysql_query($query, $connect);
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 

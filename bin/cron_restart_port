@@ -35,8 +35,8 @@ openlog("cron_restart_port", LOG_PID, LOG_LOCAL5);
 #####-- functions
 
 function restart_port($switch, $port) {
-  global $check_port_restart;
-  if ($check_port_restart===TRUE) {
+  global $conf;
+  if ($conf->check_port_restart) {
      $answer=syscall("php restart_port $port $switch");
      #logit($answer);
      debug1($answer);

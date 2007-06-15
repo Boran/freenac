@@ -23,13 +23,11 @@
  */
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
-#$debug_flag1=TRUE;
-#$debug_flag2=TRUE;
+$debug_flag1=TRUE;
+$debug_flag2=TRUE;
 
 $subject="VMPS flapping";
 require_once "funcs.inc";               # Load settings & common functions
-
-global $flap_limit;
 
 $tmp1="$argv[0].tmp1";
 $message="";
@@ -278,7 +276,7 @@ function react($cnt, $switch, $port)
       # 2 192.168.245.85 port Fa0/4
       if (preg_match("/\s+(\d+) ([1-9\.]+) port (.*)/", $answer[$j], $matches)) {
         debug2("count=$matches[1], switch=$matches[2], port=$matches[3]\n");
-        if ((int) $matches[1] > (int) $flap_limit) {
+        if ((int) $matches[1] > (int) $conf->flap_limit) {
           ## so now trawl the log entries in detail
           react($matches[1], $matches[2], $matches[3]);
         }

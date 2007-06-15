@@ -35,7 +35,7 @@
  */
 
 require_once "funcs.inc";
-include_once "etc/port_scan.inc";
+require_once "etc/port_scan.inc";
 $output=TRUE;
 check_requirements();
 //If we get up to this point, life is good
@@ -54,30 +54,30 @@ message("Doing port_scan to sytems... Please wait...\n");
 debug1("port_scan started");
 $file_timestamp=date('Y-m-d H:i:s');
 $file_timestamp=str_replace(' ','-',$file_timestamp);
-$scan_results=$scan_directory."/scan-$file_timestamp.xml";   	//Scan file
+$scan_results=$conf->scan_directory."/scan-$file_timestamp.xml";   	//Scan file
 debug1("Scan file: $scan_results");		//Parameters from port_scan.inc
-debug1("Nmap flags: $nmap_flags");
-if (($what_units_time<0)||($what_units_time>6)||($what_units_time==2))
-   $string="$time_threshold hours";
-else if ($what_units_time==0)
-   $string="$time_threshold seconds";
-else if ($what_units_time==1)
-   $string="$time_threshold minutes";
-else if ($what_units_time==3)
-   $string="$time_threshold days";
-else if ($what_units_time==4)
-   $string="$time_threshold weeks";
-else if ($what_units_time==5)
-   $string="$time_threshold months";
-else if ($what_units_time==6)
-   $string="$time_threshold years";
+debug1("Nmap flags: ".$conf->nmap_flags);
+if (($conf->what_units_time<0)||($conf->what_units_time>6)||($conf->what_units_time==2))
+   $string=$conf->time_threshold." hours";
+else if ($conf->what_units_time==0)
+   $string=$conf->time_threshold." seconds";
+else if ($conf->what_units_time==1)
+   $string=$conf->time_threshold." minutes";
+else if ($conf->what_units_time==3)
+   $string=$conf->time_threshold." days";
+else if ($conf->what_units_time==4)
+   $string=$conf->time_threshold." weeks";
+else if ($conf->what_units_time==5)
+   $string=$conf->time_threshold." months";
+else if ($conf->what_units_time==6)
+   $string=$conf->time_threshold." years";
 debug1("Last_seen threshold: $string");
 if ($argc==1)				//Running mode
    debug1("Running mode: Normal");
 else if ($flagscannow)
    debug1("Running mode: Scannow");
 else debug1("Running mode: Manual"); 
-$list=scan($scan_results,$nmap_flags);		//Scan network with those flags	
+$list=scan($scan_results,$conf->nmap_flags);		//Scan network with those flags	
 $var=parse_scanfile($scan_results,$list);		//Parse the xml file
 if ($var['equipments']>0)			
    do_inventory($var);				//Check against database	
@@ -92,7 +92,7 @@ if ($flagscannow)
 
 function check_requirements()  //Checks for required functions and tables structure
 {
-   global $scan_directory, $time_threshold, $what_units_time,$nmap_flags,$which_nmap;
+   global $conf;
    $functions=get_defined_functions();
    $functions=$functions['user']; //A little bit of paranoia :)
    if (!in_array('debug1',$functions))
@@ -107,15 +107,15 @@ function check_requirements()  //Checks for required functions and tables struct
       check_and_abort("Function normalise_mac not defined in funcs.inc\n",0);
    if (!in_array('log2db',$functions))
       check_and_abort("Function log2db not defined in funcs.inc\n",0);
-   if (!isset($which_nmap))
+   if (!$conf->which_nmap)
       check_and_abort("Var \$which_nmap not defined in port_scan.inc\n",0);
-   if (!isset($scan_directory))
+   if (!$conf->scan_directory)
       check_and_abort("Var \$scan_directory not defined in port_scan.inc\n",0);
-   if (!is_dir($scan_directory))
+   if (!$conf->scan_directory)
         check_and_abort("Required directory $scan_directory doesn't exist\n",0);
-   if (!isset($time_threshold))
+   if (!$conf->time_threshold)
       check_and_abort("Var \$time_threshold not defined in port_scan.inc\n",0);
-   if (!isset($what_units_time))
+   if (!$conf->what_units_time)
      check_and_abort("Var \$what_units_time not defined in port_scan.inc\n",0);
    $query="describe systems;";
    $res=execute_query($query);
@@ -135,7 +135,7 @@ function check_requirements()  //Checks for required functions and tables struct
    $query="describe protocols;";
    $res=execute_query($query);
    check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
-   $tmp=syscall($which_nmap." --version | grep -i nmap");
+   $tmp=syscall($conf->which_nmap." --version | grep -i nmap");
    $tmp=explode(" ",$tmp);
    $nmap_string=$tmp[0];
    $nmap_version=$tmp[2];
@@ -144,7 +144,7 @@ function check_requirements()  //Checks for required functions and tables struct
    #if (isset($nmap_version)&&($nmap_version<4.11))
    if (isset($nmap_version)&&($nmap_version<4.10))
       check_and_abort("You need a newer version of nmap\n",0);
-   if (!isset($nmap_flags))
+   if (!$conf->nmap_flags)
      check_and_abort("Var \$nmap_flags not defined in port_scan.inc\n",0);
 }
 
@@ -599,9 +599,9 @@ function add_entry($data)	//A new host in our network that needs to be added to 
 
 function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specified in the file "port_scan.inc" and the location for our XML file
 {
-   global $which_nmap;
+   global $conf;
    syscall("touch ".$xml_file);	//Just to avoid an error while running from cron
-   $scan=$which_nmap." ".$nmap_flags." -oX ".$xml_file." ";
+   $scan=$conf->which_nmap." ".$nmap_flags." -oX ".$xml_file." ";
    $list=get_ips();		//We need some IPs to scan
    for ($i=0;$i<$list['counter'];$i++) //Put those ips in a string
    {
@@ -669,7 +669,7 @@ function ip_to_bin($ip)
 
 function get_ips()	//This function will get some ips to scan
 {
-   global $what_units_time, $time_threshold, $argc, $argv,$flagscannow,$queries;
+   global $conf, $argc, $argv,$flagscannow,$queries;
    $timestamp=date('Y-m-d H:i:s');
    $ips="";
    $list=array();
@@ -807,8 +807,8 @@ function get_ips()	//This function will get some ips to scan
 	 if (($candidate)&&($argc==1)) //This is an ip which is a good candidate to be scanned and no parameters present on the command line
          {
             $lastseen=$devices['lastseen'][$l];
-            $diff=(int)date_diff($lastseen,$timestamp,$what_units_time);
-            if ($diff<=$time_threshold)
+            $diff=(int)date_diff($lastseen,$timestamp,$conf->what_units_time);
+            if ($diff<=$conf->time_threshold)
             {
 	       for ($k=0;$k<=$counter;$k++)
                   if ($devices['ip'][$l]==$list['ip'][$k])

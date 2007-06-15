@@ -46,8 +46,8 @@ function get_switch_type($switch)
     $found=FALSE;
 
     ## Get all port status and find the one that interests us
-    debug2("$snmpwalk $switch system.sysDescr");    
-    $answer=explode("\n", syscall("$snmpwalk $switch system.sysDescr"));    
+    debug2($snmpwalk." $switch system.sysDescr");    
+    $answer=explode("\n", syscall($snmpwalk." $switch system.sysDescr"));    
     for ($j = 0; $j < count($answer); $j++){
       #debug2($answer[$j]);
 
@@ -93,8 +93,8 @@ function get_port_status($port_index, $switch)
     $mymatch="ifAdminStatus.$port_index (:|=) INTEGER:";
 
     ## Get all port status and find the one that interests us
-    debug2("$snmpwalk $switch ifAdminStatus");
-    $stat_list=explode("\n", syscall("$snmpwalk $switch ifAdminStatus"));    
+    debug2($snmpwalk." $switch ifAdminStatus");
+    $stat_list=explode("\n", syscall($snmpwalk." $switch ifAdminStatus"));    
     for ($j = 0; $j < count($stat_list); $j++){
       #debug2($stat_list[$j]);
       # Invalid snmp will give "no MIB objects contained under subtree."
@@ -121,7 +121,7 @@ function restart_port($port_index, $switch)
     # /opt/OV/bin/snmpset -c MYSECRET  SWITCHNAME ifAdminStatus.18 integer 2
 
     // down
-    $cmd="$snmpset $switch ifAdminStatus.$port_index integer 2";  // down
+    $cmd=$snmpset." $switch ifAdminStatus.$port_index integer 2";  // down
     debug2($cmd);
     $answer=explode("\n", syscall($cmd));    
     if (stripos($answer[0],"timeout")!==false)
@@ -141,7 +141,7 @@ function restart_port($port_index, $switch)
     // up
     if ($down)
     {
-       $cmd="$snmpset $switch ifAdminStatus.$port_index integer 1";  // up
+       $cmd=$snmpset." $switch ifAdminStatus.$port_index integer 1";  // up
        debug2($cmd);
        $answer=explode("\n", syscall($cmd));
        if (stripos($answer[0],"timeout")!==false)
@@ -191,8 +191,8 @@ if ($catos===TRUE) { $ifquery='ifName'; }
 get_switch_type($switch);
 
 // query interface list and split into an array
-debug2("$snmpwalk $switch $ifquery");
-$if_list=explode("\n", syscall("$snmpwalk $switch $ifquery"));    
+debug2($snmpwalk." $switch $ifquery");
+$if_list=explode("\n", syscall($snmpwalk." $switch $ifquery"));    
 
 for ($i = 0; $i < count($if_list); $i++){
  debug2($if_list[$i]);

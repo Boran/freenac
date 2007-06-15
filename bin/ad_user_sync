@@ -34,7 +34,7 @@ $logit_to_stdout = TRUE;
 $debug_flag1 = FALSE;
 $debug_to_syslog = FALSE;
 
-debug1("variables from configfile: $ad_server | $ad_user | $ad_password | " . print_r($ad_base_user_dn, TRUE));
+debug1("variables from configfile: ".$conf->ad_server." | ".$ad_user." | ".$ad_password." | " . print_r($conf->ad_base_user_dn, TRUE));
 
 
 #####################
@@ -107,11 +107,11 @@ else {
 
 # Query AD and return assoc. array
 function query_AD() {
-	global $ad_server, $ad_user, $ad_password, $ad_base_user_dn, $ad_port, $exchange;
+	global $conf, $exchange,$ad_user,$ad_password;
 	
 	logit('Querying user information from AD');
 	
-	$connect = ldap_connect($ad_server,$ad_port) or logit('Could not connect to Active Directory, ' . ldap_error($connect));
+	$connect = ldap_connect($conf->ad_server,$conf->ad_port) or logit('Could not connect to Active Directory, ' . ldap_error($connect));
 	$bind = ldap_bind($connect, $ad_user, $ad_password) or logit('Could not bind to Active Directory, ' . ldap_error($connect));
 
 	#$filter = "objectClass=person";	# There might be objects of other classes around (e.g. groups) we don't want to fetch
@@ -135,7 +135,7 @@ function query_AD() {
 
 	$info = array();
 	# loop through all dn with user information and fetch data
-	foreach( $ad_base_user_dn as $base_dn ) {
+	foreach( $conf->ad_base_user_dn as $base_dn ) {
 		#$results = ldap_list($connect, $base_dn, $filter, $fetch_attributes) or logit('Could not retrieve data, ' . ldap_error($connect));
  		//ldap_list performs the query only on one level, ldap_search searches through the whole tree
                 $results = ldap_search($connect, $base_dn, $filter, $fetch_attributes) or logit('Could not retrieve data, ' . ldap_error($connect));
@@ -145,7 +145,6 @@ function query_AD() {
 	ldap_close($connect);   
 
 	debug1(print_r($info, TRUE));
-	
 	return $info;
 }
 

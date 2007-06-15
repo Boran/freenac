@@ -43,11 +43,10 @@ openlog("router_mac_ip", LOG_PID, LOG_LOCAL5);
    $starttime = $mtime;
 
 db_connect();
-global $connect, $core_routers, $router_mac_ip_ignore_ip, $router_mac_ip_ignore_mac, $router_snmpwalk;
-global $router_mac_ip_update_from_dns;
+global $connect;
 
 
-if ( empty($core_routers) ) {   // no results, error?
+if ( !$conf->core_routers ) {   // no results, error?
    logit("no routers specified in core_routers variable in config.inc");
    log2db('info',"no routers specified in core_routers variable in config.inc");
    exit -1;
@@ -56,7 +55,7 @@ if ( empty($core_routers) ) {   // no results, error?
 
 // Get the mac addresses of all unknown devices
 // for use the autoupdating of DNS names, see below
-if ( $router_mac_ip_update_from_dns ) {   // feature enabled?
+if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
 
   #$sql="SELECT mac FROM systems WHERE name='unknown'";
   $sql="SELECT mac FROM systems WHERE name LIKE '%unknown%'";
@@ -72,11 +71,11 @@ if ( $router_mac_ip_update_from_dns ) {   // feature enabled?
 }
 
 
-foreach (split(' ', $core_routers) as $router) {
+foreach (split(' ', $conf->core_routers) as $router) {
  $count_updates=0;
  // query interface list and split into an array
- debug2("$router_snmpwalk $router ipNetToMediaPhysAddress\n");
- $results=explode("\n", syscall("$router_snmpwalk $router ipNetToMediaPhysAddress"));
+ debug2($router_snmpwalk." $router ipNetToMediaPhysAddress\n");
+ $results=explode("\n", syscall($router_snmpwalk." $router ipNetToMediaPhysAddress"));
 
 
  if ( count($results) === 0 ) {   // no results, error?
@@ -95,11 +94,11 @@ foreach (split(' ', $core_routers) as $router) {
      $mac=normalise_mac($matches[3]);
      debug2("$ip - $mac ");
 
-     if ( preg_match("$router_mac_ip_ignore_ip", $ip) ) {
+     if ( preg_match($conf->router_mac_ip_ignore_ip, $ip) ) {
        debug2("Ignore Non relevant Networks: $ip - $mac ");
        continue;
      }
-     if ( preg_match("$router_mac_ip_ignore_mac", $mac) ) {
+     if ( preg_match($conf->router_mac_ip_ignore_mac, $mac) ) {
        debug2("Ignore Non relevant macs: $mac ");
        continue;
      }
@@ -118,7 +117,7 @@ foreach (split(' ', $core_routers) as $router) {
           $count_updates++;
 
           // if this mac has no associated name, try to get the fqdn for it
-          if ( $router_mac_ip_update_from_dns ) {   // feature enabled?
+          if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
             if (in_array($mac,$uk_mac)) {
               $fqdn=gethostbyaddr($ip);
               debug1("got $fqdn $ip $mac");
