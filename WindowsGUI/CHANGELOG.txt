@@ -59,4 +59,9 @@ v2.2.0.127/5.06.07/SB:
    o Migrate to MyDAC5 and SDAC4 libraries (from corelabs).
   Speed: Only load the ports, giu, naclog, patch, tables when the tab in clicked on, to
          make initial loading faster.
-  
+
+v2.2.0.129/17.06.07/SB:   
+  New 'Administration' tab: move Config, Users, locations, Vlans, OS to this
+    new tab. Makes the interface cleaner for non-admin GUI users.
+    Also add Administration->NmapSubnets to allow configuration of the subnets table.
+  (source SVN 30).
