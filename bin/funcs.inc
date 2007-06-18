@@ -63,6 +63,37 @@ function is_vm($mac)
    else return false;
 }
 
+function get_last_index($oid)                                                   //Get the last number of an SNMP OID
+{
+   $temp=explode('.',$oid);
+   return $temp[count($temp)-1];
+}
+
+function turn_on_port($port_index)                                              //Turn on port. Port index must be from SNMP
+{
+   global $switch,$snmp_rw,$snmp_port;
+
+   $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
+   if (!snmpset($switch,$snmp_rw,$oid,'i',1))
+   {
+      echo "\tCouldn't turn on port $port.\n";
+      return false;
+   }
+   else return true;
+}
+
+function turn_off_port($port_index)                                             //Shut port down. Port index must be from SNMP
+{
+   global $switch,$snmp_rw,$snmp_port;
+   $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
+   if (!snmpset($switch,$snmp_rw,$oid,'i',2))
+   {
+      echo "\tCouldn't shut down port $port.\n";
+      return false;
+   }
+   else return true;
+}
+
 
 
 function time_diff($date1,$date2)  //Returns the difference between 2 dates in secs

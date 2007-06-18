@@ -1,0 +1,234 @@
+#!/usr/bin/php -f
+<?php
+/**
+ * /opt/nac/bin/restart_port
+ *
+ * Long description for file:
+ * Use SNMP to connect to the Switch, check the port status (up/down), and
+ * reset the port (set down, then up).
+ *
+ * Example:
+ *     /opt/nac/bin/restart_port PORT SWITCH
+ *     /opt/nac/bin/restart_port 2/10 sw0503
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package			FreeNAC
+ * @author			Sean Boran (FreeNAC Core Team)
+ * @copyright		2006 FreeNAC
+ * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version			SVN: $Id$
+ * @link				http://www.freenac.net
+ *
+ */
+
+
+$debug_flag1=FALSE;
+$debug_flag2=FALSE;
+#$debug_flag1=TRUE;
+#$debug_flag2=TRUE;
+
+require_once "funcs.inc";               # Load settings & common functions
+$catos=TRUE;
+define_syslog_variables();              # not used yet, but anyway..
+openlog("restart_port", LOG_PID , LOG_LOCAL5);
+#$snmpwalk="snmpwalk -v 1 -c mysecret1 ";    # SNMP Read community
+#$snmpset ="snmpset  -v 1 -c mysecret2"; # SNMP Write community
+
+# ------------------ functions ----------------
+function get_switch_type($switch)
+{
+    global $snmpwalk, $debug_flag1, $debug_flag2, $catos;
+    $found=FALSE;
+
+    ## Get all port status and find the one that interests us
+    debug2($snmpwalk." $switch system.sysDescr");    
+    $answer=explode("\n", syscall($snmpwalk." $switch system.sysDescr"));    
+    for ($j = 0; $j < count($answer); $j++){
+      #debug2($answer[$j]);
+
+      if (preg_match("/Invalid destination/", $answer[$j], $matches)) {
+        echo($answer[$j] . " - ABORTED.\n");
+        exit(2); 
+
+      } else if (preg_match("/Timeout: No Response/", $answer[$j], $matches)) {
+        echo($answer[$j] . " - ABORTED.\n");
+        exit(2); 
+
+      } else if (preg_match("/Cisco IOS Software|Internetwork Operating System/", $answer[$j], $matches)) {
+        $catos=FALSE;
+        $found=TRUE;
+        debug2('IOS !');
+
+      } else if (preg_match("/Catalyst Operating System/", $answer[$j], $matches)) {
+        $catos=TRUE;
+        $found=TRUE;
+        debug2('CATOS !');
+      } 
+    }
+
+    if ($found==FALSE) {
+        echo("ABORTED: Could not contact switch, or unknown Switch (neither IOS nor CATOS).\n");
+        echo($answer[0]);
+        logit("ABORTED: Could not contact switch, or unknown Switch (neither IOS nor CATOS).\n");
+        logit($answer[0]);
+        exit(2); 
+    }
+}
+
+
+function get_port_status($port_index, $switch) 
+{
+  global $snmpwalk, $debug_flag1, $debug_flag2;
+  $result='';
+
+  // use index to check port status
+  if ($port_index>0 ) {
+    #debug2("Index=$port_index");
+    #$mymatch="ifEntry.ifAdminStatus.$port_index : INTEGER:";
+    $mymatch="ifAdminStatus.$port_index (:|=) INTEGER:";
+
+    ## Get all port status and find the one that interests us
+    debug2($snmpwalk." $switch ifAdminStatus");
+    $stat_list=explode("\n", syscall($snmpwalk." $switch ifAdminStatus"));    
+    for ($j = 0; $j < count($stat_list); $j++){
+      #debug2($stat_list[$j]);
+      # Invalid snmp will give "no MIB objects contained under subtree."
+      if (preg_match("/$mymatch (.+)/", $stat_list[$j], $matches)) {
+        debug1("STATUS " . $matches[2]);
+        $result=$matches[2];
+      }  // if match
+    }
+  }
+  return $result;
+}
+
+
+
+function restart_port($port_index, $switch) 
+{
+  global $snmpset, $debug_flag1, $debug_flag2;
+  $result='';
+  $up=false;
+  $down=false;
+  // use index to check port status
+  if ($port_index>0 ) {
+    # Example
+    # /opt/OV/bin/snmpset -c MYSECRET  SWITCHNAME ifAdminStatus.18 integer 2
+
+    // down
+    $cmd=$snmpset." $switch ifAdminStatus.$port_index integer 2";  // down
+    debug2($cmd);
+    $answer=explode("\n", syscall($cmd));    
+    if (stripos($answer[0],"timeout")!==false)
+       $down=false;
+    else
+    {
+       $down=true;
+       for ($j = 0; $j < count($answer); $j++){
+          if ( strlen($answer[$j]) >1 ) {
+             debug1($answer[$j]);
+             #logit($answer[$j]);
+         }
+       }
+    }
+    #get_port_status($port_index, $switch);
+
+    // up
+    if ($down)
+    {
+       $cmd=$snmpset." $switch ifAdminStatus.$port_index integer 1";  // up
+       debug2($cmd);
+       $answer=explode("\n", syscall($cmd));
+       if (stripos($answer[0],"timeout")!==false)
+          $up=false;
+       else
+       {
+          $up=true;
+          for ($j = 0; $j < count($answer); $j++){
+             if ( strlen($answer[$j]) >0 ) {
+                debug1($answer[$j]);
+                #logit($answer[$j]);
+             }
+          }
+       }
+       #get_port_status($port_index, $switch);
+    }
+
+  }  // if index>0
+  if ($down&&$up)
+     return true;
+  else return false;
+
+}    // function
+
+
+## ------- main() ---------------------
+#$switch="sw0503";   # CatOS example
+#$port="2/10";
+#$switch="sw0120";   # IOS example
+#$port="Fa0/19";
+if ($argc != 3 || in_array($argv[1], array('--help', '-help', '-h', '-?'))) {
+  echo " Usage: $argv[0] <PORT> <SWITCH>\n";
+  echo " Example: $argv[0] Fa0/19 sw0120\n";
+  exit(2);
+
+} else {
+  $port=$argv[1];
+  $switch=$argv[2];
+}
+debug1("Port $port on $switch");
+logit("Port restart try: $port on switch $switch");
+
+$port = preg_replace('/\//', '\/', $port);  # Escape slashes
+if ($catos===TRUE) { $ifquery='ifName'; }
+
+## Go!
+get_switch_type($switch);
+
+// query interface list and split into an array
+debug2($snmpwalk." $switch $ifquery");
+$if_list=explode("\n", syscall($snmpwalk." $switch $ifquery"));    
+
+for ($i = 0; $i < count($if_list); $i++){
+ debug2($if_list[$i]);
+
+ # Find the index in the list of interfaces
+ if (
+   preg_match("/ifMIB.ifMIBObjects.ifXTable.ifXEntry.ifName.(\d+) : .* $port$/", $if_list[$i], $matches) or 
+   preg_match("/IF-MIB::ifName.(\d+) .* $port$/", $if_list[$i], $matches)
+   ) {
+   debug2('port=' . $if_list[$i] . '## index=' . $matches[1]);
+   $port_index=$matches[1];
+
+   # Did we find a valid number?
+   if ($port_index >0) {
+     if (get_port_status($port_index, $switch) ==='') {
+       logit("Cannot get port status $port on switch $switch");
+       log2db('info',"Cannot get port status $port on switch $switch");
+     } else {
+       if (restart_port($port_index, $switch))
+       {
+          logit("Port successfully restarted $port on switch $switch");
+          log2db('info',"Port successfully restarted $port on switch $switch");
+       }
+       else
+       {
+          logit("Port $port on switch $switch couldn't be restarted");
+          log2db('info',"Port $port on switch $switch couldn't be restarted");
+       }
+     }
+  
+   } else {
+     logit("Port index invalid ($port_index)");
+   }
+
+ }        // if preg_match interface
+}         //for if_list
+
+### 
+?>
