@@ -1,0 +1,6 @@
+#!/bin/sh
+# logr
+
+f="/usr/local/var/log/radius/radius.log"
+echo "Monitor $f for messages..."
+tail -f $t |egrep -v "Debug:"
