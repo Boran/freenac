@@ -1,6 +1,13 @@
 #!/bin/sh
 # logr
+##
 
 f="/usr/local/var/log/radius/radius.log"
 echo "Monitor $f for messages..."
-tail -f $t |egrep -v "Debug:"
+
+ignore="Tunnel|PEAP|Call|MS-|Framed-MTU|Message-Authenticator|NAS-Port|NAS-IP-Address|NAS-Identifier"
+# Debug: Challenge.* rlm_eap_mschapv2.* SSL Connection Established
+#tail -f $f |egrep -v "$ignore"
+
+positive="Tunnel-Private-Group-Id:0|Reply-Message =\(vmps|Auth-Type = MAC-Auth-Bypass|ntlm_auth|User-Name|Calling-Station-Id|NAS-Identifier|Cisco-NAS-Port:"
+tail -f $f |egrep "$positive"
