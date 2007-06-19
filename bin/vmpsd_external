@@ -100,12 +100,12 @@ function get_port_status($switch, $port, $mac, $new_vlan, $lastvlan)
   debug2("get_port_status: SELECT vlan_group FROM vlan WHERE id='$new_vlan'");
   $last_vlan_group=v_sql_1_select("SELECT vlan_group FROM vlan WHERE id='$lastvlan'");
   debug2("get_port_status: SELECT vlan_group FROM vlan WHERE id='$lastvlan'");
-  /*if ($last_vlan_group==$new_vlan_group) {
+  if ($last_vlan_group==$new_vlan_group) {
     $result=$lastvlan;   # Stay with the existing vlan, to preserve connectivity
     logit("get_port_status: requested $lastvlan, DB says $new_vlan but they are in the same group.");
   } else {
     $result=$new_vlan;   # Use the normal vlan for this MAC
-  }*/
+  }
   // Are any other systems authorised on that port in last two hours?
   // -auth in last 2 hrs (7500 secs)
   $system_id=v_sql_1_select("select id from systems where mac='$mac'");
@@ -129,7 +129,7 @@ function get_port_status($switch, $port, $mac, $new_vlan, $lastvlan)
       #$othervlan=$tempvlan;
       $othervlan=v_sql_1_select("select default_id from vlan where id='$tempvlan'"); 
       debug1("get_port_status: found $othermac, vlan=$othervlan, $AuthLast");
-      /*if (ping_mac($othermac)) {	# Is there another system live on that port?
+      if (ping_mac($othermac)) {	# Is there another system live on that port?
         // yes, so find out about it
         // Lookup vlan name & group, avoid the Mac of the system we are checking
 
@@ -150,13 +150,10 @@ function get_port_status($switch, $port, $mac, $new_vlan, $lastvlan)
       } else {
         debug1('get_port_status: no conflict since IP is invalid or cannot be pinged. Flap is still a risk..');
         $result=$new_vlan;   # default OK
-      }*/
-      if (ping_mac2($othermac,$switch,$port,$othervlan))         # Is there another system live on that port?
-         logit("MAC $othermac is already on port $port using vlan $othervlan");
+      }
     }
   }
   
-  $result=$new_vlan;
   save_auth($port_id, $system_id, $result);        // remember authentication
   return($result);                                 // sent back results (selected vlan)
 }

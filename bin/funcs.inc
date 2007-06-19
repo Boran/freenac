@@ -229,7 +229,7 @@ function ping_mac($mac)
 {
   db_connect();
   global $connect;
-  logit("FUNCTION PING_MAC");
+  
   $query="SELECT r_ip from systems "
         . " WHERE mac='" . $mac . "'";
         #echo("$query\n");
@@ -249,10 +249,9 @@ function ping_mac($mac)
 
      // ping for max 1 sec, make sure it does not sty running/hung
      #$answer=syscall("ping -c 1 -w 1 $ip");
-     /*
-	 $answer=syscall("ping -c 3 -w 1 $ip");
+     $answer=syscall("ping -c 3 -w 1 $ip");
      syscall("killall ping");
-     /*if ( preg_match("/0 received,/m", $answer) ) {
+     if ( preg_match("/0 received,/m", $answer) ) {
        #echo "Ping Error: $answer\n";
        logit("Ping Error no answer: $answer");
        return false;
@@ -267,52 +266,12 @@ function ping_mac($mac)
        #echo "Ping Error: $answer\n";
        logit("Ping Error: $answer");
        return false;
-     }*/
-	$answer=ping($ip);
-	if ($answer){
-		logit("Ping OK: $answer");
-		return true;
-	}
-	else {
-		logit("Ping Error");
-		return false;
-	}
-
+     }
    } else {   #
      logit("No IP found for $mac");
      return false;
    }
 }
-
-function ping($host) {
-    $package = "\x08\x00\x19\x2f\x00\x00\x00\x00\x70\x69\x6e\x67";
-	$total_time = false;
-
-    /* create the socket, the last '1' denotes ICMP */   
-    $socket = socket_create(AF_INET, SOCK_RAW, 1);
-   
-    /* set socket receive timeout to 1 second */
-    socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => 1, "usec" => 0));
-   
-    /* connect to socket */
-    socket_connect($socket, $host, null);
-   
-    /* record start time */
-    list($start_usec, $start_sec) = explode(" ", microtime());
-    $start_time = ((float) $start_usec + (float) $start_sec);
-   
-    socket_send($socket, $package, strlen($package), 0);
-   
-    if(@socket_read($socket, 255)) {
-        list($end_usec, $end_sec) = explode(" ", microtime());
-        $end_time = ((float) $end_usec + (float) $end_sec);
-   
-        $total_time = $end_time - $start_time;
-    }
-	socket_close($socket);
-	return $total_time;
-}
-
 
 // function to change german umlauts into ue, oe, etc.
 // http://ch2.php.net/iconv
