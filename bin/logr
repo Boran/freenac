@@ -9,5 +9,6 @@ ignore="Tunnel|PEAP|Call|MS-|Framed-MTU|Message-Authenticator|NAS-Port|NAS-IP-Ad
 # Debug: Challenge.* rlm_eap_mschapv2.* SSL Connection Established
 #tail -f $f |egrep -v "$ignore"
 
-positive="Tunnel-Private-Group-Id:0|Reply-Message =\(vmps|Auth-Type = MAC-Auth-Bypass|ntlm_auth|User-Name|Calling-Station-Id|NAS-Identifier|Cisco-NAS-Port:"
+positive="Tunnel-Private-Group-Id:0|Reply-Message =\(vmps|Auth-Type = MAC-Auth-Bypass|ntlm_auth|User-Name|Calling-Station-Id|NAS-Identifier|Cisco-NAS-Port:| open the config file|reread_config"
+
 tail -f $f |egrep "$positive"
