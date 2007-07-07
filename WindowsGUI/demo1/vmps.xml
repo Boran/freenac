@@ -3,7 +3,7 @@
   
   <settings company="DEMO"  StaticInvEnabled="0" NmapEnabled="1" AntiVirusEnabled="0"
     PatchCableEnabled="1"/>
-	<mysql server="193.5.233.100" port="3306" 
+	<mysql server="195.176.209.80" port="3306" 
         auth="rgpWbP262YB2IGJW46le6jxx3g9qu+xbfvOGHsJeWFpjfw==" database="inventory" />
         
 	<mssql-inv server="UnusedServer\UnusedInstance"  
