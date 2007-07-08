@@ -47,18 +47,17 @@ if (!isset($_SESSION['name'])){
 	$_SESSION['username']='';
 }
 
-// validate webinput
-$_GET=array_map('validate_webinput',$_GET);
-$_POST=array_map('validate_webinput',$_POST);
-$_COOKIE=array_map('validate_webinput',$_COOKIE);
-
-
 // setup db connectivity
 $dblink=mysql_connect($dbhost, $dbuser, $dbpass)
 	or die('DB Error. Unable to connect: ' . mysql_error());
 // select database
 mysql_select_db($dbname,$dblink) 
 	or die('Could not select database '.$dbname);
+
+// validate webinput
+$_GET=array_map('validate_webinput',$_GET);
+$_POST=array_map('validate_webinput',$_POST);
+$_COOKIE=array_map('validate_webinput',$_COOKIE);
 
 // handle search requests
 if ($_REQUEST['action']=='search'){
