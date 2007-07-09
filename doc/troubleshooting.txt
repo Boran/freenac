@@ -1,22 +1,30 @@
 _____________ Tips for Troubleshooting  _____________________________
-                                               Last Update: 17.6.06/SB
+                                               Last Update: 9.7.06/SB
 troubleshooting.txt
 ______________________________________________________________________
 
 
 Syslog 
 ======
-Syslog is the most important source of info of what is going on:
-
+Syslog is the most important source of info of what is going on.
+First try "log" and "logv" commands, which tail all of syslog, and vmps related entries.
+  
+Are any MAC being constantly denied access?  
+Are any switches having problems contacting the vmps servers? They may often send
+empty vmps packets (sort of like vmps pings):
+  tail -f /var/log/messages | egrep "MACNOTRECONFIRMED|000000000000" 
+  egrep "MACNOTRECONFIRMED|000000000000"  /var/log/messages 
+  
+  
 Watch the key stuff: what is allowed or not:
    tail -f /var/log/messages | egrep "DENY|ALLOW"
  
-Watch the logic of desicions:  
+Watch the logic of decisions:  
    tail -f /var/log/messages | grep vmpsd_external
    
 Watch all relevant events 
    tail -f /var/log/messages | grep vmpsd    
-  
+
 
 
 Checking Running Daemons
@@ -67,11 +75,21 @@ Network
 =======  
 To see of VMPS requests are really coming from switches:  
   tcpdump -n port 1589                   [sniff vmps requests]
+Trace requests from one switch:
+  tcpdump -i eth1 host MYSWITCH and not port telnet
+Note: use '-i' when you have several interfaces.  
+  
+Example on Solaris (you may have snoop, not tcpdump)
+  snoop –d qfe0 port 1589
+  switch1 -> server3       UDP D=1589 S=1026 LEN=1480
+  server3 -> switch1  UDP D=1026 S=1589 LEN=38
+
+  
   
 
 Switches
 ========
-See cisco_switch.txt.
+Please read cisco_switch.txt, sw_ciscocmd.txt, sw_config_catos.txt, sw_config_ios.txt
 
   
 Database  
@@ -126,8 +144,10 @@ select * from history where what like '%000b.dbdc.d6f5%' limit 10;
   
 Starting the vmps daemon
 =========================
-Listen only on localhost:
+Listen only on localhost, to test:
 ./vmpsd -d -p 10000 -e  decide -l 0x0804 -a 127.0.0.1
+
+
 
   
 Sending test VMPS requests yourself
@@ -150,12 +170,3 @@ vqpcli.pl  [-s=server -v=VTP domain, -w=Switch -i=Port -m=Mac -c=Last Vlan]
 ./vqpcli.pl -s 192.168.245.40 -v ctcs -w 192.168.245.71 -i '2/22' -m '0000.0000.9999' -c sec230
 
 
-
-The switch to VMPS server traffic can be sniffed
-================================================
-on the server, for example on Solaris:  
-  snoop –d qfe0 port 1589
-  switch1 -> server3       UDP D=1589 S=1026 LEN=1480
-  server3 -> switch1  UDP D=1026 S=1589 LEN=38
-on Linux
-  tcpdump -i eth1 port 1589

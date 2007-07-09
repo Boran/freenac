@@ -1,0 +1,30 @@
+====== Using 'ciscocmd' =========
+
+Cisco-centric Open Source Initiative
+  http://sourceforge.net/projects/cosi-nms
+  http://cosi-nms.sourceforge.net/
+
+
+This is a great tool for 'remote control' of Cisco switches. Some examples are below.
+
+Download and extract, no compilation is needed.
+These tests were done with v1.4, I installed in /opt/nac/ciscocmd-1.4.
+
+
+One switch example:  (example switch is SWITCH1)
+------------------
+  ./ciscocmd -u USER -p MYPASS -t SWITCH1 -c "show vmps"
+  ./ciscocmd -u USER -p MYPASS -t SWITCH1 -c "reconfirm vmps" -e  -s MYPASS
+  ./ciscocmd -u USER -p MYPASS -t SWITCH1 -c "ping 192.168.1.40" -e  -s MYPASS  
+  
+  (change USER, MYPASS; and the enable password as needed..)
+
+
+many switches
+------------------
+  # Get all CatOS switches (hw type 2948, store in catos.txt),
+  echo "select name from switch where hw like '%2948%' order by name;" | mysql opennac |egrep -v name > catos.txt
+  
+  #  and check their vmps status:
+  ./ciscocmd -u USER -p MYPASS -T catos.txt -c "show vmps" | egrep "VMPS Action|VMPS Last Accessed|Last Reconfirmation|show vmps"
+

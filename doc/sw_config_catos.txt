@@ -1,4 +1,5 @@
-Network Switch Configuration & Tips for Cat OS
+Network Switch Configuration & Tips: for CatOS
+----------------------------------------------
 
 # Initially, Switches must be configured to send a copy of syslog messages, and given the name of the vmps servers, where it can send requests for dynamic port assignment.
 # See also http://www.cisco.com/en/US/products/hw/switches/ps607/products_configuration_guide_chapter09186a008007eba3.html#xtocid164834.
@@ -35,18 +36,50 @@ set vmps server reconfirminterval 120
 # Other useful commands:
   show mac-address-table address 00:04:dd:b6:5c:c2
 
+
   show arp
+ARP Aging time = 1200 sec
++ - Permanent Arp Entries
+* - Static Arp Entries
+192.168.1.19                            at 00-03-ba-17-fa-bf port  2/49 on vlan 2
+192.168.1.18                            at 00-03-ba-18-06-4b port  2/49 on vlan 2
+
 
   show cdp neighbors
   show cdp neighbors Gi4/5
   show cdp neighbors Gi4/5 detail
 
-  show cam 00:04:dd:b6:5c:c2
-  show cam dynamic 2/32
+
   show port status 2/32
+  Port  Name               Status     Vlan       Level  Duplex Speed Type
+  ----- ------------------ ---------- ---------- ------ ------ ----- ------------
+   2/32                    inactive   dyn-       normal   auto  auto 10/100BaseTX
+
 
   # Tag a name to a port (to document usage)
   Set port name 2/32 webcam
+  
+
+  show cam 00:04:dd:b6:5c:c2
+  show cam dynamic 2/32
+
+show cam dynamic 2/43
+* = Static Entry. + = Permanent Entry. # = System Entry. R = Router Entry.
+X = Port Security Entry $ = Dot1x Security Entry
+VLAN  Dest MAC/Route Des    [CoS]  Destination Ports or VCs / [Protocol Type]
+----  ------------------    -----  -------------------------------------------
+3     00-04-76-15-48-30             2/43 [ALL]
+Total Matching CAM Entries Displayed  =1
+
+
+show cam 00-04-76-15-48-30
+* = Static Entry. + = Permanent Entry. # = System Entry. R = Router Entry.
+X = Port Security Entry $ = Dot1x Security Entry
+VLAN  Dest MAC/Route Des    [CoS]  Destination Ports or VCs / [Protocol Type]
+----  ------------------    -----  -------------------------------------------
+3     00-04-76-15-48-30             2/43 [ALL]
+570   00-04-76-15-48-30             2/49 [ALL]
+Total Matching CAM Entries Displayed  =2
 
 
 
