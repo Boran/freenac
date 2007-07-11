@@ -8,7 +8,7 @@ For specifc IOS and CATOS commands for configuring and troubleshooting, see sw_c
 
 VMPS “retry” switch parameter
 -----------------------------
-Since Version 2, the VMPS server works with a live SWL database, and also have “intelligent hub detection” (meaning it tried to detect and ping all devices already on a hub), this mean that Authentication is much slower than Version 1 (seconds instead of mill seconds).
+Since Version 2, the VMPS server works with a live database, and also has “intelligent hub detection” (meaning it tried to detect and ping all devices already on a hub), this means that Authentication is much slower than Version 1 (seconds instead of mill seconds).
 
 This can lead to the switch getting impatient, sending several requests and logging MACNOTRECONFIRMED messages, especially when reconfirming all ports each hour. One solution is to increase the vmps restart count from the standard 3, to say, 10.
 
