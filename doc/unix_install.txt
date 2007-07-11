@@ -83,17 +83,18 @@ Time sync
   cron:
   0,30 7-20 * * 1-5 /usr/sbin/ntpdate -s A.B.C.D X.Y.Z.Z;  /sbin/hwclock --systohc
 
-syslog
-	/etc/hosts
+
+Setup syslog for centralised logging to the master server:
+	In /etc/hosts, add an entry for each NAC server
 			XX            vmps1  
 			YY            vmps2
 
-	Master: syslog server:
-		/etc/syslog-ng/syslog-ng.conf.in
+	On the Master, enable the syslog server:
+		vi /etc/syslog-ng/syslog-ng.conf.in
 
-        # uncomment to process log messages from network:
-        #
-        udp(ip("0.0.0.0") port(514));
+        	# uncomment to process log messages from network:
+        	#
+        	udp(ip("0.0.0.0") port(514));
 	
 		SuSEconfig 
 		rcsyslog restart
@@ -105,14 +106,16 @@ syslog
 		destination network  { udp("loghost" port(514)); };
 		log { source(src); filter(f_info); destination(network); };
 	
-		add loghost to (/etc/hosts
+		add loghost to the vmps2 line in /etc/hosts
 	
 	SuSEconfig 
 	rcsyslog restart
 	
+
 change the root GECOS field in /etc/passwd to "root MACHINE" 
 	
 Also check: /root/.ssh/authorized_keys
+
 
 naming: 
 	vi /etc/resolv.conf 
@@ -145,8 +148,4 @@ Sean's Tools: additional extras:
 	check_disk  in root cron 
 		*/3 *    * * *   /secure/check_disk 90 800  	
 	
-	
-
-	
-
 
