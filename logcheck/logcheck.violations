@@ -62,4 +62,5 @@ Exec-Program output: NT_KEY
 # key switch events
 AAA_AUTHEN_STATUS_ERROR
 
-
+#Switch events
+DOT11-7-AUTH_FAILED.*
