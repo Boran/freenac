@@ -205,9 +205,9 @@ function page()
 
                 // Submit
                 echo '<tr><td>&nbsp;</td><td>'."\n";
-                echo '<input type="submit" name="submit" value="Submit" />'."\n";
+                echo '<input type="submit" name="action" value="update" />'.'&nbsp;'.'<input type="submit" name="action" value="delete" />'."\n";
                 echo '</td></tr>'."\n";
-                echo '</table><input type="hidden" name="action" value="update" /><input type="hidden" name="id" value="'.$row['id'].'" /></form>';
+                echo '</table><!input type="hidden" name="action" value="update" /><input type="hidden" name="id" value="'.$row['id'].'" /></form>';
         }
 
    }
@@ -253,6 +253,30 @@ function page()
                 echo '<br />To restart Port '.$row['port'].' on Switch '.$row['switch'].' click <a href="'.$_SERVER['PHP_SELF'].'?action=restartport&port='.$row['id'].'">here</a>.';
         }
    }
+   // parse request and delete record
+   else if ($_REQUEST['action']=='delete' && is_numeric($_REQUEST['id'])
+			&& is_numeric($_REQUEST['status']) && is_numeric($_REQUEST['vlan'])
+			&& is_numeric($_REQUEST['username']) && $_REQUEST['name']!='')
+   {
+      //make sure we have a matching system
+      $sql='select port.id, port.name as port, swi.name as switch, users.username, vlan.id as vlan
+            from systems as sys left join port as port on port.id=sys.lastport left join switch as swi on port.switch=swi.id, vlan, users
+            where sys.id='.$_REQUEST['id'].' and vlan.id='.$_REQUEST['vlan'].' and users.id=\''.$_REQUEST['username'].'\';';
+      $result=mysql_query($sql) or die('Query failed: '.mysql_error());
+      if (mysql_num_rows($result)!=1)
+      {
+         echo 'System, VLAN or User missmatch.';
+      }
+      else
+      {
+         $sql="delete from systems where id='{$_REQUEST['id']}';";
+         mysql_query($sql) or die('Query failed: '.mysql_error());
+         //Record successfully deleted, inform user
+         echo '<br />Delete successful.<br />';
+         echo "<br />Click <a href=\"{$_SERVER['PHP_SELF']}\">here</a> to return to main page";
+      }
+   }
+         
    // mark switchport for restart
    else if ($_REQUEST['action']=='restartport' && is_numeric($_REQUEST['port'])){
         // make sure this switchport exists
