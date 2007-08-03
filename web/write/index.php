@@ -131,6 +131,22 @@ function page()
    echo print_header($entityname, $xls_output);
    // let's find out what we're supposed to do
    // edit the properties of a given system
+   $remote_host=validate_webinput($_SERVER['REMOTE_ADDR']);
+   if (empty($_SERVER['AUTHENTICATE_USERPRINCIPALNAME']))
+      $uname='1';
+   else
+   {
+      $temp=explode('@',$_SERVER['AUTHENTICATE_USERPRINCIPALNAME']);
+      $temp=validate_webinput($temp[0]);
+      $res=mysql_query("select id from users where username like '%$temp%'");
+      if (mysql_num_rows($res)!=1)
+         $uname='1';
+      else
+      {
+         $row=mysql_fetch_array($res);
+         $uname=$row['id'];
+      }
+   }
    if ($_REQUEST['action']=='edit'){
         // check that what we got is a number
         if (is_numeric($_REQUEST['id'])){
@@ -245,7 +261,7 @@ function page()
                 mysql_query($sql) or die('Query failed: ' . mysql_error());
                 // Update OK
                 // log what we have done
-                $sql='INSERT INTO guilog (who, host, datetime, priority, what) VALUES (\'WEBGUI\',\'WEBGUI\',NOW(),\'info\',\'Updated system: '.$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
+                $sql="INSERT INTO guilog (who, host, datetime, priority, what) VALUES ('$uname','$remote_host',NOW(),'info','Updated system: ".$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
                 mysql_query($sql) or die('Query failed: ' . mysql_error());
                 // Update successful
                 echo '<br />Update successful.<br />';
@@ -269,9 +285,13 @@ function page()
       }
       else
       {
+         $row=mysql_fetch_array($result);
          $sql="delete from systems where id='{$_REQUEST['id']}';";
          mysql_query($sql) or die('Query failed: '.mysql_error());
          //Record successfully deleted, inform user
+         $sql="insert into guilog (who, host, datetime, priority, what) values ('$uname','$remote_host',NOW(),'info','Deleted system: ".$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].',vlan'.$_REQUEST['vlan'].'\');';
+         mysql_query($sql) or die('Query failed: '.mysql_error());
+         //Delete successful
          echo '<br />Delete successful.<br />';
          echo "<br />Click <a href=\"{$_SERVER['PHP_SELF']}\">here</a> to return to main page";
       }
