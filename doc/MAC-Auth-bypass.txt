@@ -1,3 +1,6 @@
+Please see http://freenac.net/en/community?q=en/techguide
+the information below is probably out of date.
+_____________________________________________________________
 MAC-Auth-Bypass
 
 MAC authentication bypass is an alternative to 802.1X that allows network access to devices

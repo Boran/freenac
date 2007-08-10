@@ -1,4 +1,6 @@
-
+Please see http://freenac.net/en/community?q=en/installguide
+the information below is probably out of date.
+_____________________________________________________________
 
   tail -f /usr/local/var/log/radius/radius.log|egrep "User-Name|Exec-Program output"
   tcpdump -i eth0 -n host 10.0.0.1    (IP=Access Point)

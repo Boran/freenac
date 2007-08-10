@@ -1,3 +1,7 @@
+Please see http://freenac.net/en/community?q=en/installguide
+the information below is probably out of date.
+_____________________________________________________________
+
 # ==============================================
 
 FreeNAC: Documentation of FreeRadius component for 802.1x

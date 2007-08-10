@@ -1,7 +1,9 @@
+Please see http://freenac.net/en/community?q=en/techguide
+the information below is probably out of date.
+_____________________________________________________________
 
 Introduction:
 -------------
-See http://www.freenac.net/pages/documentation.php for an overview of documentation.
 
 A diagram of components mentionend below is available: http://svn.sourceforge.net/viewvc/opennac/branches/2.1/doc/802.1x_components1.png?view=markup
 

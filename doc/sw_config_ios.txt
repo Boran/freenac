@@ -1,3 +1,6 @@
+Please see http://freenac.net/en/community?q=en/installguide
+the information below is probably out of date.
+_____________________________________________________________
 Network Switch Configuration & Tips for Cisco IOS
 
 # Initially, Switches must be configured to send a copy of syslog messages, and given the name of the vmps servers, where it can send requests for dynamic port assignment.

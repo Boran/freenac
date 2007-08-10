@@ -1,3 +1,6 @@
+Please see http://freenac.net/en/community?q=en/installguide
+the information below is probably out of date.
+_____________________________________________________________
 ______________________________________________________________________
                                                
 slave_mysql_sync.txt                          Last Update: 22.2.07/SB

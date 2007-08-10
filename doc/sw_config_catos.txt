@@ -1,3 +1,6 @@
+Please see http://freenac.net/en/community?q=en/installguide
+the information below is probably out of date.
+_____________________________________________________________
 Network Switch Configuration & Tips: for CatOS
 ----------------------------------------------
 

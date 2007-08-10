@@ -1,15 +1,13 @@
 ________ Tips on Working with Subversion _________
 Checkout a working copy:
-svn co https://svn.sourceforge.net/svnroot/opennac/trunk/contrib
-svn co https://svn.sourceforge.net/svnroot/opennac/trunk/bin 
-svn co https://svn.sourceforge.net/svnroot/opennac/trunk/etc
-svn co https://svn.sourceforge.net/svnroot/opennac/trunk/web1
-svn co https://svn.sourceforge.net/svnroot/opennac/trunk/web2
-svn co https://svn.sourceforge.net/svnroot/opennac/doc
+svn co https://svn.sourceforge.net/svnroot/opennac/trunk
+
+Checking out a stable branch (example is the 2.2, the latest in Aug'07)
+svn co https://svn.sourceforge.net/svnroot/opennac/branches/2.2
 
 Check for changes:	
-svn update contrib bin etc doc
-		svn help update
+svn update -v 
+svn help update
 	
 Make changes:
 svn add <filename|directory>
@@ -19,7 +17,6 @@ svn move <filename|directory>
 		svn help [ add | delete | copy | move ]
 
 Examine your changes:
-svn status doc bin etc contrib
 svn status <filename|directory>
 svn diff
 svn diff > <patchfile>
@@ -28,10 +25,7 @@ svn revert <filename>
 		svn [ blame | praise ]
 
 Commit your changes:
-svn commit --username YOUR_SF_USER –m “your message“ contrib
-svn commit --username YOUR_SF_USER –m “your message“ doc
-svn commit --username YOUR_SF_USER –m “your message“ bin
-svn commit --username YOUR_SF_USER –m “your message“ etc
+svn commit --username YOUR_SF_USER –m “your message“ <filename|directory>
 svn help commit
 
 --------- Subversion client settings ----------
@@ -49,7 +43,3 @@ Limit what files are checking into SVN, edit ~/.subversion/config
 Specifically, we don't want RCS files, or the productive config.inc
 (with passwords) checked in
 
-
------------ TO DO -----------
-[sb] I have a problem with contrib/init.d
-[sb] How to move doc back into trunk with breaking things?

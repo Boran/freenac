@@ -1,3 +1,7 @@
+Please see http://freenac.net/en/community?q=en/installguide
+the information below is probably out of date.
+_____________________________________________________________
+
 Introduction
 ------------
 This document discuss several topics on the day to day usange of VMPS on Cisco switches.
