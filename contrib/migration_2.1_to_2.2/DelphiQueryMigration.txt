@@ -62,7 +62,12 @@ UPDATE switch s
   WHERE s.id=:Old_id   
   [The location updating is provided by a LookupCombox in Delphi]    
   
-  
+#SQLinsert:  
+INSERT INTO switch
+    (ip,name,location,comment,swgroup,notify,scan)
+  VALUES
+    (:ip,name,:location,:comment,:swgroup,:notify,:scan)  
+      
   
 -- quUsers
 SELECT id, username, GivenName, Surname, 
