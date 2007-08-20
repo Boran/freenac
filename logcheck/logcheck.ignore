@@ -32,6 +32,7 @@ kernel: Kernel logging (proc) stopped
 kernel: Kernel log daemon
 restarting syslog
 syslog-ng.*: (new configuration|Changing permissions on special file|SIGHUP received)
+syslog-ng.*: (STATS)
 Reload syslog service
 
 crontab.* (BEGIN|END) EDIT
@@ -39,9 +40,10 @@ crontab.* (BEGIN|END) EDIT
 
 ############# Common VMPS entries #######
 ##
+Manual Users synced from
 vmpsd_external.*: (get_port_status|decide|Debug|ping|Ping)
 
-flap_detect.*: (Debug1|restart_port for GWP)
+flap_detect.*: (Debug1|restart_port for )
 
 restart_port.*: Port restart try
 cron_restart_port[\d+]: restart_port switch
@@ -49,8 +51,8 @@ cron_restart_port[\d+]: restart_port switch
 vmpsd: (Unknown|No. Data Items|Sequence No.|Client IP address|Port name):
 vmpsd: (==============|VQP Request|ResponseDomain name|MAC address)
 vmpsd: (Vlan name|Domain name|Response)
-waiting for dynamic assignment
-0000.0000.0000
+#waiting for dynamic assignment
+#0000.0000.0000
 --NONE--
 
 # Enable these for level 1 debugging:
@@ -65,7 +67,7 @@ vmps_purge_unknowns[\d+]: completed
 dump_ports[\d+]: completed
 
 ############# Common Switch entries #######
-VQPCLIENT-7-RECONF Reconfirming VMPS responses
+#VQPCLIENT-7-RECONF Reconfirming VMPS responses
 VQPCLIENT-7-RECONF
 
 
@@ -88,10 +90,18 @@ sshd.* Accepted publickey for root from ::ffff:192.168.245.40
 Waking up in 
 (Framed-MTU|Message-Authenticator|NAS-Port|NAS-IP-Address|NAS-Identifier)
 SSL Connection Established
-Debug:  main:
-Debug: +(peap|eap|tls):
-Debug: +(rlm_eap|TLS_|eaptls_|mschap2|radius_xlat|rlm_mschap)
-Info: rlm_eap_mschapv2
+Debug.*
+Tunnel.*
+PEAP.*
+Call.*
+MS-.*
+Challenge.*
+rlm_eap_mschapv2.*
+User-Password.*
+#Debug:  main:
+#Debug: +(peap|eap|tls):
+#Debug: +(rlm_eap|TLS_|eaptls_|mschap2|radius_xlat|rlm_mschap)
+#Info: rlm_eap_mschapv2
 
 
 ## Debugging 
