@@ -261,10 +261,10 @@ function validate_webinput($value){
         }
         else {
                 if (get_magic_quotes_gpc()) {
-                        $value = stripslashes($value);
+                        $value = @stripslashes($value);
                 }
                 if (!is_numeric($value)){
-                        mysql_real_escape_string($value);
+                        $value = @mysql_real_escape_string($value);
                 }
         }
         return trim($value);
