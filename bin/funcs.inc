@@ -296,7 +296,7 @@ function cv_input($str){
 function snmp_restart_port($switch, $port) {
   global $lastseen_sms_restart;
   if ($lastseen_sms_restart) {
-     $answer=syscall("./restart_port $switch $port");
+     $answer=syscall("./restart_port $port $switch");
      debug1($answer);
      logit("restart_port for GWP: $answer");
   }
