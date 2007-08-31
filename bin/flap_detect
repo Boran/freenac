@@ -33,8 +33,9 @@ $tmp1="$argv[0].tmp1";
 $message="";
 $logs="";
 
-$tail="/opt/vmps/logtail /var/log/messages /var/log/.messages.flap_detect > $tmp1";
+# testing:
 #$tail="tail -500 /var/log/messages > $tmp1";
+$tail="/opt/nac/bin/logtail /var/log/messages /var/log/.messages.flap_detect > $tmp1";
 
 #$cmd="$tail| egrep 'vmpsd: (ALLOW|DENY)' | |awk '{print $11, $12, $13}'|sort | uniq -c | awk '{if ($1 > 40) print $1, " ", $2, " port ", $4}'";
 $cmd="egrep 'vmpsd: (ALLOW|DENY)' $tmp1 |awk '{print $11, $12, $13}'|sort | uniq -c  ";
@@ -263,11 +264,28 @@ function react($cnt, $switch, $port)
 
 
 ## --- main () ----
-  ## DRYRUN
-  $answer=explode("\n", syscall("$tail"));  # save all log entries in $tmp1
-  #echo $tail;
 
-  $answer=explode("\n", syscall("$cmd"));
+  # first get the most resent log messags
+  #echo $tail;
+  unset($answer);
+  #$answer=explode("\n", syscall("$tail"));  # save all log entries in $tmp1
+  #$answer=syscall("ls");  # save all log entries in $tmp1
+  #$answer=syscall("TEST_ERROR");  # save all log entries in $tmp1
+  $answer=syscall("$tail");  # save all log entries in $tmp1
+  if (! isset($answer) ) { 
+    logit("syscall failed");  # will never happen, see syscall()
+    exit;
+
+  } 
+  #else if (strlen($answer) >1) {
+    # Error handling is not  easy, but if there is a non-zero message,
+    # we probably have an error.
+  #  logit("Possible error, answer= $answer");
+  #}
+
+  # do a grep on the newest log messages
+  #unset($answer);
+  $answer=explode("\n", syscall("$cmd")); 
   #echo $cmd;
   for ($j = 0; $j < count($answer); $j++){
       #echo "$answer[$j]\n";

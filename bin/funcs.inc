@@ -199,14 +199,25 @@ function db_connect()
      or die("Could not select DB: " . mysql_error());;
 }
 
+/* syscall
+ * Abstract calling of unix commands.
+ * Problem: popen does not pass back command success
+ * so syscall cannot say if the command works.
+ */
 function syscall($command){
    $result='';
+   #if ( $proc = popen("($command) ","r") ) {
    if ( $proc = popen("($command) 2>&1","r") ) {
        while (!feof($proc))
          $result .= fgets($proc, 1000);
        pclose($proc);
+       #debug2("syscall(): executed $command, RETURN=$result");
        return $result;
+   #} else {       # will never be reaches, popen does not pass back command success
+   #  logit("syscall error ", $proc);
+   #  return undef;
    }
+   
 }
 
 function remove_type($element)                          //Remove the type of one element and leave only the value
