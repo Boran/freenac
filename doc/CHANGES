@@ -1,5 +1,38 @@
 ________ CHANGE Version 2.2 ___________
 
+---- Changes from V2.2 RC1 to V2.2 RC2
+ * Web 1 and Web 2 were put together into a single interface /web
+   with AD auth made optional
+ * Fixed several bugs in vmpsd_external and added new features
+	Set an expired device to killed
+	Hostname when killing a system
+	Ignoring null dates
+	VLAN by switch location
+	Hub detection
+	Handling of VMs
+	Check for unknown status
+ * Fixed several bugs in vmps_lastseen and added new features
+	GWP detection
+	Update port regardless of check_for_expired
+	Add switchname when a new switch is detected
+	Added hostname when warning about expired
+	Add port and sswitch comments if no patchcable info is found
+ * Modified version of restart_port using SNMP
+ * New functions introduced in funcs.inc. Some of them are not used at the moment,
+   but they'll be in the near future
+	is_mac_on_port
+	ping_mac2
+	is_field_active
+ * Added more monitoring scripts
+ * Added more documentation
+ * Fixes in the Windows GUI
+ * Importing of the variables contained in the config.inc file into the config table
+ * Creation of a Settings class that holds global configuration variables.
+   This Settings class marks our first steps towards the development of a 
+   OO policy interface.
+   All scripts have been modified accordingly
+
+
 ---- Changes from V2.1 RC3 to V2.2 RC1
 
 Key changes:
