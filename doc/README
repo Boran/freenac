@@ -1,8 +1,8 @@
 _______________________ FreeNAC README _____________________________
 
-This is Version 2.2 RC1 of FreeNAC, Release  2007.03.01
+This is Version 2.2 RC2 of FreeNAC, Release  2007.06.22
 
-To install please see master_server_install.txt and master_server_config.txt
+To install please see http://freenac.net/en/community?q=en/installguide
 
 Check our website http://www.freenac.net for news about our project
 
@@ -13,6 +13,11 @@ Check our website http://www.freenac.net for news about our project
 To check the list of changes in your system without actually changing anything, do:
 
 svn status -u
+
+
+__________________________Changes from 2.2 RC1 to 2.2 RC2_________________________________
+
+   See the CHANGES file
 
 __________________________Changes from 2.1 RC3 to 2.2 RC1__________________________________
 
