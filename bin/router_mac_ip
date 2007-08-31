@@ -78,7 +78,7 @@ foreach (split(' ', $conf->core_routers) as $router) {
  $results=explode("\n", syscall($router_snmpwalk." $router ipNetToMediaPhysAddress"));
 
 
- if ( count($results) === 0 ) {   // no results, error?
+ if (( count($results) === 0 ) || (!strpos($results[0],'ipNetToMediaPhysAddress'))){   // no results, error?
    logit("No results retrieved from router $router: SNMP errors?");
    debug2($results[$i]);
    #log2db('info',"No results retrieved from router $router: SNMP errors?");
