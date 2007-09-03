@@ -1,6 +1,18 @@
-________ CHANGE Version 2.2 ___________
+________ CHANGES Version 2.2 ___________
 
----- Changes from V2.2 RC1 to V2.2 RC2
+To compare changes in your installation with the FreeNAC repository:
+  svn status -u
+This reports, but does not commit any changes.
+
+
+History of this Branch 2.2
+===========================
+
+---- Changes V2.2 RC3 (SVN tag TBD)
+
+
+
+---- Changes from V2.2 RC1 to V2.2 RC2 (SVN tag 776)
  * Web 1 and Web 2 were put together into a single interface /web
    with AD auth made optional
  * Fixed several bugs in vmpsd_external and added new features
@@ -33,7 +45,7 @@ ________ CHANGE Version 2.2 ___________
    All scripts have been modified accordingly
 
 
----- Changes from V2.1 RC3 to V2.2 RC1
+---- Changes from V2.1 RC3 to V2.2 RC1 (SVN tag 550)
 
 Key changes:
  o Database redesign: improved keys, field names and table names will allow the DB
