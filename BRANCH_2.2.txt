@@ -1,6 +1,2 @@
 
 This text file is to remind you what Branch of NAC you are on :-)
-
-History of this Branch 2.2 
-- V2.2 RC1 was created from Trunk 550 
-  Branch 2.2 716 was merged back to trunk by h_ortiz on 22.07.2007
