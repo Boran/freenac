@@ -1,0 +1,39 @@
+
+The rdiff tool is great for difference backups, so FreeNAC provides
+a few wrapper scripts he help you us it for backing up your data.
+
+Getting rdiff-backup and install:- example:
+   cd /opt/install
+   download from http://librsync.sourceforge.net/
+   ./configure && make install
+
+Getting rdiff-backup and install:- example:
+   cd /opt/install
+   wget http://savannah.nongnu.org/download/rdiff-backup/rdiff-backup-1.0.4.tar.gz
+   tar xvzf rdiff-backup-1.0.4.tar.gz
+   cd rdiff-backup-1.0.4/
+   python setup.py install
+
+Now install both of the above on a second server too.
+You may also have to install 'popt', e.g. on Suse Linux:
+   yast -i popt popt-devel
+
+rdiff.run in /opt/nac/contrib is a wrapper to call rdiff-backup with some options and ignore some error messages (please have a quick look).
+
+- review rdiff.run
+- put the list of files to exclude in /opt/nac/contrib/rdiff.exclude
+- lets assume you want to backup your server 'nac1' to the server 'nac2'
+  create a root SSH trust from nac1->nac2
+  create a backup dir on nac2:
+    mkdir -p /data/backup/nac1.rdiff
+  try a backup:
+   /opt/nac/contrib/rdiff.run / nac2::/data/backup/nac1.rdiff
+
+A typical root cron entry would look like:
+0 2 * * 3,6  /opt/nac/contrib/rdiff.run nac2::/data/backup/nac1.rdiff  |logger
+  ==> backup the endtire local system, apart from excludes, to /data/backup/nac1.rdiff
+      on the remote server nac2.
+      Stop the DB when doing this or make sure its idle.
+
+
+
