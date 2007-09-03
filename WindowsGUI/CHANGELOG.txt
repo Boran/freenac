@@ -81,4 +81,6 @@ SELECT * FROM naclog where naclog.id=144391 order by id desc limit 0.500;
     to copy system name and confirm the change. The IP address is now correctly
     displayed too.
   
-  inotgdbose1-2 inonacscri
+v2.2.0.137/03.09.07/SB: 
+  'New Inventories' button was showing a blank list.
+  Add Wsus support (see Edit->Wsus and Reports->Wsus), is wsus_enabled is set in the config table.

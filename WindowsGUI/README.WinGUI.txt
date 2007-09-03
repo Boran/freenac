@@ -6,14 +6,15 @@ Description:
   Copyright (C) 2007 Swisscom, FreeNAC Core Team, Sean Boran, http://www.FreeNAC.net
 
 License  
-  We cannot provide source code at the moment as its proprietary, but you can use it for free.
+  We cannot provide source code (yet), but you can use it for free.
   You may not charge other for this tool, and must always preserve this file and the CHANGELOG if
   copying.
   
   The OpenSource issue will probably be solved by replacing it with a WebGUI, depending on the Team 
   resources (contributions are welcome).
 
-  
+
+Please read the online Installation Guide (http://FreeNAC.net/en/installguide), its probably more complete that these brief notes.
   
   
 Using this GUI on the Demo Online FreeNAC database
@@ -82,18 +83,14 @@ Full  Installation:
       e) Restart the GUI, and press "Connect"
 
    
-   4. Ensure the settings in the 'config' DB table are correct.
-      To enable all features, set value=1:
-        update config set value='1' WHERE name='StaticInvEnabled';
-        update config set value='1' WHERE name='NmapEnabled';
-        update config set value='1' WHERE name='AntiVirusEnabled';
-        update config set value='1' WHERE name='PatchCableEnabled';  
-        
-      To enable the DEMO company setting in vmps.xml to work:                  
+   4. To enable the DEMO company setting in vmps.xml to work:                  
         update config set value='1' WHERE name='DemoMode';  
       normally this is 0, meaning that a company called DEMO will not work. 
       If it is=1, and the DEMO company is set in vmps.xml, then the user is given administrator access!        
 
+   5. Please read also:
+      - the Windows GUI section of the User Guide (http://FreeNAC.net/en/userguide)
+      - the System Installation Guide (http://FreeNAC.net/en/installguide)
 
 See also the CHANGELOG.txt
 
