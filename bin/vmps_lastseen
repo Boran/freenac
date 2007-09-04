@@ -412,6 +412,7 @@ do {
                   .      "comment='$sms_details', "
                   .      "vlan='$vlan_id', "
                   .      "os3='$os3_id', "
+                  .      "os4='$sms_os', "
                   .      "lastport='$port_id', "
                   .      "office='$location_id', "
                   .      "mac='$mac2' ";
