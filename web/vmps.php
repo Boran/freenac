@@ -18,9 +18,9 @@ chdir(dirname(__FILE__));
 set_include_path("./:../");
 
 // include configuration
-require_once('../config.inc');
+require_once('./config.inc');
 // include functions
-require_once('../funcs.inc');
+require_once('./funcs.inc');
 
 define_syslog_variables();
 openlog("nac.web.read", LOG_PID, LOG_LOCAL5);

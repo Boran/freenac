@@ -29,9 +29,9 @@ chdir(dirname(__FILE__));
 set_include_path("./:../");
 
 // include configuration
-require_once('../config.inc');
+require_once('./config.inc');
 // include functions
-require_once('../funcs.inc');
+require_once('./funcs.inc');
 // include pear module (if activated in config)
 if ($xls_output){
         require_once "Spreadsheet/Excel/Writer.php";
@@ -39,7 +39,7 @@ if ($xls_output){
 
 function page()
 {
-   global $dbhost, $dbuser, $dbname, $dbpass;
+   global $dbhost, $dbuser, $dbname, $dbpass,$rights;
    //session setup
    session_name('FreeNAC');
    session_start();
@@ -161,69 +161,135 @@ function page()
         }
         // Found something
         else {
-                $row=mysql_fetch_array($result);
-                echo '<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
-                echo '<table width="1000" border="0">'."\n";
-                // Name
-                echo '<tr><td width="87">Name:</td><td width="400">'."\n";
-                echo '<input name="name" type="text" value="'.stripslashes($row['name']).'"/>'."\n";
-                echo '</td></tr>'."\n";
-                // MAC
-                echo '<tr><td>MAC:</td><td>'."\n";
-                echo $row['mac'].(!is_null($row['vendor'])?' ('.$row['vendor'].')':'')."\n";
-                echo '</td></tr>'."\n";
-                echo '<input type="hidden" name="mac" value="'.$row['mac'].'" />'."\n";
-                // Status
-                echo '<tr><td>Status:</td><td>'."\n";
-                echo get_status($row['status']);
-                echo '</td></tr>'."\n";
-                // VLAN
-                echo '<tr><td>VLAN:</td><td>'."\n";
-                echo '<select name="vlan">';
-                $sql='SELECT id, default_name as value FROM vlan ORDER BY value;'; // Get details for all vlans
-                $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
-                if (mysql_num_rows($res)>0){
+                if ($rights>=2)
+                {
+		   $row=mysql_fetch_array($result);
+                   echo '<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
+                   echo '<table width="1000" border="0">'."\n";
+                   // Name
+                   echo '<tr><td width="87">Name:</td><td width="400">'."\n";
+                   echo '<input name="name" type="text" value="'.stripslashes($row['name']).'"/>'."\n";
+                   echo '</td></tr>'."\n";
+                   // MAC
+                   echo '<tr><td>MAC:</td><td>'."\n";
+                   echo $row['mac'].(!is_null($row['vendor'])?' ('.$row['vendor'].')':'')."\n";
+                   echo '</td></tr>'."\n";
+                   echo '<input type="hidden" name="mac" value="'.$row['mac'].'" />'."\n";
+                   // Status
+                   echo '<tr><td>Status:</td><td>'."\n";
+                   echo get_status($row['status']);
+                   echo '</td></tr>'."\n";
+                   // VLAN
+                   echo '<tr><td>VLAN:</td><td>'."\n";
+                   echo '<select name="vlan">';
+                   $sql='SELECT id, default_name as value FROM vlan ORDER BY value;'; // Get details for all vlans
+                   $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+                   if (mysql_num_rows($res)>0){
                         while ($r=mysql_fetch_array($res)){
                                 echo '<option value="'.$r['id'].'" '.($r['id']==$row['vlan']?'selected="selected"':'').'>'.$r['value'].'</option>'."\n";
                         }
-                }
-                echo '</select></td></tr>'."\n";
-                // LastVLAN
-                echo '<tr><td>LastVLAN:</td><td>'."\n";
-                echo (is_null($row['lastvlan'])?'NONE':$row['lastvlan'])."\n";
-                echo '</td></tr>'."\n";
-                // User
-                echo '<tr><td>User:</td><td>'."\n";
-                echo get_userdropdown($row['user']);
-                echo '</td></tr>'."\n";
-                // Office
-                echo '<tr><td>Office:</td><td>'."\n";
-                echo get_officedropdown($row['office']);
-                echo '</td></tr>'."\n";
-                // Switch
-                echo '<tr><td>Switch:</td><td>'."\n";
-                echo $row['switch'].' -- '.$row['port'].' -- '.$row['location']."\n";
-                echo '</td></tr>'."\n";
-                // LastIP / LastIPseen
-                echo '<tr><td>LastIP:</td><td>'."\n";
-                echo (is_null($row['lastip'])?'NONE':$row['lastip'])."\n";
-                echo ' -- ';
-                echo (is_null($row['lastipseen'])?'NEVER':$row['lastipseen'])."\n";
-                echo '</td></tr>'."\n";
-                // LastSeen
-                echo '<tr><td>LastSeen:</td><td>'."\n";
-                echo (is_null($row['lastseen'])?'NEVER':$row['lastseen'])."\n";
-                echo '</td></tr>'."\n";
-                // Comment
-                echo '<tr><td>Comment:</td><td>'."\n";
-                echo '<input name="comment" type="text" value="'.stripslashes($row['comment']).'"/>'."\n";
-                echo '</td></tr>'."\n";
+                   }
+                   echo '</select></td></tr>'."\n";
+                   // LastVLAN
+                   echo '<tr><td>LastVLAN:</td><td>'."\n";
+                   echo (is_null($row['lastvlan'])?'NONE':$row['lastvlan'])."\n";
+                   echo '</td></tr>'."\n";
+                   // User
+                   echo '<tr><td>User:</td><td>'."\n";
+                   echo get_userdropdown($row['user']);
+                   echo '</td></tr>'."\n";
+                   // Office
+                   echo '<tr><td>Office:</td><td>'."\n";
+                   echo get_officedropdown($row['office']);
+                   echo '</td></tr>'."\n";
+                   // Switch
+                   echo '<tr><td>Switch:</td><td>'."\n";
+                   echo $row['switch'].' -- '.$row['port'].' -- '.$row['location']."\n";
+                   echo '</td></tr>'."\n";
+                   // LastIP / LastIPseen
+                   echo '<tr><td>LastIP:</td><td>'."\n";
+                   echo (is_null($row['lastip'])?'NONE':$row['lastip'])."\n";
+                   echo ' -- ';
+                   echo (is_null($row['lastipseen'])?'NEVER':$row['lastipseen'])."\n";
+                   echo '</td></tr>'."\n";
+                   // LastSeen
+                   echo '<tr><td>LastSeen:</td><td>'."\n";
+                   echo (is_null($row['lastseen'])?'NEVER':$row['lastseen'])."\n";
+                   echo '</td></tr>'."\n";
+                   // Comment
+                   echo '<tr><td>Comment:</td><td>'."\n";
+                   echo '<input name="comment" type="text" value="'.stripslashes($row['comment']).'"/>'."\n";
+                   echo '</td></tr>'."\n";
 
-                // Submit
-                echo '<tr><td>&nbsp;</td><td>'."\n";
-                echo '<input type="submit" name="action" value="update" />'.'&nbsp;'.'<input type="submit" name="action" value="delete" />'."\n";
-                echo '</td></tr>'."\n";
-                echo '</table><!input type="hidden" name="action" value="update" /><input type="hidden" name="id" value="'.$row['id'].'" /></form>';
+                   // Submit
+                   echo '<tr><td>&nbsp;</td><td>'."\n";
+                   echo '<input type="submit" name="action" value="update" />'.'&nbsp;'.'<input type="submit" name="action" value="delete" />'."\n";
+                   echo '</td></tr>'."\n";
+                   echo '</table><!input type="hidden" name="action" value="update" /><input type="hidden" name="id" value="'.$row['id'].'" /></form>';
+                }
+                else if ($rights==1)
+                {
+                   $row=mysql_fetch_array($result);
+                   echo '<table width="1000" border="0">'."\n";
+                   // Name
+                   echo '<tr><td width="87">Name:</td><td width="400">'."\n";
+                   echo stripslashes($row['name'])."\n";
+                   echo '</td></tr>'."\n";
+                   // MAC
+                   echo '<tr><td>MAC:</td><td>'."\n";
+                   echo $row['mac'].(!is_null($row['vendor'])?' ('.$row['vendor'].')':'')."\n";
+                   echo '</td></tr>'."\n";
+                   // Status
+                   echo '<tr><td>Status:</td><td>'."\n";
+                   echo get_status($row['status']);
+                   echo '</td></tr>'."\n";
+                   // VLAN
+                   echo '<tr><td>VLAN:</td><td>'."\n";
+                   $sql="SELECT default_name FROM vlan where id='{$row['vlan']}';"; // Get details for all vlans
+                   $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+                   if (mysql_num_rows($res)>0)
+                        while ($r=mysql_fetch_array($res))
+                           echo $r['default_name'];
+                   echo '</td></tr>'."\n";
+                   // LastVLAN
+                   echo '<tr><td>LastVLAN:</td><td>'."\n";
+                   echo (is_null($row['lastvlan'])?'NONE':$row['lastvlan'])."\n";
+                   echo '</td></tr>'."\n";
+                   // User
+                   echo '<tr><td>User:</td><td>'."\n";
+                   echo get_userdropdown($row['user']);
+                   echo '</td></tr>'."\n";
+                   // Office
+                   echo '<tr><td>Office:</td><td>'."\n";
+                   $sql="select l.name as office, b.name as building from location l inner join building b on l.building_id=b.id and l.id='{$row['office']}'";
+                   $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+                   if (mysql_num_rows($res)>0)
+                        while ($r=mysql_fetch_array($res))
+                           echo "{$r['building']} - {$r['office']}";
+                   echo '</td></tr>'."\n";
+                   // Switch
+                   echo '<tr><td>Switch:</td><td>'."\n";
+                   echo $row['switch'].' -- '.$row['port'].' -- '.$row['location']."\n";
+                   echo '</td></tr>'."\n";
+                   // LastIP / LastIPseen
+                   echo '<tr><td>LastIP:</td><td>'."\n";
+                   echo (is_null($row['lastip'])?'NONE':$row['lastip'])."\n";
+                   echo ' -- ';
+                    // LastSeen
+                   echo '<tr><td>LastSeen:</td><td>'."\n";
+                   echo (is_null($row['lastseen'])?'NEVER':$row['lastseen'])."\n";
+                   echo '</td></tr>'."\n";
+                   // Comment
+                   echo '<tr><td>Comment:</td><td>'."\n";
+                   echo stripslashes($row['comment'])."\n";
+                   echo '</td></tr>'."\n";
+
+                   // Submit
+                   echo '<tr><td>&nbsp;</td>'."\n";
+                   echo '</tr>'."\n";
+                   echo '</table>';
+                   echo "<br />Click <a href=\"{$_SERVER['PHP_SELF']}\">here</a> to return to find page";
+                }
         }
 
    }
@@ -241,32 +307,35 @@ function page()
         }
         // Got it, prepare statment and insert changes into DB
         else {
-                $row=mysql_fetch_array($result);
-                $sql='UPDATE systems SET ';
-                // got name?
-                $sql.=($_REQUEST['name']!=''?'name=\''.$_REQUEST['name'].'\', ':'');
-                // status, vlan
-                $sql.='status='.$_REQUEST['status'].', vlan='.$_REQUEST['vlan'];
-                // username
-                $sql.=($_REQUEST['username']!=''?', uid='.$_REQUEST['username'].' ':'');
-                // got office?
-                $sql.=($_REQUEST['office']!=''?', office='.$_REQUEST['office'].'':'');
-                // got comment?
-                $sql.=($_REQUEST['comment']!=''?', comment=\''.$_REQUEST['comment'].'\'':'');
-                // set what we know for sure (changedate, changeuser,...)
-                $sql.=', changedate=NOW(), changeuser=\'WEBGUI\'';
-                // where?
-                $sql.=' WHERE id=\''.$_REQUEST['id'].'\';';
-                // update the given data set
-                mysql_query($sql) or die('Query failed: ' . mysql_error());
-                // Update OK
-                // log what we have done
-                $sql="INSERT INTO guilog (who, host, datetime, priority, what) VALUES ('$uname','$remote_host',NOW(),'info','Updated system: ".$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
-                mysql_query($sql) or die('Query failed: ' . mysql_error());
-                // Update successful
-                echo '<br />Update successful.<br />';
-                // Ask the user if he want's to restart the associated port
-                echo '<br />To restart Port '.$row['port'].' on Switch '.$row['switch'].' click <a href="'.$_SERVER['PHP_SELF'].'?action=restartport&port='.$row['id'].'">here</a>.';
+                if ($rights>=2)
+                {
+                   $row=mysql_fetch_array($result);
+                   $sql='UPDATE systems SET ';
+                   // got name?
+                   $sql.=($_REQUEST['name']!=''?'name=\''.$_REQUEST['name'].'\', ':'');
+                   // status, vlan
+                   $sql.='status='.$_REQUEST['status'].', vlan='.$_REQUEST['vlan'];
+                   // username
+                   $sql.=($_REQUEST['username']!=''?', uid='.$_REQUEST['username'].' ':'');
+                   // got office?
+                   $sql.=($_REQUEST['office']!=''?', office='.$_REQUEST['office'].'':'');
+                   // got comment?
+                   $sql.=($_REQUEST['comment']!=''?', comment=\''.$_REQUEST['comment'].'\'':'');
+                   // set what we know for sure (changedate, changeuser,...)
+                   $sql.=', changedate=NOW(), changeuser=\'WEBGUI\'';
+                   // where?
+                   $sql.=' WHERE id=\''.$_REQUEST['id'].'\';';
+                   // update the given data set
+                   mysql_query($sql) or die('Query failed: ' . mysql_error());
+                   // Update OK
+                   // log what we have done
+                   $sql="INSERT INTO guilog (who, host, datetime, priority, what) VALUES ('$uname','$remote_host',NOW(),'info','Updated system: ".$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
+                   mysql_query($sql) or die('Query failed: ' . mysql_error());
+                   // Update successful
+                   echo '<br />Update successful.<br />';
+                   // Ask the user if he want's to restart the associated port
+                   echo '<br />To restart Port '.$row['port'].' on Switch '.$row['switch'].' click <a href="'.$_SERVER['PHP_SELF'].'?action=restartport&port='.$row['id'].'">here</a>.';
+                }
         }
    }
    // parse request and delete record
@@ -285,15 +354,18 @@ function page()
       }
       else
       {
-         $row=mysql_fetch_array($result);
-         $sql="delete from systems where id='{$_REQUEST['id']}';";
-         mysql_query($sql) or die('Query failed: '.mysql_error());
-         //Record successfully deleted, inform user
-         $sql="insert into guilog (who, host, datetime, priority, what) values ('$uname','$remote_host',NOW(),'info','Deleted system: ".$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].',vlan'.$_REQUEST['vlan'].'\');';
-         mysql_query($sql) or die('Query failed: '.mysql_error());
-         //Delete successful
-         echo '<br />Delete successful.<br />';
-         echo "<br />Click <a href=\"{$_SERVER['PHP_SELF']}\">here</a> to return to main page";
+         if ($rights>=2)
+         {
+            $row=mysql_fetch_array($result);
+            $sql="delete from systems where id='{$_REQUEST['id']}';";
+            mysql_query($sql) or die('Query failed: '.mysql_error());
+            //Record successfully deleted, inform user
+            $sql="insert into guilog (who, host, datetime, priority, what) values ('$uname','$remote_host',NOW(),'info','Deleted system: ".$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].',vlan'.$_REQUEST['vlan'].'\');';
+            mysql_query($sql) or die('Query failed: '.mysql_error());
+            //Delete successful
+            echo '<br />Delete successful.<br />';
+            echo "<br />Click <a href=\"{$_SERVER['PHP_SELF']}\">here</a> to return to find page";
+         }
       }
    }
          
@@ -309,12 +381,15 @@ function page()
         }
         // Got it, mark port for restart
         else {
-                $r=mysql_fetch_array($result);
-                $sql='UPDATE port SET restart_now=1 WHERE id='.$_REQUEST['port'].';';
-                mysql_query($sql) or die('Query failed: ' . mysql_error());
-                // Mark OK
-                // Port marked for restart
-                echo '<br />Port '.$r['port'].' on switch '.$r['switch'].' will be restarted whithin the next minute.';
+                if ($rights>=2)
+                {
+                   $r=mysql_fetch_array($result);
+                   $sql='UPDATE port SET restart_now=1 WHERE id='.$_REQUEST['port'].';';
+                   mysql_query($sql) or die('Query failed: ' . mysql_error());
+                   // Mark OK
+                   // Port marked for restart
+                   echo '<br />Port '.$r['port'].' on switch '.$r['switch'].' will be restarted whithin the next minute.';
+                }
         }
    }
    // show export choices
@@ -460,32 +535,28 @@ function page()
                 echo print_resultset($result,$_SERVER);
         }
         echo '</table>';
+        echo "<br />Click <a href=\"{$_SERVER['PHP_SELF']}\">here</a> to return to find page";
    }
 
     // we're done. and as all tags need to be closed, print the footer now!
    echo print_footer();
-
+   echo "<br /><p align=\"center\"><a href=\"index.php\">NAC menu</a></p>";
 }
 
 if ($ad_auth===true)
 {
    $rights=user_rights($_SERVER['AUTHENTICATE_USERPRINCIPALNAME']);
-   if ($rights>=2)
+   if ($rights>=1)
    {
       page();
-   }
-   else if ($rights==1)
-   {
-      echo "<html>\n";
-      echo "<head>\n";
-      echo "\t<META HTTP-EQUIV=\"Refresh\" CONTENT=\"0; URL=../read\" />\n";
-      echo "</head>\n";
-      echo "</html>\n";
    }
    else echo "<h1>ACCESS DENIED</h1>";
 }
 else
+{
+   $rights=2;
    page();
+}
 
 
 ?>

@@ -51,6 +51,8 @@ function ismemberof($username,$group)
          {
             ## Build the DN out of the username
             $dn=explode('@',$username);
+            if (empty($dn))
+               return false;
             $temp_dn=str_replace('.',',DC=',$dn[1]);
             $dn='DC='.$temp_dn;
          }
@@ -121,14 +123,18 @@ function print_header($entityname, $xls_output){
 		<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 		<title>FreeNAC @'.$entityname.'</title>
-		<link href="../bw.css" rel="stylesheet" type="text/css" />
+		<link href="bw.css" rel="stylesheet" type="text/css" />
 		</head>
 
 		<body>
 		<table class="bw" width="1000" border="0">
 		  <tr>
-			<td><a href="/nac"><img src="../images/logo_small.png" border="0" /></a></td>
-			<td height="50" class="right">FreeNAC @'.$entityname.' </td>
+			<td><a href="./index.html"><img src="./images/logo_small.png" border="0" /></a></td>
+                        <td align="right">
+                           <a href="http://www.freenac.net">FreeNAC website</a><br />
+                           <a href="http://www.freenac.net/en/installguide">Documentation</a><br />
+                           <a href="http://www.freenac.net/phpBB2">Support</a>
+                        </td>
 		  </tr>
 		  <tr>
 			<td class="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a>';
@@ -166,7 +172,7 @@ function header_read()
             <head>
                <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
                <title>FreeNAC @'.$entityname.'</title>
-               <link href="../bw.css" rel="stylesheet" type="text/css" />
+               <link href="bw.css" rel="stylesheet" type="text/css" />
             </head>
             <body>';
       define('HEADER',true);
@@ -179,10 +185,15 @@ function main_stuff()
    $text=<<<EOF
    <table class="bw" border="0" align="center" width="500">
    <tr height="80">
-      <td><a href="/nac"><img src="../images/logo_small.png" border="0" /></a></td>
+      <td valign="center"><a href="./index.html"><img src="./images/logo_small.png" border="0" /></a></td>
+      <td align="right">
+         <a href="http://www.freenac.net">FreeNAC website</a><br />
+         <a href="http://www.freenac.net/en/installguide">Documentation</a><br />
+         <a href="http://www.freenac.net/phpBB2">Support</a>
+      </td>
    </tr>
    <tr valign="top">
-      <td>
+      <td colspan="2">
 
 EOF;
    return $text;
@@ -276,15 +287,27 @@ function validate_webinput($value){
 // retrieves all users from the databases and returns them as a hmtl dropdownlist
 //
 function get_userdropdown($selected_user) {
-        $ret='<select name="username">';
-        $sql='SELECT id, username, surname, givenname FROM users ORDER BY surname'; // Get details for all users
-        $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
-        if (mysql_num_rows($res)>0){
+        global $rights;
+        if ($rights>=2)
+        {
+           $ret='<select name="username">';
+           $sql='SELECT id, username, surname, givenname FROM users ORDER BY surname'; // Get details for all users
+           $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+           if (mysql_num_rows($res)>0){
                 while ($r=mysql_fetch_array($res)){
                         $ret.='<option value="'.$r['id'].'" '.($r['id']==$selected_user?'selected="selected"':'').'>'.$r['surname'].' '.$r['givenname'].'</option>'."\n";
                 }
+           }
+           $ret.='</select>'."\n";
         }
-        $ret.='</select>'."\n";
+        else
+        {
+           $sql="select username from users where id='$selected_user';";
+           $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+           if (mysql_num_rows($res)>0)
+                while ($r=mysql_fetch_array($res))
+                   $ret=$r['username'];
+        }
         return $ret;
 }
 
@@ -298,7 +321,7 @@ function get_officedropdown($oid){
         if (mysql_num_rows($res)>0){
                 while ($r=mysql_fetch_array($res)){
                         $ret.='<option value="'.$r['id'].'" '.($r['id']==$oid?'selected="selected"':'').'>'.$r['building'].' -  '.$r['office'].'</option>'."\n";
-                }
+             }
         }
         $ret.='</select>'."\n";
         return $ret;
@@ -307,16 +330,29 @@ function get_officedropdown($oid){
 //
 // retrieves the different status and returns them as a html dropdownlist
 //
-function get_status($s){
-        $ret='<select name="status">';
-        $sql='SELECT id, value FROM vstatus ORDER BY value ASC;';
-        $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
-        if (mysql_num_rows($res)>0){
+function get_status($s)
+{
+        global $rights;
+        if ($rights>=2)
+        {
+           $ret='<select name="status">';
+           $sql='SELECT id, value FROM vstatus ORDER BY value ASC;';
+           $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+           if (mysql_num_rows($res)>0){
                 while ($r=mysql_fetch_array($res)){
                         $ret.='<option value="'.$r['id'].'" '.($s==$r['id']?'selected="selected"':'').'>'.$r['value'].'</option>'."\n";
                 }
+           }
+           $ret.='</select>'."\n";
         }
-        $ret.='</select>'."\n";
+        else
+        {
+          $sql="select value from vstatus where id='$s';";
+          $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
+          if (mysql_num_rows($res)>0)
+                while ($r=mysql_fetch_array($res))
+                   $ret=$r['value'];
+        }
         return $ret;
 }
 
@@ -666,10 +702,12 @@ function reformat_mac($macdot) {
 };
 
 function get_vlan_descr($vlan) {
+
   if ($vlan) {
    global $readuser,$readpass;
    db_connect($readuser,$readpass);
-    $query = "SELECT vlan_description FROM vlan WHERE id = $vlan";
+    $query = "SELECT vlan_description FROM vlan WHERE id = '$vlan'";
+    echo $query;
     //echo $query;
     $descr = mysql_fetch_array(mysql_query($query));
     return($descr[0]);
