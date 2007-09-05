@@ -30,109 +30,15 @@
   $dbuser="inventwrite";
   $dbpass="PASSWORD2";              # keep this secret!
 
-## Debug 
-  $debug_to_syslog=true;          # Daemons: Debug also to syslog?
-  $logit_to_stdout=false;         # Debugging to the console?
-
-## vmps_external script:  
-  $use_port_default_vlan=true;     # should a default port per default be checked? If not only
-                                   # the global $default_vlan will be checked.
-  $detect_hubs=true;               # 'Intelligent' algorithm to resolve conflicts of several devices
-                                   # on one port, i.e. an un-managed switch or hub
-  $default_vlan=0;                 # 0=Default deny, otherwise unknown devices are put on this vlan (NOTE: this number points to the id field
-				   # from the vlan table, it is not the default_id.
-  $vlan_by_switch_location=false;  # Assignation of vlan by switch location
-  $check_for_expired=false;        # Enable verification of expired devices
-  $vlan_for_killed=0;		   # Vlan were killed devices will be put on
-
-## vmps_lastseen script:  
-  $lastseen_dryrun=false;           # Test, don't update DB
-  $default_user_unknown='KEINE';    # Unknown devices are assigned to this User ID
-  $set_vlan_for_unknowns="0";       # Set to "0" deny unknowns. The number
-                                    # corresponds to an entry in the vlan table. 
-                                    # In a learning phase you might set this to an internal lan, and 0 afterwards to block unknowns
-  $set_status_for_unknowns="0";     # 0=disabled, 1=enabled: often set to during the 'learning phase' and 0 afterwards.
-  $lastseen_patch_lookup=false;     # Lookup Patchcable details in Alerts
-                                    # set false by default since most people don't use the patch table
-  $sms_device="SMS PC";             # Text to display in the alert when an unknown SMS device connects
-  $disable_expired_devices=false;  # Disable expired devices
-  $email_alert_expired_devices=false;   #Send an email when an expired device connects?
- 
-
 ## Binding with FreeRadius
   $vmps_servers = "localhost";	    #Several VMPS servers to query. If one fails, go and query to the next one. List has to be delimited by commas
 				    #Example: $vmps_servers = "vmps1,vmps2,vmps3";  
-
-
-# enterprise legacy issues, leave false
-  $lastseen_infnet=false;          
-  $lastseen_infnet_notify=false;
-  $check_infnet_mac="";
-  $sms_infnet_mac="";
-
-
   $mail_user="root@DOMAIN.ch";      # mail to root? Set your domain
-  #$maildomain="0";                 # set to 0 to disable.
-  $maildomain="DOMAIN.ch";          # 
-  
-  $send_mail_if_updates=FALSE;	    # send mail to root if there is a new revision available
-
-  $vmps_monitor_restart=FALSE;
-  $os_hostname="vmps1";           # for alerting
-
-
-
-## report_old_users script:           
-  $report_old_users_days_from=3;
-  $report_old_users_days_back=10;   # Check for Direx users not updated 
-                                    # between -3 and this number of days
-
-## vmps_check & vmps_monitor script:
-  $vmpsd_is_local="1";              # =1 For Version2 or later
-  $vmps_lastseen_is_local="1";      # =1 
-  $server1="";                      # 
-  $server2="";
-  $check_port_restart=true;         # Restart switch port if flagged
-
-## vmps_user script:
-  $vmps_user_ska=array('XXX*');    # Organisations be synced from Direx
-  $vmps_user_direx="direx.test.com";
-  $vmps_user_direx_path="/my/url/GetXML.aspx";
-  
-## purge_unknowns :
-  $unknown_purge=30;               # Delete unknown systems older than XX days
-
 
 ## SNMP communities
   $snmp_ro="PASSWORD2";            # maybe public	
   $snmp_rw="PASSWORD3";            # very private
 
-## restart_port
-  $snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";  # SNMP Read community
-  $snmpset ="/usr/bin/snmpset  -v 1 -c $snmp_rw";   # SNMP Write community
-
 ## router_mac_ip
-  $core_routers="192.168.245.3 192.168.245.6";
-  $router_mac_ip_ignore_ip="/^(127\.0\.0|192\.168\./";
-  $router_mac_ip_ignore_mac="/^(00d0\.0064\.d000)/";
   $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";    # SNMP Read
-  $router_mac_ip_update_from_dns=false;     # Auto-update system names from DNS for 'unknowns'?
-
-
-## monitor_allows.sh
-#  $messagecount=50;
-
-## flap_detect
-  $flap_limit=40;
-  
-
-## LDAP coniguration settings (Active Directory)
-## ad_user_sync
-  $ad_server = 'dc.test.xx';		# Domain controller
-  $ad_port = '389';		#Port 389 is for domain-level lookups, use 3268 to use a global catalog
-  $ad_user = 'cn=administrator,cn=users,dc=test,dc=xx';	# AD user with read privileges on AD
-  $ad_password = '';			# AD users's password
-  $ad_base_user_dn = array('cn=users,dc=test,dc=xx');	# List with base DNs under which user information is stored
-
-
 ?>
