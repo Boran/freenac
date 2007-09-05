@@ -114,7 +114,9 @@ class Settings
                   break;
                case 'boolean':
                   {
-                     if (strcasecmp($result['value'],'true')==0)
+                     if ($result['value']>=1)
+                        $temp[$result['name']]=(boolean)true;
+                     else if (strcasecmp($result['value'],'true')==0)
                         $temp[$result['name']]=(boolean)true;
                      else
                         $temp[$result['name']]=(boolean)false;
