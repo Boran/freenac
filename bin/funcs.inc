@@ -304,12 +304,12 @@ function cv_input($str){
      return $out;
 }
 
-function snmp_restart_port($switch, $port) {
+function snmp_restart_port($port, $switch) {
   global $lastseen_sms_restart;
   if ($lastseen_sms_restart) {
      $answer=syscall("./restart_port $port $switch");
      debug1($answer);
-     logit("restart_port for GWP: $answer");
+     logit("snmp_restart_port: $answer");
   }
 }
 
