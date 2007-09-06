@@ -45,8 +45,12 @@ $queries['number']=0;
 $queries['messages']=0;
 $flagscannow=0;
 for ($i=0;$i<$argc;$i++)
+{
    if ($argv[$i]=="--scannow")
       $flagscannow++;
+   else if ($argv[$i]=="--verbose")
+      $debug_flag1=true;      
+}  
 if ($flagscannow)
    $output=FALSE;
 
