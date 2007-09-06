@@ -81,6 +81,9 @@ SELECT * FROM naclog where naclog.id=144391 order by id desc limit 0.500;
     to copy system name and confirm the change. The IP address is now correctly
     displayed too.
   
-v2.2.0.137/03.09.07/SB: 
+v2.2.0.137/06.09.07/SB: 
   'New Inventories' button was showing a blank list.
-  Add Wsus support (see Edit->Wsus and Reports->Wsus), is wsus_enabled is set in the config table.
+  Add Wsus support (see Edit->Wsus and Reports->Wsus), is wsus_enabled is set in the config table.  
+  Add Computer name/IP, user name to Edit->AntiVirus tab
+  Rename config options: NmapEnabled=>nmap_enabled, StaticInvEnabled=>static_inv,
+    PatchCableEnabled =>patchcable_lookups
