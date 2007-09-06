@@ -120,11 +120,11 @@ switch($j)
 debug1("Port $port on $switch");
 logit("Port restart try: $port on switch $switch");
 
-$ports_on_switch=@snmprealwalk($switch,$snmp_rw,'1.3.6.1.2.1.31.1.1.1.1');	//Get the list of ports on the switch
+$ports_on_switch=snmprealwalk($switch,$snmp_rw,'1.3.6.1.2.1.31.1.1.1.1');	//Get the list of ports on the switch
 if (empty($ports_on_switch))
 {
-   echo "ABORTED: Could not contact switch, or unknown Switch.\n";
-   logit("ABORTED: Could not contact switch, or unknown Switch");
+   echo "ABORTED: Could not contact switch $switch or unknown Switch.\n";
+   logit("ABORTED: Could not contact switch $switch or unknown Switch");
    exit(2);
 }
 $ports_on_switch=array_map("remove_type",$ports_on_switch);		//We are only interested in the string
