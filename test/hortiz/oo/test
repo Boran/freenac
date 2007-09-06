@@ -1,0 +1,29 @@
+#!/usr/bin/php -f
+<?
+
+function __autoload($classname)
+{
+   require_once "$classname.php";
+}
+
+require_once "policy.inc.php";
+
+
+define_syslog_variables();
+openlog("test",LOG_PID,LOG_LOCAL5);
+
+$request=VMPSRequest::getInstance();
+$request->setValues('MAC','SWITCH','PORT','VTP','LASTVLAN');
+
+$syslog=SysLogger::getInstance();
+$syslog->setLevel(2);
+$syslog->debug(1,"Testing debug level 1");
+$syslog->debug(2,"Testing debug level 2");
+$syslog->debug(3,"Testing debug level 3");
+
+$db_log=new DBLogger();
+$db_log->log("Testing 'DBLOGGER'");
+
+handle_request();	//Defined in policy.inc.php
+
+?>
