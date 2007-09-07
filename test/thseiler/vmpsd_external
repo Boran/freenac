@@ -12,12 +12,15 @@
  *   so some jobs such as document what was last seen, where, or recognising 
  *   Infnet PCs, is done in the vmps_lastseen script, which is not real time.
  *     o If the MAC is active in the DB authorise it.
- *     o If the mac is active on a port where another system has been active withein 
- *       the last hour, try to use the vlan last seen on the port, nut the vlan 
- *       assigned to this system. This is to detect hubs and prevent .flapping.. 
- *       This feature is only allowed if the vlan on the port and assigned to the MAC 
+ *     o If the mac is active on a port where another system has been
+ *       active withein the last hour, try to use the vlan last seen on the 
+ *       port, nut the vlan assigned to this system. This is to detect hubs and
+ *       prevent .flapping.. 
+ *       This feature is only allowed if the vlan on the port and assigned to 
+ *       the MAC 
  *       are in the same vlan group (otherwise the new MAC is denied)
- *     o If the MAC is unknown, check to see if a default vlan has been configured for 
+ *     o If the MAC is unknown, check to see if a default vlan has been 
+ *       configured for 
  *       that port and use it, otherwise use the default vlan.
  *     o Log decisions to syslog, and key events to DB (visible in the GUI).
  * 
@@ -33,124 +36,139 @@
  *              So send debugging output to syslog, not stdout. Or just start
  *              directly from the commandline to check for classical
  *              PHP syntax problems.
- *              Do not log to the DB either (with log2db()), because this program
- *              can also run on a secondary and should NOT write to any other tables
- *              than vmpsauth, which is not replicated.
+ *              Do not log to the DB either (with log2db()), because this
+ *              program can also run on a secondary and should NOT write to any
+ *              other tables than vmpsauth, which is not replicated.
  *
- * PHP version 5
  *
  * LICENSE: This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
  * by the Free Software Foundation.
  *
- * @package			FreeNAC
- * @author			Sean Boran (FreeNAC Core Team)
- * @copyright		2006 FreeNAC
- * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			SVN: $Id$
- * @link				http://www.freenac.net
+ * @package		FreeNAC
+ * @author		Sean Boran (FreeNAC Core Team)
+ * @copyright	2006 FreeNAC
+ * @license		http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version		SVN: $Id$
+ * @link		http://www.freenac.net
  *
  */
+/* Open Syslog channel for logging */
+define_syslog_variables();
+openlog("vmpsd_external", LOG_PID , LOG_LOCAL5);
 
-include "system.php";
-include "CallLog.php";
+/* include files */
+include("exceptions.php");
+include("funcs.inc.php");
 
+/* Load the policy file */
+require_once "policy.inc.php";
 
-/* Global variables */
-$policy_inc = "policy.inc.php";
-
-
-/* __autoload() Trick
- * This tries to autoload a class that has been devined by the user.
- * This way the user does not to add an explicit include statement to the
- * policy file...
- */
-function __autoload($classname)
-{
-   require_once "$classname.php";
-}
-
-// Load the policy file
-require_once "$policy_inc";
-
-// Some sanity checks
-if (!function_exists("preconnect")) {
-	die("Policy does not define preconnect handler policy in ".$policy_inc);
-}
-
-// Open stdin and stdout - These connect us to vmpsd
+/* Open stdin and stdout - These connect us to vmpsd */
 $in = fopen("php://stdin", "r");
 $out = fopen("php://stdout", "w");
 
-// Loop Forever (we are a daemon)
+/* Loop Forever (we are a daemon) */
 while ($in && $out) {
 
-	// Read one line from vmpsd and parse it
+	/* Read one line from vmpsd and parse it */
     $line=rtrim( fgets($in, 1024) );
-    if (strlen($line) > 0) {
-      list($domain, $switch, $port, $lastvlan, $mac)=explode(" ", $line);
-      
-      /* Normalise mac address format,  Add . every 4 digit */
-  	  $mac = preg_replace('/-|\.|\s/', '', $mac);  //remove space, dash, dots
-  	  $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
 
-      /* Ignore "zero" dummy requests */
-	  if ( $mac === '0000.0000.0000' ) {
-    	 logit("decide: DENY, ignore mac $mac" );
-     	 deny();
-     	 continue;
-  	  }
+	/* If there are some characters */
+    if (strlen($line) > 0) {
+    	/* Log Request Start and Input */
+    	trace("----------------------------");
+    	trace("$line");
+
+		/* split by space */      	
+    	$splitted = explode(" ", $line);
+ 
+      	/* sanity checks, 5 values */
+      	if (count($splitted) != 5 || strlen($splitted[4]) !=12) {
+      		// Todo: Complain in the log file
+      		continue;
+      	}
+      	
+      	/* extract values */
+      	list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
+
+		try {
+
+           // Todo, setup policy object 
       
-      /* create System Object */
-	  $system = new CallLog(new System($mac));
+      
+    	    /* create System Object */
+		    $system = new CallWrapper(new System($mac));
  
+ 			
+ 			/* Call Default policy */
+ 			if ($conf->default_policy)
+	 			eval($conf->default_policy."->preconnect();");
+  
+ 			/* In case there was an error, try fallback policy */
+ 			if ($conf->fallback_policy) {
+ 	 			trace("Error at default policy, falling back to policy ".
+ 	 			     $conf->fallback_policy);
+	 			eval($conf->fallback_policy."->preconnect();");
+	 		}
+ 	    
+ 	  		/* This is the default action */
+ 	  		DENY();
+ 	    }
+ 	    catch (DenyException $e) {
+ 	  		fputs($out, "DENY\n");
+ 	  		reportException($e);
+ 	    }
+ 	    catch (KillException $e) {
+ 	    	if ($conf->vlan_for_killed) {
+ 	    		fputs($out, "ALLOW ".$conf->vlan_for_killed."\n");
+ 	    	} else {
+	 	  		fputs($out, "DENY\n");
+	 	  	}
+ 	  		reportException($e);
+ 	  		// Todo: let freenac_lastseen know to kill this system via some IPC
+ 	    }
+ 	    catch (AllowException $e) {
+ 	  		fputs($out, "ALLOW ".$e->decidedVlan."\n");
+ 	  		reportException($e);
+ 	    }
+ 	    catch (Exception $e) {
+ 		    fputs($out, "DENY\n");
+ 	    	reportException($e);
+ 	    }
  
- 	  try {
- 	  	preconnect();
- 	  }
- 	  catch (Exception $e) {
- 	  
- 	  }
+		trace("----------------------------");
  
- 	  //$result=decide($port, $switch, $mac, $lastvlan);
-      $DecidedVlan=v_sql_1_select("select default_name from vlan where id='$result' limit 1");
-      if ((!empty($DecidedVlan))&&($DecidedVlan!='0'))
-      {
-         fputs($out, "ALLOW $DecidedVlan\n");
-      }
-      else
-      {
-         debug2("DENY");
-         fputs($out, "DENY\n");
-      }
-      ob_flush();               # log buffered outputs
-      flush();
+      	//ob_flush();               # log buffered outputs
+      	flush();
     }                // strlen >0
-  #sleep(1);                 # wait 1 secs, before retrying
-  ob_flush();               # log buffered outputs
+  	#sleep(1);                 # wait 1 secs, before retrying
+   //ob_flush();               # log buffered outputs
 }
 
 
 exit(0);
 // End of Main -----------------------
 
+function reportException(Exception $e) {
+ 	$t = $e->GetTrace();
+ 	trace($e->getMessage() ." (at ".basename($t[0]['file']).
+ 										":". $t[0]['line'].")");
+}
+
+function trace($message) {
+	syslog(LOG_CRIT, $message);
+}
+
+
 function vlanId2Name($vlanID) {
 	  // Todo: Proper Error Handling, and use better Database abstraction
       return v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
 }
 
-
-function getSystem() {
-	$system = new System();
-	
-	
-	//} else if (mysql_num_rows($res)>1) {
-    //	logit("decide: Deny, Duplicates for $mac in Database");
-    //	#log2db('info', "DENY $mac on $switch, $port, DUPLICATE MACs: please remove!");
-    //	$result=0;
-  	//}
-	
-	return $system;
+function __autoload($classname)
+{
+   require_once "$classname.php";
 }
 
 
