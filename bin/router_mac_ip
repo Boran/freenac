@@ -5,6 +5,9 @@
  *
  * Long description for file:
  * Get MAC / IP table of active hosts from core routers
+ * - update the IP for known MACs, witha time stamp
+ * - lookup the name for MACs called "unknown"
+ * - insert all new unknown MACs, with IP, DNS name, and make as status "unmanaged"
  *
  * On IOS do "show ip arp"
  *        or "sh ip arp vrf insec"
@@ -30,8 +33,12 @@
 $debug_flag1=false;
 $debug_flag2=false;
 
+# Debugging
+$debug_to_syslog=true;
+$mysql_write1=true;                    # Just test or actually write DB changes??
+$mysql_write2=true;                    # Just test or actually write DB changes??
+
 require_once "funcs.inc";               # Load settings & common functions
-$debug_to_syslog=TRUE;
 
 define_syslog_variables();              # not used yet, but anyway..
 openlog("router_mac_ip", LOG_PID, LOG_LOCAL5);
@@ -86,7 +93,7 @@ foreach (split(' ', $conf->core_routers) as $router) {
 
  // go though each pair and update the SYSTEMS table
  for ($i = 0; $i < count($results); $i++){
-  debug2($results[$i]);
+  debug2("Pre-match results: " .$results[$i]);
 
   if ( preg_match("/ipNetToMediaPhysAddress\.(\d+)\.(.*) = STRING: (.*)/", $results[$i], $matches) ) {
      $ip=$matches[2];
@@ -103,20 +110,11 @@ foreach (split(' ', $conf->core_routers) as $router) {
        continue;
      }
 
-     $query="UPDATE systems SET r_timestamp=NOW(), r_ip='" .$ip . "' "
-        . " WHERE mac='" . $mac . "'";
-        #echo("$query\n");
-        $resource = mysql_query($query, $connect);
-        if (!$resource) { die('Invalid query: ' . mysql_error()); }
+     $query1="UPDATE systems SET r_timestamp=NOW(), r_ip='$ip' ";
+     $query2='';
+     $where= " WHERE mac='$mac'";
 
-        #$rowcount=mysql_affected_rows($resource);   # why does this not work?
-        $rowcount=mysql_affected_rows();
-        #debug1(" rows $rowcount ");
-        if ($rowcount==1) {          # it worked
-          debug1("$ip - $mac : updated in systems table");
-          $count_updates++;
-
-          // if this mac has no associated name, try to get the fqdn for it
+          // if this mac has no associated name i.e. 'unknown', try to get the fqdn for it
           if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
             if (in_array($mac,$uk_mac)) {
               $fqdn=gethostbyaddr($ip);
@@ -125,21 +123,62 @@ foreach (split(' ', $conf->core_routers) as $router) {
                 // strip domain name
                 list($hostname_only) = split('[.]', $fqdn);
                 $hostname_only = strtolower($hostname_only);
-                $sql='UPDATE systems SET name=\''.$hostname_only.'\' WHERE mac=\''.$mac.'\'';
-                logit($sql);
-                logit("Changed name of $mac to its DNS name $hostname_only");
-                if (!mysql_query($sql,$connect)) { die('Invalid query: '.mysql_error()); }
+                $query2=", name='$hostname_only' ";
+                logit("Change name of $mac to its DNS name $hostname_only");
+                #if (!mysql_query($sql,$connect)) { die('Invalid query: '.mysql_error()); }
               }
             }
           }
 
-        } else if ($rowcount==0) {   # entry does not exist, 0 rows
-          #logit("$query");
-          debug1("$ip - $mac : ignore");
+        $query=$query1 . $query2 . $where;
+        $rowcount=0;
+        if ($mysql_write1) {
+          $res = mysql_query($query, $connect);
+          if (!$res) { die('Invalid query:' . mysql_error()); }
+          $rowcount=mysql_affected_rows($connect);
+          debug2($query ."==> rows:" .$rowcount);
+        } else {
+          echo("QUERY DRYRUN: $query\n");
+        }
+
+        // Analyse results by checking rowcount
+        if ($rowcount==1) {          # it worked
+          debug1("$ip - $mac : updated in systems table");
+          $count_updates++;
+
+        } else if (($rowcount==0) && ($conf->router_mac_ip_discoverall)) {   
+          // New unmanaged systems have been discovered, lets insert/document them
+          // TBD: make sure that all IPs come from our networks? So far, only local
+          //      IPs were visible
+          debug2("$ip - $mac: new, so insert into systems");
+          # TBD: What vlan should we use? In theor it makes no difference, since these device should onyl be unmanaged,
+          # but if thy connect to a VMPS port saome day??
+          # We could use $conf->set_vlan_for_unknowns, or set to '1' which is the default. For now use the latter.
+          $query1="INSERT INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
+          $query2='';
+          if ( $conf->router_mac_ip_update_from_dns ) {   // flag to disable name lookup
+              $fqdn=gethostbyaddr($ip);
+              debug2("got $fqdn $ip $mac");
+              if($fqdn!=$ip) { // We got the host name, now update it
+                // strip domain name
+                list($hostname_only) = split('[.]', $fqdn);
+                $hostname_only = strtolower($hostname_only);
+                $query2=", name='$hostname_only' ";
+              }
+          }
+          logit("New unmanaged end-device: mac=$mac ip=$ip dns=$hostname_only");
+          $query=$query1 . $query2;
+          if ($mysql_write2) {
+            if (!mysql_query($query,$connect)) { die('Invalid query: '.mysql_error()); }
+          } else {
+            echo("QUERY DRYRUN: $query\n");
+          }
+        } else if ($rowcount == -1) {   # problem
+          logit("Error query failed: $query");
 
         } else if ($rowcount > 1) {   # problem: duplicates
           #logit("$query");
-          debug1("$ip - $mac : duplicates in systems table - ERROR");
+          logit("$ip - $mac : duplicates in systems table - ERROR");
         }   
 
   }
