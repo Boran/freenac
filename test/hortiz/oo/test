@@ -1,29 +1,36 @@
 #!/usr/bin/php -f
 <?
 
-function __autoload($classname)
+/*function __autoload($classname)
 {
    require_once "$classname.php";
-}
+}*/
 
 require_once "policy.inc.php";
-
+require_once "funcs.inc";
 
 define_syslog_variables();
 openlog("test",LOG_PID,LOG_LOCAL5);
 
 $request=VMPSRequest::getInstance();
-$request->setValues('MAC','SWITCH','PORT','VTP','LASTVLAN');
+$request->setValues('0008.7446.2aa5','192.168.245.83','Fa0/5','VTP','sec230');
 
-$syslog=SysLogger::getInstance();
+$device=new EndDevice($request->mac);
+
+print_r($device->getAllProperties());
+$device->isExpired();
+
+$vlan=$device->getVlanName();
+echo $vlan;
+/*$syslog=SysLogger::getInstance();
 $syslog->setLevel(2);
 $syslog->debug(1,"Testing debug level 1");
 $syslog->debug(2,"Testing debug level 2");
-$syslog->debug(3,"Testing debug level 3");
+$syslog->debug(3,"Testing debug level 3");*/
 
-$db_log=new DBLogger();
-$db_log->log("Testing 'DBLOGGER'");
+#$db_log=new DBLogger();
+#$db_log->log("Testing 'DBLOGGER'");
 
-handle_request();	//Defined in policy.inc.php
+//handle_request();	//Defined in policy.inc.php
 
 ?>
