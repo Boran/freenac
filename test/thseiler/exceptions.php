@@ -72,7 +72,11 @@ class AllowException extends Exception
  	function __construct($vlan) {
  		$this->decidedVlan = $vlan;
  		parent::__construct("ALLOW ".$vlan); 
- 	}	
+ 	}
+
+ 	public function getDecidedVlan() {
+		return $decidedVlan;
+	}	
 }
 
 /* This function is some syntactic sugar to throw an AllowException 

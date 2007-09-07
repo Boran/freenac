@@ -20,7 +20,10 @@ class Policy {
 	protected $system;
 	
 	// Todo __construct($system)
-	
+	protected function __construct($system) {
+           $this->system=$system;
+	}
+
 	// Todo change_system()
 	
 	/* default policy is to deny everything */

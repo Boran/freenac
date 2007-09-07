@@ -20,7 +20,7 @@
  */
 
 
-class system {
+class System {
 	private $mac;
 	private $db_row = array();
 

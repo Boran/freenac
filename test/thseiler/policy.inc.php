@@ -15,9 +15,13 @@
  
 class InoPolicy extends Policy {
 
-	protected function preconnect() {
+	public function __construct($system) {
+           parent::__construct($system);
+	}
+
+        public function preconnect() {
 		
-		if ($system->isExpired()) KILL();
+		if ($this->system->isExpired()) KILL();
 		
 		ALLOW();
 

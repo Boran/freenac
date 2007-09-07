@@ -1,4 +1,4 @@
-#!/usr/local/php5/bin/php -f
+#!/usr/bin/php -f
 <?php
 
 /**
@@ -72,38 +72,41 @@ $out = fopen("php://stdout", "w");
 while ($in && $out) {
 
 	/* Read one line from vmpsd and parse it */
-    $line=rtrim( fgets($in, 1024) );
+	$line=rtrim( fgets($in, 1024) );
 
 	/* If there are some characters */
-    if (strlen($line) > 0) {
-    	/* Log Request Start and Input */
-    	trace("----------------------------");
-    	trace("$line");
+	if (strlen($line) > 0) {
+		/* Log Request Start and Input */
+		trace("----------------------------");
+		trace("$line");
 
 		/* split by space */      	
-    	$splitted = explode(" ", $line);
- 
-      	/* sanity checks, 5 values */
-      	if (count($splitted) != 5 || strlen($splitted[4]) !=12) {
-      		// Todo: Complain in the log file
-      		continue;
-      	}
-      	
-      	/* extract values */
-      	list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
+		$splitted = explode(" ", $line);
+
+		/* sanity checks, 5 values */
+		if (count($splitted) != 5 || strlen($splitted[4]) !=12) {
+			// Todo: Complain in the log file
+			continue;
+		}
+
+		/* extract values */
+		list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
 
 		try {
 
-           // Todo, setup policy object 
-      
-      
-    	    /* create System Object */
-		    $system = new CallWrapper(new System($mac));
- 
- 			
- 			/* Call Default policy */
- 			if ($conf->default_policy)
-	 			eval($conf->default_policy."->preconnect();");
+			// Todo, setup policy object 
+
+
+			/* create System Object */
+			//$system = new CallWrapper(new System($mac));
+			$system=new System($mac);
+			/* Call Default policy */
+			if ($system->isExpired()) KILL();
+			if ($conf->default_policy)
+			{
+				$a=new $conf->default_policy($system);
+				eval($a->preconnect());
+                        }
   
  			/* In case there was an error, try fallback policy */
  			if ($conf->fallback_policy) {
@@ -129,7 +132,7 @@ while ($in && $out) {
  	  		// Todo: let freenac_lastseen know to kill this system via some IPC
  	    }
  	    catch (AllowException $e) {
- 	  		fputs($out, "ALLOW ".$e->decidedVlan."\n");
+ 	  		fputs($out, "ALLOW ".$e->getDecidedVlan()."\n");
  	  		reportException($e);
  	    }
  	    catch (Exception $e) {
