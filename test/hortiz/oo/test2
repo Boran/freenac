@@ -18,6 +18,7 @@ $port1=new Port("192.168.245.71", "1/1");
 print_r($port1->getAll());
 echo "SwitchName=" . $port1->SwitchName ."\n";
 echo "SwitchName=" . $port1->get1('SwitchName') ."\n";
+echo "getPortDefaultVlan=" . $port1->getPortDefaultVlan() ."\n";
 
 #$syslog=SysLogger::getInstance();
 #$syslog->setLevel(2);

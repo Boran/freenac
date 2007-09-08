@@ -16,11 +16,22 @@ $request=VMPSRequest::getInstance();
 $request->setValues('0008.7446.2aa5','192.168.245.83','Fa0/5','VTP','sec230');
 
 $device=new EndDevice($request->mac);
+$port1 =new Port($request->switch, $request->port);
 
 print_r($device->getAllProperties());
-$device->isExpired();
 
-$vlan=$device->getVlanName();
+if ($device->isExpired()) {
+  //deny
+}
+
+if ( ($vlan=$device->getVlanName()) > 0 ) {
+  // allow $vlan
+} else if ( ($vlan= $port1->getPortDefaultVlan())>0 ) {
+  // allow $vlan
+} else {
+  // deny
+}
+
 echo $vlan;
 /*$syslog=SysLogger::getInstance();
 $syslog->setLevel(2);

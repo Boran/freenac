@@ -4,8 +4,8 @@
  *
  * Long description for file:
  *
- * This file defines the Settings class which is a Singleton
- * used to hold global variables stored in the configuration files and running script.
+ * The Port class describes the interfaces to information on Ports and Switches
+ * TBD; update the rest of this description
  *
  * CONSTRUCTOR SUMMARY:
  * *	private __construct(array $var_list, array $exclude_list);
@@ -45,7 +45,7 @@
  * by the Free Software Foundation.
  *
  * @package                     FreeNAC
- * @author                      Hector Ortiz (FreeNAC Core Team)
+ * @author                      FreeNAC Core Team
  * @copyright                   2007 FreeNAC
  * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version                     SVN: $Id$
@@ -60,14 +60,14 @@ class Port
 
    function __construct($switchip, $portname)
    {
+      // Invalid parameters ?
       if ((strlen($switchip) < 8) || (strlen($portname) <1)) {
-        // Invalid parameters
         logit("new Port(): invalid parameters, switchip=$switchip, portname=$portname");
         return undef;
       }
 
       // Returns an array containing all variables defined in the config table
-      #$this->props=mysql_fetch_all("select * from port");
+      // TBD: query is a first draft, there is probably too much in there.
       $query=<<<EOF
 SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchName, 
   default_vlan, last_vlan, v1.default_name as LastVlanName, 
@@ -87,10 +87,10 @@ EOF;
    }
 
 
-   public function __set($key,$val)						//Set a var in our array
-   {
-      $this->props[$key]=$val;
-   }
+   #public function __set($key,$val)						//Set a var in our array
+   #{
+   #   $this->props[$key]=$val;
+   #}
 
    public function get1($key)							//Get the value of one var
    {
@@ -117,7 +117,8 @@ EOF;
 
    public function getPortDefaultVlan()
    {
-      return default_vlan;
+      #return default_vlan;
+      return $this->props['default_vlan'];
    }
 }
 
