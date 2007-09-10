@@ -45,6 +45,27 @@ function db_connect()
      or die("Could not select DB: " . mysql_error());;
 }
 
+function mysql_fetch_one($query){
+  #echo "QUERY: $query\n";
+  $r=@mysql_query($query);
+  if($err=mysql_errno())return $err;
+  if(@mysql_num_rows($r))
+  return mysql_fetch_array($r);
+}
+
+function time_diff($date1,$date2)  //Returns the difference between 2 dates in secs
+{
+   $temp=explode(' ',$date1);
+   $time_info_1=explode(':',$temp[1]);
+   $date_info_1=explode('-',$temp[0]);
+   $temp=explode(' ',$date2);
+   $time_info_2=explode(':',$temp[1]);
+   $date_info_2=explode('-',$temp[0]);
+   $time1=mktime((int)$time_info_1[0],(int)$time_info_1[1],(int)$time_info_1[2],(int)$date_info_1[1],(int)$date_info_1[2],(int)$date_info_1[0]);
+   $time2=mktime((int)$time_info_2[0],(int)$time_info_2[1],(int)$time_info_2[2],(int)$date_info_2[1],(int)$date_info_2[2],(int)$date_info_2[0]);
+   $time=$time2-$time1;
+   return $time;
+}
 
 
 ?>

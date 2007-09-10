@@ -23,6 +23,8 @@
 class System {
 	private $mac;
 	private $db_row = array();
+	private $settings;
+	
 
 	/* The constructor takes the mac address of the system and creates 
 	 * and instance representing that particular system.
@@ -46,9 +48,10 @@ class System {
 	  	
 	  	// Todo: Update Query with SQL joins to user table and vlan table
 	  	
-	  	$sql_query="SELECT * FROM systems WHERE mac='" . $this->mac;
-		//mysql_query($sql_query, $connect);
+	  	$sql_query="SELECT * FROM systems WHERE mac='" . $this->mac."';";
 		//Todo fill the db_row array
+                $this->db_row=mysql_fetch_one($sql_query);
+		$this->settings=Settings::getInstance();
 	}
 
 
@@ -61,9 +64,9 @@ class System {
 	 */
 	public function isExpired() {
 		/* check if expiry checks are enabled */
-		if ($conf->check_for_expired) {
+		if ($this->settings->check_for_expired) {
 			/* get systems expiry date*/
-			$expiry = getExpiry();
+			$expiry = $this->db_row['expiry'];
 			
 			if ($expiry)
 			{
@@ -82,7 +85,7 @@ class System {
            	}
 		} 
 		/* default is not to expire */
-        return false;
+        	return false;
 	}
 
 	/* system->isVM()    Is this system a Virtual Machine ?
@@ -127,9 +130,9 @@ class System {
 	 * and will be able to access them in the policy as
 	 * $system->getDBFieldName() without haveing to change this class
 	 */
-	public function __call($methodName, $parameters) {
+	/*public function __call($methodName, $parameters) {
 		/* If methodname starts with get */
-		if (substr($methodName,0,3) == "get") {
+	/*	if (substr($methodName,0,3) == "get") {
 			$dbfieldname = substr($methodName,3);
 			foreach(array_keys($this->db_row) as $key) {
 				if (strtolower($key) == strtolower($dbfieldname)) {
@@ -141,7 +144,17 @@ class System {
 		// Todo: Log
 		
 		/* Then DENY as default action */
-		DENY();
+	/*	DENY();
+	}*/
+
+	public function __get($key)                                                  //Get the value of one var
+   	{
+      		return $this->props[$key];
+   	}
+
+	public function getAllProps()
+	{
+		return $this->db_row;
 	}
 }
 

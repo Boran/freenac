@@ -98,10 +98,8 @@ while ($in && $out) {
 
 
 			/* create System Object */
-			//$system = new CallWrapper(new System($mac));
-			$system=new System($mac);
+			$system = new CallWrapper(new System($mac));
 			/* Call Default policy */
-			if ($system->isExpired()) KILL();
 			if ($conf->default_policy)
 			{
 				$a=new $conf->default_policy($system);
