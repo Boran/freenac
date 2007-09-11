@@ -69,5 +69,26 @@ function time_diff($date1,$date2)  //Returns the difference between 2 dates in s
    return $time;
 }
 
+## SQL SQL and expect just one /field/row to return
+function v_sql_1_select($query) {
+  #logit($query);
+  global $connect;
+  db_connect();
+
+  $result=NULL;
+  $res = mysql_query($query, $connect);
+  if (!$res) {
+    logit('Invalid query: ' . mysql_error());
+
+  } else if (mysql_num_rows($res)==1) {
+    list($result)=mysql_fetch_array($res, MYSQL_NUM);
+  }
+  return($result);
+}
+
+function vlanId2Name($vlanID) {
+          // Todo: Proper Error Handling, and use better Database abstraction
+      return v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
+}
 
 ?>

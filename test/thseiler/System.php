@@ -54,7 +54,7 @@ class System {
                    $this->db_row=$temp;
 		   $this->conf=Settings::getInstance();
 		}
-		else DENY();
+		else UNKNOWN_SYSTEM();
 	}
 
 
@@ -123,7 +123,11 @@ class System {
 	
 	/* Return the Name of the systems default VLAN */
 	public function getVlanName() {
-		// Todo:
+		return $this->vlan_name;	
+	}
+
+	public function getVlanID() {
+		return $this->vid;
 	}
 
 	/* Universal Accessor Method
@@ -151,7 +155,7 @@ class System {
 	}
 	
 	# Get the value of only one var if it exists
-	protected function __get($key)                                                  //Get the value of one var
+	public function __get($key)                                                  //Get the value of one var
    	{
       		if (array_key_exists($key,$this->db_row))
 		   return $this->db_row[$key];

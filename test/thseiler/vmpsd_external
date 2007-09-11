@@ -124,7 +124,7 @@ while ($in && $out) {
  	    }
  	    catch (KillException $e) {
  	    	if ($conf->vlan_for_killed) {
- 	    		fputs($out, "ALLOW ".$conf->vlan_for_killed."\n");
+ 	    		fputs($out, "ALLOW ".vlanId2name($conf->vlan_for_killed)."\n");
  	    	} else {
 	 	  		fputs($out, "DENY\n");
 	 	  	}
@@ -132,9 +132,16 @@ while ($in && $out) {
  	  		// Todo: let freenac_lastseen know to kill this system via some IPC
  	    }
  	    catch (AllowException $e) {
- 	  		fputs($out, "ALLOW ".$e->getDecidedVlan()."\n");
+ 	  		fputs($out, "ALLOW ".vlanId2name($e->getDecidedVlan())."\n");
  	  		reportException($e);
  	    }
+ 	    catch (UnknownSystemException $e) {
+		if ($conf->set_vlan_for_unknowns)
+		   fputs($out,"ALLOW ".vlanId2name($conf->set_vlan_for_unknowns)."\n");
+		else
+		   fputs($out, "DENY\n");
+		reportException($e);		
+	    }
  	    catch (Exception $e) {
  		    fputs($out, "DENY\n");
  	    	reportException($e);
@@ -164,10 +171,10 @@ function trace($message) {
 }
 
 
-function vlanId2Name($vlanID) {
+/*function vlanId2Name($vlanID) {
 	  // Todo: Proper Error Handling, and use better Database abstraction
       return v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
-}
+}*/
 
 function __autoload($classname)
 {

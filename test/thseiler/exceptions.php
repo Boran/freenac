@@ -35,7 +35,17 @@ function DENY() {
 	throw new DenyException;
 }
 
+class UnknownSystemException extends Exception
+{
+	/* constructor */
+	function __construct() {
+		parent::__construct("UNKNOWN_SYSTEM");
+	}
+}
 
+function UNKNOWN_SYSTEM() {
+	throw new UnknownSystemException;
+}
 
 /* This Exception may be trown at any point in the desicion process to
  * indicate that the current request should be denied and furthermore, the
@@ -75,7 +85,7 @@ class AllowException extends Exception
  	}
 
  	public function getDecidedVlan() {
-		return $decidedVlan;
+		return $this->decidedVlan;
 	}	
 }
 

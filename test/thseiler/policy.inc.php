@@ -22,8 +22,7 @@ class InoPolicy extends Policy {
         public function preconnect() {
 		
 		if ($this->system->isExpired()) KILL();
-		
-		ALLOW();
+		ALLOW($this->system->getvid());
 
 	}
 }
