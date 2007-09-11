@@ -48,9 +48,11 @@ function db_connect()
 function mysql_fetch_one($query){
   #echo "QUERY: $query\n";
   $r=@mysql_query($query);
-  if($err=mysql_errno())return $err;
-  if(@mysql_num_rows($r))
-  return mysql_fetch_array($r);
+  if($err=mysql_errno())return false;
+  if(@mysql_num_rows($r)==1)
+     return mysql_fetch_array($r,MYSQL_ASSOC);
+  else 
+     return false;
 }
 
 function time_diff($date1,$date2)  //Returns the difference between 2 dates in secs

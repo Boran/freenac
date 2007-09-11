@@ -18,10 +18,12 @@
  
 class Policy {
 	protected $system;
+	protected $port;
 	
 	// Todo __construct($system)
-	protected function __construct($system) {
+	protected function __construct($system,$port) {
            $this->system=$system;
+	   $this->port=$port;
 	}
 
 	// Todo change_system()

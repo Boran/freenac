@@ -23,7 +23,7 @@
 class System {
 	private $mac;
 	private $db_row = array();
-	private $settings;
+	private $conf;
 	
 
 	/* The constructor takes the mac address of the system and creates 
@@ -36,22 +36,25 @@ class System {
 		 * and collons, and by converting to lower case.
 		 */
   	  	$mac = strtolower(preg_replace('/-|\.|\s|\:/', '', $mac));
-	
 		/* sanity check - Is this a valid MAC address ??? */
   	  	if (!preg_match("/^[0-9a-f]{12}$/",$mac)) DENY();
   	  	if ($mac === '000000000000') DENY();
 	
 	  	/* Rewrite mac address according to Cisco convention, XXXX.XXXX.XXXX */ 
 	  	$this->mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";	  	
-	  	  
 	  	/* query system table */
 	  	
 	  	// Todo: Update Query with SQL joins to user table and vlan table
 	  	
-	  	$sql_query="SELECT * FROM systems WHERE mac='" . $this->mac."';";
+	  	#$sql_query="SELECT * FROM systems WHERE mac='" . $this->mac."';";
+		$sql_query="select s.id as sid, s.mac as mac, s.name as hostname, s.description, s.status, u.id as uid, u.username, s.r_ip as ip, s.expiry, v.id as vid, v.default_name as vlan_name from systems s inner join users u on s.uid=u.id inner join vlan v on s.vlan=v.id where s.mac='{$this->mac}'";
 		//Todo fill the db_row array
-                $this->db_row=mysql_fetch_one($sql_query);
-		$this->settings=Settings::getInstance();
+		if ($temp=mysql_fetch_one($sql_query))
+		{
+                   $this->db_row=$temp;
+		   $this->conf=Settings::getInstance();
+		}
+		else DENY();
 	}
 
 
@@ -64,9 +67,9 @@ class System {
 	 */
 	public function isExpired() {
 		/* check if expiry checks are enabled */
-		if ($this->settings->check_for_expired) {
+		if ($this->conf->check_for_expired) {
 			/* get systems expiry date*/
-			$expiry = $this->db_row['expiry'];
+			$expiry = $this->expiry;
 			
 			if ($expiry)
 			{
@@ -94,7 +97,7 @@ class System {
 	 */
 	public function isVM() {
 		/* check if VM checks are enabled */
-		if ($conf->vm_lan_like_host) {
+		if ($this->conf->vm_lan_like_host) {
 			if (stristr($this->getVendor(),"vmware")) return true;    // the original
 			if (stristr($this->getVendor(),"parallels")) return true; // Mac VMWare-alike
 			// Todo: Check with Sean if its okay to think that all Microsoft OUIs are
@@ -130,9 +133,9 @@ class System {
 	 * and will be able to access them in the policy as
 	 * $system->getDBFieldName() without haveing to change this class
 	 */
-	/*public function __call($methodName, $parameters) {
+	public function __call($methodName, $parameters) {
 		/* If methodname starts with get */
-	/*	if (substr($methodName,0,3) == "get") {
+		if (substr($methodName,0,3) == "get") {
 			$dbfieldname = substr($methodName,3);
 			foreach(array_keys($this->db_row) as $key) {
 				if (strtolower($key) == strtolower($dbfieldname)) {
@@ -140,18 +143,33 @@ class System {
 				}
 			}
 		}
-		/* If the db field does not exists, Log Error */
+		/*If the db field does not exists, Log Error */
 		// Todo: Log
 		
-		/* Then DENY as default action */
-	/*	DENY();
-	}*/
-
-	public function __get($key)                                                  //Get the value of one var
+		/*Then DENY as default action */
+		DENY();
+	}
+	
+	# Get the value of only one var if it exists
+	protected function __get($key)                                                  //Get the value of one var
    	{
-      		return $this->props[$key];
+      		if (array_key_exists($key,$this->db_row))
+		   return $this->db_row[$key];
+		else
+		   DENY(); 
    	}
 
+	# Set the value of only one var if it exists
+        protected function __set($key,$value)                                                  //Set the value of one var
+        {
+                if (array_key_exists($key,$this->db_row))
+                   $this->db_row[$key]=$value;
+                else
+                   DENY();
+        }
+
+
+	#Return all properties asigned to this system. This method is here only for debugging purposes, please delete it after
 	public function getAllProps()
 	{
 		return $this->db_row;

@@ -15,8 +15,8 @@
  
 class InoPolicy extends Policy {
 
-	public function __construct($system) {
-           parent::__construct($system);
+	public function __construct($system,$port) {
+           parent::__construct($system,$port);
 	}
 
         public function preconnect() {

@@ -84,7 +84,7 @@ while ($in && $out) {
 		$splitted = explode(" ", $line);
 
 		/* sanity checks, 5 values */
-		if (count($splitted) != 5 || strlen($splitted[4]) !=12) {
+		if (count($splitted) != 5 || ((strlen($splitted[4]) < 12) || (strlen($splitted[4]) > 17))) {
 			// Todo: Complain in the log file
 			continue;
 		}
@@ -99,18 +99,20 @@ while ($in && $out) {
 
 			/* create System Object */
 			$system = new CallWrapper(new System($mac));
+			$port = new CallWrapper(new Port($domain, $switch, $port,$lastvlan));
 			/* Call Default policy */
 			if ($conf->default_policy)
 			{
-				$a=new $conf->default_policy($system);
-				eval($a->preconnect());
+				$policy=new $conf->default_policy($system,$port);
+				eval($policy->preconnect());
                         }
   
  			/* In case there was an error, try fallback policy */
  			if ($conf->fallback_policy) {
+				$policy=new $conf->fallback_policy($system,$port);
  	 			trace("Error at default policy, falling back to policy ".
  	 			     $conf->fallback_policy);
-	 			eval($conf->fallback_policy."->preconnect();");
+	 			eval($policy->preconnect());
 	 		}
  	    
  	  		/* This is the default action */
