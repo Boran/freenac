@@ -106,7 +106,30 @@ class System {
 		}
 		return false; 
 	}
+
+	/* Is this device 'killed'? */
+	public function isKilled() {
+		if ($this->status==7)
+			return true;
+		else
+			return false;
+	}
+
+	/* Is this device 'active'? */
+	public function isActive() {
+		if ($this->status==1)
+			return true;
+		else
+			return false;
+	}
 	
+	 /* Is this device 'unknown'? */
+        public function isUnknown() {
+                if ($this->status==0)
+                        return true;
+                else
+                        return false;
+        }
 	
 	
 /* Information about system ------------------------------------------------- */

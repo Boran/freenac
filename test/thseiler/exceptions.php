@@ -35,18 +35,6 @@ function DENY() {
 	throw new DenyException;
 }
 
-class UnknownSystemException extends Exception
-{
-	/* constructor */
-	function __construct() {
-		parent::__construct("UNKNOWN_SYSTEM");
-	}
-}
-
-function UNKNOWN_SYSTEM() {
-	throw new UnknownSystemException;
-}
-
 /* This Exception may be trown at any point in the desicion process to
  * indicate that the current request should be denied and furthermore, the
  * current system should be killed
@@ -81,7 +69,7 @@ class AllowException extends Exception
 	/* constructor to set this VLAN */ 	
  	function __construct($vlan) {
  		$this->decidedVlan = $vlan;
- 		parent::__construct("ALLOW ".$vlan); 
+ 		parent::__construct("ALLOW ".vlanId2Name($vlan)); 
  	}
 
  	public function getDecidedVlan() {
@@ -99,3 +87,19 @@ function ALLOW($vlan = -1) {
 	}
 	throw new AllowException($vlan);
 }
+
+/* This Exception may be thrown at any point in the desicion process to
+ * indicate that the current request its for an unknown device
+ */
+class UnknownSystemException extends Exception
+{
+        /* constructor */
+        function __construct() {
+                parent::__construct("UNKNOWN_SYSTEM");
+        }
+}
+
+function UNKNOWN_SYSTEM() {
+        throw new UnknownSystemException;
+}
+?>
