@@ -21,9 +21,27 @@ class InoPolicy extends Policy {
 
         public function preconnect() {
 		
-		if ($this->system->isExpired() || $this->system->isKilled()) KILL();
+		#TODO: HUB_DETECTION, VLAN_BY_SWITCH_LOCATION
+
+		#Check for VMs
+                if ($this->system->isVM() && !$this->system->isKilled()) ALLOW(); #Retrieve the vlan from the host device
+
+		#Port has a default vlan
+		if ($this->port->hasDefaultVlan()) ALLOW($this->port->getPortDefaultVlan());
+
+		#Handling of unknown systems
 		if ($this->system->isUnknown()) UNKNOWN_SYSTEM();
-		if ($this->system->isActive()) ALLOW($this->system->getvid());
+		
+		#Policy related stuff
+		if ($this->system->isExpired() || $this->system->isKilled()) KILL();
+
+		#Normal case
+		if ($this->system->isActive()) 
+		{	
+			ALLOW($this->system->getvid());
+		}
+	
+		#Default policy
 		DENY();
 
 	}

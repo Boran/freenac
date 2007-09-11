@@ -103,7 +103,15 @@ EOF;
 
    public function getPortDefaultVlan()
    {
-      return $this->default_vlan;
+	return $this->default_vlan;
+   }
+
+   public function hasDefaultVlan()
+   {
+	if ($this->default_vlan)
+		return true;
+	else
+		return false;
    }
 }
 
