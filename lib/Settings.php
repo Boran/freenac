@@ -52,7 +52,6 @@
  * @link                        http://www.freenac.net
  *
  */
-include_once('funcs.inc');
 
 class Settings
 {
@@ -114,9 +113,7 @@ class Settings
                   break;
                case 'boolean':
                   {
-                     if ($result['value']>=1)
-                        $temp[$result['name']]=(boolean)true;
-                     else if (strcasecmp($result['value'],'true')==0)
+                     if (strcasecmp($result['value'],'true')==0)
                         $temp[$result['name']]=(boolean)true;
                      else
                         $temp[$result['name']]=(boolean)false;

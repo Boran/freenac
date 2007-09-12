@@ -25,7 +25,7 @@ set_include_path("./:../");
 
 function __autoload($classname)
 {
-   require_once "$classname.php";
+   require_once "../lib/$classname.php";
 }
 
 require_once 'etc/config.inc';
