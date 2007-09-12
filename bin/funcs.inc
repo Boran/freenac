@@ -22,13 +22,99 @@
 
 chdir(dirname(__FILE__));
 set_include_path("./:../");
-require_once "etc/config.inc";
+
+function __autoload($classname)
+{
+   require_once "$classname.php";
+}
+
+require_once 'etc/config.inc';
+
+$conf=Settings::getInstance();
+
+function is_field_active($field)
+{
+   $temp=v_sql_1_select("select value from config where name like '$field';");
+   debug2("is_field_active: select value from config where name like '$field';");
+   if (!empty($temp)&&((strcmp(trim($temp),"true")==0)||($temp==1)))
+      return true;
+   else
+      return false;
+}
+
+function is_vm($mac)
+{
+   $counter=0;
+   $parts=explode(".",$mac);
+   $temp_mac=$parts[0].$parts[1].$parts[2];
+   $query="select mac from ethernet where vendor like '%vmware%';";
+   debug2("is_vm: $query");
+   $res=mysql_query($query);
+   if ($res)
+   {
+      while ($rows=mysql_fetch_array($res,MYSQL_ASSOC))
+      {
+         if (stripos($temp_mac,$rows['mac'])!==FALSE)
+            $counter++;
+      }
+   }
+   if ($counter>0)
+      return true;
+   else return false;
+}
+
+function get_last_index($oid)                                                   //Get the last number of an SNMP OID
+{
+   $temp=explode('.',$oid);
+   return $temp[count($temp)-1];
+}
+
+function turn_on_port($port_index)                                              //Turn on port. Port index must be from SNMP
+{
+   global $switch,$snmp_rw,$snmp_port;
+
+   $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
+   if (!snmpset($switch,$snmp_rw,$oid,'i',1))
+   {
+      echo "\tCouldn't turn on port $port.\n";
+      return false;
+   }
+   else return true;
+}
+
+function turn_off_port($port_index)                                             //Shut port down. Port index must be from SNMP
+{
+   global $switch,$snmp_rw,$snmp_port;
+   $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
+   if (!snmpset($switch,$snmp_rw,$oid,'i',2))
+   {
+      echo "\tCouldn't shut down port $port.\n";
+      return false;
+   }
+   else return true;
+}
+
+
+
+function time_diff($date1,$date2)  //Returns the difference between 2 dates in secs
+{
+   $temp=explode(' ',$date1);
+   $time_info_1=explode(':',$temp[1]);
+   $date_info_1=explode('-',$temp[0]);
+   $temp=explode(' ',$date2);
+   $time_info_2=explode(':',$temp[1]);
+   $date_info_2=explode('-',$temp[0]);
+   $time1=mktime((int)$time_info_1[0],(int)$time_info_1[1],(int)$time_info_1[2],(int)$date_info_1[1],(int)$date_info_1[2],(int)$date_info_1[0]);
+   $time2=mktime((int)$time_info_2[0],(int)$time_info_2[1],(int)$time_info_2[2],(int)$date_info_2[1],(int)$date_info_2[2],(int)$date_info_2[0]);
+   $time=$time2-$time1;
+   return $time;
+}
 
 function debug1($msg) {
-  global $debug_flag1, $debug_to_syslog;
+  global $debug_flag1, $conf;
   $msg=rtrim($msg);
   if (($debug_flag1==TRUE) && (strlen($msg)>0) ) {
-    if ($debug_to_syslog===TRUE) {
+    if ($conf->debug_to_syslog) {
       syslog(LOG_INFO, "Debug1: $msg");
     } else {
       echo "Debug1: $msg\n";
@@ -37,10 +123,10 @@ function debug1($msg) {
 }
 
 function debug2($msg) {
-  global $debug_flag2, $debug_to_syslog;
+  global $debug_flag2, $conf;
   $msg=rtrim($msg);
   if (($debug_flag2==TRUE) && (strlen($msg)>0) ) {
-    if ($debug_to_syslog===TRUE) {
+    if ($conf->debug_to_syslog) {
       syslog(LOG_INFO, "Debug2: $msg");
     } else {
       echo "Debug2: $msg\n";
@@ -54,7 +140,7 @@ function logit($msg) {
   syslog(LOG_INFO, "$msg");
 
   # Write a message on stdout too?
-  if ($logit_to_stdout===TRUE) {
+  if ($logit_to_stdout) {
     echo "logit: $msg";
   }
 }
@@ -113,23 +199,48 @@ function db_connect()
      or die("Could not select DB: " . mysql_error());;
 }
 
+/* syscall
+ * Abstract calling of unix commands.
+ * Problem: popen does not pass back command success
+ * so syscall cannot say if the command works.
+ */
 function syscall($command){
    $result='';
+   #if ( $proc = popen("($command) ","r") ) {
    if ( $proc = popen("($command) 2>&1","r") ) {
        while (!feof($proc))
          $result .= fgets($proc, 1000);
        pclose($proc);
+       #debug2("syscall(): executed $command, RETURN=$result");
        return $result;
+   #} else {       # will never be reaches, popen does not pass back command success
+   #  logit("syscall error ", $proc);
+   #  return undef;
    }
+   
 }
 
+function remove_type($element)                          //Remove the type of one element and leave only the value
+{
+   $temp=explode(':',$element);
+   $element=trim($temp[1]);
+   return trim($element,'"');
+}
+
+function ping_mac2($mac,$switch,$port,$vlan)
+{
+   if (is_mac_on_port($mac,$switch,$port,$vlan))
+      return true;
+   else
+      return false;
+}
 
 function ping_mac($mac)
 # Return: true=Ping successful
 {
   db_connect();
   global $connect;
-
+  
   $query="SELECT r_ip from systems "
         . " WHERE mac='" . $mac . "'";
         #echo("$query\n");
@@ -167,13 +278,11 @@ function ping_mac($mac)
        logit("Ping Error: $answer");
        return false;
      }
-
    } else {   #
      logit("No IP found for $mac");
      return false;
    }
 }
-
 
 // function to change german umlauts into ue, oe, etc.
 // http://ch2.php.net/iconv
@@ -195,12 +304,12 @@ function cv_input($str){
      return $out;
 }
 
-function snmp_restart_port($switch, $port) {
+function snmp_restart_port($port, $switch) {
   global $lastseen_sms_restart;
-  if ($lastseen_sms_restart===TRUE) {
-     $answer=syscall("/opt/vmps/bin/restart_port $switch $port");
+  if ($lastseen_sms_restart) {
+     $answer=syscall("./restart_port $port $switch");
      debug1($answer);
-     logit("restart_port for GWP: $answer");
+     logit("snmp_restart_port: $answer");
   }
 }
 
@@ -227,34 +336,122 @@ function lookup_vendor_mac($mac) {
   return $result;
 }
 
+function array_isearch($str,$array)                     //Search the array for a given value and return its key
+{
+   foreach($array as $k => $v)
+   {
+      if (strcasecmp($v,$str)==0)
+      {
+         return $k;
+      }
+   }
+   return false;
+}
+
+function array_find_key($str,$array,$token,$number)     //Search the array for a given key and return its value, but using tokenizers
+{
+   foreach($array as $k => $v)
+   {
+      if (strcasecmp(str_get_last($k,$token,$number),str_get_last($str,$token,$number))==0)
+      {
+         return $v;
+      }
+   }
+   return false;
+}
+
+function array_find_value($str,$array,$token,$number)   //Search the array for a given value and return it, but using tokenizers
+{
+   foreach($array as $k => $v)
+   {
+      if (strcasecmp(str_get_last($v,$token,$number),str_get_last($str,$token,$number))==0)
+      {
+         return $v;
+      }
+   }
+   return false;
+}
+
+
+function str_get_last($string,$token,$number)           //Return the last parts of a tokenized string
+{
+   $temp=explode($token,$string);
+   $tokens=count($temp);
+   for ($i=$tokens-$number;$i<$tokens;$i++)
+      $final.=$token.$temp[$i];
+   return $final;
+}
+
+function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC address is on a certain port using SNMP
+{
+   global $snmp_ro;                                     //Read Only community
+
+   $macs_on_vlan=@snmprealwalk($switch,"$snmp_ro@$vlan",'1.3.6.1.2.1.17.4.3.1.1');      //Obtain MAC address table
+   if (empty($macs_on_vlan))
+   {
+      logit("Couldn't establish communication with $switch using the SNMP_RO community.");
+      return false;
+   }
+   $macs_on_vlan=array_map("remove_type",$macs_on_vlan);
+   $macs_on_vlan=array_map("normalise_mac",$macs_on_vlan);
+   $mac_on=array_isearch($mac,$macs_on_vlan);                                           //Is this MAC in this switch?
+   if (empty($mac_on))
+      return false;                                                                     //No, return
+
+   $bridge_port_number=@snmprealwalk($switch,"$snmp_ro@$vlan",'1.3.6.1.2.1.17.4.3.1.2'); //Yes, get bridge port number for vlan
+   if (empty($bridge_port_number))
+      return false;
+   $bridge_port_number=array_map("remove_type",$bridge_port_number);
+   $bridge_port=array_find_key($mac_on,$bridge_port_number,'.',5);                      //Where is this MAC?
+   if (empty($bridge_port))
+      return false;
+
+   $map_bridge_port=@snmprealwalk($switch,"$snmp_ro@$vlan","1.3.6.1.2.1.17.1.4.1.2");   //Map the bridge port to the ifIndex
+   if (empty($map_bridge_port))
+      return false;
+   $map_bridge_port=array_map("remove_type",$map_bridge_port);
+   $map_bridge=array_find_key($bridge_port,$map_bridge_port,'.',1);                   //Get the one that is of interest to us
+   if (empty($map_bridge))
+      return false;
+
+   $port_names=@snmprealwalk($switch,"$snmp_ro@$vlan","1.3.6.1.2.1.31.1.1.1.1");        //Get the name of the interfaces
+   if (empty($port_names))
+      return false;
+   $port_names=array_map("remove_type",$port_names);
+   $port_learnt=array_find_key($map_bridge,$port_names,'.',1);                          //What is the port name of this interface?
+   if (strcmp($port_learnt,$port)==0)                                                   //Is this name equal to the one we provided??
+      return true;                                                                      //Yes, the MAC is on this port
+   else
+      return false;                                                                     //No, MAC is not using this port
+}
 
 
 ## old: delete later #############
 function mailit($switch, $msg) {
   ## These should be set in config.inc
-  global $maildomain, $mail_user;
+  global $conf;
 
-  if ($mail_user!=="") {
-    debug1("Sending email alert to $mail_user");
-    mail($mail_user, "VMPS alert on $switch", $msg);
+  if ($conf->mail_user!=="") {
+    debug1("Sending email alert to ".$conf->mail_user);
+    mail($conf->mail_user, "VMPS alert on $switch", $msg);
   }
   # Send an email to super user, for the relevant switch
   # each switch has its own email alias "vmps.SWITCH@domain"
-  if ($maildomain!=="0" ) {
-    debug1("Sending email alert to vmps.$switch@$maildomain");
-    mail("vmps.$switch@$maildomain", "VMPS notification on $switch", $msg);
+  if ($conf->maildomain!=="0" ) {
+    debug1("Sending email alert to vmps.$switch@".$conf->maildomain);
+    mail("vmps.$switch@".$conf->maildomain, "VMPS notification on $switch", $msg);
   }
 }
 
 function notify2($switch, $msg, $subject) {
-  global $connect, $mail_user;
+  global $connect, $conf;
   db_connect();
 
   ## 1. Sent email to sysadmin 
-  if ($mail_user!=="") {    # usually for root
-    debug1("Sending email alert to $mail_user");
+  if ($conf->mail_user!=="") {    # usually for root
+    debug1("Sending email alert to ".$conf->mail_user);
     #mail($mail_user, "VMPS alert on $switch", $msg);
-    mail($mail_user, $subject, $msg);
+    mail($conf->mail_user, $subject, $msg);
   }
 
   ## 2. Lookup notify list for that switch, email them too.
@@ -274,12 +471,12 @@ function notify2($switch, $msg, $subject) {
 }
 
 function notify($switch, $msg) {
-  global $connect, $mail_user;
+  global $connect, $conf;
   db_connect();
 
-  if ($mail_user!=="") {    # usually for root
-    debug1("Sending email alert to $mail_user");
-    mail($mail_user, "VMPS alert on $switch", $msg);
+  if ($conf->mail_user!=="") {    # usually for root
+    debug1("Sending email alert to ".$conf->mail_user);
+    mail($conf->mail_user, "VMPS alert on $switch", $msg);
   }
 
   $query="select notify from switch WHERE name='" . $switch . "'";

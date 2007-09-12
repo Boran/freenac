@@ -1,0 +1,21 @@
+As of this revision (715) of FreeNAC (2.2 RC1), some of the configuration variables are stored in the db instead.
+
+The reason for this is that we plan to develop an OO policy interface and thus we can contain
+all those variables in a simple configuration object which will be available to every module which
+would take part in the decision process.
+
+Some variables are still left in the configuration files since they are sensitive (usernames, 
+passwords). The rest of the variables are stored into the config table.
+
+The process to import the config files into the config table is as follows:
+
+Change to the contrib directory
+   cd /opt/nac/contrib
+
+Execute the config2db script providing the configuration file 
+   ./config2db ../etc/config.inc
+   ./config2db ../etc/port_scan.inc
+
+And that's it. You don't need to perform any more modifications to your config files, nor comment 
+variables out, they won't be taken into account by the scripts.
+

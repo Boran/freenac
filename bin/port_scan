@@ -1,4 +1,4 @@
-#!/usr/bin/php -- -f
+#!/usr/bin/php -f
 <?php
 /**
  * /opt/nac/bin/portscan
@@ -35,8 +35,30 @@
  */
 
 require_once "funcs.inc";
-include_once "etc/port_scan.inc";
+require_once "etc/port_scan.inc";
 $output=TRUE;
+
+#Compatibility with old vars
+if (!$conf->scan_directory && $conf->nmap_scan_directory)
+   $scan_directory=$conf->nmap_scan_directory;
+else 
+   $scan_directory=$conf->scan_directory;
+
+if (!$conf->what_units_time && $conf->nmap_what_units_time)
+   $what_units_time=$conf->nmap_what_units_time;
+else 
+   $what_units_time=$conf->what_units_time;
+
+if (!$conf->time_threshold && $conf->nmap_time_threshold)
+   $time_threshold=$conf->nmap_time_threshold;
+else
+   $time_threshold=$conf->time_threshold;
+
+if (!$conf->which_nmap && $conf->nmap_path)
+   $which_nmap=$conf->nmap_path;
+else
+   $which_nmap=$conf->which_nmap;
+
 check_requirements();
 //If we get up to this point, life is good
 define_syslog_variables();
@@ -45,42 +67,51 @@ $queries['number']=0;
 $queries['messages']=0;
 $flagscannow=0;
 for ($i=0;$i<$argc;$i++)
+{
    if ($argv[$i]=="--scannow")
       $flagscannow++;
+   else if ($argv[$i]=="--verbose")
+      $debug_flag1=true;      
+}  
 if ($flagscannow)
    $output=FALSE;
 
 message("Doing port_scan to sytems... Please wait...\n");
 debug1("port_scan started");
-$scan_results=$scan_directory."/scan.xml";   	//Scan file
+$file_timestamp=date('Y-m-d H:i:s');
+$file_timestamp=str_replace(' ','-',$file_timestamp);
+
+$scan_results=$scan_directory."/scan-$file_timestamp.xml";   	//Scan file
 debug1("Scan file: $scan_results");		//Parameters from port_scan.inc
-debug1("Nmap flags: $nmap_flags");
+debug1("Nmap flags: ".$conf->nmap_flags);
 if (($what_units_time<0)||($what_units_time>6)||($what_units_time==2))
-   $string="$time_threshold hours";
+   $string=$time_threshold." hours";
 else if ($what_units_time==0)
-   $string="$time_threshold seconds";
+   $string=$time_threshold." seconds";
 else if ($what_units_time==1)
-   $string="$time_threshold minutes";
+   $string=$time_threshold." minutes";
 else if ($what_units_time==3)
-   $string="$time_threshold days";
+   $string=$time_threshold." days";
 else if ($what_units_time==4)
-   $string="$time_threshold weeks";
+   $string=$time_threshold." weeks";
 else if ($what_units_time==5)
-   $string="$time_threshold months";
+   $string=$time_threshold." months";
 else if ($what_units_time==6)
-   $string="$time_threshold years";
+   $string=$time_threshold." years";
 debug1("Last_seen threshold: $string");
 if ($argc==1)				//Running mode
    debug1("Running mode: Normal");
 else if ($flagscannow)
    debug1("Running mode: Scannow");
 else debug1("Running mode: Manual"); 
-$list=scan($scan_results,$nmap_flags);		//Scan network with those flags	
+$list=scan($scan_results,$conf->nmap_flags);		//Scan network with those flags	
 $var=parse_scanfile($scan_results,$list);		//Parse the xml file
 if ($var['equipments']>0)			
    do_inventory($var);				//Check against database	
 else
    $var['equipments']=0;
+
+syscall("rm $scan_results");
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 if ($flagscannow)
@@ -88,7 +119,7 @@ if ($flagscannow)
 
 function check_requirements()  //Checks for required functions and tables structure
 {
-   global $scan_directory, $time_threshold, $what_units_time,$nmap_flags,$which_nmap;
+   global $conf,$what_units_time, $scan_directory, $time_threshold, $which_nmap;
    $functions=get_defined_functions();
    $functions=$functions['user']; //A little bit of paranoia :)
    if (!in_array('debug1',$functions))
@@ -103,15 +134,15 @@ function check_requirements()  //Checks for required functions and tables struct
       check_and_abort("Function normalise_mac not defined in funcs.inc\n",0);
    if (!in_array('log2db',$functions))
       check_and_abort("Function log2db not defined in funcs.inc\n",0);
-   if (!isset($which_nmap))
+   if (!$which_nmap)
       check_and_abort("Var \$which_nmap not defined in port_scan.inc\n",0);
-   if (!isset($scan_directory))
+   if (!$scan_directory)
       check_and_abort("Var \$scan_directory not defined in port_scan.inc\n",0);
-   if (!is_dir($scan_directory))
+   if (!$scan_directory)
         check_and_abort("Required directory $scan_directory doesn't exist\n",0);
-   if (!isset($time_threshold))
+   if (!$time_threshold)
       check_and_abort("Var \$time_threshold not defined in port_scan.inc\n",0);
-   if (!isset($what_units_time))
+   if (!$what_units_time)
      check_and_abort("Var \$what_units_time not defined in port_scan.inc\n",0);
    $query="describe systems;";
    $res=execute_query($query);
@@ -131,7 +162,7 @@ function check_requirements()  //Checks for required functions and tables struct
    $query="describe protocols;";
    $res=execute_query($query);
    check_and_abort("Please make sure you have properly followed the doc file README.port_scan\n",$res);
-   $tmp=syscall($which_nmap." --version | grep nmap");
+   $tmp=syscall($which_nmap." --version | grep -i nmap");
    $tmp=explode(" ",$tmp);
    $nmap_string=$tmp[0];
    $nmap_version=$tmp[2];
@@ -140,7 +171,7 @@ function check_requirements()  //Checks for required functions and tables struct
    #if (isset($nmap_version)&&($nmap_version<4.11))
    if (isset($nmap_version)&&($nmap_version<4.10))
       check_and_abort("You need a newer version of nmap\n",0);
-   if (!isset($nmap_flags))
+   if (!$conf->nmap_flags)
      check_and_abort("Var \$nmap_flags not defined in port_scan.inc\n",0);
 }
 
@@ -613,8 +644,10 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
 
 function check_and_abort($message,$resource)	//This function checks if there is a problem with an important query and aborts. It is also used to abort the script because we want to do it
 {
+   global $scan_results;
    if (!is_resource($resource))		//Let's abort just for fun
    {
+      syscall("rm $scan_results");
       message($message);
       message("port_scan ended abnormally.\n");
       debug1($message);
@@ -626,6 +659,7 @@ function check_and_abort($message,$resource)	//This function checks if there is 
    else
    if (mysql_num_rows($resource) == 0)	//No results from our query so there is no point in continuing execution
    {
+      syscall("rm $scan_results");
       message($message);
       message("port_scan ended abnormally.\n");
       debug1($message);
@@ -852,15 +886,7 @@ function get_ips()	//This function will get some ips to scan
 
 function date_diff($date1, $date2,$what) //Time difference between the timestamp from the database and the one generated by the script
 {
-   $temp=explode(' ',$date1);
-   $time_info_1=explode(':',$temp[1]);
-   $date_info_1=explode('-',$temp[0]);
-   $temp=explode(' ',$date2);
-   $time_info_2=explode(':',$temp[1]);
-   $date_info_2=explode('-',$temp[0]);
-   $time1=mktime((int)$time_info_1[0],(int)$time_info_1[1],(int)$time_info_1[2],(int)$date_info_1[1],(int)$date_info_1[2],(int)$date_info_1[0]);
-   $time2=mktime((int)$time_info_2[0],(int)$time_info_2[1],(int)$time_info_2[2],(int)$date_info_2[1],(int)$date_info_2[2],(int)$date_info_2[0]);
-   $time=$time2-$time1;
+   $time=time_diff($date1,$date2);
    if (($what<0)||($what>6))
       $what=2;
    for ($i=1;$i<=$what;$i++)

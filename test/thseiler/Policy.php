@@ -16,14 +16,13 @@
  *
  */
  
-class Policy {
+class Policy extends Common {
 	protected $system;
 	protected $port;
 	
 	// Todo __construct($system)
-	protected function __construct($system,$port) {
-           $this->system=$system;
-	   $this->port=$port;
+	protected function __construct() {
+	   parent::__construct();
 	}
 
 	// Todo change_system()

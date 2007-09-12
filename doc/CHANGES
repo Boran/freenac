@@ -1,4 +1,79 @@
-________ CHANGE Version 2.1 ___________
+________ CHANGES Version 2.2 ___________
+
+To compare changes in your installation with the FreeNAC repository:
+  svn status -u
+This reports, but does not commit any changes.
+
+
+History of this Branch 2.2
+===========================
+
+---- Changes V2.2 RC3 (SVN tag TBD)
+
+
+
+---- Changes from V2.2 RC1 to V2.2 RC2 (SVN tag 776)
+ * Web 1 and Web 2 were put together into a single interface /web
+   with AD auth made optional
+ * Fixed several bugs in vmpsd_external and added new features
+	Set an expired device to killed
+	Hostname when killing a system
+	Ignoring null dates
+	VLAN by switch location
+	Hub detection
+	Handling of VMs
+	Check for unknown status
+ * Fixed several bugs in vmps_lastseen and added new features
+	GWP detection
+	Update port regardless of check_for_expired
+	Add switchname when a new switch is detected
+	Added hostname when warning about expired
+	Add port and sswitch comments if no patchcable info is found
+ * Modified version of restart_port using SNMP
+ * New functions introduced in funcs.inc. Some of them are not used at the moment,
+   but they'll be in the near future
+	is_mac_on_port
+	ping_mac2
+	is_field_active
+ * Added more monitoring scripts
+ * Added more documentation
+ * Fixes in the Windows GUI
+ * Importing of the variables contained in the config.inc file into the config table
+ * Creation of a Settings class that holds global configuration variables.
+   This Settings class marks our first steps towards the development of a 
+   OO policy interface.
+   All scripts have been modified accordingly
+
+
+---- Changes from V2.1 RC3 to V2.2 RC1 (SVN tag 550)
+
+Key changes:
+ o Database redesign: improved keys, field names and table names will allow the DB
+   to better grow with time and ensure better data consistency.
+   There were for example, locations as text fields in several tables. There are now 
+   lookups into a location table which in turn looks into a building table.
+   Many new empty base tables for the enterprise edition were added.
+   -- See the drawing db_schema_v2.2.jpg in the doc directory.
+   
+ o The server scripts, Web and Windows GUI have been adapted to suit the new schema.
+ o The new db name is by default 'opennac' (and can be changed); it was 'inventory' before.    
+ o Many cosmetic changes to the Windows Gui
+ o End-devices: add an expiry date, set in the Windows GUI, checked in vmpsd_external
+ o Ports: record the last vlan used, and when.
+ o The end-device status has been extended from enabled/disabled to:
+   unknown, active, unmanaged, killed.
+ o Docs updated
+
+---- Changes from V2.1 RC2 to V2.1 RC3
+
+   Added some features to some scripts
+   Added new scripts
+   Modified configuration scripts to add new vars for the new scripts
+   Fixed a php include problem for all the scripts
+   Changes to the db schema
+   Enhancements made to the GUIs
+   Added sample configuration files for FreeRadius, Samba, Kerberos
+   More documentation 
 
 ---- Changes from V2.1 RC1 to V2.1 RC2
 

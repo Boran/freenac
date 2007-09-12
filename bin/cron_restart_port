@@ -35,8 +35,8 @@ openlog("cron_restart_port", LOG_PID, LOG_LOCAL5);
 #####-- functions
 
 function restart_port($switch, $port) {
-  global $check_port_restart;
-  if ($check_port_restart===TRUE) {
+  global $conf;
+  if ($conf->check_port_restart) {
      $answer=syscall("php restart_port $port $switch");
      #logit($answer);
      debug1($answer);
@@ -61,7 +61,7 @@ $query="SELECT switch.name as switchname, switch.ip as switchip,port.name,port.c
     log2db('info', "restart_port switch $line[0] $line[1], $line[2], $line[3], $line[4]");
     #$switch=v_sql_1_select("select ip from switch where id='$line[0]'");
     $switch=$line[1];
-    restart_port($switch, $line[1]);
+    restart_port($switch, $line[2]);
   }
 
 # Now reset the flag, since its done

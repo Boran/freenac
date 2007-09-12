@@ -53,22 +53,27 @@
  *
  */
 
-class Port
+class Port extends Common
 {
    private $props=array();
-   
-
-   function __construct($domain, $switchip, $portname, $lastvlan)
+   function __construct($request)
    {
-      // Invalid parameters ?
-      if ((strlen($switchip) < 8) || (strlen($portname) <1)) {
-        //logit("new Port(): invalid parameters, switchip=$switchip, portname=$portname");
-        return undef;
-      }
+      parent::__construct();
+      if ($request instanceof VMPSRequest)
+      {
+         $switchip=$request->switch;
+         $portname=$request->port;
+         $domain=$request->vtp;
+         $lastvlan=$request->lastvlan;
+         // Invalid parameters ?
+         if ((strlen($switchip) < 8) || (strlen($portname) <1)) {
+            //logit("new Port(): invalid parameters, switchip=$switchip, portname=$portname");
+            return undef;
+         }
 
-      // Returns an array containing all variables defined in the config table
-      // TBD: query is a first draft, there is probably too much in there.
-      $query=<<<EOF
+         // Returns an array containing all variables defined in the config table
+         // TBD: query is a first draft, there is probably too much in there.
+         $query=<<<EOF
 SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchName, 
   default_vlan, last_vlan, v1.default_name as LastVlanName, 
   port.name,  restart_now, port.comment, last_activity, 
@@ -81,19 +86,20 @@ SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchNam
   LEFT  JOIN auth_profile ON auth_profile.id = port.auth_profile
   LEFT  JOIN vlan v1    ON port.last_vlan = v1.id
 EOF;
-      $query .=" WHERE port.name='$portname' and switch.ip='$switchip' LIMIT 1";
-      if ($temp=mysql_fetch_one($query))
-      {
-         $this->props=$temp;
+         $query .=" WHERE port.name='$portname' and switch.ip='$switchip' LIMIT 1";
+         if ($temp=mysql_fetch_one($query))
+         {
+            $this->props=$temp;
+         }
+         $this->props['exception_vlan']=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id"
+				." inner join switch s on s.id=vs.swid where s.ip='$switchip'");
       }
    }
 
-   public function __get($key)							//Get the value of one var
+   protected function __get($key)							//Get the value of one var
    {
       if (array_key_exists($key,$this->props))
          return $this->props[$key];
-      else
-         DENY();
    }
 
    public function getAllProps()						//Get our inner array
@@ -103,15 +109,29 @@ EOF;
 
    public function getPortDefaultVlan()
    {
-	return $this->default_vlan;
+	if ($this->conf->use_port_default_vlan)
+	   return $this->default_vlan;
+	else
+	{
+	   #Log option not enabled
+	   return false;
+        }
    }
 
-   public function hasDefaultVlan()
+   public function vlanBySwitchLocation()
    {
-	if ($this->default_vlan)
-		return true;
-	else
-		return false;
+      if ($this->conf->vlan_by_switch_location)
+      {
+         if ($this->exception_vlan)
+            return $this->exception_vlan;
+         else
+            return false;
+      }
+      else
+      {
+         #Log: this option is not enabled
+         return false;
+      }
    }
 }
 

@@ -65,8 +65,8 @@ if ($debug_flag1) { $query=$query . " LIMIT 10"; }
 
 #log2db('info', 'dump_ports: completed');
 syslog(LOG_INFO, 'completed');
-if ($mail_user!=="") {
-  mail($mail_user, "VMPS /opt/vmps/dump_ports", $msg);
+if ($conf->mail_user!=="") {
+  mail($conf->mail_user, "VMPS dump_ports", $msg);
 }
 
 closelog();

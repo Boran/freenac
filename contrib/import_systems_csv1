@@ -1,0 +1,181 @@
+#!/usr/bin/php -- -f
+<?php
+/**
+ * /opt/nac/contrib/import_systems_csv1
+ *
+ * Imports and activates systems contained in a CSV file.
+ * 
+ * The format of the CSV file is as follows:
+ *
+ * mac_address;hostname;vlan;ip_address;location;user;inventory_number;comment;history
+ *
+ * where mac_address is in the form xxxx.xxxx.xxxx
+ * 
+ * For an example of a CSV file, please see /opt/nac/contrib/sample_csv1.txt
+ *
+ * NOTE: This script has to be run from /opt/nac/bin
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package                     FreeNAC
+ * @author                      Héctor Ortiz (FreeNAC Core Team)
+ * @copyright                   2007 FreeNAC
+ * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version                     SVN: $Id$
+ * @link                        http://www.freenac.net
+ *
+ */
+
+require_once "funcs.inc";
+
+function validate($string)
+{
+   rtrim($string,' ');
+   if (get_magic_quotes_gpc()) {
+      $value=stripslashes($string);
+   }
+   if (!is_numeric($string)) {
+      $string= mysql_real_escape_string($string);
+   }
+   return $string;
+}
+
+function print_usage()
+{
+   echo "Usage: import_systems_csv1 file\n";
+   exit(1);
+}
+
+if ($argc!=2)
+   print_usage();
+
+if (!file_exists($argv[1]))
+   die("File doesn't exist");
+$file=fopen(trim($argv[1]),'r');
+
+if ($file)
+{
+   $inserted=0;
+   $updated=0;
+   $inserted_users=0;
+   $inserted_vlans=0;
+   $inserted_locations=0;
+   while (!feof($file))
+   {
+      $line=fgets($file);
+      $fields=explode(';',$line);
+      $mac=validate(strtolower(trim($fields[0])));
+      $hostname=validate(strtolower(trim($fields[1])));
+      $vlan=validate(trim($fields[2]));
+      $ip=validate(trim($fields[3]));
+      $location=validate(trim($fields[4]));
+      $username=validate(strtolower(trim($fields[5])));
+      $inventory=validate(trim($fields[6]));
+      $comment=validate(trim($fields[7]));
+      $history=validate(trim($fields[8]));
+      if (empty($mac))
+         continue;
+      if (ereg("([0-9a-zA-Z]{4}\.){2}([0-9a-zA-Z]{4})",$mac))
+      {
+         if ($vlan)
+         {
+            $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan';");
+            if (is_numeric($vlan))
+               $vlan_id=v_sql_1_select("select id from vlan where default_id='$vlan';");
+            else if (is_string($vlan))
+               $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan';");
+            else $vlan_id=1;
+            if (!$vlan_id)
+            {
+               if (is_numeric($vlan))
+                  $query="insert into vlan set default_id='$vlan'";
+               else if (is_string($vlan))
+                  $query="insert into vlan set default_name='$vlan';";
+               $res=mysql_query($query);
+               if ($res)
+               {
+                  if (is_numeric($vlan))
+                     $vlan_id=v_sql_1_select("select id from vlan where default_id='$vlan';");
+                  else if (is_string($vlan))
+                     $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan';");
+                  $inserted_vlans++;
+               }
+               else $vlan_id=1;
+            }
+         }
+         else $vlan_id=1;
+
+         if ($location)
+         {
+            $location_id=v_sql_1_select("select id from location where name like '$location';");
+            if (!$location_id)
+            {
+               $query="insert into location set name='$location';";
+               $res=mysql_query($query);
+               if (!res)
+                  $location_id=1;
+               else
+               {
+                  $location_id=v_sql_1_select("select id from location where name like '$location';");
+                  $inserted_locations++;
+               }
+            }
+         }
+         else $location_id=1;
+
+         if ($username)
+         {
+            $user_id=v_sql_1_select("select id from users where username like '$username';");
+            if (!$user_id)
+            {
+               $query="insert into users set username='$username';";
+               $res=mysql_query($query);
+               if (!res)
+                  $user_id=1;
+               else
+               {
+                  $user_id=v_sql_1_select("select id from users where username like '$username';");
+                  $inserted_users++;   
+               }
+            }
+         }
+         else $user_id=1;
+         
+         if (!$ip||!ereg("([12]?[0-9]?[0-9]{1}\.){3}([12]?[0-9]?[0-9]{1})",$ip))
+            $ip='';
+         
+         $sid=v_sql_1_select("select id from systems where mac='$mac';");
+         if (!$sid)
+         {
+            $query="insert into systems set mac='$mac',name='$hostname',uid='$user_id',vlan='$vlan_id',comment='$comment',status=1,office='$location_id',inventory='$inventory',history='$history';";
+            $res=mysql_query($query);
+            if ($res)
+               $inserted++;
+            else echo "Error inserting $mac ".mysql_error();
+         }
+         else
+         {
+            $query="update systems set name='$hostname',status=1,uid='$user_id',vlan='$vlan_id',comment='$comment',status=1,office='$location_id',inventory='$inventory',history='$history' where mac='$mac';";
+            $res=mysql_query($query);
+            if ($res)
+               $updated++;
+            else echo "Error updating $mac ".mysql_error();
+         }
+      }
+      else
+         echo "Discarding $mac\n";
+   }
+   echo "Inserted $inserted new devices\n";
+   echo "Updated $updated devices\n";
+   echo "Inserted $inserted_users new users\n";
+   echo "Inserted $inserted_vlans new vlans\n";
+   echo "Inserted $inserted_locations new locations\n";
+ 
+}
+else 
+   echo "There was a problem reading the file\n";
+?>

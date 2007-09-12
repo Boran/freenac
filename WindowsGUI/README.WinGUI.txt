@@ -2,14 +2,23 @@ __________ Free NAC Windows GUI  ___________
 
 Description:
   This Windows Executable can be used to connect to the NAC Database and manage it.
-  We cannot provide source code at the moment as its proprietary, but you can use it for free.
-  This is issue will probably be solved by replacing it with a WebGUI, depending on the Team 
+  
+  Copyright (C) 2007 Swisscom, FreeNAC Core Team, Sean Boran, http://www.FreeNAC.net
+
+License  
+  We cannot provide source code (yet), but you can use it for free.
+  You may not charge other for this tool, and must always preserve this file and the CHANGELOG if
+  copying.
+  
+  The OpenSource issue will probably be solved by replacing it with a WebGUI, depending on the Team 
   resources (contributions are welcome).
 
-  Copyright (C) 2007 Swisscom, FreeNAC Core Team, Sean Boran, http://www.FreeNAC.net
+
+Please read the online Installation Guide (http://FreeNAC.net/en/installguide), its probably more complete that these brief notes.
   
-Using this GUI on the Online FreeNAC database
----------------------------------------------
+  
+Using this GUI on the Demo Online FreeNAC database
+--------------------------------------------------
   1. Download vmps.exe from http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/
   2. Download the demo config file vmps.xml from
      http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/demo1
@@ -21,15 +30,36 @@ Using this GUI on the Online FreeNAC database
         port 3306/mysql needs to be open outgoing.
         
         
-Using this GUI on the FreeNAC Virtual Machine
+        
+Using this GUI on the FreeNAC Virtual Machine (demo database)
+---------------------------------------------
+A test dataset is available in the 'nacdemo' db, delivered with the VM.
+This is useful for trying out the GUI, and learning how it works by studying
+the example data.
+  1. Download vmps.exe and vmps.xml from 
+     http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/     
+  2. Then save these in a directory, e.g. c:\nac.demo
+  3. Configure vmps.xml with a text edit such as 'wordpad'
+     - Change the IP address of the server to corresponding to the FreeNAC VM 
+     - Change the database="nacdemo" to use the test dataset      
+  4. Start the NAC GUI by double clicking on the vmps.exe.
+  
+  Note if you do not have the VM, the demo DB is in SVN:
+  http://svn.sourceforge.net/viewvc/*checkout*/opennac/branches/2.2/contrib/nacdemo_db.tgz
+
+  
+  
+          
+Using this GUI on the FreeNAC Virtual Machine (live database)
 ---------------------------------------------
   1. Download vmps.exe and vmps.xml from 
      http://svn.sourceforge.net/viewvc/opennac/branches/2.2/WindowsGUI/     
-  2. Then save these in a directory, e.g. c:\nac..
+  2. Then save these in a directory, e.g. c:\nac
   3. Configure vmps.xml with a text edit such as 'wordpad'
      - Change the IP address of the server to corresponding to the FreeNAC VM 
   4. Start the NAC GUI by double clicking on the vmps.exe.
 
+ 
  
 Full  Installation:
 -------------------
@@ -37,6 +67,7 @@ Full  Installation:
   
   2. Configure vmps.xml with a text edit such as 'wordpad'
     - Change the IP address of the server
+     - Change the database="opennac" to use the live dataset        
     
   3.  Configure the SQL username/password key, to access the NAC database. This
       will need to be changed on the mysql side, and on the windows side.
@@ -51,43 +82,17 @@ Full  Installation:
       d) Copy the value of the 'generated key' filed to the 'auth' field in vmps.xml
       e) Restart the GUI, and press "Connect"
 
+   
+   4. To enable the DEMO company setting in vmps.xml to work:                  
+        update config set value='1' WHERE name='DemoMode';  
+      normally this is 0, meaning that a company called DEMO will not work. 
+      If it is=1, and the DEMO company is set in vmps.xml, then the user is given administrator access!        
 
+   5. Please read also:
+      - the Windows GUI section of the User Guide (http://FreeNAC.net/en/userguide)
+      - the System Installation Guide (http://FreeNAC.net/en/installguide)
 
-
-
-CHANGE HISTORY:  
---------------
-v1.2.0.100: fix 'scannow' button, remove error message when writing patchtable.
-v1.2.0.101/30.10.06/SB: Deleted systems were not correctly logged, Delection of changes to vlans in Edit Tab improved. For DEMO company allow Admin access for all users.
-v1.2.0.101/30.10.06/SB: Handling of locates with '/' and not '.' for date seperators.
-v1.2.0.102/10.11.06/SB: fix history log timestamps for some timezones, and add the demodb/vmps.xml
-v1.2.0.103/24.11.06/SB: 
-	Allow the port default vlan to be changed. 
-	Add Queries for expired user, expired systems. Add button to export entire table to excel.
-	Sources: delete old components taPorts, taSystems.
-v1.2.0.103/4.12.06/SB: 	
-  History field was accidentally read-only. Edit tab: make user lookups much faster via a dedicated query.
-  Query tab: add Anti-Virus out of date
-  Query tab: add the actual query SQL to the bottom of each query.  
-  Allow vlans, switchs, ports, lookups rows to be deleted by an admin.
-v1.2.0.104/18.12.06/SB: 	
-  Remove references to old 'oper' table. Remove 'user' column from patch cables tab.  
-  Add a PatchCable column to the Overview tab, added an 'unmanaged' status to the Edit/Overvew tabs
-v1.2.0.105/21.12.06/SB: 	  
-  IP address visible in the Edit tab again. Record port restarts
-  in the Change History. Remove some unneeded warnings.
-v1.2.0.108/24.01.07/SB: 	  
-  Add PatchCableEnabled to vmps.xml, which hides or shows relevant Tabs/fields.
-  Performance: optimise queries, start reduced from 30 to 3 secs. To view Users on an office
-   on the Ports Tab, doubleclick.
-  Install DeveloperExpress tools for delphi and start using their improved components
-  - Change grids in Change and Server log
-  - Improved edit-User ComboBox to show key zuser details
-  - Add Filter by Switch to the Ports page  
-  
-v2.2.0.113/23.02.07/SB:   
-  Rewrite for completely new DB scheam NAC V2.2, add new tables.
-  Migrate most grids to the cxGrid from DeveloperExpress, enables export to Excel.
+See also the CHANGELOG.txt
 
 
 	

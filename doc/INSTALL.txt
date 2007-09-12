@@ -1,0 +1,15 @@
+
+Browse our online documentary on our website http://www.freenac.net
+
+        * Installation guide    http://freenac.net/en/installguide
+        * Technical guide       http://freenac.net/en/techguide
+        * Users guide           http://freenac.net/en/usersguide
+
+Check out our forums for answer to problems you might have or for
+news about our project
+
+        http://freenac.net/phpBB
+
+Please do sign up to the website and forum.
+On the Website you can post comments/tips on each page of the documents,
+and in the Forums, share your knowledge and benefit from that of other.

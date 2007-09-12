@@ -1,0 +1,821 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<title>FreeNAC Installation Guide</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /><base href="http://freenacweb.vptt.ch/" />
+<style type="text/css">
+@import url(misc/print.css);
+</style>
+</head>
+<body>
+<div id="node-105" class="section-1">
+<h1 class="book-heading">FreeNAC Installation Guide</h1>
+<p><em>There are three key documents available on <a href="http://FreeNAC.net/en/community" title="http://FreeNAC.net/en/community">http://FreeNAC.net/en/community</a>, the User&#39;s, Technical and Installation Guide. FreeNAC administrators will need to read all three. Each is divided into several subpages, if you wish to see it all on one page, click the &quot;Printer-friendly version&quot; link below.</em></p>
+<p>This document describes how to get FreeNAC installed. </p>
+<p>A nice, complete step-by-step installation guide<strong> for FreeNAC v2.1 and Suse v10</strong> has also been contributed in Word format, see <a href="http://opennac.svn.sourceforge.net/viewvc/*checkout*/opennac/branches/2.2/doc/freeNac%20Installation.doc" title="http://opennac.svn.sourceforge.net/viewvc/*checkout*/opennac/branches/2.2/doc/freeNac%20Installation.doc">http://opennac.svn.sourceforge.net/viewvc/*checkout*/opennac/branches/2....</a> . It it limited to the older v2.1 though, and Suse specific. </p>
+<p>This document aims to bring similar information, more uptodate.</p>
+<h4>Contents </h4>
+<p>&nbsp;</p><div id="node-129" class="section-2">
+<h1 class="book-heading">1. Requirements</h1>
+<p>To run FreeNAC, you&#39;ll need </p>
+<ul>
+<li>a Linux server (or VM) with FreeNAC installed</li>
+<li>a  Cisco Switch</li>
+<li>a Windows PC to run the current <a href="http://svn.sourceforge.net/viewvc/opennac/tags/Release_2.2_RC2/WindowsGUI/README.WinGUI.txt?view=markup">GUI</a></li>
+</ul>
+<h3>FreeNAC server hardware requirements<br /></h3>
+<p>Example: a site running with ~2&#39;000 active end-devices. The server is rarely loaded (CPU or I/O). The slowest part is the Windows GUI with its complex SQL queries - not the VMPS back-end. </p>
+<ul>
+<li>A PC server which is compatible with the brand of Linux you choose.<br />The FreeNAC core team use Ubuntu LTS now, but Suse, Fedora, Gentoo, Rehat etc. should also work. Solaris has also been used.</li>
+<li>Disk
+<ul>
+<li>A hard-disk of at least 20G, recommended 100G: the more the better for backups. </li>
+<li>Have a second disk for backups or RAID, for additional data security. Ensure the RAID system is Linux compatible.</li>
+<li>IDE is fine, but SCSI or SATA are often more reliable, faster and you can boot from each disk without changing cables. </li>
+</ul>
+</li>
+<li>Network Interfaces: Have two if possible. <br />The second interface is useful for a dedicated switch management, or backup network. 100Mb speed is fine (Gb is not necessary).</li>
+<li>CPU is not a bottleneck, 2GHz should be fine. </li>
+<li>Memory is always good for databases. 1GB will work fine, but the more the better.</li>
+<li>A dual, hot plug power supply improves reliability.</li>
+<li>A dual, hot plug fan also imroves reliability.</li>
+<li>Remote console management should be included in the Server Bios (e.g. HP Lights out, Sun LOM, Dell DRAC5), for easier remote installation, troubleshooting and monitoring of hardware status. </li>
+</ul>
+<p>Its recommended to have at least 2, and perhaps 3 servers. If you are used to Virtual Machines, do the Master as a VM, and one or more replicas as &#39;real&#39; machines. Point the switches at the replicas, and use the master for serving GUI requests, scanning and polling switches/routers and processing syslogs.</p>
+<p> By doing the master as a VM, snapshots can be used before system upgrades, and roll backs are easier. </p></div>
+<div id="node-130" class="section-2">
+<h1 class="book-heading">2. Quick install using a Virtual Machine (VM)</h1>
+<h3><a name="vm" title="vm"></a>Introduction</h3>
+<p>To get FreeNAC up and running, either a physical machine with GNU/Linux and FreeNAC will have to be installed, or the Linux VM downloaded. This section describes the latter approach.</p>
+<p>FreeNAC does not run on windows. </p>
+<p> In order to get you started quickly  with FreeNAC, we have built a Virtual Appliance with Linux, the modules needed, and FreeNAC installed in a &#39;demo mode&#39;. </p>
+<p>You can download the virtual  machine, and start it within VMware <a href="http://www.vmware.com/products/ws/">Workstation</a> or the free VMware <a href="http://www.vmware.com/products/player/">Player</a> or <a href="http://www.vmware.com/products/server/">Server</a> <a href="/?q=en/community/downloads"></a>.</p>
+<p>There are two datasets included with the VM: &quot;nacdemo&quot; contains an example that should help to understand the GUI and what information freeNAC stores, whereas &quot;opennac&quot; is an empty dataset ready for productive use. </p>
+<h3>Installing the VM</h3>
+<ol>
+<li>Download the file <a href="http://sourceforge.net/project/showfiles.php?group_id=170004">FreeNAC_VM_2.2_RC1.zip</a>  (~1.07 GB.</li>
+<li>Uncompress it into a folder where your VMs are normally stored </li>
+<li>The VM is configured to use &quot;NAT&quot;. Set &quot;bridged mode&quot; if the VM is not just to be used as a demo (visible only to your PC with the windows GUI), but should be visible to the network.</li>
+<li>Start the VM, ignore the error <em>&quot;ethx interface  could not be set up&quot;</em>, login as  <strong>root</strong>:<strong>freenac</strong> (this should fix the previous  error). </li>
+<li>The VM will try to get an IP address via DHCP, which you can see with  &#39;ifconfig -a&#39;</li>
+</ol>
+<p>Optional changes to the Linux VM:
+<ol>
+<li>If you need to configure a static IP address or change the network  settings, execute &#39;yast network&#39; (Suse) or &#39;vi /etc/network/interfaces (Ubuntu).</li>
+<li>The keyboard layout in the VM is Swiss German, to set it to your preference,<br />Suse: <em>YaST -&gt; Hardware  -&gt; Keyboard Settings</em> .<br />Ubuntu: to do</li>
+<li>Timezone<br />Suse: to enable the Europe-&gt;Zurich zone ...<br />  cp /etc/localtime /etc/localtime.orig<br />  cp /usr/share/zoneinfo/Europe/Zurich /etc/localtime<br />Ubuntu: to do</li>
+<li>To get the latest revision (bug fixes) from the release, in the directory  <em>/opt/nac</em> just type &#39;svn update&#39;.</li>
+</ol>
+<h3>Connect to the Web Interface</h3>
+<ol>
+<li>To connect to the Web GUI, open your favorite web browser and  type in the address bar the IP of your VM (which you seen with &#39;ifconfig&#39; above).</li>
+<li>If the web page is displayed correctly, the the VM is running, on the network, and apache is running fine too. </li>
+<li>On the web page there should be a summary of documentation, links to the web gui and a copy of instruction on this page.</li>
+<li>Check in the &quot;Web GUI&quot; link, which leads to a &quot;Read-only&quot; interface and a &quot;Read-Write&quot; interface. These are described in XXX.</li>
+<li>Note that this interface is accessing the &quot;opennac&quot; database, which is empty after a fresh VM install.</li>
+</ol>
+<h3>Install the Windows Interface</h3>
+<ol>
+<li>Download the Windows GUI (vmps.exe and vmps.xml) and save a copy to two folders, for example called <em>FreeNAC_demo</em> and <em>FreeNAC_test</em>.</li>
+<li>FreeNAC_demo will be used to connect to the demo dataset &#39;nacdemo&#39;, to better understand how to use the GUI.
+<ul>
+<li>Edit <em>vmps.xml</em> and set the &#39;mysql server&#39; parameter to the  IP address of the VM, and set the &#39;mysql database&#39; to &#39;nacdemo&#39;.</li>
+<li>Start the GUI and press &#39;connect&#39;.</li>
+</ul>
+</li>
+<li>FreeNAC_test is used to connect to the &#39;opennac&#39; dataset, which is initially empty an will be used to when FreeNAC talks to switches and rouoters in your environment.
+<ul>
+<li>Configure <em>vmps.xml</em> and set the &#39;mysql server&#39; parameter to the  IP address of the VM, and set the &#39;mysql database&#39; to &#39;nacdemo&#39;.</li>
+<li>To do: create a user to allow the GUI access.<br />XXXXX</li>
+<li>Start the GUI and press &#39;connect&#39;.</li>
+</ul>
+</li>
+<li>See the Users Guide (<a href="http://freenac.net/en/community?q=en/usersguide" title="http://freenac.net/en/community?q=en/usersguide">http://freenac.net/en/community?q=en/usersguide</a>) for a description of how to use the Windows interface.</li>
+</ol>
+<h3>Connecting Switches to FreeNAC</h3>
+<p>Point your switch(es) to the FreeNAC VM (see the technical Guide (<a href="http://freenac.net/en/techguide" title="http://freenac.net/en/techguide">http://freenac.net/en/techguide</a>).  Observe syslog and play with the GUIs.  </p>
+<h3>Using FreeNAC in 802.1x mode</h3><div id="node-267" class="section-3">
+<h1 class="book-heading">Using the FreeNAC virtual machine with 802.1x</h1>
+<p>This virtual machine includes support for 802.1x which provides for stronger security. User authentication is performed against a windows domain controller so ensure you have one in place. If you don&#39;t, you can still enjoy of a fully functional LAN Access Control since it is already configured to do so. The 802.1X default configuration is intended to allow you to authenticate users against Active Directory, and then validate devices and assign them a VLAN. </p>
+<p>Presumably you already have a functioning Active Directory domain, and know how to run it. AD is very dependent on DNS (domain name system) so first you&#39;ll need to add an entry for your FreeNAC virtual machine in your DNS. Once you&#39;ve added this entry, we need to configure kerberos. </p>
+<p>Clock synchronization is so important in the security of the Kerberos protocol. If clocks are not synchronized within a reasonable window, Kerberos will report fatal errors and refuse to function. Clients attempting to authenticate from a machine with an inaccurate clock will be failed by the KDC in authentication attempts due to the time difference with the KDC&#39;s clock. This is why it is so important to have the clock of your virtual machine configured properly. This virtual machine is configured to use the Zurich&#39;s timezone, so if you live in a different part of the globe, you&#39;ll need to change the configuration of your timezone.</p>
+<p>Change to the directory to /usr/share/zoneinfo, here you will find a list of time zone regions. Choose the most appropriate region, if you live in Canada or the US this directory is the &quot;Americas&quot; directory.</p>
+<p>If you wish, backup the previous timezone configuration by copying it to a different location. Such as </p>
+<p>   mv /etc/localtime /etc/localtime-old</p>
+<p>Make a symbolic link from the file with the appropiate timezone to /etc/localtime. </p>
+<p>   ln -s  /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime</p>
+<p>Then, adjust the time of your virtual machine by using the command date. The syntax of the date command is &#39;date MMDDhhmmYYYY&#39;. So, let&#39;s say it is January 30 2010, 13:35, you type:</p>
+<p>   date 013013352010</p>
+<p>This will set the right time for your computer. You verify that the time is correct by typing &#39;date&#39; again with no parameters.</p>
+<p>   date</p>
+<p>and it will display the time you specified in the previous step.</p>
+<p>The Network Time Protocol (NTP) is available for the time synchronization of servers. Add an entry in your crontab to synchronize the clock of your virtual machine with an external time source.</p>
+<p>   crontab -e</p>
+<p>A text editor will appear with some entries in it. The existent entries are required for the proper functioning of FreeNAC. Add the next entry at the beggining of the file:</p>
+<p>   #Time synchronization<br />   0 0 * * *        /usr/sbin/ntpdate server &gt; /dev/null 2&gt;&amp;1</p>
+<p>Save your changes. This entry will synchronize every midnight your VM&#39;s clock with the one of server.</p>
+<p>Next, set the hardware clock. Do this by </p>
+<p>   hwclock --systohc </p>
+<p>Then, restart your VM.</p>
+<p>Once it is up again, we need to modify the configuration files for Kerberos to work.<br />Edit /etc/krb5.conf. The provided krb5.conf file is as follows:</p>
+<p>   [libdefaults]<br />        default_realm = DOMAIN.COM<br />        dns_lookup_real = false<br />        dns_lookup_kdc = false</p>
+<p>   [realms]<br />        DOMAIN.COM = {<br />                default_domain = domain.com<br />                kdc = ad.domain.com<br />                admin_server = ad.domain.com<br />        }<br />   [logging]<br />    kdc = FILE:/var/log/krb5kdc.log<br />    admin_server = FILE:/var/log/kadmin.log<br />    default = FILE:/var/log/krb5lib.log</p>
+<p>Modify the lines</p>
+<p>   default_realm = DOMAIN.COM<br />   DOMAIN.COM = {<br />   default_domain = domain.com</p>
+<p>And change domain.com for your domain. Mind the case.<br />For the lines</p>
+<p>   kdc = ad.domain.com<br />   admin_server = ad.domain.com</p>
+<p>You specifiy your Active Directory domain server.<br />Save your changes, and then check that you get no error from typing</p>
+<p>   kinit Administrator</p>
+<p>It&#39;ll request you for the Administrator password to create a ticket in your system.<br />If you get errors, check again your /etc/krb5.conf file. </p>
+<p>Even if your DNS servers are perfect in every way, it is a good idea to add important servers to your local /etc/hosts file. It speeds up lookups and provides a fallback in case the DNS servers go down. So, add the entry for your Active Directory domain server in /etc/hosts.</p>
+<p>Sample:<br />   192.168.1.1        ad.domain.com    ad</p>
+<p>Once you have this part working, let&#39;s configure Samba.<br />Modify the file /opt/samba/lib/smb.conf. The provided smb.conf file is as follows:</p>
+<p>   [global]<br />        workgroup = domain<br />        security = ads<br />        idmap uid = 16777216-33554431<br />        idmap gid = 16777216-33554431<br />        template shell = /bin/bash<br />        winbind use default domain = no<br />        password server = ads.domain.com<br />        realm = domain.com<br />   [homes]<br />        comment = Home Directories<br />        browseable = No<br />        writable = yes</p>
+<p>Modify the lines</p>
+<p>   workgroup = domain<br />   password server = ads.domain.com<br />   realm = domain.com</p>
+<p>With the appropiate values for your domain. Start Samba</p>
+<p>   /etc/init.d/smbd start</p>
+<p>Verify that it started</p>
+<p>   ps uax ¦ grep smbd</p>
+<p>And check for errors in /opt/samba/var/log.smbd. If errors are present, check again your sbm.conf file. Once Samba has started correctly, do:</p>
+<p>   net join</p>
+<p>This will join your VM to the domain. You can verify that your computer has joined the domain by typing </p>
+<p>   klist</p>
+<p>This should display valid Kerberos tickets and one of those is from your Active Directory domain server.<br />Now, start winbind</p>
+<p>   /etc/init.d/winbindd start</p>
+<p>Verify that windbind is working. This command pulls a list of users from AD </p>
+<p>   wbinfo -u</p>
+<p>And check for errors in /opt/samba/var/log.winbindd. If it started successfully, it will create another log file called log.wb-DOMAIN.<br />Once we have winbindd running, let&#39;s activate both smbd and winbindd as a service, so next time you restart your VM they&#39;ll be started automatically</p>
+<p>   chkconfig smbd on<br />   chkconfig winbindd on</p>
+<p>We have done all this just to get ntlm_auth running.<br />Now, let&#39;s try to auth with NTLM<br />  <br />  ntlm_auth --request-nt-key --domain=domain.com --username=Administrator<br />  password:<br />  NT_STATUS_OK: Success (0x0)</p>
+<p>This success message indicates that Samba is properly configured to authenticate users using AD, which is what we need for FreeRadius.</p>
+<p>Now, let&#39;s configure FreeRadius.</p>
+<p>Modify the file /usr/local/etc/raddb/clients.conf and add the switches you want to talk to this Radius server. Don&#39;t forget to specify the shared secret between this Radius server and your switch. In this configuration there are plenty of examples of how to define an entry for this file. You need to specify these entries in this file, otherwise the Radius server will ignore the incoming requests. </p>
+<p>Another configuration file that you may modify is the /usr/local/etc/raddb/eap.conf. The certificates defined in this file are the ones provided by FreeRadius. These certificates are not intended to be used in a production environment. You will need to create your own certificates later on. If you only want to perform test, these will work.</p>
+<p>The /usr/local/etc/raddb/radiusd.conf file is the main configuration file. This file will authenticate the username against your AD through ntlm_auth and then will authenticate the device and will assign a VLAN to it through the perl script /opt/nac/bin/rad2vmps. You don&#39;t need to modify anything. It is all set to start working right away.</p>
+<p>Now, run <br /> <br />   /etc/init.d/radius debug</p>
+<p> If you get at the end of all the text the line:</p>
+<p>Ready to process requests.</p>
+<p>Your FreeRadius server is properly running. Now, press Ctrl+C to interrupt it, and activate the service</p>
+<p>   chkconfig radius on</p>
+<p>And start the daemon</p>
+<p>   /etc/init.d/radius start</p>
+<p>The configuration regarding your VM is finished. You only need to configure your switches to speak 802.1X to your FreeRadius and enable 802.1x in your computers.<br />If you have further questions, problems or comments, please post them in our forum.</p></div>
+</div>
+<div id="node-215" class="section-2">
+<h1 class="book-heading">3. Linux platform Installation</h1>
+<p>This section describes how to install Linux and the components needed for NAC.</p>
+<h3>Overview </h3>
+<p>The steps involved are:</p>
+<ol>
+<li>Install Linux</li>
+<li>Install additional key components:<br />freetds, libxml, latest LAMP: PHP5/Apache2/MySQL</li>
+<li>Install optional components for 802.1x support Samba and FreeRadius are also needed.</li>
+<li>Harden: disable unneeded services.</li>
+<li>Configure linux: configure email, syslog, time synchronisation, DNS, shell profile, system monitoring scripts</li>
+</ol>
+<p>Once linux is installed, FreeNAC also needs to be installed, and the key components (FreeTDS, freeradius, Apache, PHP, MySQL) &amp; FreeNAC configured. </p>
+<h3> Linux</h3>
+<p>Linux required packages: ncurses-devel gcc-c++ gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel net-snmp net-snmp-devel tcpd-devel rpm-devel<br />    openssl openssl-devel openldap2-devel graphviz</p>
+<p>Linux key components: mysql-client mysql-server libxml samba apache php5</p>
+<p>Additional components: freeradius, freetds. </p>
+<p>Optional, but useful packages: traceroute, whois.</p>
+<p>&nbsp;</p><div id="node-216" class="section-3">
+<h1 class="book-heading">Linux Installation notes: Suse</h1>
+<h3>A. Introduction</h3>
+<p>This section describes Suse (version 9.3) specific commands. </p>
+<ul>
+<li>this section has not been updated since V2.1 in summer &#39;06 (The core team now uses ubuntu).</li>
+<li>Suse 9.3 is old, you should be using a more recent release.</li>
+<li>A nice, c<strong>omplete step-by-step installation guide for FreeNAC v2.1 and Suse v10</strong> has been contributed in Word format, see <a href="http://opennac.svn.sourceforge.net/viewvc/*checkout*/opennac/branches/2.2/doc/freeNac%20Installation.doc" title="http://opennac.svn.sourceforge.net/viewvc/*checkout*/opennac/branches/2.2/doc/freeNac%20Installation.doc">http://opennac.svn.sourceforge.net/viewvc/*checkout*/opennac/branches/2....</a>  </li>
+</ul>
+<h3>B. Installing Suse packages</h3>
+<p>Packages to install: rcs xntp sharutils tcpdump iptraf whois nmap  automake gcc ethereal rsync lynx links pin  scanlogd rsync uudeview ltrace smartmontools zip unzip pcre net-snmp ntop arpwatch perl-dbi flex pytn python-dev</p>
+<p>a) via the nework<br />Yast -&gt; Network services -&gt; proxy<br />        <a href="http://YOUR.PROXY.COM:80/" title="http://YOUR.PROXY.COM:80/">http://YOUR.PROXY.COM:80/</a></p>
+<p>Set Patch source 9.x in Switzerland <br />  <a href="http://mirror.switch.ch/ftp/mirror/SuSE/suse/" title="http://mirror.switch.ch/ftp/mirror/SuSE/suse/">http://mirror.switch.ch/ftp/mirror/SuSE/suse/</a><br />Install source 9.x:<br />  <a href="http://sunsite.cnlab-switch.ch//ftp/mirror/suse/suse/i386/9.3/" title="http://sunsite.cnlab-switch.ch//ftp/mirror/suse/suse/i386/9.3/">http://sunsite.cnlab-switch.ch//ftp/mirror/suse/suse/i386/9.3/</a><br />  sunsite.cnlab-switch.ch /ftp/mirror/suse/suse/i386/9.3/</p>
+<p>yast -i  <br />yast online_update</p>
+<p>b) or, if you have no internet access,<br />   by downloading the Suse 9.3 ISO images to /opt/install/suse9.3<br />   and then mounting/unmounting a CD as needed:<br />   umount /mnt/cd<br />   mount -o loop -t iso9660 /opt/install/suse9.3/cd1.iso /mnt/cd</p>
+<p>   In Yast, set the install source to the local directory &quot;/mnt/cd&quot;.</p>
+<h3>C. Linux preparation</h3>
+<p>Create /etc/mods        (documentation of system changes)</p>
+<p>/etc/hosts : timehost, loghost, mailhost</p>
+<p>rcSuSEfirewall2 stop<br />chkconfig SuSEfirewall2 off <br />chkconfig SuSEfirewall2_init off<br />chkconfig SuSEfirewall2_setup off</p>
+<p>rcportmap stop<br />chkconfig nfs off<br />chkconfig nfsboot off<br />chkconfig portmap off</p>
+<p>chkconfig mdnsd off<br />rcmdnsd stop</p>
+<p>## optional<br />vi /etc/snmpd.conf     [enable a read-only community if you want SNMP monitoring]<br />  rcsnmpd start <br />  chkconfig snmpd on </p>
+<p>Disable powersaving on servers and especially VMs:<br />/etc/sysconfig/powersave/cpufreq<br />  POWERSAVE_CPUFREQD_MODULE=&quot;off&quot;</p>
+<p>Email<br />  Yast -&gt; Network services -&gt; mail transfer agent<br />        Outgoing mail server = [YOUR_OUTBOUND_SERVER]</p>
+<p>    vi /etc/aliases, and set &quot;root&quot; alias to the sysadmin<br />    newaliases</p>
+<p>    Test email:<br />            echo test | mailx -s &quot;test&quot; root</p>
+<p>Time sync<br />  cp /etc/localtime /etc/localtime.orig<br />  cp /usr/share/zoneinfo/Europe/Zurich /etc/localtime      [Switzerland]<br />  cron:<br />  0,30 7-20 * * 1-5 /usr/sbin/ntpdate -s A.B.C.D X.Y.Z.Z;  /sbin/hwclock --systohc</p>
+<p>Setup syslog for centralised logging to the master server:<br />    In /etc/hosts, add an entry for each NAC server<br />            XX            vmps1  <br />            YY            vmps2</p>
+<p>    On the Master, enable the syslog server:<br />        vi /etc/syslog-ng/syslog-ng.conf.in</p>
+<p>            # uncomment to process log messages from network:<br />            #<br />            udp(ip(&quot;0.0.0.0&quot;) port(514));</p>
+<p>        SuSEconfig <br />        rcsyslog restart</p>
+<p>    Slave: syslog client:<br />        /etc/syslog-ng/syslog-ng.conf.in<br />        ## Forward *.info to loghost<br />        filter f_info   { level(info) ; };<br />        destination network  { udp(&quot;loghost&quot; port(514)); };<br />        log { source(src); filter(f_info); destination(network); };</p>
+<p>        add loghost to the vmps2 line in /etc/hosts</p>
+<p>    SuSEconfig <br />    rcsyslog restart</p>
+<p>change the root GECOS field in /etc/passwd to &quot;root MACHINE&quot; </p>
+<p>Also check: /root/.ssh/authorized_keys</p>
+<p>naming: <br />    vi /etc/resolv.conf </p>
+<p>  If you use DNS domains with &quot;.local&quot;, then replace dns library since Suse <br />  does not like domains ending int &quot;.local&quot;. Backup  libresolv.so.2 and create a new /lib/libresolv.so.2.orig that is not so brain dead: <br />      cd /lib cp libresolv.so.2 libresolv.so.2.orig <br />      cat libresolv.so.2.orig |sed &#39;s/local/lokal/g&#39; &gt; libresolv.so.2.NO_LOCAL <br />      cp libresolv.so.2.NO_LOCAL libresolv.so.2 </p>
+<p>  If SSH logins seem very slow, you might have to replace LOCAL with 127.0.0.1 in /etc/hosts.allow for the sshd entry.</p>
+<h3>D. additional extras</h3>
+<p>    create /secure  check_disk, monitor_processes, secure.conf <br />    ln -s /usr/bin/perl /bin/perl    </p>
+<p>    Environment<br />      copy /etc/profile.local from another machine<br />      . /etc/profile.local</p>
+<p>    Setup filewatch<br />      mkdir -p /var/filewatcher/archive<br />      copy /usr/local/bin/filewatcher from another machine<br />      copy /etc/filewatcher.conf from another machine<br />      filewatcher -c /etc/filewatcher.conf<br />      Setup Cron entry:<br />      2 6-18    * * 1-5 /usr/local/bin/filewatcher -c /etc/filewatcher.conf</p>
+<p>    check_disk  in root cron <br />        */3 *    * * *   /secure/check_disk 90 800       </p></div>
+<div id="node-217" class="section-3">
+<h1 class="book-heading">Linux Installation notes: Ubuntu</h1>
+<h3>Introduction</h3>
+<p>For the Ubuntu VM, we have used used the image &quot;Alternate Desktop CD&quot; from the 6.06 LTS version, which you can download from <a href="http://www.ubuntu.com/getubuntu/download" target="_blank">the Ubuntu website.</a> This version doesn&#39;t include the Live CD, instead it uses a text-based installer.</p>
+<p>We installed the LAMP server that comes with Ubuntu. This will install Apache2, MySQL5 and PHP5. </p>
+<p>Modify the instalation sources by uncommenting the lines starting with deb from the /etc/apt/sources.list file and comment out the lines with deb cdrom<br /><em><br />sudo vi /etc/apt/sources.list<br />sudo apt-get update</em></p>
+<p>And then upgrade the existing packages</p>
+<p><em>sudo apt-get upgrade</em></p>
+<p>[Optional] <em>Edit the file /boot/grub/menu.lst and add the following<br />vga=773<br />at the end of the line &quot;kernel&quot; in the section where you running kernel is and reboot the server. This will give you more lines in your console, so you won&#39;t be constrained to a 80x25 lines resolution.</em> </p>
+<p>In Ubuntu, to install a package, you do it with</p>
+<p><em>sudo apt-get install PACKAGE</em></p>
+<p>where PACKAGE is the name of the package to install.  </p>
+<h3>Installing Ubuntu Packages </h3>
+<p>As part of the FreeNAC installation, the following packages <strong>require to be installed:</strong></p>
+<ul>
+<li>flex</li>
+<li>python-dev</li>
+<li>apt-file</li>
+<li>libsnmp-base</li>
+<li>libsnmp9-dev</li>
+<li>mailx</li>
+<li>nmap</li>
+<li>openssh-server</li>
+<li>zip</li>
+<li>unzip</li>
+<li>syslog-ng</li>
+<li>ncurses-dev</li>
+<li>freetype2-dev</li>
+<li>libjpeg-dev</li>
+<li>libpng-dev</li>
+<li>apache2-prefork-dev</li>
+<li>php-pear</li>
+<li>php5-snmp</li>
+<li>libxml2-dev</li>
+<li>freetds-dev</li>
+<li>graphviz</li>
+<li>subversion</li>
+</ul>
+<p>The following packages, are <strong>optional:</strong></p>
+<ul>
+<li>rcs</li>
+<li>sharutils</li>
+<li>tcpdump</li>
+<li>iptraf</li>
+<li>whois</li>
+<li>rsync</li>
+<li>lynx</li>
+<li>links</li>
+<li>scanlogd</li>
+<li>uudeview</li>
+<li>ltrace</li>
+<li>ntop</li>
+<li>arpwatch</li>
+<li>smartmontools </li>
+<li>traceroute</li>
+<li>screen</li>
+</ul>
+<h3>Linux preparation</h3>
+<p>Create the file /etc/mods where you&#39;ll store the changes made to your system<br /><em>sudo touch /etc/mods</em></p>
+<p>Add in /etc/hosts definitions for timehost, loghost and mailhost</p>
+<p>In the file /etc/aliases there should be an alias for root. Usually the user that receives mail for root is freenac. Test email:</p>
+<p><em>echo test | mailx -s &quot;test&quot; root</em></p>
+<p>The freenac user should receive a test email</p>
+<p>From the installation, you should have set your time zone properly. In case you haven&#39;t, copy from the /usr/share/zoneinfo directory the file that best suits your timezone.</p>
+<p>In our case:<br /><em>cp /etc/localtime /etc/localtime.orig</em> (create a backup of the original timezone)<br /><em>cp /usr/share/zoneinfo/Europe/Zurich /etc/localtime</em> (Timezone of Switzerland)</p>
+<p>And adjust your crontab to update the current time from an NTP server</p>
+<p>#Entry in cron<br /><em>0,30 7-20 * * 1-5 /usr/sbin/ntpdate -s A.B.C.D X.Y.Z.Z; /sbin/hwclock --systohc</em><br />where A.B.C.D X.Y.Z.Z are NTP servers to synchronize from.</p>
+<p>Change the root GECOS field in /etc/passwd to &quot;root MACHINE&quot; </p>
+<p>Also check: /root/.ssh/authorized_keys </p></div>
+<div id="node-218" class="section-3">
+<h1 class="book-heading">Compiling key non-FreeNAC components from sources</h1>
+<h3>Introduction</h3>
+<p>This document explains how to compile key components from source, if needed. It is recommended to use the packages that are included with your distribution if possible, since automated updates will be easier. </p>
+<p>It was last updated in Mar&#39;07, and refers to versions available on that date.</p>
+<h3>Download</h3>
+<p>You&#39;ll need to download the packages, always use the latest releases, the following are example URLs. </p>
+<p><a href="http://mirror.switch.ch/ftp/mirror/apache/dist/httpd/httpd-2.2.2.tar.gz" title="http://mirror.switch.ch/ftp/mirror/apache/dist/httpd/httpd-2.2.2.tar.gz">http://mirror.switch.ch/ftp/mirror/apache/dist/httpd/httpd-2.2.2.tar.gz</a><br /><a href="http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-5.0.27.tar.gz" title="http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-5.0.27.tar.gz">http://mirror.switch.ch/ftp/mirror/mysql/Downloads/MySQL-5.0/mysql-5.0.2...</a><br /><a href="ftp://fr.rpmfind.net/pub/libxml/libxml2-2.6.23.tar.gz" title="ftp://fr.rpmfind.net/pub/libxml/libxml2-2.6.23.tar.gz">ftp://fr.rpmfind.net/pub/libxml/libxml2-2.6.23.tar.gz</a><br /><a href="http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz" title="http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz">http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates...</a><br /><a href="http://ch2.php.net/get/php-5.2.0.tar.bz2/from/this/mirror" title="http://ch2.php.net/get/php-5.2.0.tar.bz2/from/this/mirror">http://ch2.php.net/get/php-5.2.0.tar.bz2/from/this/mirror</a></p>
+<h3>Apache  </h3>
+<p>  cd /opt/install<br />  tar xvzf httpd-2.2.2.tar.gz<br />  cd httpd-2.2.2<br />  ./configure --prefix=/usr/local/apache2 --enable-so<br />  make install<br />  ln -s /usr/local/apache2 /usr/local/apache<br />  ln -s /usr/local/apache2/bin/apachectl /etc/init.d/apache2<br />  ln -s /usr/local/apache2/bin/apachectl /sbin/rcapache2  </p>
+<p># Actually start apache if you intend using the web interfaces, see below:<br />  chkconfig apache2 on<br />  /etc/init.d/apache2 start</p>
+<h3>MYSQL 5</h3>
+<p>  Prerequisites: ncurses-devel gcc-c++</p>
+<p>  cd /opt/install<br />  tar xvzf mysql-5.0.27.tar.gz<br />  cd mysql-5.0.27<br />  ./configure --prefix=/usr/local/mysql-5.0.27 --localstatedir=/mysqldata --with-unix-socket-path=/var/lib/mysql/mysql.sock<br />  make install</p>
+<p>  cd /usr/local<br />  mv mysql mysql.$$            [in case you have a link already]<br />  ln -s mysql-5.0.27 mysql<br />  ln -s /usr/local/mysql/bin/mysqld_safe /usr/local/mysql/bin/mysql</p>
+<p>Create a mysql user:  <br />    groupadd mysql<br />    useradd -g mysql mysql   </p>
+<p>Create an empty database:<br />  cd /usr/local/mysql<br />  bin/mysql_install_db --user=mysql<br />  mv data /var/lib/mysql  </p>
+<p>  ln -s /var/lib/mysql data<br />  ln -s /var/lib/mysql /mysqldata<br />  ln -s /var/lib/mysql/mysql.sock /tmp/mysql.sock</p>
+<p>   Set permissions:<br />    chown -R mysql:mysql /mysqldata /var/lib/mysql</p>
+<h3>libxml</h3>
+<p>  cd /opt/install<br />  tar xvzf libxml2-2.6.24.tar.gz<br />  cd libxml2-2.6.24/<br />  ./configure --prefix=/opt/libxml2 &amp;&amp; make install</p>
+<h3>FreeTDS</h3>
+<p>If you need to access MS-SQL or Sybase Enterprise databases.</p>
+<p>  cd /opt/install<br />  wget <a href="http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz" title="http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates/freetds-0.64RC2.tar.gz">http://www.ibiblio.org/pub/Linux/ALPHA/freetds/stable/release_candidates...</a><br />  tar xvzf freetds-0.64RC2.tar.gz<br />  cd freetds-0.64RC2<br />  ./configure --prefix=/opt/freetds  --enable-msdblib<br />  make install<br />  vi /opt/freetds/etc/freetds.conf and add a definition to a DB to test: <br />   [sms]                                           &lt;-- alias name<br />        host = MyServer.mydomain.com               &lt;-- sever name/IP<br />        port = 1433<br />        tds version = 4.2<br />        dump file = /var/log/freetds.log<br />        dump file append = yes<br />        #debug level = 10<br />        debug level = 3</p>
+<p>  Try connectivity:<br />        /opt/freetds/bin/tsql -S [alias] -U [user] -P [password] </p>
+<h3>PHP5</h3>
+<p>Install first the prerequisites packages, PHP is built with many options enabled:    gd-devel freetype2-devel zlib-devel libpng-devel libjpeg-devel <br />    net-snmp net-snmp-devel tcpd-devel rpm-devel<br />    openssl openssl-devel openldap2-devel graphviz  </p>
+<p>  cd /opt/install;<br />  tar xBf php-5.2.0.tar.bz2<br />  cd php-5.2.0</p>
+<p>## If you need MS-SQL (its best to assume you do - FreeTDS was compiled above)<br />  ./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --with-mysql-sock=/var/lib/mysql/mysql.sock --prefix=/opt/php-5.2.0 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-mssql=/opt/freetds --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --with-snmp=/usr --enable-ucd-snmp-hack --with-ldap</p>
+<p>make install</p>
+<p>Disable any current php binaries, and enable the new ones: </p>
+<p>  mv /usr/bin/php /usr/bin/php.$$<br />  mv /opt/php5 /opt/php5.$$<br />  ln -s /opt/php-5.2.0 /opt/php5    <br />  ln -s /opt/php5/bin/php /usr/bin/php</p>
+<p>Test PHP: <br />      php -v</p>
+<p>  Note: </p>
+<ul>
+<li>On Suse Linux, PHP may complain about MySQL libraries, it may be best to        compile MySQL from source (see above), rather than using binary packages.</li>
+<li>If MS-SQL support (via TDS) is not needed in PHP, the build line is simpler:<br />./configure --with-apxs2=/usr/local/apache2/bin/apxs --with-mysql=/usr/local/mysql --prefix=/opt/php-5.2.0 --with-xml --with-libxml-dir=/opt/libxml2 --enable-pcntl --enable-force-cgi-redirect --with-gd --with-zlib-dir --with-ttf --with-freetype-dir --with-ldap</li>
+<li>To allow easier upgrading, rollback or testing new PHP modules, we install into a version specific directory like &#39;/opt/php5.2.0&#39; above, and create links to this directory.
+</li>
+</ul>
+<p><strong>Enable PHP in apache:</strong></p>
+<p>Edit your httpd.conf (e.g. /usr/local/apache/conf/httpd.conf) to load the PHP module</p>
+<pre>    LoadModule php5_module modules/libphp5.so</pre><p>The path on the right hand side of the LoadModule statement must point to the path of the PHP module on your system.  Then &quot;make install&quot; from above may have already added this for you, but be sure to check. Also, tell Apache to parse certain extensions as PHP in httpd.conf<br />    AddType application/x-httpd-php .php .phtml<br />    AddType application/x-httpd-php-source .phps   </p>
+<p>&nbsp;</p></div>
+<div id="node-261" class="section-3">
+<h1 class="book-heading">Building 802.1x components</h1>
+<h3>0. Introduction</h3>
+<p>This section describes how to configure FreeRadius to authenticate users in Active Directory or using certificates.</p>
+<h3>1. Software required</h3>
+<p> To authenticate users in Active Directory, make sure you have the following installed in your system:</p>
+<ul>
+<li>Kerberos development libraries</li>
+<li>OpenLDAP development libraries</li>
+<li>Samba</li>
+<li>Winbind</li>
+<li>FreeRadius</li>
+</ul>
+<h3>2. Configure &amp; test Kerberos &amp; Samba<br /></h3>
+<p>Create or modify the file <em>smb.conf</em> to include the following minimum configuration (change for your Windows environment)</p>
+<pre>[global]<br />workgroup = domain<br />security = ads<br />idmap uid = 16777216-33554431<br />idmap gid = 16777216-33554431<br />template shell = /bin/bash<br />winbind use default domain = no<br />password server = ads.domain.com<br />realm = domain.com<br /><br />[homes]<br />comment = Home Directories<br />browseable = No<br />writable = yes<br /></pre><p>Presumably you already have a functioning Active Directory domain, and know how to run it. AD is very dependent on DNS (domain name system) so first you&#39;ll need to add an entry for your server in your DNS. </p>
+<p>Once you&#39;ve added this entry, we need to configure kerberos. Edit the file <em>krb5.conf</em> and add in the realms section info concerning your domain.<br />Your <em>krb5.conf</em> file should look like</p>
+<pre>[libdefaults]<br />default_realm = DOMAIN.COM<br />dns_lookup_real = false<br />dns_lookup_kdc = false<br /><br />[realms]<br />DOMAIN.COM = {<br />   default_domain = domain.com<br />   kdc = ads.domain.com<br />   admin_server = ads.domain.com<br />}<br /><br />[logging]<br />kdc = FILE:/var/log/krb5kdc.log<br />admin_server = FILE:/var/log/kadmin.log<br />default = FILE:/var/log/krb5lib.log</pre><p>Modify the lines</p>
+<pre>default_realm = DOMAIN.COM<br />DOMAIN.COM = {<br />   default_domain = domain.com<br /></pre><p>And change domain.com for your domain. Mind the case.<br />For the lines</p>
+<pre>kdc = ad.domain.com<br />admin_server = ad.domain.com</pre><p>You specifiy your Active Directory domain server.</p>
+<p>Clock synchronization is so important in the security of the Kerberos protocol. <br />If clocks are not synchronized within a reasonable window, Kerberos will report fatal errors and refuse to function. <br />Clients attempting to authenticate from a machine with an inaccurate clock will be failed by the KDC in authentication attempts due to the time difference with the KDC&#39;s clock. <br />Ensure you have your clock properly configured. If you want to use an external source to synchronize your server use ntp.</p>
+<p>The Network Time Protocol (NTP) is available for the time synchronization of servers. <br />Add an entry in your crontab to synchronize the clock of your computer with an external time source adding the next entry.</p>
+<pre>#Time synchronization<br />0 0 * * *        /usr/sbin/ntpdate server &gt; /dev/null 2&gt;&amp;1</pre><p>Save your changes. This entry will synchronize every midnight your clock with the one of server.</p>
+<p>Even if your DNS servers are perfect in every way, it is a good idea to add important servers to your local /etc/hosts file. It speeds up lookups and provides a fallback in case the DNS servers go down. So, add the entry for your Active Directory domain server in /etc/hosts.</p>
+<pre>192.168.1.1        ad.domain.com    ad</pre><p>Check that you get no error from typing</p>
+<pre> kinit Administrator</pre><p>This will ask you for the administrator&#39;s password. Make sure you know it beforehand.<br />Possible causes of error are:</p>
+<ul>
+<li>Clocks not properly synchronized</li>
+<li>DNS resolution</li>
+</ul>
+<p>Edit the file <em>/etc/nsswitch.conf</em> and add winbind at the end of the following lines:   </p>
+<pre>passwd:<br />group:<br />protocols:<br />services:<br />netgroup:<br />automount:</pre><p>If everything went ok, start Samba and verify that it started. Check for errors in the Samba log. If errors are present, check again your <em>smb.conf</em> file. Once Samba has started correctly, do:</p>
+<pre>net join</pre><p>This will join you to the domain. You can verify that your computer has joined the domain by typing </p>
+<pre>klist</pre><p>This should display valid Kerberos tickets and one of those is from your Active Directory domain server.<br />Now, change the group that the lock <em>winbindd_privileged</em> belongs to</p>
+<pre>chgrp radiusd /opt/samba/var/locks/winbindd_privileged</pre><p>This is done because we&#39;ll run freeradius as the radiusd user, and this user needs to access this lock in order to perform the authentication against the Windows Domain</p>
+<p>Now change its permissions</p>
+<pre>chmod 750 /opt/samba/var/locks/winbindd_privileged</pre><p>And start winbind</p>
+<pre>/etc/init.d/winbindd start</pre><p>Verify that windbind is working. This command pulls a list of users from AD </p>
+<pre>wbinfo -u</pre><p>And check for errors in the winbindd log. If it started successfully, it will create another log file called log.wb-DOMAIN. Once we have winbindd running, activate both smbd and winbindd as services if they are not already activated.</p>
+<p>All this has been done in order to get ntlm_auth to run. Try to auth with NTLM</p>
+<pre>ntlm_auth --request-nt-key --domain=domain.com --username=Administrator<br />password:<br />NT_STATUS_OK: Success (0x0)</pre><p>This success message indicates that Samba is properly configured to authenticate users against AD, which is what we need for FreeRadius.</p>
+<h3>3. Configure Freeradius</h3>
+<p>Configure the known access points in FreeRadius</p>
+<p>  mv /usr/local/etc/raddb/clients.conf /usr/local/etc/raddb/clients.conf.$$<br />cp /opt/nac/contrib/freeradius/etc/raddb/clients.conf /usr/local/etc/raddb/clients.conf</p>
+<p>Then, edit <em>/usr/local/etc/raddb/clients.conf</em> to include the NAS (switches or APs) that will contact our Freeradius server; change ip addresses and PASSWORD1/2/3<br />Configure the <em>/usr/local/etc/raddb/radiusd.conf</em> file, this example uses Windows logon</p>
+<pre>mv /usr/local/etc/raddb/radiusd.conf /usr/local/etc/raddb/radiusd.conf.$$<br />cp /opt/nac/contrib/freeradius/etc/raddb/radiusd.conf.winlogon+macauthbypass /usr/local/etc/raddb/radiusd.conf</pre><p>Another configuration file that you may modify is <em>/usr/local/etc/raddb/eap.conf</em>. The certificates defined in this file are the ones provided by FreeRadius. These certificates are not intended to be used in a production environment. You will need to create your own certificates later on. If you only want to perform test, these will work. If you want to generate your own certificates, please see <a href="http://freenacweb.vptt.ch/en/node/278" title="http://freenacweb.vptt.ch/en/node/278">http://freenacweb.vptt.ch/en/node/278</a> which contains information about how to generate certificates for your FreeRadius server if you have a Windows CA.</p>
+<p>Start radius in debug mode to see if there are errors</p>
+<pre>radiusd -xX</pre><p>If you get at the end the line:</p>
+<pre>Ready to process requests.<br /></pre><p>Then you are done. You are reading to authenticate users in the windows domain and validate devices. </p></div>
+</div>
+<div id="node-150" class="section-2">
+<h1 class="book-heading">4a. Master Server initial configuration</h1>
+<p>This sections describes the instllation of the master server components.</p><div id="node-219" class="section-3">
+<h1 class="book-heading">1. MySQL configuration</h1>
+<h3>Getting FreeNAC core </h3>
+<p>Start by downloading the latest stable release nac tarball from FreeNac.net, copying to /opt, and extracting it into /opt/nac. Or, checking out directly from Subversion.</p>
+<p>mkdir /opt/nac<br />svn co  <a href="https://opennac.svn.sourceforge.net/svnroot/opennac/branches/2.2" title="https://opennac.svn.sourceforge.net/svnroot/opennac/branches/2.2">https://opennac.svn.sourceforge.net/svnroot/opennac/branches/2.2</a> /opt/nac </p>
+<h3>MySQL Installation settings<br />  </h3>
+<h4><strong>General</strong></h4>
+<p>Ensure that mysql starts automatically (e.g. &#39;chkconfig mysql on&#39; on RedHat/Suse systems).</p>
+<p>Add the path to &#39;mysql&#39; to your PATH for ease of use. </p>
+<p>Set a softlink &quot;/mysqldata&quot; to point to the mysql database directory, for example &#39;/var/lib/mysql&#39;. In most of the documentation we refer to /mysqldata for brevity. </p>
+<pre>ln -s /var/lib/mysql /mysqldata </pre><p><strong>my.cnf</strong></p>
+<p>Compare your /etc/my.cnf with /opt/nac/contrib/etc/my.cnf, for paramters that may need to be set.</p>
+<p>e.g. Adapt log-bin and report-host to include hostname:</p>
+<pre>    log-bin=vmps1-bin</pre><pre>    report-host= vmps1</pre><h4>Permissions</h4>
+<p>Ensure the mysql user can write to the database files.</p>
+<pre>chown -R mysql /mysqldata /var/lib/mysql</pre><p>Change the mysql &#39;root&#39; password, if the server is multi-user (not restricte to one or two trusted administrators).</p>
+<h3>Initial FreeNAC empty dataset</h3>
+<p>Install an initial set of empty FreeNAC tables for the &#39;opennac&#39; database, backing up the existing tables first:</p>
+<pre>    cd /mysqldata</pre><pre>    cp opennac opennac.$$  </pre><pre>    cp /opt/nac/contrib/opennac_db.tar.gz .</pre><pre>    tar xvzf opennac_db.tar.gz</pre><pre>mysql opennac &lt; tables.sql</pre><pre>mysql opennac &lt; values.sql</pre><p>Start mysql:</p>
+<pre>    /etc/init.d/mysql start  </pre><p>check /mysqldata/localhost.err for errors.</p>
+<p>Login to sql and look at a few tables, they should exist, but be empty:</p>
+<pre>    mysql opennac<br />          show tables;<br />          select * from ports;</pre><h3>Database rights</h3>
+<p>There are 4 mysql users needed for accessing the database. </p>
+<p>A. Local daemon user for PHP scripts: inventwrite@localhost<br />B. A user for the remote Delphi Windows GUI: inventwrite@&#39;%&#39; <br />C. Root is used by the sysadmin for local configuration. By default root <br />   is only allowed from localhost, and has no password. Its is <br />   recommended that you set a root password for mysql root, if the NAC <br />   server login is accessible to several users.<br />D. The Web1 GUI has a specific user%localhost, by default called &quot;readonly&quot;.<br />E. The Web2 GUI has a specific user%localhost, by default called &quot;webwrite&quot;.</p>
+<p>Local daemon user for PHP scripts (set the user/pw in /opt/nac/config.inc):<br />  grant SELECT,INSERT,UPDATE        ON opennac.*       to inventwrite@localhost IDENTIFIED by &#39;PASSWORD2&#39;;<br />  SET PASSWORD FOR inventwrite@localhost = OLD_PASSWORD(&#39;PASSWORD2&#39;);</p>
+<p>  grant SELECT,INSERT,UPDATE,DELETE ON opennac.systems to inventwrite@localhost;<br />  grant CREATE TEMPORARY TABLES     ON opennac.*        to inventwrite@localhost;<br />  grant ALL                         ON opennac.vmpsauth to inventwrite@localhost;</p>
+<p>Remote delphi Windows GUI user. See also the vmps.ini file on the Windows client.<br />  grant SELECT,INSERT               ON opennac.*       to inventwrite@&#39;%&#39; IDENTIFIED by &#39;PASSWORD1&#39;;<br />  SET PASSWORD FOR inventwrite@&#39;%&#39; = OLD_PASSWORD(&#39;PASSWORD1&#39;);</p>
+<p>  grant SELECT,UPDATE               ON opennac.oper    to inventwrite@&#39;%&#39; ;<br />  grant SELECT,UPDATE               ON opennac.config  to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.building to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.location to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.port    to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.switch  to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlan    to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.systems to inventwrite@&#39;%&#39;;<br />  grant SELECT,INSERT,UPDATE,DELETE  ON opennac.users   to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.patchcable to inventwrite@&#39;%&#39;;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlanswitch to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.cabletype  to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_class to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_class2 to inventwrite@&#39;%&#39; ;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os        to inventwrite@&#39;%&#39;;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os1       to inventwrite@&#39;%&#39;;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os2       to inventwrite@&#39;%&#39;;<br />  grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os3       to inventwrite@&#39;%&#39;;</p>
+<p>The read-only webgui Web1 needs &quot;read&quot; access and by default uses a user <br />named &#39;readonly&#39;. See also /opt/nac/web1/config.inc.  <br />  grant SELECT       ON opennac.* to readonly@&#39;localhost&#39; IDENTIFIED by &#39;PASSWORD1&#39;;</p>
+<p>The webgui Web2 needs &quot;read-write&quot; access and by default uses a user <br />  grant SELECT,INSERT        ON opennac.*       to webwrite@&#39;localhost&#39; IDENTIFIED by &#39;PASSWORD1&#39;;<br />  SET PASSWORD FOR webwrite@&#39;localhost&#39; = OLD_PASSWORD(&#39;PASSWORD1&#39;);<br />  grant SELECT,UPDATE        ON opennac.systems to webwrite@&#39;localhost&#39; ;<br />  grant SELECT               ON opennac.users   to webwrite@&#39;localhost&#39; ;<br />  grant SELECT               ON opennac.patchcable to webwrite@&#39;localhost&#39; ;<br />  grant SELECT,UPDATE        ON opennac.port    to webwrite@&#39;localhost&#39; ;<br />  grant SELECT               ON opennac.oper    to webwrite@&#39;localhost&#39; ;<br />  grant SELECT               ON opennac.switch  to webwrite@&#39;localhost&#39; ;<br />  grant SELECT               ON opennac.vlan    to webwrite@&#39;localhost&#39; ;<br />  grant SELECT,INSERT,UPDATE ON opennac.sys_class to webwrite@&#39;localhost&#39; ;<br />  grant SELECT,INSERT,UPDATE ON opennac.sys_os to webwrite@&#39;localhost&#39;;<br />  grant SELECT               ON opennac.nac_openports to webwrite@&#39;localhost&#39; ;</p>
+<h3>Regular housekeeping with cron</h3>
+<p>The cron tool is where all regular tasks are done to keep the system healthy. The following are recommended regualr tasks. </p>
+<p>Remove &#39;unknowns&#39; from the DB, that were never authorised and are very old:<br />0 1 * * 1              /opt/nac/bin/purge_unknowns</p>
+<p>Clean mysql logs on the 1st per month<br />0 6 30  * 1     /usr/local/mysql/bin/mysql -uroot -e &quot;PURGE MASTER LOGS BEFORE DATE_SUB( NOW( ), INTERVAL 30 DAY);&quot;</p>
+<p>The following are scripts to backup the system in different ways to the second internal disk. These are highly system specifc, make sure you understand, tune and test them (e.g. you will need a &#39;/disk2&#39; partition).</p>
+<p>0   3    * * 1-5 /opt/nac/bin/dump_ports<br />0   3    * * 1   /usr/local/mysql/bin/mysqlhotcopy --allowold --keepold --regexp=&quot;.+&quot; /disk2/backups/mysql 2&gt;&amp;1 | logger<br />0   3    * * 6   rdiff-backup  --exclude /media --exclude /sys --exclude /disk2 --exclude /proc  --exclude /mnt --print-statistics  / /disk2/backups/vmps0.rdiff;</p>
+<h3>Changing the mysql root password </h3>
+<p>If the NAC server is not exclusively used by one administrator, you may want to set a local root password for mysql. This make administratig more difficult though, and some cron scripts will need to be adapted to provide a password.</p>
+<pre>mysqladmin -u root password &#39;new-password&#39;<br />mysqladmin -u root -h MYHOST password &#39;new-password&#39; <br /></pre></div>
+<div id="node-274" class="section-3">
+<h1 class="book-heading">2. Syslog server</h1>
+<p>The NAC server needs to have a syslog server to collect messages locally, and from any slave servers.</p>
+<p>Its also useful, though not mandatory, for switches to send a copy of their events via syslog too. </p>
+<p>Configure the syslog damon to listen to the network interface for messages, e.g. by starting with the &quot;-r&quot; option. Syslog-ng needs a directive for the network interface. Somare examples are: </p>
+<ul>
+<li>On Suse Linux,  set SYSLOGD_PARAMS=&quot;-r&quot; in /etc/sysconfig/syslog, and possibly also &quot;udp(ip(&quot;0.0.0.0&quot;) port(514));&quot; in &#39;source src&#39; of /etc/syslog-ng/syslog-ng.conf .</li>
+<li>With Ubuntu 6.04, SYSLOGD=&quot;-u syslog -r&quot; in /etc/init.d/sysklogd</li>
+</ul>
+<p>A log pruning configuration file is provided with FreeNAC, review it and then activate:</p>
+<pre>cp /etc/logrotate.d/syslog /etc/logrotate.d/syslog.$$  <br />cp /opt/nac/contrib/logrotate.d/syslog /etc/logrotate.d/syslog   <br /></pre><p>Add a cron entry to prune syslog, for example on weekday mornings:  <br />  <br /># Log pruning<br />0 6 * * 1-5            /usr/sbin/logrotate /etc/logrotate.conf | logger </p></div>
+<div id="node-220" class="section-3">
+<h1 class="book-heading">3. PHP settings</h1>
+<p>To do: </p>
+<ul>
+<li>document recommended settings for /etc/php5/cli/php.ini or relevant php5.ini file.</li>
+</ul>
+<p>The &#39;php.ini-recommended&#39; file included in the PHP distribution, or the contrib/etc_php5_cli/php.ini of FreeNAC should be used in case of doubt.</p></div>
+<div id="node-266" class="section-3">
+<h1 class="book-heading">4. FreeNAC daemons</h1>
+<h3>FreeNAC core: installing /opt/nac</h3>
+<p>Start by downloading the latest stable release nac tarball from FreeNac.net, copying to /opt, and extracting it into /opt/nac. Or, checking out directly from Subversion.</p>
+<p>mkdir /opt/nac<br />svn co  <a href="https://opennac.svn.sourceforge.net/svnroot/opennac/branches/2.2" title="https://opennac.svn.sourceforge.net/svnroot/opennac/branches/2.2">https://opennac.svn.sourceforge.net/svnroot/opennac/branches/2.2</a> /opt/nac </p>
+<h3>config.inc</h3>
+<p>Create a config.inc from a template and set especially the DB connection parameters:<br />  cp /opt/nac/etc/config.inc.template /opt/nac/etc/config.inc<br />  vi /opt/nac/etc/config.inc</p>
+<p>Once you&#39;re happy with your settings, you need to import the config file into the database. To do so:</p>
+<p>cd /opt/nac/contrib<br />./config2db ../etc/config.inc </p>
+<h3>Start the vmps daemon</h3>
+<p>Creating a startup file and start the service:</p>
+<p>  cp /opt/nac/contrib/startup_init.d/vmps /etc/init.d/vmps<br />  ln -s /etc/init.d/vmps /usr/sbin/rcvmps<br />  chmod 750 /etc/init.d/vmps<br />  chkconfig vmps on<br />  vi /etc/init.d/vmps       [adapt IP address on vmpsd start line]</p>
+<p>  Start and watch syslog for events:<br />  rcvmps start<br />  tail -f /var/log/messages </p>
+<h3>Start the vmps_lastseen daemon</h3>
+<p>  cp /opt/nac/contrib/startup_init.d/vmps_lastseen /etc/init.d/vmps_lastseen<br />  ln -s /etc/init.d/vmps_lastseen /usr/sbin/rcvmps_lastseen<br />  chmod 750 /etc/init.d/vmps_lastseen<br />  chkconfig vmps_lastseen on</p>
+<p>  Start and watch syslog for events:<br />  rcvmps_lastseen start<br />  tail -f /var/log/messages </p></div>
+<div id="node-247" class="section-3">
+<h1 class="book-heading">5. Router integration</h1>
+<p>Routers can be queried regularly to discover the IP addresses attributed to MAC addresses.</p>
+<ul>
+<li>Adapt the relevant lines in config.inc</li>
+<li>then try route_mac_ip from the command line, possibly enabling the debug flags</li>
+<li>Then add an entry to the root cron:<br />*/6 *    * * *   /opt/nac/bin/router_mac_ip  </li>
+</ul></div>
+<div id="node-248" class="section-3">
+<h1 class="book-heading">6. Switch integration</h1>
+<h3>Switch configuration</h3>
+<p>Parameters to set on switches are covered in the FreeNAC Techincal Guide, &#39;Configuring Network Switches&#39; chapter. <a href="http://FreeNAC.net/en/techguide" title="http://FreeNAC.net/en/techguide">http://FreeNAC.net/en/techguide</a>  </p>
+<h3>Port restarting </h3>
+<p>The Windows GUI has a &quot;restart port&quot; button that sets a flag in the database. The following script is then called from cron every minute, checking the DB for ports to restart and sending a SNMP command to the relevant switch.</p>
+<p>Installation:</p>
+<ul>
+<li>Adapt the relevant lines in config.inc</li>
+<li>Test from the command line, possibly enabling the debug flags.</li>
+<li>Then add an entry to the root cron: <br />* * * * *              /opt/nac/bin/cron_restart_port</li>
+</ul>
+<h3>Scanning of MAC tables via SNMP</h3>
+<p>As of release 2.2 RC2, the community edition counts with the snmp_scan.php script. This script&#39;s task is to register devices&#39; information which are currently connected to your switches. This script scans the switches which in the switch table have the flag scan=1.</p>
+<p>Its main function is go to the switch, and by means of SNMP queries, documents information that can be helpful for a system administrator, such as:</p>
+<ul>
+<li>Switch&#39;s hardware version </li>
+<li>Switch&#39;s software version</li>
+<li>Ports on the switch</li>
+<li>VLANs on the switch </li>
+<li>MAC address of the devices currently connected to the switch</li>
+<li>VLAN currently used by to those devices</li>
+<li>If a port is configured as static, dynamic or trunk</li>
+</ul>
+<p>To configure it for use, you need to first declare which switches are goind to be scanned.</p>
+<p>update switch set scan=&#39;1&#39; where ip=&#39;192.168.0.1&#39;;</p>
+<p>In config.inc, modify the value of snmp_ro and snmp_rw if you haven&#39;t done so. This variables contain the SNMP communities which are used to connect to your switches.</p>
+<p>Once you have done so, run it from the command line for testing purposes:</p>
+<p>cd /opt/nac/bin<br />./snmp_scan.php</p>
+<p>This script can take some time, depending on the number of switches of your network.</p>
+<p>To run from crontab, add an entry as follows:</p>
+<p>#Scanning of switches<br />3 11 * * 1-5     /opt/nac/bin/snmp_scan.php | logger </p></div>
+<div id="node-250" class="section-3">
+<h1 class="book-heading">7. Web interface</h1>
+<h3>Description</h3>
+<p>The Web GUI is an alternative to the Windows GUI which allows to control some parts of the FreeNAC system. </p>
+<p>As of release v2.2 RC2, the <em>/web</em> interface unites both <em>/web1</em> and <em>/web2</em> in a single interface. In the future we&#39;ll delete both <em>/web1</em> and <em>/web2</em> from our repository. Also, we have done some development for the <em>/web</em> interface that allows to validate user credentials against Active Directory using multiple domains in order to restrict the number of users who use this <em>/web</em> interface.</p>
+<h3>Basic installation</h3>
+<p>Install Apache &amp; libraries for graphics: this should have been done as part of your server installation, however, for completeness:</p>
+<ul>
+<li>Install Apache</li>
+<li>Graphviz for the switch view</li>
+<li>JPGraph for statistics (also required freetype &amp; MS core fonts)</li>
+<li>GD devel libraries</li>
+</ul>
+<p>JPGraph may not be in your system&#39;s packages repository, so to install it, download the tarball from <a href="http://www.aditus.nu/jpgraph/jpdownload.php" target="_blank">http://www.aditus.nu/jpgraph/jpdownload.php</a>  to your <em>/opt</em> directory. Then:</p>
+<pre>cd /opt<br />tar zxvf jpgraph-X.X.XX.tar.gz<br />ln -s jpgraph-X.X.XX jpgraph<br />ln -s jpgraph-X.X.XX /usr/local/share/jpgraph</pre><p><strong>[ Optional: </strong><br />If you want to use the Excel export function you also need the following PEAR Module:<em> Spreadsheet_Excel_Writer</em></p>
+<p>To install Spreadsheet_Excel_Writer invoque the following command on your shell:</p>
+<pre>pear install --alldeps -f Spreadsheet_Excel_Writer </pre><p><strong>]</strong>
+<p>Create a configuration file for the web interface. Copy the file <em>/opt/nac/web/config.inc.template</em> to <em>/opt/nac/web/config.inc</em> and adjust it according to your needs.  </p>
+<p>In the <em>/opt/nac/web/config.inc</em> file you need to define 3 different usernames.  <br /> One for using the database (the same as in the <em>/opt/nac/etc/config.inc</em> file)</p>
+<pre>  $dbhost=&quot;localhost&quot;;<br />  $dbname=&quot;opennac&quot;;<br />  $dbuser=&quot;inventwrite&quot;;<br />  $dbpass=&quot;PASSWORD2&quot;; </pre><p> Another one to use the write interface  </p>
+<pre>   $writeuser=&quot;webwrite&quot;;                     <br />   $writepass=&quot;PASSWORD1&quot;; </pre><p> and another one to use the read interface </p>
+<pre>   $readuser = &#39;inventwrite&#39;; <br />   $readpass = &#39;PASSWORD2&#39;;</pre><p> We did so because maybe you want some users (desktop support) to be able to read information from the database, without actually doing modifications to it, and allow some other users (administrators) to make modifications to the systems in FreeNAC. <br /><br />Change this file&#39;s permissions</p>
+<pre>chmod 640 /opt/nac/web/config.inc<br /></pre><p>And change the group this file belongs to, to the one that is used by apache to run the server. In my system, the username and group that are running my apache server are <em>www-data</em>, then</p>
+<pre>chgrp www-data config.inc</pre><p>And change the owner of the <em>/opt/nac/web/read/tmp</em> directory as well</p>
+<pre>chown www-data /opt/nac/web/read/tmp</pre><p>The Web GUI is located in <em>/opt/nac/web</em>, so we&#39;ll do a virtual directory in Apache pointing to this directory.</p>
+<p>Locate your Apache main configuration file (it is distribution dependant) and add the definition of this virtual directory as follows:</p>
+<pre>Alias /nac /opt/nac/web<br />&lt;Directory /opt/nac/web/&gt;<br />   Options None<br />   Order deny,allow<br />   Allow from all<br />&lt;/Directory&gt;<br /><br />&lt;LocationMatch &quot;\/nac.*\.inc\.*&quot;&gt;<br />   Deny from all<br />&lt;/LocationMatch&gt; </pre><p> This basic configuration doesn&#39;t restrict the use of this interface to anyone. If you want to restrict access only to a certain IP addresses, do the following:</p>
+<pre>Deny from all<br />Allow from 192.168.0.1 192.168.0.2 </pre><p>The <em>LocationMatch</em> stanza protects from reading all include files that you could contain within your <em>/opt/nac/web</em> directory. This is really important since your <em>config.inc</em> file, contains sensitive information such as usernames and passwords.</p>
+<p>Make sure you have created and granted rights to the usernames that will use this interface. This is explained in <a href="/en/support?q=en/installguide">the installation guide.</a>  In case you haven&#39;t done so:</p>
+<pre> #The read-only webgui needs &quot;read&quot; access and by default uses a user  <br /> #named &#39;readonly&#39;. <br />  grant SELECT       ON opennac.* to readonly@&#39;localhost&#39; IDENTIFIED by &#39;PASSWORD1&#39;; <br />  <br /> #The write webgui needs &quot;read-write&quot; access and by default uses a user  <br />  grant SELECT,INSERT        ON opennac.*       to webwrite@&#39;localhost&#39; IDENTIFIED by &#39;PASSWORD1&#39;; <br /> SET PASSWORD FOR webwrite@&#39;localhost&#39; = OLD_PASSWORD(&#39;PASSWORD1&#39;); <br /> grant SELECT,UPDATE        ON opennac.systems to webwrite@&#39;localhost&#39; ; <br /> grant SELECT               ON opennac.users   to webwrite@&#39;localhost&#39; ; <br /> grant SELECT               ON opennac.patchcable to webwrite@&#39;localhost&#39; ; <br /> grant SELECT,UPDATE        ON opennac.port    to webwrite@&#39;localhost&#39; ; <br /> grant SELECT               ON opennac.oper    to webwrite@&#39;localhost&#39; ; <br /> grant SELECT               ON opennac.switch  to webwrite@&#39;localhost&#39; ; <br /> grant SELECT               ON opennac.vlan    to webwrite@&#39;localhost&#39; ; <br /> grant SELECT,INSERT,UPDATE ON opennac.sys_class to webwrite@&#39;localhost&#39; ; <br /> grant SELECT,INSERT,UPDATE ON opennac.sys_os to webwrite@&#39;localhost&#39;; <br /> grant SELECT               ON opennac.nac_openports to webwrite@&#39;localhost&#39; ; </pre><p>Then start/restart/reload your apache server, point your web browser to <a href="http://yourserver/nac" title="http://yourserver/nac">http://yourserver/nac</a> and you should see now the web interface.</p>
+<h3>Authentication against Active Directory </h3>
+<p>To configure Apache to authenticate users against Active Directory, we&#39;ll use the module mod_authnz_ldap from Apache. Check if in the list of compiled in modules there is an entry like:</p>
+<pre>mod_authnz_ldap.c</pre><p>If so, we are ready to start configuring Apache and the Web interface. If not, install this module.</p>
+<p>In your Apache main configuration file you have already defined an entry for /nac. To perform the authentication, you need to modify that entry as follows:</p>
+<pre> Alias /nac /opt/nac/web<br />&lt;Directory &quot;/opt/nac/web/&quot;&gt;<br />      Options All ExecCGI -Indexes<br />      Order deny,allow<br />      Allow from all<br />      AuthzLDAPAuthoritative off<br />      AuthType Basic<br />      AuthBasicProvider ldap<br />      AuthUserFile /dev/null<br />      AuthName &quot;Sensitive Zone&quot;<br />      AuthLDAPBindDN cn=Administrator,cn=Users,dc=domain,dc=com<br />      AuthLDAPBindPassword password<br />      AuthLDAPURL &quot;ldap://server.domain.com/?userPrincipalName?sub?(&amp;(objectClass=person)(objectClass=user))&quot;<br />      require valid-user<br />&lt;/Directory&gt; <br /><br />&lt;LocationMatch &quot;\/nac.*\.inc\.*&quot;&gt;<br />   Deny from all<br />&lt;/LocationMatch&gt; </pre><p>AuthLDAPBindDN is an optional DN used to bind to the server when searching for entries. If not provided, mod_authnz_ldap will use an anonymous bind.<br />AuthLDAPBindPassword is a bind password to use in conjunction with the bind DN.<br />AuthLDAPBindDN and AuthLDAPBindDN should only be used if no anonymous bind is allowed.<br />AuthzLDAPAuthoritative prevents other authentication modules from authenticating the user if this one fails. Set to off if this module should let other authentication modules attempt to authenticate the user, should authentication with this module fail.</p>
+<p>If you have more than one domain, you should be using global catalog. Global catalog uses port 3268. Global Catalog is a read only copy of selected attributes of all the Active Directory servers within the Active Directory forest. Querying the Global Catalog allows all the domains to be queried in a single query, without the query spanning servers over potentially slow links.</p>
+<p>To use the Global Catalog, you just need to subsitute the line</p>
+<pre>AuthLDAPURL &quot;ldap://server.domain.com/?userPrincipalName?sub?(&amp;(objectClass=person)(objectClass=user))&quot;</pre><p>for</p>
+<pre>AuthLDAPURL &quot;ldap://server.domain.com:3268/?userPrincipalName?sub?(&amp;(objectClass=person)(objectClass=user))&quot; <br /></pre><p>To distinguish users between domains, an identifier called a User Principal Name (UPN) can be added to a user&#39;s entry in the directory. This UPN usually takes the form of the user&#39;s account name, followed by the domain components of the particular domain, for example </p>
+<pre>somebody@nz.somedomain.com <br /></pre><p>For more information about mod_authnz_ldap please see <a href="http://httpd.apache.org/docs/2.2/mod/mod_authnz_ldap.html" title="http://httpd.apache.org/docs/2.2/mod/mod_authnz_ldap.html">http://httpd.apache.org/docs/2.2/mod/mod_authnz_ldap.html</a> </p>
+<p>Once you are done with this, restart Apache and let&#39;s start configuring the Web interface.</p>
+<p>Edit your file <em>/opt/nac/web/config.inc</em>, and adjust the following variables:</p>
+<pre>$ad_server<br />$ad_port<br />$ad_user<br />$ad_password<br />$ad_base<br />$ad_auth</pre><ul>
+<li>ad_server: The Domain controller where the AD is queried.</li>
+<li>ad_port: Make sure it matches what you have defined in your Apache main configuration file. If you are using a Global Catalog set it to 3268, 389 otherwise.</li>
+<li>ad_user: This is the DN of a user with sufficient privileges to read the necessary information from AD. The possible values for this setting should be in the form &#39;cn=User,cn=users,dc=domain,dc=com&#39;; </li>
+<li>ad_password: The password for ad_user</li>
+<li>ad_base: The base DN (Distinguished Name) where users&#39; information is stored. The possible values for this setting should be in the form &#39;cn=users,dc=test,dc=com&#39;</li>
+<li>ad_port: Set it to true to active AD authentication in the Web Interface, to false otherwise.</li>
+</ul>
+<p>This interface reuses the credentials supplied to Apache to perform the authentication in the Web GUI.</p>
+<p>Since this GUI has a read-only and a write-only interface, we need to define the groups who&#39;ll be using each of these interfaces. In MySQL, you modify the table guirights to define the rights associated to each group. To declare a group, you use its full DN. For example:</p>
+<pre>update guirights set ad_group=&#39;CN=FreeNAC_write,DC=domain,DC=com&#39; where code=99;<br />update guirights set ad_group=&#39;CN=FreeNAC_read,DC=domain,DC=com&#39; where code=1;</pre><p>Now point your browser to your Web interface to check that it is properly working. </p></div>
+<div id="node-252" class="section-3">
+<h1 class="book-heading">Monitoring</h1>
+<p>There are several monitoring scripts that need to be individually tested and enabled in root cron.</p>
+<p>Monitor syslog for unusual events:</p>
+<pre>0 8,12  * * 1-5        /opt/nac/logcheck/logcheck.sh </pre><p>Is the Mysql the socket OK? If not restart.</p>
+<pre>7-18 * * 1-5 /opt/nac/bin/check_mysql</pre><p>Are any disks full?</p>
+<pre>*/3 *     * * *    /opt/nac/bin/check_disk 90 800</pre><p>These two check that a minimum number of devices are being regular allowed onto the network, and that a port is not flapping between several vlans:</p>
+<pre>30   6-22 * * 1-5 /opt/nac/bin/monitor_allows.sh<br />*/4 *     * * *   /opt/nac/bin/flap_detect</pre><p>Are there any &#39;MAC-NOT-RECONFIRMED&#39; from switches or vmps requests with MAC 000000 that might indicate communication problems between switches and the NAC server?</p>
+<pre>*/10 7-18 * * 1-5 /opt/nac/bin/monitor2.sh</pre><p>Notify if there are updates to NAC (query FreeNAC.net)</p>
+<pre>0 0 * * 0        /opt/nac/bin/updates <br /></pre><p>Alert if key processes die.<br />[Note: the proctst daemon is the main method of daemon watching]</p>
+<pre>*/20 7-18 * * 1-5 /opt/nac/bin/monitor_processes.pl proctst vmpsd_external</pre><p>In 802.1x mode, check samba &amp; free radius too.</p>
+<pre>*/20 7-18 * * 1-5 /opt/nac/bin/monitor_processes.pl winbindd smbd nmbd radiusd<br /></pre></div>
+<div id="node-251" class="section-3">
+<h1 class="book-heading">AD/LDAP user interface</h1>
+<h3>DESCRIPTION</h3>
+<p>The purpose of this module is to query Microsoft&#39;s Active Directory to obtain user information which is then stored in the users table. The module should also work for other LDAP implementations, although some modifications may be necessary (attribute names). Optionally additional information from the Microsoft Exchange AD schema extension can be fetched as well.<br />
+<h3>HOW DOES IT WORK</h3>
+<p>The module fetches the attributes sAMAccountName, sn (surname) and GivenName of all objects of type person underneath all Distinguished Names (dn)  defined in $ad_base_user_dn as configured in config.inc. Then it checks for each account name if it exists already in the database. If it does, the entry is updated, including the LastSeenDirex field. Otherwise a new entry is inserted into the database.</p>
+<p>In case of querying addtional MS Exchange attributes, these are:
+<ul>
+<li>department</li>
+<li>mail</li>
+<li>physicalDeliveryOfficeName</li>
+<li>telephoneNumber</li>
+<li>mobile</li>
+</ul>
+<h3>CONFIGURATION</h3>
+<p> There are five options in the global configuration.</p>
+<ul>
+<li>ad_server: The Domain controller where the AD is queried.</li>
+<li>ad_user: This is the DN of a user with sufficient privileges to read the necessary information from AD. The possible values for this setting should be in the form &#39;cn=User,cn=users,dc=domain,dc=com&#39;; </li>
+<li>ad_password: The password for ad_user</li>
+<li>ad_base_user_dn: The DNs (do not confuse with Domain Name Server) of the places underneath which users are stored. The possible values for this setting should be in the form &#39;cn=users,dc=test,dc=com&#39; </li>
+<li>ad_port: The port where we should connect to.<br />There are two ports related to LDAP. The port 389 is the standard port assigned to this service and the port 3268. The port 3268 is assigned to the Global catalog. A Global Catalog is a read only copy of selected attributes of all of the Active Directory servers whithin the AD forest. Querying the Global Catalog allows all the domains to be queried in a single query, without the query spanning servers over potentially slow links. It is recommended to use the Global Catalog since it is used only for searches and port 389 is used for read and write operations, and therefore it could be restricted. </li>
+</ul>
+<h3>HOW TO USE IT</h3>
+<p>First, setup the AD related parameters in config.inc. <strong>IMPORTANT:</strong> Once you have set the related parameters in config.inc, you need to import the config.inc file into the database. As of release V2.2 RC2, ad_user_snyc takes all the variables from the config table, so the config.inc file has to be imported into the database.  </p>
+<p> Do the following from the /opt/nac/contrib directory:</p>
+<pre>./config2db ../etc/config.inc</pre><p>If you need to redefine some of these settings, you can do so through the Windows GUI. </p>
+<p>Then run the module script from the command line with the paramter &#39;test&#39;. This checks whether your LDAP server can be reached and dumps the user information obtained to stdout. If you want to fetch the addtional MS Exchange attributes launch the module with the addtional argument &#39;exchange&#39;. Once your setup works, register the module in crontab.</p>
+<pre>crontab -e</pre><p>add the next line</p>
+<pre>0 0 * * *    /opt/nac/bin/ldap</pre><p>or</p>
+<pre>0 0 * * *    /opt/nac/bin/ldap exchange</pre><p>This will run it every day at midnight.</p>
+<h3>DEPENDENCIES</h3>
+<p>OpenNac<br />PHP with LDAP support<br />
+<h3>FILES</h3>
+<p>bin/ad_user_sync<br />etc/config.inc<br />doc/README.ad_user_sync</p></div>
+<div id="node-249" class="section-3">
+<h1 class="book-heading">nmap port scan module</h1>
+<h3>Description:<br /></h3>
+<p>This module is provided in order to give network administrators further knowledge about the systems that are part of their network, providing information about changes that computers connected to the network have suffered.</p>
+<h3>How does it work?</h3>
+<p>It grabs some allowed IPs from the OpenNAC database (more precisely from the systems table), and passes them to nmap, which is going to perform a scan. The results of this scan are saved to an XML file which is then parsed and these results are used to populate some tables which form part of the OpenNAC inventory system. The module logs to syslog if there are discrepancies between the current scan and information stored in the database. If there are differences it logs what has changed and makes the necessary corrections to the database. The tables used by port_scan are: </p>
+<ul>
+<li>nac_hostscanned</li>
+<li>nac_openports</li>
+<li>protocols</li>
+<li>services</li>
+<li>subnets</li>
+</ul>
+<p> The tables protocols and services are lookup tables. They contain descriptions of protocols and services related to a certain port. <br /> The table subnets contains definitions of subnetworks that port_scan is allowed to scan. <br /> The table nac_hostscanned contains general information (IP address, hostname, OS) of scanned systems.<br /> The table nac_openports contains information of the services present on each host which is in the nac_hostscanned table.<br />
+<h3>Dependencies:<br /></h3>
+<p>OpenNAC<br />Nmap 4.11 or later</p>
+<h3>Modes of operation:<br /></h3>
+<p>This script has 3 modes of operation:</p>
+<ol>
+<li>When it is called with no arguments, it grabs IPs from the systems table and compares them against the networks defined in the subnets table. The final decision on what to scan is made through the LastSeen time threshold. With this, you say to scan only the hosts that were seen on the network within the lapse of 1 day, 1 month, 30 minutes, whatever.</li>
+<li>When it is called with the &quot;--scannow&quot; parameter, it grabs IPs from the systems table, no matter if they are allowed or not, as long as in the systems table the flag &quot;scannow&quot; has the value &quot;1&quot;. Then it checks these IPs against what you have specified in the subnets table.</li>
+<li>IPs from the command line. You can call the script with something like port_scan x1.y1.z1.w1 ... xn.yn.zn.wn. In this way, the script will get the IPs from the command line and only those IPs which fall within the criteria specified in the subnets table will be scanned.</li>
+</ol>
+<h3>About the subnets table and its use with port_scan:<br /></h3>
+<p>Only those computers which fall within the criteria specified in the subnets table will become a strong candidate to be scanned. As said before, this table contains definitions of subnetworks that port_scan is allowed to scan. This was done so because maybe you have lots of subnets in your network, and some of them are behind a firewall, so they can&#39;t be accessed and scanning them would be a waste of time and resources. That&#39;s why, you need to specify in this table one register per subnet you want to take into account.</p>
+<h3>How to install:<br /></h3>
+<p>You&#39;ll need nmap v4 or later, if you don&#39;t have it, download it from <a href="http://www.insecure.org/nmap" title="www.insecure.org/nmap">www.insecure.org/nmap</a>, or your local package source. </p>
+<p>Rename port_scan.inc.template to port_scan.inc</p>
+<pre>cp /opt/nac/etc/port_scan.inc.template /opt/nac/etc/port_scan.inc</pre><p>and modify the configuration settings according to your needs, especially the nmap path. <br />Once you are happy with your settings, you need to import this configuration file into the database. As of release V2.2 RC2, port_scan takes all the variables from the config table (except for $debug_flag1), so the port_scan.inc file has to be also imported into the database. </p>
+<p> Do the following from the /opt/nac/contrib directory:</p>
+<pre>./config2db ../etc/port_scan.inc</pre><p>If you need to redefine some of these settings, you can do so through the Windows GUI. </p>
+<p>Next, create the following directory</p>
+<pre>mkdir /opt/nac/scan</pre><p>Now you need to define the networks you&#39;d like to scan. In MySQL, do the following:</p>
+<pre>insert into subnets set ip_address=&#39;192.168.1.0&#39;, ip_netmask=&#39;24&#39;, scan=&#39;1&#39;;</pre><p>This will add the subnetwork 192.168.1.0/24 to your subnets table and with &#39;scan=1&#39; we are saying that this subnetwork can be scanned. You need to do this for every subnet you want to take into account. </p>
+<h3>Files and directories required:<br /></h3>
+<p>/opt/nac/bin/port_scan<br />/opt/nac/etc/port_scan.inc<br />/opt/nac/funcs.inc<br />/opt/nac/scan/</p>
+<h3>How to run it:</h3>
+<p><strong>Important: </strong>You need to specify first in the subnets table the networks you want to scan.</p>
+<ul>
+<li>To scan all devices that are in the systems table, just type:</p>
+<pre> /opt/nac/bin/port_scan &amp;</pre><p></li>
+<li>To scan all devices in the systems table that have the flag scannow=1, do:<br />
+<pre> /opt/nac/bin/port_scan --scannow</pre><p>With the GUI you can set the flag for devices you want to scan now.</p>
+<p>If you prefer do it by hand, then</p>
+<pre>update systems set scannow=1 where ...;</pre><p></li>
+<li>To scan a list of IP addresses, do <br />
+<pre>/opt/nac/bin/port_scan 192.168.0.1 192.168.0.2 192.168.0.3 ... 192.168.0.254</pre></li>
+</ul>
+<p>Add the following entries to your crontab:</p>
+<pre># FreeNAC: port_scanning of systems<br />*/5 8-18 * * 1-5       /opt/nac/bin/port_scan --scannow<br /># Active scanning: nmap monday<br />0 11 * * 1             /opt/nac/bin/port_scan </pre><p>The first entry runs every five minutes, and it is the main mechanism to control port_scan from the GUI. With the GUI you set the flag &#39;scannow=1&#39; and then this cronjob will scan the systems which have this flag on.</p>
+<p>The second entry scans all devices present in the systems table every Monday at 11:00 AM </p>
+<h3>Bugs:<br /></h3>
+<p>Please report them in our Development forum:<br /><a href="http://www.freenac.net/phpBB2/viewforum.php?f=2" title="http://www.freenac.net/phpBB2/viewforum.php?f=2">http://www.freenac.net/phpBB2/viewforum.php?f=2</a>  </p></div>
+</div>
+<div id="node-149" class="section-2">
+<h1 class="book-heading">4b. Slave server initial configuration</h1>
+<p>This sections describes the specific configuration for slave servers.</p>
+<p>Slaves, also called secondaries, are much simpler that masters. They just have a replicated MySQL database running, and a vmpsd daemon.</p>
+<p>The slave does not communicate with GUIs, or poll routers /switches, or communicate with any external servers such as Wsus, MS-SMS or Epo. </p>
+<p>All data in the DB is read-only, except for one local tables &quot;vmpsauth&quot;. </p><div id="node-257" class="section-3">
+<h1 class="book-heading">MySQL configuration</h1>
+<h3>Introduction</h3>
+<p>It is presumed that mysql is up and running, but that the opennac DB does not exist yet.</p>
+<h3>/etc/my.cnf settings</h3>
+<p>Copy /etc/my.cnf from your MASTER machine and adapt. The key settings for a server called &quot;vmps2&quot; would be as follows. </p>
+<pre>datadir=/var/lib/mysql<br />log-error=/var/lib/mysql/mysqld.log<br />log-bin=vmps2-bin<br />log-warnings<br />server-id       = 20                     [adapt if more than one slave]<br />report-host=vmps2                        [adapt if more than one slave]<br />replicate-do-db= inventory<br />replicate-wild-ignore-table= inventory.vmpsauth%<br />relay-log=vmps2-relay-bin </pre><p>It is important that server-id and report-host are unique with the group of NAC servers. So set it to &quot;vmps3&quot; and &quot;30&quot; for a third server (2ndslave) etc.</p>
+<h3>Mysqld startup</h3>
+<p>Ensure that /etc/init.d/mysql exists, and automatic start is enabled (&#39;chkconfig mysql on&#39;).</p>
+<h3>Configuring the empty opennac DB</h3>
+<p>Empty the vmpsauth (local):<br />  DELETE FROM vmpsauth;</p>
+<h3>Configuring the DB permissions<br /></h3>
+<p>The DB in only accessed by local scripts, it is not used by the GUis, so permissions can be mucht tighter than on the master.</p>
+<p>-- Set passwords for script access<br />-- Local PHP server script user, PASSWORD1 is set in config.inc</p>
+<p>grant SELECT,INSERT,UPDATE        ON inventory.*       to inventwrite@localhost IDENTIFIED by &#39;PASSWORD1&#39;;<br />SET PASSWORD FOR inventwrite@localhost = OLD_PASSWORD(&#39;PASSWORD1&#39;);</p>
+<p>grant SELECT,INSERT,UPDATE,DELETE ON opennac.systems to inventwrite@localhost;<br />grant ALL     ON opennac.vmpsauth to inventwrite@localhost; </p>
+<h3>Troubleshooting </h3>
+<p>Try to start mysql:<br />    /etc/init.d/mysql start</p>
+<p> If you have errors, check the log:<br />    more /mysqldata/mysqld.log</p>
+<p>Check that mysql client works, i.e. can connect to the DB:</p>
+<pre>mysql mysql</pre><p>Welcome to the MySQL monitor.  Commands end with ; or \g.<br />Your MySQL connection id is 2 to server version: 5.0.21-max-log<br />Type &#39;help;&#39; or &#39;\h&#39; for help. Type &#39;\c&#39; to clear the buffer.<br />mysql&gt;  </p>
+</p>
+<p>Make sure that file permissions are right. e.g.</p>
+<p>  chown -R mysql:mysql /mysqldata/* /var/lib/mysql<br />  chgrp -R mysql /usr/local/mysql/*  </p>
+<h3>Notes</h3>
+<ul>
+<li>If the server is not exclusively used by VMPS with one administrator, you probably want to set a local root password for mysql.<br />mysqladmin -u root password &#39;new-password&#39;<br />mysqladmin -u root -h MYHOST password &#39;new-password&#39;</li>
+<li>On some Suse systems it might be necessary to copy the mysql client library (for PHP) from your master<br />scp /usr/lib/libmysqlclient.so.14 vmps2:/usr/lib</li>
+<li>On a strictly minimal slave, you need libxml and php5 at least. <br />Copy /opt/php5 /opt/libxml2 and /opt/vmps from your master<br />  ln -s /opt/php5/bin/php /usr/bin/php</li>
+</ul></div>
+<div id="node-260" class="section-3">
+<h1 class="book-heading">MySQL replication</h1>
+<h3>1. Introduction</h3>
+<p>This document explains how to setup MySQL replication between master and slaves.</p>
+<p>Reference.http://dev.mysql.com/doc/refman/5.0/en/replication-howto.html</p>
+<p>Replace the following in the examples below:</p>
+<p>&nbsp;</p>
+<pre> SERVER2.DOMAIN       the FQDN of your slave</pre><pre>repl                 Replication username</pre><pre>REPL_PASSWD          Replication password</pre><pre>opennac              Name of your database (this was &#39;inventory&#39; prior to NAC v2.2).</pre><h3>2. Master: enable replication</h3>
+<p>On the mysql prompt:</p>
+<pre>GRANT SELECT, PROCESS, FILE, SUPER, REPLICATION CLIENT, REPLICATION SLAVE ON *.* TO &#39;repl&#39;@&#39;vmps2&#39; IDENTIFIED BY &#39;REPL_PASSWD&#39;;</pre><pre>SHOW MASTER STATUS;</pre><p>Purge uneeded logs on the master:</p>
+<pre>PURGE MASTER LOGS TO &#39;SERVER-bin.NUMBER&#39; </pre><p>[the exactname comes from the File field in the status above]<br />    </p>
+<h3>3. Re-synchronisation</h3>
+<p>We&#39;ll use &quot;vmps2&quot; to mean the slave, and &quot;vmps1&quot; to mean the master.</p>
+<p>0) On vmps2<br />stop slave;</p>
+<p>1) On the master, vmps1: Lock the tables, note log position, restart</p>
+<pre>  mysql&gt; FLUSH TABLES WITH READ LOCK;</pre><pre>  vmps1:/mysqldata[11]$ tar cvf opennac.tar opennac</pre><pre>  mysql&gt; SHOW MASTER STATUS;</pre><p>  +------------------------+----------+--------------+------------------+<br />  | File                   | Position | Binlog_Do_DB | Binlog_Ignore_DB |<br />  +------------------------+----------+--------------+------------------+<br />  | vmps1-bin.000027       | 12717436 |              |                  |</p>
+<p>  ==&gt; take note of the position</p>
+<pre>  mysql&gt; UNLOCK TABLES;</pre><p>2) Slave vmps2:</p>
+<p>  # stop mysql<br />  rcmysql stop</p>
+<p>  # Copy DB tar file from master &amp; extract:<br />   mv opennac opennac.$$<br />   scp vmps1:/mysql/opennac.tar .<br />   tar xvf opennac.tar<br />   chmod 770 opennac; chmod g+s opennac; chown -R mysql:mysql opennac;</p>
+<p>  # Configure slave: start daemon with slave off<br />    /usr/local/mysql/bin/mysqld --user=mysql --skip-slave-start --log-warnings</p>
+<p>  Start mysql client:<br />    reset slave;</p>
+<p>  # CHANGE MASTER, replace XXXX, YYYY, ZZZZ and &#39;FILE_NAME&#39;: </p>
+<pre>CHANGE MASTER TO MASTER_HOST=&#39;XXXX&#39;, MASTER_USER=&#39;repl&#39;,</pre><pre>  MASTER_PASSWORD=&#39;YYYY&#39;, MASTER_LOG_FILE=&#39;FILE_NAME&#39;, MASTER_LOG_POS=ZZZ;</pre><p>  <br />  # Start replication:</p>
+<pre>    START SLAVE;</pre><pre>    show slave status \G;</pre><p>  # Check the log position with that on the master:</p>
+<pre>    show master status;</pre><p>  ### Create a new vmpsauth table, which is the only local table:<br />    CREATE TABLE opennac.`vmpsauth` ( `mac` varchar(30) NOT NULL default &#39;&#39;, `AuthLast` datetime default NULL, `AuthPort` varchar(20) default NULL, `AuthSw` varchar(20) default NULL, `vlan_group` int(11) default NULL, `AuthVlan` int(11) default NULL, PRIMARY KEY (`mac`) ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT=&#39;List of VMPS authenticated Computers&#39; ;</p>
+<p>  # Also check the slave mysql log for errors.</p>
+<p>  # If all looks fine, stop the slave and start it normally:<br />    /etc/init.d/mysql stop<br />    /etc/init.d/mysql start</p>
+<p>  # If vmps is configured, restart that too:<br />    /etc/init.d/vmps start</p>
+<p>    tail -f /var/log/messages | grep vmpsd_external</p>
+<h3>3. Fixing a replication problem</h3>
+<p>It has happened to us that replication stops due to an invalid query.<br />Replication is OK if</p>
+<pre>   show slave status \G;</pre><p>Shows the master log position  correct, Slave_IO_Running: Yes and Slave_SQL_Running: Yes.</p>
+<p>For eaxmple, lets say Slave_SQL_Running was &#39;No&#39;, so we fix it, by stopping the <br />slave and skipping the SQL Query causing the problem:</p>
+<p>  stop slave;<br />  SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1;<br />  start slave;<br />  show slave status \G;<br />  <br />It now skips to the next error:<br />  Slave_SQL_Running: No<br />  Last_Error: Error &#39;Unknown table &#39;opennac.v_1&#39;&#39; on query. Default database: &#39;opennac&#39;. Query: &#39;DROP   VIEW v_1&#39;</p>
+<p>To get through these difficult queries, it may be necessary to repeat the above.<br />  <br />[Note: I don&#39;t why drop views failed in the above example, seems to be a MySQL5 issue]<br />More reading:<br />  <a href="http://dev.mysql.com/doc/refman/5.0/en/set-global-sql-slave-skip-counter.html" title="http://dev.mysql.com/doc/refman/5.0/en/set-global-sql-slave-skip-counter.html">http://dev.mysql.com/doc/refman/5.0/en/set-global-sql-slave-skip-counter...</a><br />  <a href="http://dev.mysql.com/doc/refman/5.1/en/replication-options.html" title="http://dev.mysql.com/doc/refman/5.1/en/replication-options.html">http://dev.mysql.com/doc/refman/5.1/en/replication-options.html</a></p>
+<h3>4. Monitoring replication</h3>
+<p>Install monitor_mysql_slave and call it from cron on the slave:</p>
+<pre>*/5  7-18 * * 1-5 /opt/nac/bin/monitor_mysql_slave</pre><p>&nbsp;</p></div>
+<div id="node-259" class="section-3">
+<h1 class="book-heading">Monitoring</h1>
+<p>When tests show that everything is working, enable CRON entries for process monitoring and to restart SQL weekly:</p>
+<p>## Vmps secondary:<br />0   1    * * 6    /sbin/rcsyslog restart|logger; /etc/init.d/mysql restart|logger; /etc/init.d/vmps restart|logger;</p>
+<p># Monitoring:<br />*/20 7-18 * * 1-5 /secure/monitor_processes.pl proctst vmpsd_external mysqld_safe</p>
+<p>[NOTE: To do: the /secure paths are wrong, update with /opt/nac bin and test these instructions]<br />Enable &quot;Proctst&quot; to automatically re-start a dameon if it dies:<br />  Copy from master:<br />    scp /opt/nac/bin/proctst* vmps2:/secure<br />    scp /etc/proctst.conf vmps2:/etc<br />        <br />  Configure on slave:<br />    vi /etc/proctst.conf   [enable entries for &quot;vmps2&quot;]<br />    <br />    vi /etc/init.d/proctst   [remove the vmps_lastseen dependancy in the header]<br /> <br />    ln -s /secure/proctst /etc/init.d/proctst<br />    ln -s /secure/proctst /sbin/rcproctst<br />    chkconfig proctst on<br />    /etc/init.d/proctst start</p>
+<p>    tail nohup.out</p>
+<p> Check sylsog messages</p>
+<p>Try stopping a daemon such as postfix and make sure its auto started and an email generated.</p>
+<p>&nbsp;</p></div>
+<div id="node-258" class="section-3">
+<h1 class="book-heading">Vmps daemon installation</h1>
+<p>Now we get the vmps daemon going.</p>
+<p>  cp /opt/nac/contrib/init.d/vmps /etc/init.d<br />  ln -s /etc/init.d/vmps /usr/sbin/rcvmps<br />  chmod 750 /etc/init.d/vmps</p>
+<p>  vi /etc/init.d/vmps       [adapt IP address on vmpsd start line]</p>
+<p>Start and watch syslog for events:<br />  /etc/init.d/vmps start</p>
+<p>Check the syslog:<br />  tail -f /var/log/messages | grep vmpsd</p>
+<p>If there are errors, first try to start /opt/nac/bin/vmpsd_external manually.</p>
+<p>If everything looks good, enable VMPS to start after a reboot:<br />   chkconfig vmps on</p></div>
+</div>
+<div id="node-268" class="section-2">
+<h1 class="book-heading">5. Install the Windows Interface</h1>
+<h3>Installation</h3>
+<ol>
+<li>Download the Windows GUI (vmps.exe and vmps.xml) and save a copy to a  folders, for example called <em>FreeNAC</em>.</li>
+<li>The GUI configuration file is <em>vmps.xml</em>, open this is your favourite text editor (vi, notepad, ...)</li>
+</ol>
+<h3>Configuration: NAC server IP address and Database name</h3>
+<ol>
+<li>Configure <em>vmps.xml</em> and set the &#39;mysql server&#39; parameter to the  IP address of the the NAC master server. </li>
+<li>By default, the GUI expects to connect to the &#39;opennac&#39; dataset, which is initially empty an will be used to when FreeNAC talks to switches and routers in your environment. To select this database, no changes are needed to vmps.xnl.</li>
+<li>There is also a sample database &quot;nacdemo&quot; (in the contrib directory), if you wish the GUI to point to this:
+<ul>
+<li>Configure <em>vmps.xml</em> and set the &#39;mysql database&#39; to &#39;nacdemo&#39;.</li>
+</ul>
+<p> </li>
+</ol>
+<h3>Configuration: GUI user rights</h3>
+<p>There are two levels of authentication/authorisation: <br />A. MySQL authentication &amp; authorisation: the windows GUI uses a specific user &amp; password to connect to the DB. We call this the &#39;mysql user&#39;<br />B. Windows GUI identification and authorisation: the GUI takes your currently windows logged-in user to identify you, and uses the value in the nac_rights field for this user to control what you can do (client-side enforcement). we call this the &#39;NAC user&#39;<br /></p>
+<h4>A. MySQL user</h4>
+<p>The MySQL user is created in mysql and given rights to access certain tables remotely. This users is usually called &#39;inventwrite&#39; (for historical reasons) and is granted access in mysql (as root) with commands like the following (see the MySQL section in the Master Server installation installation chapter).</p>
+<p>Note that the password is set to &#39;PASSWORD1&#39; below, adapt as necessary. </p>
+<pre>CREATE USER &#39;inventwrite&#39;@&#39;%&#39; IDENTIFIED BY &#39;PASSWORD1&#39;;<br />grant SELECT,INSERT               ON opennac.*       to inventwrite@&#39;%&#39;;<br />SET PASSWORD FOR inventwrite@&#39;%&#39; = OLD_PASSWORD(&#39;PASSWORD1&#39;); <br />   grant SELECT,UPDATE               ON opennac.oper    to inventwrite@&#39;%&#39; ; <br />   grant SELECT,UPDATE               ON opennac.config  to inventwrite@&#39;%&#39; ;  <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.building to inventwrite@&#39;%&#39; ; <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.location to inventwrite@&#39;%&#39; ;     <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.port    to inventwrite@&#39;%&#39; ;    <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.switch  to inventwrite@&#39;%&#39; ; <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlan    to inventwrite@&#39;%&#39; ;   <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.systems to inventwrite@&#39;%&#39;; <br />   grant SELECT,INSERT,UPDATE,DELETE  ON opennac.users   to inventwrite@&#39;%&#39; ;   <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.patchcable to inventwrite@&#39;%&#39;;   <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.vlanswitch to inventwrite@&#39;%&#39; ;   <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.cabletype  to inventwrite@&#39;%&#39; ;     <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_class to inventwrite@&#39;%&#39; ; <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_class2 to inventwrite@&#39;%&#39; ; <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os        to inventwrite@&#39;%&#39;; <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os1       to inventwrite@&#39;%&#39;; <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os2       to inventwrite@&#39;%&#39;; <br />   grant SELECT,INSERT,UPDATE,DELETE ON opennac.sys_os3       to inventwrite@&#39;%&#39;;   </pre><pre>FLUSH PRIVILEGES ; <br /></pre><p>To verify that the inventwrite user exists:</p>
+<pre> select * from user where user=&quot;inventwrite&quot;&#39;</pre><p>&nbsp;</p>
+<p>Next, inform the windows GUI about which username/password it should use. The username and password is stored in an encrypted string called &#39;auth&#39; in the vmps.xml configuration file.</p>
+<pre>      a) Starting the GUI vmps.exe       b) Admin -&gt; Encrypt User       c) Fill in the Username and Password, and click on Generate       d) Copy the value of the &#39;generated key&#39; filed to the &#39;auth&#39; field in vmps.xml       e) quit the GUI </pre><h4>B. NACuser</h4>
+<p>The GUI takes your currently windows logged-in user to identify you, to the server. It also sends the Windows domain to the server too.</p>
+<p>So the windows username must also exist in the NAC user table, and the user must also have a permission value set. The permission is a value access to the nac_rights field and it can have three values (1=readonly, 2=write, 99=administrator). </p>
+<p>Next, an SQL example to add a user called &#39;smith&#39; to the users table, with administrator permissions:</p>
+<pre> insert into users (username, Surname, GivenName, nac_rights) values (&#39;jsmith&#39;, &#39;John&#39;, &#39;Smith&#39;, 99);</pre><p>Once users have been added, their permissions and other details change be changed in the GUI itself. (Administration -&gt; Users).</p>
+<p>Demo mode:</p>
+<p>For demonstration puurposes, there is a &#39;demo mode&#39; which is enabled if the field &#39;DemoMode&#39; is set to &#39;1&#39; in the config table on the server.</p>
+<p>If DemoMode is=1, and the DEMO company is set in vmps.xml, then all Windows users are given administrator access, which is fine for initial testing, but must be changed afterwards.</p>
+<p>To disable, do the following as root on the MySQL prompt:</p>
+<pre>update config set value=&#39;0&#39; WHERE name=&#39;DemoMode&#39;;  <br /></pre></p>
+<p><strong> Verification of the windows domain</strong></p>
+<ul>
+<li>The GUI can also be restricted to a specific window domain, if the &#39;guidomain&#39; filed in the config table on the server is set.</li>
+<li>If this is set to &#39;MYDOMAIN&#39; for example, then the GUI will only allow users to connect, who are logged onto that domain. </li>
+</ul>
+<h3>Using the NAC Windows GUI</h3>
+<p>Start the GUI and press &#39;connect&#39;. </p>
+<p>See the Users Guide (<a href="http://freenac.net/en/community?q=en/usersguide" title="http://freenac.net/en/community?q=en/usersguide">http://freenac.net/en/community?q=en/usersguide</a>) for a description of how to use the Windows interface.</p></div>
+<div id="node-264" class="section-2">
+<h1 class="book-heading">6. Switch configuration</h1>
+<p>Please refer to the FreeNAC Technical Guide (<a href="http://freenac.net/en/techguide" title="http://freenac.net/en/techguide">http://freenac.net/en/techguide</a>).</p></div>
+<div id="node-143" class="section-2">
+<h1 class="book-heading">Learning mode</h1>
+<p>Starting with a test switch on specific ports, NAC is enabled by configuring ports to use dynamic vlan assignment (“switchport access vlan dynamic” in IOS).<br />
+<p class="MsoNormal">The switch performs a VLAN assignment requests for each new connection and will regularly re-confirm existing connections.</p>
+<ol>
+<li class="MsoNormal">If the MAC Address of the connecting system is in      the database, the switch will assign the attributed VLAN.</li>
+<li class="MsoNormal">If the MAC Address of the connecting system is not      in the database, meaning that this is an <em>unknown</em> system (new,      unmanaged or something else), the switch will assign the <em>default vlan</em>.<br />      The MAC Address will also be inserted into the NAC database so that it can      be later edited and activated.</li>
+</ol>
+<p class="MsoNormal">During this <em>learning mode</em>, all ports are open to all hosts. This is meant to avoid disrupting the network during the initialisation of the NAC service.</p>
+<p class="MsoNormal">As noted above, new MAC addresses will be inserted into the database as <em>unknown</em> hosts. The NAC system will auto-discover the IP &amp; DNS names of these systems (via the router_ipprogram called from cron).</p>
+<p class="MsoNormal">The NAC administrator(s) or the super-users, will need to edit those hosts in the NAC and designate their VLAN and optionally document the end-device details and assign it to a user.</p></div>
+<div id="node-131" class="section-2">
+<h1 class="book-heading">Notes</h1>
+<p>If at first you don&#39;t succeed, persevere :-) ... check the troubleshooting section of the FreeNAC User Guide  notes, then search/ask questions in the Forums. </p>
+<p>We are working hard on FreeNAC, so considering get the latest snapshot from  subversion (SVN) once you&#39;re running.  </p>
+<p>&nbsp;</p></div>
+<div id="node-152" class="section-2">
+<h1 class="book-heading">Troubleshooting</h1>
+<p>See the users guide <a href="http://freenac.net/en/community?q=en/usersguide" title="http://freenac.net/en/community?q=en/usersguide">http://freenac.net/en/community?q=en/usersguide</a></p></div>
+</div>
+
+</body>
+</html>

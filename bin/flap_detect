@@ -23,20 +23,19 @@
  */
 $debug_flag1=FALSE;
 $debug_flag2=FALSE;
-#$debug_flag1=TRUE;
-#$debug_flag2=TRUE;
+$debug_flag1=TRUE;
+$debug_flag2=TRUE;
 
 $subject="VMPS flapping";
 require_once "funcs.inc";               # Load settings & common functions
-
-global $flap_limit;
 
 $tmp1="$argv[0].tmp1";
 $message="";
 $logs="";
 
-$tail="/opt/vmps/logtail /var/log/messages /var/log/.messages.flap_detect > $tmp1";
+# testing:
 #$tail="tail -500 /var/log/messages > $tmp1";
+$tail="/opt/nac/bin/logtail /var/log/messages /var/log/.messages.flap_detect > $tmp1";
 
 #$cmd="$tail| egrep 'vmpsd: (ALLOW|DENY)' | |awk '{print $11, $12, $13}'|sort | uniq -c | awk '{if ($1 > 40) print $1, " ", $2, " port ", $4}'";
 $cmd="egrep 'vmpsd: (ALLOW|DENY)' $tmp1 |awk '{print $11, $12, $13}'|sort | uniq -c  ";
@@ -265,11 +264,28 @@ function react($cnt, $switch, $port)
 
 
 ## --- main () ----
-  ## DRYRUN
-  $answer=explode("\n", syscall("$tail"));  # save all log entries in $tmp1
-  #echo $tail;
 
-  $answer=explode("\n", syscall("$cmd"));
+  # first get the most resent log messags
+  #echo $tail;
+  unset($answer);
+  #$answer=explode("\n", syscall("$tail"));  # save all log entries in $tmp1
+  #$answer=syscall("ls");  # save all log entries in $tmp1
+  #$answer=syscall("TEST_ERROR");  # save all log entries in $tmp1
+  $answer=syscall("$tail");  # save all log entries in $tmp1
+  if (! isset($answer) ) { 
+    logit("syscall failed");  # will never happen, see syscall()
+    exit;
+
+  } 
+  #else if (strlen($answer) >1) {
+    # Error handling is not  easy, but if there is a non-zero message,
+    # we probably have an error.
+  #  logit("Possible error, answer= $answer");
+  #}
+
+  # do a grep on the newest log messages
+  #unset($answer);
+  $answer=explode("\n", syscall("$cmd")); 
   #echo $cmd;
   for ($j = 0; $j < count($answer); $j++){
       #echo "$answer[$j]\n";
@@ -278,7 +294,7 @@ function react($cnt, $switch, $port)
       # 2 192.168.245.85 port Fa0/4
       if (preg_match("/\s+(\d+) ([1-9\.]+) port (.*)/", $answer[$j], $matches)) {
         debug2("count=$matches[1], switch=$matches[2], port=$matches[3]\n");
-        if ((int) $matches[1] > (int) $flap_limit) {
+        if ((int) $matches[1] > (int) $conf->flap_limit) {
           ## so now trawl the log entries in detail
           react($matches[1], $matches[2], $matches[3]);
         }

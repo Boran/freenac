@@ -1,0 +1,289 @@
+
+======== Queries used in the Delphi Gui ==========================
+
+THese are queries used within the Delphi GUI, you don't need to change or do anything, they are just provided for information, so you can bettr undersatnd how inforation is extracted and joined between the various tables.
+
+Regards,
+
+Sena Boran.   1.6.07
+______________________________
+
+-- quPorts    
+SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchName, 
+  default_vlan, last_vlan, v1.default_name as LastVlanName, 
+  port.name,  restart_now, port.comment, last_activity, 
+  auth_profile.method as VlanAuth,
+  CONCAT(switch.name, ' ', port.name) as switchport  
+  FROM port 
+  INNER JOIN switch     ON port.switch = switch.id 
+  LEFT  JOIN patchcable ON patchcable.port = port.id 
+  LEFT  JOIN location   ON patchcable.office = location.id   
+  LEFT  JOIN auth_profile ON auth_profile.id = port.auth_profile
+  LEFT  JOIN vlan v1    ON port.last_vlan = v1.id
+  ORDER BY SwitchName, port.name  
+  
+   
+UPDATE port
+  SET switch=:switch, default_vlan=:default_vlan,  name=:name, comment=:comment
+  WHERE id=:Old_id
+  
+#Refresh SQL: 
+SELECT DISTINCT port.id AS _0, switch as _1, port.default_vlan AS _4,
+  port.name AS _5, port.restart_now AS _6, port.comment AS _7, port.last_vlan AS _8, port.last_activity AS _9 
+  FROM port
+  INNER JOIN switch     ON port.switch = switch.id 
+  LEFT  JOIN patchcable ON patchcable.port = port.id 
+  LEFT  JOIN location   ON patchcable.office = location.id    
+  WHERE port.id = :Old_1 
+    
+#SQLinsert:  
+INSERT INTO port
+    (switch,name)
+  VALUES
+    (:switch,:name)    
+
+#SQLdelete
+DELETE FROM port
+WHERE
+  id = :Old_1 
+
+  
+-- quSwitch
+SELECT switch.id, ip, switch.name, location, location.name as LocationName,
+  building.name as building, comment, swgroup, notify, scan, hw, sw 
+  FROM switch 
+  LEFT JOIN location ON switch.location = location.id 
+  LEFT JOIN building ON location.building_id = building.id   
+  limit 1;
+ 
+UPDATE switch s
+  SET s.name=:name, s.comment=:comment, s.swgroup=:swgroup, s.notify=:notify, 
+  s.location=:location
+  WHERE s.id=:Old_id   
+  [The location updating is provided by a LookupCombox in Delphi]    
+  
+#SQLinsert:  
+INSERT INTO switch
+    (ip,name,location,comment,swgroup,notify,scan)
+  VALUES
+    (:ip,name,:location,:comment,:swgroup,:notify,:scan)  
+      
+  
+-- quUsers
+SELECT id, username, GivenName, Surname, 
+  CONCAT(Surname, ', ', GivenName, ', ', username, ', ', Department) as  GivenNameSurname,
+  Department, rfc822mailbox, 
+  HouseIdentifier, PhysicalDeliveryOfficeName, TelephoneNumber, Mobile, 
+  LastSeenDirectory, nac_rights, manual_direx_sync, 
+  comment, GuiVlanRights, location
+  FROM users ORDER BY Surname, GivenName 
+  limit 1;  
+
+UPDATE users
+  SET username=:username, GivenName=:GivenName, Surname=:Surname, 
+  Department=:Department, rfc822mailbox=:rfc822mailbox, 
+  HouseIdentifier=:HouseIdentifier, PhysicalDeliveryOfficeName=:PhysicalDeliveryOfficeName, 
+  TelephoneNumber=:TelephoneNumber, Mobile=:Mobile, 
+  nac_rights=:nac_rights, manual_direx_sync=:manual_direx_sync, 
+  comment=:comment, location=:location
+  WHERE id=:Old_id  
+  
+#SQLrefresh:
+SELECT users.id AS _0, username AS _1, users.GivenName AS _2, users.Department AS _5, users.rfc822mailbox AS _6, users.HouseIdentifier AS _7, users.PhysicalDeliveryOfficeName AS _8, users.TelephoneNumber AS _9, users.Mobile AS _10, users.nac_rights AS _12, users.manual_direx_sync AS _13, users.comment AS _14, users.GuiVlanRights AS _15, users.Surname AS _3, users.LastSeenDirectory AS _11, users.location AS _16 FROM users
+WHERE users.id = :Old_1
+
+#SQLinsert:  
+INSERT INTO users    (username,GivenName,Surname,Department,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,TelephoneNumber,Mobile,nac_rights,manual_direx_sync,comment,location)
+  VALUES  (:username,:GivenName,:Surname,:Department,:rfc822mailbox,:HouseIdentifier,:PhysicalDeliveryOfficeName,:TelephoneNumber,:Mobile,:nac_rights,:manual_direx_sync,:comment,:location)
+
+INSERT INTO users    (username,GivenName,Surname,Department,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,TelephoneNumber,Mobile,nac_rights,manual_direx_sync,comment,location)
+  VALUES  (:username,:GivenName,:Surname,:Department,:rfc822mailbox,:HouseIdentifier,:PhysicalDeliveryOfficeName,:TelephoneNumber,:Mobile,:nac_rights,:manual_direx_sync,:comment,:location)
+      
+
+
+
+  
+-- quUserLookup   
+SELECT LastSeenDirectory, Surname, GivenName, Department, 
+   rfc822mailbox, HouseIdentifier, PhysicalDeliveryOfficeName, TelephoneNumber, 
+   Mobile, comment, location from users 
+   
+   
+
+-- quVlan
+SELECT id, default_id, default_name,   
+  vlan_description, vlan_group FROM vlan ORDER BY default_name 
+
+-- quVlanswitch  
+SELECT 
+  vid, swid, vlan_id, vlan_name,
+  vlan.default_name, switch.name
+  FROM vlanswitch   
+  INNER JOIN vlan   ON vlanswitch.vid = vlan.id   
+  INNER JOIN switch ON vlanswitch.swid = switch.id    
+SELECT 
+  vid, swid, vlan_id, vlan_name,
+  FROM vlanswitch    
+  
+  
+    
+    
+-- quSystems 
+SELECT s.id, s.uid, vlan,
+  v1.default_id as vlan_default_id, v1.id as vlanid,  v2.default_name as LastVlan,
+  v1.default_name as vlanname, v1.vlan_group as vlangroup, s.status, vstatus.value as statusname,
+  s.name, s.inventory, s.comment, 
+  s.mac, ChangeDate, LastSeen, building.name as building,
+  s.office, port.name as port, s.LastPort as portid, l2.name as PortLocation, port.comment as PortComment,
+  switch.ip as switch, switch.name as SwitchName, l3.name as SwitchLocation, switch.comment as SwitchComment,
+  CONCAT(patchcable.outlet, ', ', l2.name, ', ', patchcable.comment) as PatchCable, 
+  s.history,
+  users1.username as user_name,      users1.TelephoneNumber as UserTel,  
+  users1.Surname as UserSurname,     users1.GivenName as UserForename,    users1.Department as UserDept,
+  users1.rfc822mailbox as UserEmail, users1.HouseIdentifier as UserHouse, users1.PhysicalDeliveryOfficeName as UserOffice,
+  users1.Mobile as UserMobileTel,    users1.LastSeenDirectory as UserLastSeenDirex, 
+  users2.username as ChangeUser, 
+  CONCAT(users2.Surname, ' ', users2.GivenName, ' ', users1.Department) as ChangeUserFullName,
+  s.os, os.value as OsName, os1, os1.value as os1name, os2, os2.value as os2name, 
+  os3, os3.value as os3name, s.os4,
+  class, class2, cl1.value as ClassName, cl2.value as Class2Name,
+  scannow, s.expiry, r_ip, r_timestamp, r_ping_timestamp    
+  FROM systems s
+  LEFT JOIN vlan v1      on s.vlan = v1.id 
+  LEFT JOIN vlan v2      on s.LastVlan = v2.id   
+  LEFT JOIN vstatus      on s.status = vstatus.id  
+  LEFT JOIN users users1 on s.uid = users1.id  
+  LEFT JOIN users users2 on s.ChangeUser = users2.id   
+  LEFT JOIN location l1  ON s.office = l1.id 
+  LEFT JOIN building     ON l1.building_id = building.id  
+  LEFT JOIN port         ON s.LastPort=port.id  
+  LEFT JOIN patchcable   ON patchcable.port = port.id   
+  LEFT JOIN location l2  ON patchcable.office = l2.id    
+  LEFT JOIN switch       ON port.switch = switch.id
+  LEFT JOIN location l3  ON switch.location = l3.id  
+  LEFT JOIN sys_os   os  ON s.os = os.id 
+  LEFT JOIN sys_os1  os1 ON s.os1 = os1.id   
+  LEFT JOIN sys_os2  os2 ON s.os2 = os2.id 
+  LEFT JOIN sys_os3  os3 ON s.os3 = os3.id       
+  LEFT JOIN sys_class  cl1 ON s.class  = cl1.id        
+  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id     
+  limit 1 \G;  
+  
+# testing: 
+# SELECT s.id, s.uid,
+  s.name, r_ping_timestamp    
+  FROM systems s
+  LEFT JOIN vlan v1      on s.vlan = v1.id 
+  LEFT JOIN vlan v2      on s.LastVlan = v2.id   
+  LEFT JOIN vstatus      on s.status = vstatus.id  
+  LEFT JOIN users users1 on s.uid = users1.id  
+  LEFT JOIN users users2 on s.ChangeUser = users2.id   
+  LEFT JOIN location l1  ON s.office = l1.id 
+  LEFT JOIN building     ON l1.building_id = building.id  
+  LEFT JOIN port         ON s.LastPort=port.id  
+  LEFT JOIN patchcable   ON patchcable.port = port.id   
+  LEFT JOIN location l2  ON patchcable.office = l2.id    
+  LEFT JOIN switch       ON port.switch = switch.id
+  LEFT JOIN location l3  ON switch.location = l3.id  
+  LEFT JOIN sys_os   os  ON s.os = os.id 
+  LEFT JOIN sys_os1  os1 ON s.os1 = os1.id   
+  LEFT JOIN sys_os2  os2 ON s.os2 = os2.id 
+  LEFT JOIN sys_os3  os3 ON s.os3 = os3.id       
+  LEFT JOIN sys_class  cl1 ON s.class  = cl1.id        
+  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id    
+  
+UPDATE `systems` SET
+  uid=:uid, vlan=:vlan, status=:status, name=:name, inventory=:inventory, comment=:comment,
+  mac=:mac, office=:office, history=:history, os=:os, os1=:os1, os2=:os2, os3=:os3, os4=:os4,
+  class=:class, expiry=:expiry, class2=:class
+WHERE  
+  `id` = :Old_1
+  
+    
+-- quCable    PatchCables
+SELECT p.id, rack, rack_location, outlet, other as rack_outlet,
+  office, location.name as OfficeLocation, type, cabletype.name as cable_name,
+  port, p.comment, lastchange, expiry,
+  modifiedby, CONCAT(users.GivenName, ' ', users.Surname) as ChangedBy
+  FROM patchcable p
+  LEFT JOIN cabletype ON p.type = cabletype.id    
+  LEFT JOIN users    ON p.modifiedby = users.id
+  LEFT JOIN location ON p.office = location.id
+  LEFT JOIN port     ON p.port=port.id
+  ORDER BY outlet
+  LIMIT 4;  
+  #LEFT JOIN switch   ON port.switch = switch.id
+ 
+  
+UPDATE patchcable
+  SET rack=:rack, rack_location=:rack_location, outlet=:outlet, port=:port, modifiedby=:modifiedby,
+  other=:rack_outlet, office=:office, type=:type, comment=:comment, lastchange=:lastchange 
+  WHERE id=:Old_id      
+      
+  --- Notes on old & new field names:
+  nach_port=port 
+  nach_other=other  
+  von_he_dosen=rack_location 
+  von_office=office 
+  von_geb_sch=rack  
+  von_dose=outlet   
+  nach_network=type
+  visum=modifiedby   
+  bis_wann=expiry    
+  Deleted:   von_user  nach_switch
+
+
+
+quHistory [guilog]
+SELECT
+  datetime, priority, what, host, who,
+  CONCAT(users.GivenName, ' ', users.Surname) as user
+  FROM guilog
+  LEFT JOIN users on guilog.who=users.id
+  ORDER BY datetime DESC LIMIT 0,500
+  
+#SQLrefresh:
+SELECT
+  datetime, priority, what, host, who,
+  CONCAT(users.GivenName, ' ', users.Surname) as user
+  FROM guilog
+  LEFT JOIN users on guilog.who=users.id
+  ORDER BY datetime DESC LIMIT 0,500
+  
+  
+
+--- quLocation
+SELECT l.id, l.building_id, building.name as BuildingName, l.name as LocationName,
+  CONCAT(building.name, ' ', l.name) as LocationAndBuilding
+  FROM location l
+  INNER JOIN building on l.building_id = building.id  
+  ORDER BY building.name, l.name
+
+UPDATE location 
+  SET building_id=:building_id, name=:LocationName  WHERE id=:Old_id
+
+UPDATE switch s
+  SET s.name=:name, s.comment=:comment, s.swgroup=:swgroup, s.notify=:notify, 
+  s.location=:location
+  WHERE s.id=:Old_id   
+  [The location updating is provided by a LookupCombox in Delphi]  
+    
+#DeleteSQL:     
+DELETE FROM location
+  WHERE id = :Old_1  
+  
+#RefreshSQL: 
+SELECT l.id AS _0, l.building_id AS _1, building.name AS _2, l.name AS _3
+  FROM location l
+  INNER JOIN building on l.building_id = building.id  
+  WHERE l.id = :Old_1 
+  
+#InsertSQL:   
+INSERT INTO location (name,building_id)
+  VALUES             (:LocationName,:building_id)    
+    
+  
+___________________________________________________________  
+
+
+

@@ -152,7 +152,7 @@ sub sendVQP($) {
               for ($j=0;$j<3;$j++)
               {
                  print $socket "$buf";
-                 usleep(5000*($j+1));
+                 usleep(1000000*($j+1));
                  sysread($socket,$var,1500,0);
                  if ($var)
                  {

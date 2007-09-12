@@ -42,13 +42,11 @@ $debug_flag2=FALSE;
 
 require_once "funcs.inc";
 
-global  $lastseen_dryrun, $default_user_unknown;
 if ($debug_flag2===TRUE) {
   $daemon=false;
-  $lastseen_dryrun=true;
+  $conf->lastseen_dryrun=true;
 } else  { 
   $daemon=true;
-  global  $lastseen_dryrun;
 }
 
 $progname = basename($argv[0]);
@@ -132,7 +130,7 @@ function patch_lookup($port_id) {
 #
 # ----------- main() : infinite loop -----------------------------------
 
-if ($lastseen_dryrun)  {
+if ($conf->lastseen_dryrun)  {
   echo "*** DRYRUN: No DB inserts will be done***\n";
 
 } else {
@@ -141,7 +139,8 @@ if ($lastseen_dryrun)  {
 
 ## Fork and run in background as a daemon
 if ($daemon) {
-  $pid = pcntl_fork();    # fork child & get PID
+##Deactivated forking due that when using a singleton it causes vmps_lastseen to die
+/*  $pid = pcntl_fork();    # fork child & get PID
   if ($pid == -1) {
     die("pcntl_fork() failed: $php_errorstr");
 
@@ -155,7 +154,7 @@ if ($daemon) {
   } else {
     //printf("I am the child, my pid is %d.\n", posix_getpid());
     ob_flush();              // log buffered outputs
-  }
+  }*/
   posix_setsid();        // create new session, detach from shells process group
 }
 
@@ -181,9 +180,9 @@ do {
     ## Pull out the lines that summarise connections
     $regs=array();
     #if (ereg("(.*) vmpsd: +(ALLOW|DENY): (.*) -> (.*), switch (.*) port ([A-Z]?[a-z0-9\/]*){1}", $line, $regs) ) {
-    #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
-    if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
-    #if (ereg("(.*) vmpsd: (ALLOW|DENY): (.{12}) -> (.+), switch (.{1,15}) port (.{1,9})",$line, $regs) ) {
+    if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs) ) {
+    #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
+    #if (ereg("(.*) vmpsd: (ALLOW|DENY): (.{12}) -> (.{0,30}), switch (.{8,15}) port (.{1,9})",$line, $regs) ) {
       #echo "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n";
       debug1("FOUND: {$regs[1]} {$regs[2]} $regs[3]");
       $success=$regs[2]; 
@@ -219,13 +218,16 @@ do {
         $buiding_name='';
 
         ## 2. Has this switch been seen before? If not add to table
-        $query="SELECT id,name from switch WHERE ip='" . $switch . "' ";
+        $query="SELECT id,name,comment from switch WHERE ip='" . $switch . "' ";
         debug1("$query");
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
-        if ((mysql_num_rows($res) ==0) && ! $lastseen_dryrun) {   # entry does not exist, 0 rows
+        if ((mysql_num_rows($res) ==0) && ! $conf->lastseen_dryrun) {   # entry does not exist, 0 rows
+          $switch_name=gethostbyaddr($switch);
+          if (strcasecmp($switch_name,$switch)==0)
+             $switch_name='unknown';
           $query="INSERT INTO switch "
-          . "SET ip='" . $switch . "', name='unknown'";
+          . "SET ip='" . $switch . "', name='".$switch_name."'";
           #.      "comment='First found: "     . $details    . "' ";
           log("New switch: $query");
           logit("New switch entry $switch, please update the description.");
@@ -233,13 +235,13 @@ do {
           $res = mysql_query($query);
           if (!$res) { die('Invalid query: ' . mysql_error()); }
           $switch_id=v_sql_1_select("select id from switch where ip='$switch'");
-          $switch_name='unknown';
         }
         else {
           # Remember switch name for better logging
           $row=mysql_fetch_array($res, MYSQL_NUM);
           $switch_id=$row[0];
           $switch_name=$row[1];
+          $switch_comment=$row[2];
           $log_entry=$log_entry . $row[1];
         }
 
@@ -256,9 +258,19 @@ do {
            $building_name=$results['building'];
         }
         debug1("Switch $switch, location $location_name, building $building_name");
-        $port_id=v_sql_1_select("select id from port where switch='$switch_id' and name='$port'");
-                
-        if ((!$port_id && ! $lastseen_dryrun) && (strlen($port)<10))
+        $query="select id,comment from port where switch='$switch_id' and name='$port'";
+        debug1($query);
+        $res=mysql_query($query);
+        if (!res) { die('Invalid  query: '.mysql_error()); }
+        else
+        {
+           $row=mysql_fetch_array($res,MYSQL_NUM);
+           $port_id=$row[0];
+           $port_comment=$row[1];
+        }
+         
+        if ((!$port_id && ! $conf->lastseen_dryrun) && (strlen($port)<10)&&(!empty($port)))       
+        #if ((!$port_id && ! $conf->lastseen_dryrun) && (strlen($port)<10)&&(!empty($port))&&(ereg("(^([A-Z][a-z] ?)?[0-9]+\/[0-9]+)",$port)))
         {
           // ===== entry does not exist, --> NEW PORT!
 
@@ -295,23 +307,64 @@ do {
           $result=mysql_fetch_array($res,MYSQL_ASSOC);
           $patchcable=$result['patchcable_comment'];
         }
-        $subject="in $location_name, $patchcable, port $port";
+        if ($conf->lastseen_patch_lookup&&!empty($patchcable))
+           $subject="in $location_name, $patchcable, port $port";
+        else
+           $subject="in $location_name, $patchcable, port $port $port_comment";
 
         #####################################################
         ## Search the DB for this MAC & update "LastSeen" ###
         $vlan_id=v_sql_1_select("select id from vlan where default_name='$vlan'");
-	$system_id=v_sql_1_select("select id from systems where mac='$mac2'");
+        $query="select id, status, name, expiry from systems where mac='$mac2'";
+        $res=mysql_query($query);
+        if ($res)
+        {
+           $row=mysql_fetch_array($res,MYSQL_ASSOC);
+           $system_id=$row['id'];
+           $expiry=$row['expiry'];
+           $status=$row['status'];
+           $name=$row['name'];
+        }
+        else die('Invalid query: '.mysql_error);
         
         if ($system_id)
         { 
-           $query="UPDATE systems SET LastSeen=NOW()"
-           . ", LastPort='" .$port_id . "' "
-           . ", LastVlan='" .$vlan_id . "' "
-           ." WHERE id='" . $system_id . "'";
-           debug1($query);
-           $res = mysql_query($query);
-           if (!$res) { die('Invalid query: ' . mysql_error()); }
-           debug1("Records affected: " . mysql_affected_rows());
+            $query="UPDATE systems SET LastSeen=NOW()"
+               . ", LastPort='" .$port_id . "' "
+               . ", LastVlan='" .$vlan_id . "' "
+               ." WHERE id='" . $system_id . "'";
+            debug1($query);
+            $res = mysql_query($query);
+            if (!$res) { die('Invalid query: ' . mysql_error()); }
+            debug1("Records affected: " . mysql_affected_rows());
+            if ($conf->check_for_expired)			//Are we going to disable expired devices?
+            {
+               if ($expiry&&(strcmp(trim($expiry),"0000-00-00 00:00:00")==0))	//Ignore null dates
+                  $expiry=false;
+               if ($expiry)
+               {
+                  $timestamp=date('Y-m-d H:i:s');				//Out timestamp
+                  $time=time_diff($timestamp,$expiry);				//Difference in seconds from our current time & expiration for that device
+                  if ($time<0)							//It has expired
+                  {
+                     if ($conf->disable_expired_devices)			//Disable it
+                     {
+                        $query="update systems set status='7',lastseen=NOW(),lastport='$port_id' where id='$system_id'"; #Disable expired device
+                        logit("decide: Expired device $name($mac) has been refused network access and its status has been set to killed. Expiration date: $expiry");
+                        log2db('info',"Expired device $name($mac) has been refused network access and its status has been set to killed. Expiration date: $expiry");
+                        $res = mysql_query($query, $connect);
+                        if (!$res) { die('Invalid query: ' . mysql_error()); }
+                     }
+                     if ($conf->email_alert_expired_devices)			//Send an email
+                     {
+                        $log_entry="Device $name($mac) with expiration date $expiry has been refused network access ";
+                        if ($conf->disable_expired_devices)
+                           $log_entry.=" and its status has been set to killed.";
+                        notify2($switch_name, $log_entry, "NAC alert: expired device");
+                     } 
+                  }
+               }
+            }
         }
         else
         {
@@ -323,51 +376,58 @@ do {
 
            $newmac_vendor=lookup_vendor_mac($mac2);
 
-           if ($lastseen_sms==TRUE) 
+           if ($conf->lastseen_sms) 
            {         # Enterprise only
 
                # 1.1 SMS PC?: See if its known on SMS, can take several secs
                $retval='';
-               $sms_details=syscall("$sms_mac $mac2", $retval);
+               $sms_details=syscall($conf->sms_mac." $mac2", $retval);
 
                # Enable PC and set to SMS VLAN
                if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$sms_details, $matches))
                {
                   $sms_name=$matches[1];     
-                  $txx_name= $default_user_unknown;         # default
+                  $txx_name= $conf->default_user_unknown;         # default
                   $txx_name   =$matches[2];
                   $sms_os     =$matches[3];
                   $sms_details="";
                   logit("SMS PC: name=$sms_name, NTaccount=$txx_name, $sms_os, $sms_details");
-                  $os3_id=v_sql_1_select("select id from sys_os3 where value='$sms_os'");     
-                  $query="INSERT INTO systems "
-                  . "SET LastSeen=NOW(), status=1, class=1,"      # active, GWP
+                  $os3_id=v_sql_1_select("select id from sys_os3 where value='$sms_os'");    
+
+                  insert_user($txx_name);
+                  #logit("Inserted new user $txx_name");
+                  direx_sync_user($txx_name);
+                  #logit("Symced new user $txx_name");
+ 
+                  $uid=v_sql_1_select("select id from users where username like '$txx_name'");
+		  if (!$uid)
+                     $uid=0;
+		  if ($conf->lastseen_sms_vlan)
+		     $vlan_id=$conf->lastseen_sms_vlan;
+	          $query="INSERT INTO systems "
+                  . "SET LastSeen=NOW(), status=1, class=2,"      # active, GWP
                   .      "description='$txx_name', "   # nt account
+		  .      "uid='$uid', "
                   .      "name='$sms_name', "
                   .      "comment='$sms_details', "
                   .      "vlan='$vlan_id', "
                   .      "os3='$os3_id', "
+                  .      "os4='$sms_os', "
                   .      "lastport='$port_id', "
                   .      "office='$location_id', "
                   .      "mac='$mac2' ";
                   debug1($query);
                   debug1("New $sms_device System $mac2 on sw/port $switch/$port"); 
                   $newmac_found=TRUE;                // used further down
-              
                   $log_entry="New $sms_device $mac2 ($newmac_vendor) $sms_name, $txx_name, $sms_details, switch ";
 
-                  if ($lastseen_dryrun==FALSE) {
+                  if (!$conf->lastseen_dryrun) {
                     $res = mysql_query($query);
                     if (!$res) { die('Invalid query: ' . mysql_error()); }
                     snmp_restart_port($port, $switch);
                   }
 
                
-                  insert_user($txx_name);
-                  #logit("Inserted new user $txx_name");
-                  direx_sync_user($txx_name);
-                  #logit("Symced new user $txx_name");
-
                   // Document the user's details in the alert
                   $query="SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where username='$txx_name'";
                   $res = mysql_query($query);
@@ -387,18 +447,21 @@ do {
 
            if ($newmac_found==FALSE) 
            { # Already added in SMS Section?
-              $default_vlan=v_sql_1_select("select id from vlan where default_id='$set_vlan_for_unknowns'");
+              $default_vlan=v_sql_1_select("select id from vlan where default_id='".$conf->set_vlan_for_unknowns."'");
               $query="INSERT INTO systems "
-                . "SET LastSeen=NOW(), " 
-                .      "status='$set_status_for_unknowns', name='unknown',"
-                .      "vlan='$default_vlan',"
-                .      "lastport='$port_id', office='$location_id', "
-                .      "description='$default_user_unknown', "   # usually 'KEINE'
-                .      "mac='$mac2' ";
-              $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name ";
+                 . "SET LastSeen=NOW(), " 
+                 .      "status='".$conf->set_status_for_unknowns."', name='unknown',"
+                 .      "vlan='".$conf->default_vlan."',"
+                 .      "lastport='$port_id', office='$location_id', "
+                 .      "description='".$conf->default_user_unknown."', "   # usually 'KEINE'
+                 .      "mac='$mac2' ";
+            if ($conf->lastseen_patch_lookup&&!empty($patchcable))
+               $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name ";
+            else
+               $log_entry="New unknown $mac2 ($newmac_vendor), switch $switch_name($switch_comment)";
               #logit($log_entry);
 
-              if ($lastseen_dryrun==FALSE) 
+              if (!$conf->lastseen_dryrun) 
               {
                 $res = mysql_query($query);
                 if (!$res) { die('Invalid query: ' . mysql_error()); }
@@ -420,7 +483,7 @@ do {
       
       ## Log details of new system
       if ($newmac_found===TRUE) {  
-        if ($lastseen_patch_lookup==true) {
+        if ($conf->lastseen_patch_lookup) {
            ## lookup patch details if switch/port in patch list
            $log_entry=$log_entry . "(Patch: "
              . patch_lookup($port_id) .")";
@@ -428,10 +491,10 @@ do {
         logit($log_entry); 
         log2db('info', $log_entry); 
 
-        if ($lastseen_sms==FALSE) {
+        if (!$conf->lastseen_sms) {
           notify2($switch_name, $log_entry, "NAC alert $subject"); 
 
-        } else if ($lastseen_sms_notify==TRUE) { # Only alert if set
+        } else if ($conf->lastseen_sms_notify) { # Only alert if set
           notify2($switch_name, $log_entry, "NAC alert $subject"); 
         }
 
@@ -448,7 +511,7 @@ do {
   usleep(500000);            # wait 0.5 secs (500ms * 100 mic.secs), before retrying
 
 #} while (true);
-} while ($lastseen_dryrun===false);   # If debugging only once
+} while (!$conf->lastseen_dryrun);   # If debugging only once
 
 echo "*** DRYRUN: Singe loop finished\n";
 
