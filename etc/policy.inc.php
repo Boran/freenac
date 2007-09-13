@@ -15,8 +15,8 @@
  
 class BasicPolicy extends Policy {
 
-	#public function __construct($system,$port) {
-        #   parent::__construct($system,$port);
+	#public function __construct($HOST,$PORT) {
+        #   parent::__construct($HOST,$PORT);
 	#}
 
 /*        public function HealthOK() {
@@ -39,8 +39,8 @@ class BasicPolicy extends Policy {
 
 		#Normal case
 		if ($this->system->isExpired() || $this->system->isKilled()) {
-		     #ALLOW($this->conf->vlan_for_killed(), NOCHANGE);
-		     DENY($this->conf->vlan_for_killed());
+		     #ALLOW($CONF->vlan_for_killed(), NOCHANGE);
+		     DENY($CONF->vlan_for_killed());
 
 		} else if ($this->system->isActive()) {	
 
@@ -61,7 +61,7 @@ class BasicPolicy extends Policy {
 
                 } else if ($this->system->isUnManaged()) {	
 		   # Same as "unknown": use default, but alert
-                   log("Unmanaged device on VMPSD port $switch $port", "WARN");
+                   log("Unmanaged device on VMPSD port $switch $PORT", "WARN");
 
 		} else {   # unknown
 	  	   ## log warning? 
@@ -90,35 +90,39 @@ class BasicPolicy extends Policy {
 		
 
 		}*/
-		if ($system->isExpired() || $system->isKilled())
-			ALLOW($this->conf->vlan_for_killed);
+		if ($HOST->isExpired() || $HOST->isKilled())
+			ALLOW($CONF->vlan_for_killed);
 
-		if ($system->isActive())
+		if ($HOST->isActive())
 		{
-			if ($vlan=$port->vlanBySwitchLocation())
+			if ($vlan=$PORT->vlanBySwitchLocation())
 				ALLOW($vlan);
 			else
-				ALLOW($system->getVlanId());
+				ALLOW($HOST->getVlanId());
 		} 
-		else if ($system->isUnManaged()) 
+		else if ($HOST->isUnManaged()) 
 		{
                    # Same as "unknown": use default, but alert
-                   #log("Unmanaged device on VMPSD port $switch $port", "WARN");
+                   #log("Unmanaged device on VMPSD port $switch $PORT", "WARN");
 
                 } 
 		else 
 		{   
 		   #UNKNOWN SYSTEMS
 		   #Check for VMs: special case, use vlan of VM host
-	           if ($vlan=$system->isVM()) ALLOW($vlan); #Retrieve the vlan from the host device
+	           if ($HOST->isVM()) 
+                   {
+                      if ($vlan=$PORT->getVMVlan())
+                         ALLOW($vlan); #Retrieve the vlan from the host device
+                   }
 
                    #Port has a default vlan
-                   if ($vlan=$port->getPortDefaultVlan()) {
+                   if ($vlan=$PORT->getPortDefaultVlan()) {
                       ALLOW($vlan); #Retrieve the vlan from the host device
                    } 
-                   else if ($this->conf->default_vlan) 
+                   else if ($CONF->default_vlan) 
                    {
-                      ALLOW($this->conf->default_vlan);
+                      ALLOW($CONF->default_vlan);
                    }
 		}
 		#Default policy

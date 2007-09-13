@@ -166,8 +166,12 @@ class EndDevice extends Common {
 		/* Todo: Implement a vendor Cache in an arry 
 		 * to save an sql statement per request ;-) 
 		 */
-		 
-		 return "vendorXYZ";
+                 $mac=preg_replace('/\./','',$this->mac);
+                 $prefix="$mac[0]$mac[1]$mac[2]$mac[3]$mac[4]$mac[5]";
+                 $query="select vendor from ethernet where mac like '%$prefix%';";
+                 $vendor=v_sql_1_select($query);
+		 $vendor=rtrim($vendor,',');
+		 return trim($vendor);
 	}
 	
 	/* Return the Name of the systems default VLAN */

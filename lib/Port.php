@@ -133,6 +133,27 @@ EOF;
          return false;
       }
    }
+
+   public function getVMVlan()
+   {
+      if ($this->conf->vm_lan_like_host)
+      {
+         $query="select s.mac as mac,s.lastvlan as lastvlan from systems s inner join port p on "
+               ."s.lastport=p.id inner join switch sw on p.switch=sw.id and p.name='{$this->name}'"
+               ." and sw.ip='{$this->switchip}' where date_sub(curdate(), interval 2 hour) <= s.lastseen"
+               ." order by lastseen desc limit 1;";
+         $vm_vlan=v_sql_1_select($query);
+         if ($vm_vlan)
+            return $vm_vlan;
+         else
+            return false;
+      }
+      else
+      {
+         #Log: this option is not enabled
+         return false;
+      }
+   }
 }
 
 ?>

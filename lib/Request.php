@@ -20,6 +20,9 @@
  * @version                     SVN: $Id$
 */
 
-abstract class Request {}
+abstract class Request {
+   protected $port;
+   protected $system;
+}
 
 ?>

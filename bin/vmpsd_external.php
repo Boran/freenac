@@ -58,8 +58,9 @@ chdir(dirname(__FILE__));
 set_include_path("./:../");
 
 /* Open Syslog channel for logging */
-$syslogger=SysLogger::getInstance();
-$syslogger->setIdentifier("vmpsd_external");
+$logger=Logger::getInstance();
+#$logger->setIdentifier("vmpsd_external");
+#$logger->logToStdErr();
 /* include files */
 require_once("../lib/exceptions.php");
 require_once("../lib/funcs.inc.php");
@@ -70,9 +71,10 @@ require_once("../lib/funcs.inc.php");
 $class_string = file_get_contents("../etc/policy.inc.php");
 $class_string = preg_replace('/<\\?php/','',$class_string);
 $class_string = preg_replace('/\\?>/','',$class_string);
-$class_string = preg_replace('/\\$system/','$GLOBALS["system"]',$class_string);
-$class_string = preg_replace('/\\$port/','$GLOBALS["port"]',$class_string);
-#echo $class_string;
+$class_string = preg_replace('/\\$HOST/','$GLOBALS["HOST"]',$class_string);
+$class_string = preg_replace('/\\$PORT/','$GLOBALS["PORT"]',$class_string);
+$class_string = preg_replace('/\\$REQUEST/','$GLOBALS["REQUEST"]',$class_string);
+$class_string = preg_replace('/\\$CONF/','$GLOBALS["REQUEST"]',$class_string);
 eval($class_string);
 
 // create policy object
@@ -81,11 +83,12 @@ $policy=new $conf->default_policy();
 
 
 /* Open stdin and stdout - These connect us to vmpsd */
-$in = fopen("php://stdin", "r");
-$out = fopen("php://stdout", "w");
+#$in = fopen("php://stdin", "r");
+#$out = fopen("php://stdout", "w");
+$in = STDIN;
+$out = STDOUT;
 
 /* Loop Forever (we are a daemon) */
-$request=VMPSRequest::getInstance();
 while ($in && $out) {
 
 	/* Read one line from vmpsd and parse it */
@@ -108,23 +111,25 @@ while ($in && $out) {
 
 		/* extract values */
 		list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
-		$request->setValues($mac,$switch,$port,$domain,$lastvlan);
 		try {
 
 			// Todo, setup policy object 
 
 
 			/* create System Object */
-			$system = new CallWrapper(new EndDevice($request));
-			$port = new CallWrapper(new Port($request));
+			#$system = new CallWrapper(new EndDevice($request));
+			#$port = new CallWrapper(new Port($request));
+                        $request=new VMPSRequest($mac,$switch,$port,$domain,$lastvlan);
 			/* Call Default policy */
 			if ($conf->default_policy)
 			{
 				#$policy=new $conf->default_policy();
 				try
 				{
-				   $GLOBALS["port"]   = $port;
-				   $GLOBALS["system"] = $system;
+				   $GLOBALS["REQUEST"] = $request;
+				   $GLOBALS["PORT"]   = $request->getPort();
+				   $GLOBALS["HOST"] = $request->getEndDevice();
+				   $GLOBALS["CONF"] = Settings::getInstance();
 				   $policy->preconnect();
 				}
 				catch(Exception $e)
@@ -210,8 +215,8 @@ function reportException(Exception $e) {
 }
 
 function trace($message) {
-        global $syslogger;
-        $syslogger->log($message,LOG_CRIT);
+	global $logger;
+        $logger->logit($message,LOG_CRIT);
 	#syslog(LOG_CRIT, $message);
 }
 

@@ -56,7 +56,7 @@ final class VMPSRequest	extends Request		//Disallow inheriting from this class
    private $props=array();			//Here we hold our internal properties
    private static $instance;			//Our instance of this class
 
-   public function setValues($tmac, $tswitch,$tport,$tvtp,$tlastvlan)
+   public function __construct($tmac, $tswitch,$tport,$tvtp,$tlastvlan)
    {	
       //Set our internal properties
       //Could we set our properties only once per request that comes into VMPS
@@ -68,20 +68,13 @@ final class VMPSRequest	extends Request		//Disallow inheriting from this class
          $this->props['port']=$tport;
          $this->props['vtp']=$tvtp;
          $this->props['lastvlan']=$tlastvlan;
+	 $this->port=new CallWrapper(new Port($this));
+         $this->system=new CallWrapper(new EndDevice($this));
          return true;
       }
       else return false;
    }
   
-   private function __construct() {}
-
-   public static function getInstance()
-   {
-      if (empty(self::$instance))		//Is there an instance of this class?
-         self::$instance=new VMPSRequest();	//No, then create it
-      return self::$instance; 			//Yes, return it 
-   }
-
    public function __get($key)			//Return the value of a property
    {
       if (array_key_exists($key,$this->props))	//First look if it exists in our internal array
@@ -97,4 +90,15 @@ final class VMPSRequest	extends Request		//Disallow inheriting from this class
    {
       throw new Exception("Cannot clone the VMPSRequest object");
    }
+
+   public function getEndDevice()
+   {
+      return $this->system;
+   }
+
+   public function getPort()
+   {
+      return $this->port;
+   }
+
 }
