@@ -15,9 +15,9 @@
  
 class BasicPolicy extends Policy {
 
-	public function __construct() {
-           parent::__construct();
-	}
+	#public function __construct($system,$port) {
+        #   parent::__construct($system,$port);
+	#}
 
 /*        public function HealthOK() {
 		   if ($this->system->HealthOK())   # Health=OK, was checked in the last 24 hours
@@ -31,7 +31,7 @@ class BasicPolicy extends Policy {
 		}
         }*/
 
-        public function preconnect($system,$port) {
+        public function preconnect() { 
 		
 /*		#TODO: HUB_DETECTION, VLAN_BY_SWITCH_LOCATION
 		#Policy related stuff

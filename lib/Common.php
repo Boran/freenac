@@ -20,9 +20,11 @@
 
 class Common {
    protected $conf;
+   protected $syslogger;
    
-   protected function __construct()
+   public function __construct()
    {
       $this->conf=Settings::getInstance();
+      $this->syslogger=SysLogger::getInstance();
    }	
 }

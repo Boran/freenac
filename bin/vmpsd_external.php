@@ -53,16 +53,32 @@
  * @link		http://www.freenac.net
  *
  */
-/* Open Syslog channel for logging */
-define_syslog_variables();
-openlog("vmpsd_external", LOG_PID , LOG_LOCAL5);
 
+chdir(dirname(__FILE__));
+set_include_path("./:../");
+
+/* Open Syslog channel for logging */
+$syslogger=SysLogger::getInstance();
+$syslogger->setIdentifier("vmpsd_external");
 /* include files */
 require_once("../lib/exceptions.php");
 require_once("../lib/funcs.inc.php");
 
 /* Load the policy file */
-require_once "../etc/policy.inc.php";
+//require_once "../etc/policy.inc.php";
+
+$class_string = file_get_contents("../etc/policy.inc.php");
+$class_string = preg_replace('/<\\?php/','',$class_string);
+$class_string = preg_replace('/\\?>/','',$class_string);
+$class_string = preg_replace('/\\$system/','$GLOBALS["system"]',$class_string);
+$class_string = preg_replace('/\\$port/','$GLOBALS["port"]',$class_string);
+#echo $class_string;
+eval($class_string);
+
+// create policy object
+$policy=new $conf->default_policy();
+
+
 
 /* Open stdin and stdout - These connect us to vmpsd */
 $in = fopen("php://stdin", "r");
@@ -78,15 +94,15 @@ while ($in && $out) {
 	/* If there are some characters */
 	if (strlen($line) > 0) {
 		/* Log Request Start and Input */
-		trace("----------------------------");
-		trace("$line");
+		trace("----------------------------\n");
+		trace("$line\n");
 
 		/* split by space */      	
 		$splitted = explode(" ", $line);
 
 		/* sanity checks, 5 values */
 		if (count($splitted) != 5 || ((strlen($splitted[4]) < 12) || (strlen($splitted[4]) > 17))) {
-			// Todo: Complain in the log file
+			$syslogger->log("Invalid request\n");
 			continue;
 		}
 
@@ -107,18 +123,25 @@ while ($in && $out) {
 				#$policy=new $conf->default_policy();
 				try
 				{
-				   $policy=new $conf->default_policy();
-				   eval($policy->preconnect($system,$port));
+				   $GLOBALS["port"]   = $port;
+				   $GLOBALS["system"] = $system;
+				   $policy->preconnect();
 				}
 				catch(Exception $e)
 				{
 					if (method_exists($policy,catch_ALLOW))
 					{
-						ALLOW($policy->catch_ALLOW($e->getDecidedVlan()));
+						if ($e instanceof DenyException)
+						   DENY();
+						else
+						   ALLOW($policy->catch_ALLOW($e->getDecidedVlan()));
 					}
 					else 
 					{
-						ALLOW($e->getDecidedVlan());
+						if ($e instanceof DenyException)
+						   DENY();
+						else 
+						   ALLOW($e->getDecidedVlan());
 					}
 				}
                         }
@@ -127,7 +150,7 @@ while ($in && $out) {
  			if ($conf->fallback_policy) {
 				$policy=new $conf->fallback_policy($system,$port);
  	 			trace("Error at default policy, falling back to policy ".
- 	 			     $conf->fallback_policy);
+ 	 			     $conf->fallback_policy."\n");
 				#try {
 	 				$policy->preconnect();
 				#} catch(Exception $e) {
@@ -168,7 +191,7 @@ while ($in && $out) {
  	    	reportException($e);
  	    }
  
-		trace("----------------------------");
+		trace("----------------------------\n");
  
       	//ob_flush();               # log buffered outputs
       	flush();
@@ -183,12 +206,13 @@ exit(0);
 
 function reportException(Exception $e) {
  	$t = $e->GetTrace();
- 	trace($e->getMessage() ." (at ".basename($t[0]['file']).
- 										":". $t[0]['line'].")");
+ 	trace($e->getMessage() ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
 }
 
 function trace($message) {
-	syslog(LOG_CRIT, $message);
+        global $syslogger;
+        $syslogger->log($message,LOG_CRIT);
+	#syslog(LOG_CRIT, $message);
 }
 
 
@@ -201,31 +225,5 @@ function __autoload($classname)
 {
    require_once "../lib/$classname.php";
 }
-
-
-/* 
-
-
-
-define_syslog_variables();
-openlog("vmpsd_external", LOG_PID , LOG_LOCAL5);
-
-
-
-$request=VMPSRequest::getInstance();
-$request->setValues('MAC','SWITCH','PORT','VTP','LASTVLAN');
-
-$syslog=SysLogger::getInstance();
-$syslog->setLevel(2);
-$syslog->debug(1,"Testing debug level 1");
-$syslog->debug(2,"Testing debug level 2");
-$syslog->debug(3,"Testing debug level 3");
-
-$db_log=new DBLogger();
-$db_log->log("Testing 'DBLOGGER'");
-
-handle_request();	//Defined in policy.inc.php
-
-*/
 
 ?>

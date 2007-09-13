@@ -20,11 +20,12 @@
  *              Create an instance of the Settings class if one hasn't been defined yet and return the instance to the calling code.
  *                              If no $list has been passed, a default list, which excludes PHP defined vars, is used.
  *
- * *    public log($message):
+ * *    public log($message,$criticality):
  *              Log message to syslog
  *
  *		Parameters:
  *		$message	Message to log
+ *		$criticality	How critical this message is
  *
  * *	public debug($to_level,$message):	
  *		Wrapper around the log method. Log a message only if the specified level for this function
@@ -34,7 +35,7 @@
  *		$to_level	Debugging level we want to output our message to
  *		$message	Message to log
  *
- * *	public setLevel($level):
+ * *	public setDebugLevel($level):
  *		Set current debug level to a certain value
  *
  *		Parameters:
@@ -57,11 +58,64 @@ require_once "Logger.php";
 
 final class SysLogger implements Logger
 {
-   const MAX_LEVEL=3;				//Maximum debugging level
-   static private $level=NULL;			//Current debugging level
-   private static $instance=NULL;		//Instance of this class
+   #This class uses the constants used by Syslog, which are listed as follows:
+   #LOG_EMERG	0	System is unusable
+   #LOG_ALERT	1	Action must be taken immediately
+   #LOG_CRIT	2	Critical conditions
+   #LOG_ERROR	3	Error conditions
+   #LOG_WARNING	4	Warning conditions
+   #LOG_NOTICE	5	Normal, but significant condition
+   #LOG_INFO	6	Informational message
+   #LOG_DEBUG	7	Debug-level-message
    
-   private function __construct() {}
+
+   const MAX_DEBUG_LEVEL=3;				//Maximum debugging level
+   private $debug_level=NULL;			//Current debugging level
+   private static $instance=NULL;		//Instance of this class
+   private $identifier=NULL;
+   private $facility=NULL;
+   private $stdout=false;
+   
+   private function __construct()  
+   {
+      define_syslog_variables();
+      $this->openFacility();   
+   }
+
+   private function __destruct()
+   {
+      closelog();
+   }
+
+   public function logToStdOut($var=true)	//Redirect logging to stdout
+   {
+      if ($var)
+      {
+         closelog();
+         $this->stdout=$var;
+      }
+      else
+      {
+         $this->openFacility();
+      }
+   }
+ 
+   public function setIdentifier($name=NULL)	//The name which will be displayed in syslog
+   {
+      if ($name != NULL)
+      {   
+         closelog();
+         $this->identifier=$name;
+         $this->openFacility();
+         return true;
+      }
+      else return false;
+   }
+  
+   public function getIdentifier()
+   {
+      return $this->identifier;
+   }
 
    public static function getInstance()
    {
@@ -75,12 +129,22 @@ final class SysLogger implements Logger
       throw new Exception("Cannot clone the SysLogger object");
    }
 
-   public function log($message='')		//Implementation of the log method defined in the parent class
+   public function Log($message='',$criticality=LOG_INFO)		//Implementation of the log method defined in the parent class
    {
+      if (($criticality<0) || ($criticality > 7))	//Sanity check, defaults to LOG_INFO if user entered an invalid value
+         $criticality=LOG_INFO;
       if (is_string($message)&&(strlen($message)>0))
       {
-         syslog(LOG_INFO,$message); 		//Log it to syslog
-         return true;
+         if ($this->stdout)			//Should we log to stdout?
+         {
+            echo $message;
+            return true;
+         }
+         else
+         {
+            syslog($criticality,$message); 		//Log it to syslog
+            return true;
+         }
       }
       else 
          return false;
@@ -93,21 +157,21 @@ final class SysLogger implements Logger
       if (is_int($to_level)&&is_string($msg))
       {
          //Perform sanity checks to see if both the current debugging level and the specified level are valid values 
-         //according to MAX_LEVEL
+         //according to MAX_DEBUG_LEVEL
 
          //Lower bound
          $to_level <= 0 ? $to_level=NULL : $to_level=$to_level;	
-         $this->level <= 0 ? $this->level=NULL : $this->level=$this->level;
+         $this->debug_level <= 0 ? $this->debug_level=NULL : $this->debug_level=$this->debug_level;
 
          //Upper bound
-         $this->level > self::MAX_LEVEL ? $this->level=self::MAX_LEVEL : $this->level=$this->level;
-         $to_level > self::MAX_LEVEL ? $to_level=self::MAX_LEVEL : $to_level=$to_level;
+         $this->debug_level > self::MAX_DEBUG_LEVEL ? $this->debug_level=self::MAX_DEBUG_LEVEL : $this->debug_level=$this->debug_level;
+         $to_level > self::MAX_DEBUG_LEVEL ? $to_level=self::MAX_DEBUG_LEVEL : $to_level=$to_level;
 
          //The specified level falls within our current debugging level?
-         if ($this->level && ($to_level<=$this->level) && (strlen($msg)>0))
+         if ($this->debug_level && ($to_level<=$this->debug_level) && (strlen($msg)>0))
          {
             $mymsg="Debug$to_level: $msg";	//Include debugging level in the message
-            $this->Log($mymsg);			//Log it
+            $this->Log($mymsg,LOG_DEBUG);			//Log it
             return true;
          }
          else return false;
@@ -115,15 +179,48 @@ final class SysLogger implements Logger
       else return false;
    }
 
-   public function setLevel($var=0)
+   public function setDebugLevel($var=0)	//Set debugging level, 0 means no debugging
    {
       if (is_int($var))
       {
-         $this->level=$var;
+         $this->debug_level=$var;
          return true;
       }
       else
          return false;
+   }
+
+   public function openFacility($facility=LOG_DAEMON)	//Open logging facility specified for the user
+   {
+      switch($facility)					//Sanity checks
+      {
+         case LOG_AUTH:
+         case LOG_AUTHPRIV:
+         case LOG_CRON:
+         case LOG_DAEMON:
+         case LOG_KERN:
+         case LOG_LOCAL0:
+         case LOG_LOCAL1:
+         case LOG_LOCAL2:
+         case LOG_LOCAL3:
+         case LOG_LOCAL4:
+         case LOG_LOCAL5:
+         case LOG_LOCAL6:
+         case LOG_LOCAL7:
+         case LOG_LPR:
+         case LOG_MAIL:
+         case LOG_NEWS:
+         case LOG_SYSLOG:
+         case LOG_USER:
+         case LOG_UUCP:
+            {
+               closelog();
+               $this->facility=$facility;
+               return openlog($this->identifier,LOG_CONS | LOG_NDELAY | LOG_PID, $this->facility);
+            }
+         default:
+            return false;
+      }
    }
 
 }

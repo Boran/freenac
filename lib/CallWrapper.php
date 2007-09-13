@@ -21,18 +21,19 @@
  
  
  
-class CallWrapper {
+class CallWrapper extends Common {
 	protected $object;
 	
 	// we save a reference to the real object
 	public function __construct($object) {
+		parent::__construct();
 		$this->object = $object;
 	}
 	
 	// here we log the return value of each method that is called in policy.inc.php
 	public function __call($methodName, $parameters) {
 		$value = call_user_func_array(array( $this->object, $methodName ), $parameters);
-		echo get_class($this->object)."->".$methodName."(".join(",",$parameters).") = ".$value ."\n"; 
+		$this->syslogger->log(get_class($this->object)."->".$methodName."(".join(",",$parameters).") = ".$value ."\n"); 
 		return $value;
 	}
 }
