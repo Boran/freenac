@@ -129,7 +129,7 @@ final class SysLogger implements Logger
       throw new Exception("Cannot clone the SysLogger object");
    }
 
-   public function Log($message='',$criticality=LOG_INFO)		//Implementation of the log method defined in the parent class
+   public function log($message='',$criticality=LOG_INFO)		//Implementation of the log method defined in the parent class
    {
       if (($criticality<0) || ($criticality > 7))	//Sanity check, defaults to LOG_INFO if user entered an invalid value
          $criticality=LOG_INFO;
@@ -171,7 +171,7 @@ final class SysLogger implements Logger
          if ($this->debug_level && ($to_level<=$this->debug_level) && (strlen($msg)>0))
          {
             $mymsg="Debug$to_level: $msg";	//Include debugging level in the message
-            $this->Log($mymsg,LOG_DEBUG);			//Log it
+            $this->log($mymsg,LOG_DEBUG);			//Log it
             return true;
          }
          else return false;
