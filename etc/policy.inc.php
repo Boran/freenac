@@ -145,6 +145,10 @@ class BasicPolicy extends Policy {
 	      echo "HOST SHOULD BE INSERTED IN DB\n";
            else
 	      echo "HOST IS ALREADY IN DB\n";
+           if (!$PORT->isSwitchInDB())
+              echo "SWITCH SHOULD BE INSERTED INTO DB\n";
+           if (!$PORT->isPortInDB())
+              echo "PORT SHOULD BE INSERTED INTO DB\n";
 	}
 }
  

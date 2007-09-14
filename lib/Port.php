@@ -90,9 +90,24 @@ EOF;
          if ($temp=mysql_fetch_one($query))
          {
             $this->props=$temp;
+            $this->props['exception_vlan']=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id"
+                                ." inner join switch s on s.id=vs.swid where s.ip='$switchip'");
+	    if (!empty($this->switchip))
+               $this->props['switch_in_db']=true;
+            else
+               $this->props['switch_in_db']=false;
+            if (!empty($this->name))
+               $this->props['port_in_db']=true;
+            else
+               $this->props['port_in_db']=false;
          }
-         $this->props['exception_vlan']=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id"
-				." inner join switch s on s.id=vs.swid where s.ip='$switchip'");
+         else
+         {
+            $this->props['switchip']=$switchip;
+            $this->props['name']=$portname;
+	    $this->props['switch_in_db']=false;
+            $this->props['port_in_db']=false;
+	 }
       }
    }
 
@@ -153,6 +168,16 @@ EOF;
          #Log: this option is not enabled
          return false;
       }
+   }
+ 
+   public function isSwitchInDB()
+   {
+      return $this->switch_in_db;
+   }
+
+   public function isPortInDB()
+   {
+      return $this->port_in_db;
    }
 }
 
