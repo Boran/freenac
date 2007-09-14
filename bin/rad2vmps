@@ -320,7 +320,7 @@ sub authenticate() #MAC-Auth-Bypass
 sub post_auth()
 {
    #If we have done a MAC-Auth-Bypass, this part doesn't make much sense, so skip it
-   if ($RAD_CHECK{'Auth-Type'} eq 'MAC-Auth-Bypass')
+   if (($RAD_CHECK{'Auth-Type'} eq 'MAC-Auth-Bypass') || ($RAD_CHECK{'NAS-Port-Type'} eq 'Wireless-802.11'))
    {
       return RLM_MODULE_OK;
    }
