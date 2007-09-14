@@ -59,7 +59,7 @@ set_include_path("./:../");
 
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
-#$logger->setIdentifier("vmpsd_external");
+#$logger->setDebugLevel(1);
 #$logger->logToStdErr();
 /* include files */
 require_once("../lib/exceptions.php");
@@ -97,8 +97,8 @@ while ($in && $out) {
 	/* If there are some characters */
 	if (strlen($line) > 0) {
 		/* Log Request Start and Input */
-		trace("----------------------------\n");
-		trace("$line\n");
+		$logger->logit("----------------------------\n");
+		$logger->logit("$line\n");
 
 		/* split by space */      	
 		$splitted = explode(" ", $line);
@@ -154,7 +154,7 @@ while ($in && $out) {
  			/* In case there was an error, try fallback policy */
  			if ($conf->fallback_policy) {
 				$policy=new $conf->fallback_policy($system,$port);
- 	 			trace("Error at default policy, falling back to policy ".
+ 	 			$logger->logit("Error at default policy, falling back to policy ".
  	 			     $conf->fallback_policy."\n");
 				#try {
 	 				$policy->preconnect();
@@ -196,7 +196,7 @@ while ($in && $out) {
  	    	reportException($e);
  	    }
  
-		trace("----------------------------\n");
+		$logger->logit("----------------------------\n");
  
       	//ob_flush();               # log buffered outputs
       	flush();
@@ -210,15 +210,16 @@ exit(0);
 // End of Main -----------------------
 
 function reportException(Exception $e) {
+	global $logger;
  	$t = $e->GetTrace();
- 	trace($e->getMessage() ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
+ 	$logger->logit($e->getMessage() ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
 }
 
-function trace($message) {
+/*function trace($message) {
 	global $logger;
         $logger->logit($message,LOG_CRIT);
 	#syslog(LOG_CRIT, $message);
-}
+}*/
 
 
 /*function vlanId2Name($vlanID) {
