@@ -17,18 +17,6 @@
  */
  
 class Policy extends Common {
-	#protected $system;
-	#protected $port;
-	
-	// Todo __construct($system)
-	#public function __construct() {
-	   #$this->system=$system;
-	   #$this->port=$port;
-	#   parent::__construct();
-	#}
-
-	// Todo change_system()
-	
 	/* default policy is to deny everything */
 	public function preconnect() {
 		DENY();

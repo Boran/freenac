@@ -28,6 +28,11 @@
 
 require_once '../etc/config.inc';
 
+function __autoload($classname)
+{
+   require_once "../lib/$classname.php";
+}
+
 $conf=Settings::getInstance();
 
 db_connect();

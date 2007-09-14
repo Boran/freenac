@@ -127,11 +127,24 @@ class BasicPolicy extends Policy {
 		}
 		#Default policy
 		DENY();
-
 	}
 
-	function catch_ALLOW($vlan) {
+	function catch_ALLOW($vlan) 
+	{
 		return $vlan;
+	}
+
+	public function postconnect()
+        {
+	   echo "Inside postconnect\n";
+	   echo "PORT:\n";
+           print_r($PORT->getAllProps());
+           echo "HOST:\n";
+           print_r($HOST->getAllProps());
+	   if (!$HOST->inDB())
+	      echo "HOST SHOULD BE INSERTED IN DB\n";
+           else
+	      echo "HOST IS ALREADY IN DB\n";
 	}
 }
  

@@ -29,15 +29,15 @@ class EndDevice extends Common {
 	 * and instance representing that particular system.
 	 * Access is read-only.
 	 */
-	public function __construct($request) {
+	public function __construct($object) {
 	  	
 		parent::__construct();
-		if ($request instanceof VMPSRequest)
+		if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
                 {
 		   /* Normalise mac address format by removing spaces, dashes, dots
 		    * and collons, and by converting to lower case.
 		    */
-		   $mac=$request->mac;
+		   $mac=$object->mac;
   	  	   $mac = strtolower(preg_replace('/-|\.|\s|\:/', '', $mac));
 		   /* sanity check - Is this a valid MAC address ??? */
   	  	   if (!preg_match("/^[0-9a-f]{12}$/",$mac)) DENY();
@@ -57,11 +57,13 @@ class EndDevice extends Common {
 		   if ($temp=mysql_fetch_one($sql_query))
 		   {
                       $this->db_row=$temp;
+		      $this->db_row['in_db']=true;
 		   }
 		   else 
 		   {
 		      $this->db_row['status']=0;
 		      $this->db_row['mac']=$this->mac;
+		      $this->db_row['in_db']=false;
 		      #Log unknown device   
 		   }
 		}
@@ -228,6 +230,11 @@ class EndDevice extends Common {
 	public function getAllProps()
 	{
 		return $this->db_row;
+	}
+
+	public function inDB()
+	{
+		return $this->in_db;
 	}
 }
 

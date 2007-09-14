@@ -56,15 +56,15 @@
 class Port extends Common
 {
    private $props=array();
-   function __construct($request)
+   function __construct($object)
    {
       parent::__construct();
-      if ($request instanceof VMPSRequest)
+      if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
       {
-         $switchip=$request->switch;
-         $portname=$request->port;
-         $domain=$request->vtp;
-         $lastvlan=$request->lastvlan;
+         $switchip=$object->switch;
+         $portname=$object->port;
+         $domain=$object->vtp;
+         $lastvlan=$object->lastvlan;
          // Invalid parameters ?
          if ((strlen($switchip) < 8) || (strlen($portname) <1)) {
             //logit("new Port(): invalid parameters, switchip=$switchip, portname=$portname");

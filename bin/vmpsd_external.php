@@ -57,13 +57,13 @@
 chdir(dirname(__FILE__));
 set_include_path("./:../");
 
+require_once("../lib/exceptions.php");
+require_once("../lib/funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
 #$logger->setDebugLevel(1);
 #$logger->logToStdErr();
 /* include files */
-require_once("../lib/exceptions.php");
-require_once("../lib/funcs.inc.php");
 
 /* Load the policy file */
 //require_once "../etc/policy.inc.php";
@@ -74,7 +74,7 @@ $class_string = preg_replace('/\\?>/','',$class_string);
 $class_string = preg_replace('/\\$HOST/','$GLOBALS["HOST"]',$class_string);
 $class_string = preg_replace('/\\$PORT/','$GLOBALS["PORT"]',$class_string);
 $class_string = preg_replace('/\\$REQUEST/','$GLOBALS["REQUEST"]',$class_string);
-$class_string = preg_replace('/\\$CONF/','$GLOBALS["REQUEST"]',$class_string);
+$class_string = preg_replace('/\\$CONF/','$GLOBALS["CONF"]',$class_string);
 eval($class_string);
 
 // create policy object
@@ -87,6 +87,8 @@ $policy=new $conf->default_policy();
 #$out = fopen("php://stdout", "w");
 $in = STDIN;
 $out = STDOUT;
+
+$logger->logit("Started\n");
 
 /* Loop Forever (we are a daemon) */
 while ($in && $out) {
@@ -105,7 +107,7 @@ while ($in && $out) {
 
 		/* sanity checks, 5 values */
 		if (count($splitted) != 5 || ((strlen($splitted[4]) < 12) || (strlen($splitted[4]) > 17))) {
-			$syslogger->log("Invalid request\n");
+			$logger->logit("Invalid request\n");
 			continue;
 		}
 
@@ -171,7 +173,7 @@ while ($in && $out) {
  	  		fputs($out, "DENY\n");
  	  		reportException($e);
  	    }
- 	    catch (KillException $e) {
+ 	    /*catch (KillException $e) {
  	    	if ($conf->vlan_for_killed) {
  	    		fputs($out, "ALLOW ".vlanId2name($conf->vlan_for_killed)."\n");
  	    	} else {
@@ -179,18 +181,18 @@ while ($in && $out) {
 	 	  	}
  	  		reportException($e);
  	  		// Todo: let freenac_lastseen know to kill this system via some IPC
- 	    }
+ 	    }*/
  	    catch (AllowException $e) {
  	  		fputs($out, "ALLOW ".vlanId2name($e->getDecidedVlan())."\n");
  	  		reportException($e);
  	    }
- 	    catch (UnknownSystemException $e) {
+ 	    /*catch (UnknownSystemException $e) {
 		if ($conf->default_vlan)
 		   fputs($out,"ALLOW ".vlanId2name($conf->default_vlan)."\n");
 		else
 		   fputs($out, "DENY\n");
 		reportException($e);		
-	    }
+	    }*/
  	    catch (Exception $e) {
  		    fputs($out, "DENY\n");
  	    	reportException($e);
@@ -227,9 +229,9 @@ function reportException(Exception $e) {
       return v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
 }*/
 
-function __autoload($classname)
+/*function __autoload($classname)
 {
    require_once "../lib/$classname.php";
-}
+}*/
 
 ?>
