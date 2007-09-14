@@ -38,11 +38,6 @@
   $ad_password = 'password';                                                                                # AD users's password
   $ad_base ='cn=Users,dc=domain,dc=com';		# Base DN under which user information is stored
 
-### Write GUI
-// MySQL DB settings for all scripts
-   $writeuser="webwrite";                     # this user needs write access to the DB
-   $writepass="PASSWORD1";                    # keep this secret!
-
 // Variable setup
    $entityname='MyCompany';                # name of your company
 
@@ -51,11 +46,6 @@
 
 // Enable XLS export? (requires the PEAR module Spreadsheet_Excel_Writer)
    $xls_output=false; // To enable set it to: true
-
-## Read GUI
-## DB connection
-  $readuser = 'inventwrite';    # 
-  $readpass = 'PASSWORD2';
 
 ## logging
 
