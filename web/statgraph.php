@@ -20,7 +20,7 @@ function cbFmtPercentage($aVal) {
     	return sprintf("%.0f",$aVal); // Convert to string
 };
 
-db_connect($readuser,$readpass);
+db_connect();
 
 $select = $sel[$stattype]['graph']." ORDER BY count(*) $order;";
 $result = mysql_query($select) or die ("Unable to query MySQL ($select) \n");

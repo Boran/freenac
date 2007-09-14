@@ -40,8 +40,8 @@ function get_hosts($port) {
 function hubs_stuff()
 {
    // ----------- main () -------------------
-   global $readuser,$readpass,$hubs_queryday;
-   db_connect($readuser,$readpass);
+   global $hubs_queryday;
+   db_connect();
   
   echo("The following ports may have a hub, i.e.  with more than one end-device see in the last $hubs_querydays days:<br>");
    $sel = "SELECT port.name,port.switch,port.location,count(*) ".

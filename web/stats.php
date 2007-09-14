@@ -77,7 +77,7 @@ function print_stats($query) {
 
 function stats_stuff()
 {
-   global $readuser,$readpass,$stattypes,$graphtypes,$orders,$sel;
+   global $stattypes,$graphtypes,$orders,$sel;
    // TODO need to put proper parsing
    $type = $_GET["type"];
    $graphtype = $_GET["graphtype"];
@@ -99,7 +99,7 @@ function stats_stuff()
    echo '<hr>';
 
    // show statistics
-   db_connect($readuser,$readpass);
+   db_connect();
 
    $query = $sel[$type]['table']." ORDER BY count(*) $order;";
    //echo $query.'<hr>';

@@ -12,8 +12,7 @@ include_once('print.inc');
 
 function display_stuff()
 {
-   global $readuser,$readpass;
-   db_connect($readuser,$readpass);
+   db_connect();
    $single_host = mysql_real_escape_string($_GET["single_host"]);
    echo print_host($single_host);
 }
