@@ -77,7 +77,10 @@ $class_string = preg_replace('/\\$CONF/','$GLOBALS["CONF"]',$class_string);
 eval($class_string);*/
 
 // create policy object
-$policy=new $conf->default_policy();
+if ($conf->default_policy)
+   $policy=new $conf->default_policy();
+else
+   die("A default policy hasn't been defined in the config table");
 
 
 
