@@ -92,11 +92,11 @@ EOF;
             $this->props=$temp;
             $this->props['exception_vlan']=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id"
                                 ." inner join switch s on s.id=vs.swid where s.ip='$switchip'");
-	    if (!empty($this->switchip))
+	    if ($this->switchip)
                $this->props['switch_in_db']=true;
             else
                $this->props['switch_in_db']=false;
-            if (!empty($this->name))
+            if ($this->name)
                $this->props['port_in_db']=true;
             else
                $this->props['port_in_db']=false;

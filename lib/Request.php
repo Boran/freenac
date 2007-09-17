@@ -21,8 +21,6 @@
 */
 
 abstract class Request {
-   protected $port;
-   protected $system;
 }
 
 ?>

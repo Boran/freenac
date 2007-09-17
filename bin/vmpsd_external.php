@@ -61,21 +61,20 @@ require_once("../lib/exceptions.php");
 require_once("../lib/funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
-#$logger->setDebugLevel(1);
+$logger->setDebugLevel(1);
 #$logger->logToStdErr();
 /* include files */
-
 /* Load the policy file */
-//require_once "../etc/policy.inc.php";
+require_once "../etc/policy.inc.php";
 
-$class_string = file_get_contents("../etc/policy.inc.php");
+/*$class_string = file_get_contents("../etc/policy.inc.php");
 $class_string = preg_replace('/<\\?php/','',$class_string);
 $class_string = preg_replace('/\\?>/','',$class_string);
 $class_string = preg_replace('/\\$HOST/','$GLOBALS["HOST"]',$class_string);
 $class_string = preg_replace('/\\$PORT/','$GLOBALS["PORT"]',$class_string);
 $class_string = preg_replace('/\\$REQUEST/','$GLOBALS["REQUEST"]',$class_string);
 $class_string = preg_replace('/\\$CONF/','$GLOBALS["CONF"]',$class_string);
-eval($class_string);
+eval($class_string);*/
 
 // create policy object
 $policy=new $conf->default_policy();
@@ -92,7 +91,6 @@ $logger->logit("Started\n");
 
 /* Loop Forever (we are a daemon) */
 while ($in && $out) {
-
 	/* Read one line from vmpsd and parse it */
 	$line=rtrim( fgets($in, 1024) );
 
@@ -101,7 +99,6 @@ while ($in && $out) {
 		/* Log Request Start and Input */
 		$logger->logit("----------------------------\n");
 		$logger->logit("$line\n");
-
 		/* split by space */      	
 		$splitted = explode(" ", $line);
 

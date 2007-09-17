@@ -77,6 +77,7 @@ final class Logger
    private function __construct()  
    {
       define_syslog_variables();
+      ob_start();
       $this->identifier=basename($_SERVER['SCRIPT_FILENAME'],'.php');
       $this->openFacility();   
    }
@@ -84,6 +85,7 @@ final class Logger
    private function __destruct()
    {
       closelog();
+      ob_end_flush();
    }
 
    public function logToStdErr($var=true)	//Redirect logging to stderr
@@ -137,11 +139,13 @@ final class Logger
          if ($this->stderr)			//Should we log to stderr?
          {
             fputs(STDERR,$message);
+            ob_flush();
             return true;
          }
          else
          {
             syslog($criticality,$message); 		//Log it to syslog
+            ob_flush();
             return true;
          }
       }

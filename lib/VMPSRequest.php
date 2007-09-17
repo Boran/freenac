@@ -55,6 +55,8 @@ final class VMPSRequest	extends Request		//Disallow inheriting from this class
 {
    private $props=array();			//Here we hold our internal properties
    private static $instance;			//Our instance of this class
+   protected $port;
+   protected $system;
 
    public function __construct($tmac, $tswitch,$tport,$tvtp,$tlastvlan)
    {	

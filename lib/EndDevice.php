@@ -210,7 +210,7 @@ class EndDevice extends Common {
 	}
 	
 	# Get the value of only one var if it exists
-	protected function __get($key)                                                  //Get the value of one var
+	public function __get($key)                                                  //Get the value of one var
    	{
 		if (array_key_exists($key,$this->db_row))
 		   return $this->db_row[$key];

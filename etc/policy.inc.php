@@ -90,9 +90,12 @@ class BasicPolicy extends Policy {
 		
 
 		}*/
+		$HOST=$GLOBALS['HOST'];
+		$CONF=$GLOBALS['CONF'];
+		$PORT=$GLOBALS['PORT'];
+		$REQUEST=$GLOBALS['REQUEST'];
 		if ($HOST->isExpired() || $HOST->isKilled())
 			ALLOW($CONF->vlan_for_killed);
-
 		if ($HOST->isActive())
 		{
 			if ($vlan=$PORT->vlanBySwitchLocation())
