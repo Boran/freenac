@@ -180,7 +180,7 @@ do {
     ## Pull out the lines that summarise connections
     $regs=array();
     #if (ereg("(.*) vmpsd: +(ALLOW|DENY): (.*) -> (.*), switch (.*) port ([A-Z]?[a-z0-9\/]*){1}", $line, $regs) ) {
-    #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs) ) {
+    if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs) ) {
     #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.+[0-9])", $line, $regs) ) {
     #if (ereg("(.*) vmpsd: (ALLOW|DENY): (.{12}) -> (.{0,30}), switch (.{8,15}) port (.{1,9})",$line, $regs) ) {
       #echo "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n";
