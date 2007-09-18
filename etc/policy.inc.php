@@ -139,6 +139,10 @@ class BasicPolicy extends Policy {
 
 	public function postconnect()
         {
+	   $HOST=$GLOBALS['HOST'];
+           $CONF=$GLOBALS['CONF'];
+           $PORT=$GLOBALS['PORT'];
+           $REQUEST=$GLOBALS['REQUEST'];
 	   echo "Inside postconnect\n";
 	   echo "PORT:\n";
            print_r($PORT->getAllProps());

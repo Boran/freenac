@@ -45,15 +45,12 @@ class EndDevice extends Common {
 	
 	  	   /* Rewrite mac address according to Cisco convention, XXXX.XXXX.XXXX */ 
 	  	   $this->mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";	  	
-	  	   /* query system table */
-	  	
-	  	   // Todo: Update Query with SQL joins to user table and vlan table
-	  	
-	  	   #$sql_query="SELECT * FROM systems WHERE mac='" . $this->mac."';";
+	  	   
+		   /* query system table */
 		   $sql_query="select s.id as sid, s.mac as mac, s.name as hostname, s.description, s.status, u.id as uid,"
 			   ."u.username, s.r_ip as ip, s.expiry, v.id as vid, v.default_name as vlan_name from systems s"
 			   ." inner join users u on s.uid=u.id inner join vlan v on s.vlan=v.id where s.mac='{$this->mac}'";
-		   //Todo fill the db_row array
+		   //Found system in database, fill up the properties
 		   if ($temp=mysql_fetch_one($sql_query))
 		   {
                       $this->db_row=$temp;
@@ -61,10 +58,11 @@ class EndDevice extends Common {
 		   }
 		   else 
 		   {
+		      //System unknown
 		      $this->db_row['status']=0;
 		      $this->db_row['mac']=$this->mac;
 		      $this->db_row['in_db']=false;
-		      #Log unknown device   
+		      $this->logger->logit("Unknown device {$this->mac}");
 		   }
 		}
 	}
@@ -102,8 +100,8 @@ class EndDevice extends Common {
 		} 
 		else 
 		{
-			#Log: this option is not enabled
 			/* default is not to expire */
+			$this->logger->logit("check_for_expired option is not enabled");
         		return false;
 		}
 	}
@@ -123,7 +121,7 @@ class EndDevice extends Common {
 		}
 		else
 		{
-			#Log: this option is not enabled
+			$this->logger->logit("vm_lan_like_host option is not enabled");
 			return false; 
 		}
 	}
@@ -203,8 +201,7 @@ class EndDevice extends Common {
 			}
 		}
 		/*If the db field does not exists, Log Error */
-		// Todo: Log
-		
+		$this->logger->logit("Field $methodName doesn't exist");
 		/*Then DENY as default action */
 		DENY();
 	}
@@ -232,6 +229,7 @@ class EndDevice extends Common {
 		return $this->db_row;
 	}
 
+	#This method indicates if a system is in the db. This flag was set in the constructor.
 	public function inDB()
 	{
 		return $this->in_db;

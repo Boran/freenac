@@ -46,9 +46,9 @@ $logger=Logger::getInstance();
 #$logger->logToStdErr();
 
 /* Load the policy file */
-//require_once "../etc/policy.inc.php";
+require_once "../etc/policy.inc.php";
 
-$class_string = file_get_contents("../etc/policy.inc.php");
+/*$class_string = file_get_contents("../etc/policy.inc.php");
 $class_string = preg_replace('/<\\?php/','',$class_string);
 $class_string = preg_replace('/\\?>/','',$class_string);
 $class_string = preg_replace('/\\$HOST/','$GLOBALS["HOST"]',$class_string);
@@ -57,7 +57,7 @@ $class_string = preg_replace('/\\$PORT/','$GLOBALS["PORT"]',$class_string);
 $class_string = preg_replace('/\\$RESULT/','$GLOBALS["RESULT"]',$class_string);
 $class_string = preg_replace('/\\$CONF/','$GLOBALS["REQUEST"]',$class_string);
 #echo $class_string;
-eval($class_string);
+eval($class_string);*/
 
 // create policy object
 $policy=new $conf->default_policy();
