@@ -65,14 +65,14 @@ $logger=Logger::getInstance();
 #$logger->logToStdErr();
 /* include files */
 /* Load the policy file */
-//require_once "../etc/policy.inc.php";
+require_once "../etc/policy.inc.php";
 
-$class_string = file_get_contents("../etc/policy.inc.php");
+/*$class_string = file_get_contents("../etc/policy.inc.php");
 $class_string = preg_replace('/<\\?php/','',$class_string);
 $class_string = preg_replace('/\\?>/','',$class_string);
 $class_string = preg_replace('/function\s+[^\(]+\([^\)]*\)[^{]*{/','\0 global $HOST, $PORT, $REQUEST, $CONF;',$class_string);
 echo $class_string;
-eval($class_string);
+eval($class_string);*/
 
 // create policy object
 if ($conf->default_policy)
