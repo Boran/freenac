@@ -33,7 +33,7 @@ class CallWrapper extends Common {
 	// here we log the return value of each method that is called in policy.inc.php
 	public function __call($methodName, $parameters) {
 		$value = call_user_func_array(array( $this->object, $methodName ), $parameters);
-		$this->logger->debug(2,get_class($this->object)."->".$methodName."(".join(",",$parameters).") = ".$value ."\n"); 
+		$this->logger->debug(get_class($this->object)."->".$methodName."(".join(",",$parameters).") = ".$value ."\n",2); 
 		return $value;
 	}
 }

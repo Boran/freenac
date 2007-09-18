@@ -98,8 +98,8 @@ while ($in && $out) {
 	/* If there are some characters */
 	if (strlen($line) > 0) {
 		/* Log Request Start and Input */
-		$logger->debug(1,"----------------------------\n");
-		$logger->debug(1,"$line\n");
+		$logger->debug("----------------------------\n");
+		$logger->debug("$line\n");
 		/* split by space */      	
 		$splitted = explode(" ", $line);
 
@@ -196,7 +196,7 @@ while ($in && $out) {
  	    	reportException($e);
  	    }
  
-		$logger->debug(1,"----------------------------\n");
+		$logger->debug("----------------------------\n");
  
       	//ob_flush();               # log buffered outputs
       	flush();
@@ -212,7 +212,7 @@ exit(0);
 function reportException(Exception $e) {
 	global $logger;
  	$t = $e->GetTrace();
- 	$logger->debug(1,$e->getMessage() ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
+ 	$logger->debug($e->getMessage() ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
 }
 
 /*function trace($message) {

@@ -80,14 +80,12 @@ final class Logger
       ob_start();
       $this->identifier=basename($_SERVER['SCRIPT_FILENAME'],'.php');
       $this->openFacility();   
-
-
    }
 
    private function __destruct()
    {
-      closelog();
       ob_end_flush();
+      closelog();
    }
 
    public function logToStdErr($var=true)	//Redirect logging to stderr
@@ -112,10 +110,13 @@ final class Logger
          $this->openFacility();
          return true;
       }
-      else return false;
+      else 
+      {
+         return false;
+      }
    }
   
-   public function getIdentifier()
+   public function getIdentifier()		//The name displayed in syslog
    {
       return $this->identifier;
    }
@@ -151,13 +152,15 @@ final class Logger
             return true;
          }
       }
-      else 
+      else
+      { 
          return false;
+      }
    }
 
    //Wrapper around the log method. Log a message only if the specified level for this function
    //is less or equal than the current debugging level.
-   public function debug($to_level,$msg)
+   public function debug($msg,$to_level=1)
    {
       if (is_int($to_level)&&is_string($msg))
       {
@@ -165,12 +168,16 @@ final class Logger
          //according to MAX_DEBUG_LEVEL
 
          //Lower bound
-         $to_level <= 0 ? $to_level=NULL : $to_level=$to_level;	
-         $this->debug_level <= 0 ? $this->debug_level=NULL : $this->debug_level=$this->debug_level;
+         if ($to_level<=0)
+            $to_level=NULL;
+         if ($this->debug_level<=0)
+            $this->debug_level=NULL;
 
          //Upper bound
-         $this->debug_level > self::MAX_DEBUG_LEVEL ? $this->debug_level=self::MAX_DEBUG_LEVEL : $this->debug_level=$this->debug_level;
-         $to_level > self::MAX_DEBUG_LEVEL ? $to_level=self::MAX_DEBUG_LEVEL : $to_level=$to_level;
+         if ($this->debug_level > self::MAX_DEBUG_LEVEL)
+            $this->debug_level=self::MAX_DEBUG_LEVEL;
+         if ($to_level > self::MAX_DEBUG_LEVEL)
+            $to_level=self::MAX_DEBUG_LEVEL;
 
          //The specified level falls within our current debugging level?
          if ($this->debug_level && ($to_level<=$this->debug_level) && (strlen($msg)>0))
@@ -179,12 +186,18 @@ final class Logger
             $this->logit($mymsg,LOG_DEBUG);			//Log it
             return true;
          }
-         else return false;
+         else 
+         {
+            return false;
+         }
       }
-      else return false;
+      else 
+      {
+         return false;
+      }
    }
 
-   public function setDebugLevel($var=0)	//Set debugging level, 0 means no debugging
+   public function setDebugLevel($var=1)	//Set debugging level, 0 means no debugging
    {
       if (is_int($var))
       {
@@ -192,7 +205,10 @@ final class Logger
          return true;
       }
       else
+      {
+         $this->logit("Value passed to setDebugLevel is not an integer",LOG_WARNING);
          return false;
+      }
    }
 
    public function openFacility($facility=LOG_DAEMON)	//Open logging facility specified for the user
@@ -227,5 +243,4 @@ final class Logger
             return false;
       }
    }
-
 }
