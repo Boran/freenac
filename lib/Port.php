@@ -108,6 +108,7 @@ EOF;
          {
             $this->props['switch_ip']=$switchip;
             $this->props['port_name']=$portname;
+            $this->props['switch_name']=gethostbyaddr($switchip);
 	    $this->props['switch_in_db']=false;
             $this->props['port_in_db']=false;
 	 }
@@ -125,7 +126,14 @@ EOF;
    protected function __get($key)							//Get the value of one var
    {
       if (array_key_exists($key,$this->props))
+      {
          return $this->props[$key];
+      }
+      else
+      {
+         $this->logger->logit("Property $key not found",LOG_WARNING);
+         return false;
+      }      
    }
 
    private function __set($key,$value)
@@ -190,7 +198,7 @@ EOF;
       }
       else
       {
-         #Log: this option is not enabled
+         $this->logit("Option vm_lan_like_host is not enabled",LOG_WARNING);
          return false;
       }
    }
@@ -249,7 +257,9 @@ EOF;
       $query="update port set last_activity=NOW(), last_vlan='{$this->last_vlan}' where id='{$this->port_id}'";
       $res=mysql_query($query);
       if ($res)
+      {
          return true;
+      }
       else
       {
          $this->logger->logit(mysql_error(),LOG_ERROR);

@@ -133,7 +133,7 @@ final class Logger
       throw new Exception("Cannot clone the SysLogger object");
    }
 
-   public function logit($message='',$criticality=LOG_INFO)		//Implementation of the log method defined in the parent class
+   public function logit($message='',$criticality=LOG_INFO)
    {
       if (($criticality<0) || ($criticality > 7))	//Sanity check, defaults to LOG_INFO if user entered an invalid value
          $criticality=LOG_INFO;
@@ -168,9 +168,9 @@ final class Logger
          //according to MAX_DEBUG_LEVEL
 
          //Lower bound
-         if ($to_level<=0)
+         if ($to_level <= 0)
             $to_level=NULL;
-         if ($this->debug_level<=0)
+         if ($this->debug_level <= 0)
             $this->debug_level=NULL;
 
          //Upper bound
