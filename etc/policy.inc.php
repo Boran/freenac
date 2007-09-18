@@ -143,19 +143,9 @@ class BasicPolicy extends Policy {
            $CONF=$GLOBALS['CONF'];
            $PORT=$GLOBALS['PORT'];
            $REQUEST=$GLOBALS['REQUEST'];
-	   echo "Inside postconnect\n";
-	   echo "PORT:\n";
-           print_r($PORT->getAllProps());
-           echo "HOST:\n";
-           print_r($HOST->getAllProps());
-	   if (!$HOST->inDB())
-	      echo "HOST SHOULD BE INSERTED IN DB\n";
-           else
-	      echo "HOST IS ALREADY IN DB\n";
-           if (!$PORT->isSwitchInDB())
-              echo "SWITCH SHOULD BE INSERTED INTO DB\n";
-           if (!$PORT->isPortInDB())
-              echo "PORT SHOULD BE INSERTED INTO DB\n";
+	   $PORT->insertIfUnknown();
+           $PORT->update();
+           //$PORT->getAllProps();
 	}
 }
  

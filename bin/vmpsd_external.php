@@ -65,16 +65,14 @@ $logger->setDebugLevel(1);
 #$logger->logToStdErr();
 /* include files */
 /* Load the policy file */
-require_once "../etc/policy.inc.php";
+//require_once "../etc/policy.inc.php";
 
-/*$class_string = file_get_contents("../etc/policy.inc.php");
+$class_string = file_get_contents("../etc/policy.inc.php");
 $class_string = preg_replace('/<\\?php/','',$class_string);
 $class_string = preg_replace('/\\?>/','',$class_string);
-$class_string = preg_replace('/\\$HOST/','$GLOBALS["HOST"]',$class_string);
-$class_string = preg_replace('/\\$PORT/','$GLOBALS["PORT"]',$class_string);
-$class_string = preg_replace('/\\$REQUEST/','$GLOBALS["REQUEST"]',$class_string);
-$class_string = preg_replace('/\\$CONF/','$GLOBALS["CONF"]',$class_string);
-eval($class_string);*/
+$class_string = preg_replace('/function\s+[^\(]+\([^\)]*\)[^{]*{/','\0 global $HOST, $PORT, $REQUEST, $CONF;',$class_string);
+echo $class_string;
+eval($class_string);
 
 // create policy object
 if ($conf->default_policy)
@@ -100,8 +98,8 @@ while ($in && $out) {
 	/* If there are some characters */
 	if (strlen($line) > 0) {
 		/* Log Request Start and Input */
-		$logger->logit("----------------------------\n");
-		$logger->logit("$line\n");
+		$logger->debug(1,"----------------------------\n");
+		$logger->debug(1,"$line\n");
 		/* split by space */      	
 		$splitted = explode(" ", $line);
 
@@ -198,7 +196,7 @@ while ($in && $out) {
  	    	reportException($e);
  	    }
  
-		$logger->logit("----------------------------\n");
+		$logger->debug(1,"----------------------------\n");
  
       	//ob_flush();               # log buffered outputs
       	flush();
@@ -214,7 +212,7 @@ exit(0);
 function reportException(Exception $e) {
 	global $logger;
  	$t = $e->GetTrace();
- 	$logger->logit($e->getMessage() ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
+ 	$logger->debug(1,$e->getMessage() ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
 }
 
 /*function trace($message) {

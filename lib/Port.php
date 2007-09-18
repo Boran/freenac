@@ -73,7 +73,7 @@ class Port extends Common
 
          // Returns an array containing all variables defined in the config table
          // TBD: query is a first draft, there is probably too much in there.
-         $query=<<<EOF
+         /*$query=<<<EOF
 SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchName, 
   default_vlan, last_vlan, v1.default_name as LastVlanName, 
   port.name,  restart_now, port.comment, last_activity, 
@@ -86,28 +86,39 @@ SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchNam
   LEFT  JOIN auth_profile ON auth_profile.id = port.auth_profile
   LEFT  JOIN vlan v1    ON port.last_vlan = v1.id
 EOF;
-         $query .=" WHERE port.name='$portname' and switch.ip='$switchip' LIMIT 1";
+         $query .=" WHERE port.name='$portname' and switch.ip='$switchip' LIMIT 1";*/
+         $query= "select sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, p.default_vlan, p.last_vlan, p.id as port_id, p.name as port_name, p.default_vlan, concat(sw.name,' ',p.name) as switchport, l.name as office,b.name as building from switch sw left join port p on sw.id=p.switch and p.name='$portname' left join location l on sw.location=l.id left join building b on l.building_id=b.id where ip='$switchip' limit 1;";
          if ($temp=mysql_fetch_one($query))
          {
             $this->props=$temp;
             $this->props['exception_vlan']=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id"
                                 ." inner join switch s on s.id=vs.swid where s.ip='$switchip'");
-	    if ($this->switchip)
+	    if ($this->switch_ip)
                $this->props['switch_in_db']=true;
             else
                $this->props['switch_in_db']=false;
-            if ($this->name)
+            if ($this->port_name)
                $this->props['port_in_db']=true;
             else
                $this->props['port_in_db']=false;
+	    if (!$this->port_name)
+               $this->port_name=$portname;
          }
          else
          {
-            $this->props['switchip']=$switchip;
-            $this->props['name']=$portname;
+            $this->props['switch_ip']=$switchip;
+            $this->props['port_name']=$portname;
 	    $this->props['switch_in_db']=false;
             $this->props['port_in_db']=false;
 	 }
+         if ($object instanceof VMPSResult)
+         {
+            $temp_vlan=v_sql_1_select("select id from vlan where default_name='$lastvlan';");
+            if ($temp_vlan>0)
+               $this->props['last_vlan']=$temp_vlan;
+            else
+               $this->props['last_vlan']=0;
+         }
       }
    }
 
@@ -115,6 +126,20 @@ EOF;
    {
       if (array_key_exists($key,$this->props))
          return $this->props[$key];
+   }
+
+   private function __set($key,$value)
+   {
+      if (array_key_exists($key,$this->props))
+      {
+         $this->props[$key]=$value;
+         return true;
+      }
+      else
+      {
+         $this->logger->logit("Property $key not found",LOG_WARNING);
+         return false;
+      }
    }
 
    public function getAllProps()						//Get our inner array
@@ -128,7 +153,7 @@ EOF;
 	   return $this->default_vlan;
 	else
 	{
-	   #Log option not enabled
+           $this->logger->logit("Option use_port_default_vlan not enabled",LOG_WARNING);
 	   return false;
         }
    }
@@ -144,7 +169,7 @@ EOF;
       }
       else
       {
-         #Log: this option is not enabled
+         $this->logger->logit("Option vlan_by_switch_location not enabled",LOG_WARNING);
          return false;
       }
    }
@@ -155,7 +180,7 @@ EOF;
       {
          $query="select s.mac as mac,s.lastvlan as lastvlan from systems s inner join port p on "
                ."s.lastport=p.id inner join switch sw on p.switch=sw.id and p.name='{$this->name}'"
-               ." and sw.ip='{$this->switchip}' where date_sub(curdate(), interval 2 hour) <= s.lastseen"
+               ." and sw.ip='{$this->switch_ip}' where date_sub(curdate(), interval 2 hour) <= s.lastseen"
                ." order by lastseen desc limit 1;";
          $vm_vlan=v_sql_1_select($query);
          if ($vm_vlan)
@@ -178,6 +203,58 @@ EOF;
    public function isPortInDB()
    {
       return $this->port_in_db;
+   }
+
+   public function insertIfUnknown()
+   {
+      #Insert switch in database if it doesn't exist
+      if (!$this->isSwitchInDB())
+      {
+         $query="insert into switch set ip='{$this->switch_ip}', name='unknown';";
+         $res=mysql_query($query);
+         if ($res)
+         {
+            $this->switch_in_db=true;
+            $this->switch_id=v_sql_1_select("select id from switch where ip='{$this->switch_ip}' limit 1");
+            $this->logger->logit("New switch entry {$this->switch_ip}, please update the description.");
+         }
+         else
+         {
+            $this->logger->logit(mysql_error(),LOG_ERROR);
+            return false;
+         }   
+      }
+      #Insert port in database if it doesn't exist
+      if (!$this->isPortInDB())
+      {
+         $query="insert into port set name='{$this->port_name}', switch='{$this->switch_id}', last_vlan='{$this->last_vlan}', last_activity=NOW();";
+         $res=mysql_query($query);
+         if ($res)
+         {
+            $this->port_in_db=true;
+            $this->port_id=v_sql_1_select("select id from port where name='{$this->port_name}' and switch='{$this->switch_id}' limit 1;");
+            $this->logger->logit("New port {$this->port_name} in switch {$this->switch_ip}"); 
+         }
+         else
+         {
+            $this->logger->logit(mysql_error(),LOG_ERROR);
+            return false;
+         }
+      }
+      return true;
+   }
+
+   public function update()
+   {
+      $query="update port set last_activity=NOW(), last_vlan='{$this->last_vlan}' where id='{$this->port_id}'";
+      $res=mysql_query($query);
+      if ($res)
+         return true;
+      else
+      {
+         $this->logger->logit(mysql_error(),LOG_ERROR);
+         return false;
+      }
    }
 }
 

@@ -80,6 +80,8 @@ final class Logger
       ob_start();
       $this->identifier=basename($_SERVER['SCRIPT_FILENAME'],'.php');
       $this->openFacility();   
+
+
    }
 
    private function __destruct()
