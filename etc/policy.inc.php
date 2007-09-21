@@ -145,7 +145,10 @@ class BasicPolicy extends Policy {
            $REQUEST=$GLOBALS['REQUEST'];
 	   $PORT->insertIfUnknown();
            $PORT->update();
-           //$PORT->getAllProps();
+	   $HOST->insertIfUnknown();
+	   #$HOST->update();
+           #$PORT->getAllProps();
+	   $HOST->getAllProps();
 	}
 }
  

@@ -223,7 +223,7 @@ class EndDevice extends Common {
         }
 
 
-	#Return all properties asigned to this system. This method is here only for debugging purposes, please delete it after
+	#Return all properties assigned to this system. This method is here only for debugging purposes, please delete it after
 	public function getAllProps()
 	{
 		return $this->db_row;
@@ -233,6 +233,49 @@ class EndDevice extends Common {
 	public function inDB()
 	{
 		return $this->in_db;
+	}
+
+	public function update()
+	{
+	   if ($this->inDB())
+	   {
+	      if ($this->isExpired() && $this->conf->disable_expired_devices)
+                 $query="update systems set lastseen=NOW(), lastport='".$this->port->getPortID()."', status=7 where id='{$this->getEndDeviceID()}'";
+	      else
+	         $query="update systems set lastseen=NOW(), lastport='".$this->port->getPortID()."' where id='{$this->getEndDeviceID()}'";
+	      $res=mysql_query($query);
+	      if ($res)
+	      {
+	         return true;
+	      }
+	      else
+	      {
+	         return false;
+	      }
+	   }
+	}
+
+	protected function getEndDeviceID()
+	{
+	   return $this->sid;
+	}
+
+	public function insertIfUnknown()
+	{
+	   if (!$this->inDB())
+	   {
+	      $query="insert into systems set lastseen=NOW(), status='{$this->conf->set_status_for_unknowns}', name='unknown', vlan='{$this->conf->default_vlan}',lastport='".self::port->getPortID()."', office='".self::port->office_id."', description='".$this->conf->default_user_unknown."', mac='{$this->mac}';";
+	      $res=mysql_query($query);
+	      if ($res)
+	      {
+	         return true;
+	      }
+	      else
+	      {
+	         $this->logger->logit(mysql_error(),LOG_ERROR);
+	         return false;
+	      }
+	   }
 	}
 }
 

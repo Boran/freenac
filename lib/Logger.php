@@ -82,7 +82,7 @@ final class Logger
       $this->openFacility();   
    }
 
-   private function __destruct()
+   public function __destruct()
    {
       ob_end_flush();
       closelog();

@@ -87,8 +87,8 @@ SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchNam
   LEFT  JOIN vlan v1    ON port.last_vlan = v1.id
 EOF;
          $query .=" WHERE port.name='$portname' and switch.ip='$switchip' LIMIT 1";*/
-         $query= "select sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, p.default_vlan, p.last_vlan, p.id as port_id, p.name as port_name, p.default_vlan, concat(sw.name,' ',p.name) as switchport, l.name as office,b.name as building from switch sw left join port p on sw.id=p.switch and p.name='$portname' left join location l on sw.location=l.id left join building b on l.building_id=b.id where ip='$switchip' limit 1;";
-         if ($temp=mysql_fetch_one($query))
+         $query="select sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, p.default_vlan, p.last_vlan, p.id as port_id, p.name as port_name, p.default_vlan, l.id as office_id, l.name as office,b.name as building from switch sw left join port p on sw.id=p.switch and p.name='$portname' left join location l on sw.location=l.id left join building b on l.building_id=b.id where sw.ip='$switchip' limit 1;";
+	 if ($temp=mysql_fetch_one($query))
          {
             $this->props=$temp;
             $this->props['exception_vlan']=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id"
@@ -112,6 +112,15 @@ EOF;
 	    $this->props['switch_in_db']=false;
             $this->props['port_in_db']=false;
 	 }
+         if ($this->conf->lastseen_patch_lookup && $this->port_in_db && $this->office_id)
+         {
+            $query="SELECT GROUP_CONCAT(Surname) as Surname from users WHERE PhysicalDeliveryOfficeName='" . $this->office . "'";
+            $users=v_sql_1_select($query);
+            $this->props['users_in_office']=$users;
+            $query="select CONCAT(outlet,', {$this->office}, ',comment) from patchcable where port='" . $this->port_id . "'";
+            $patch_details=v_sql_1_select($query);
+            $this->props['patch_details']=$patch_details;
+         }
          if ($object instanceof VMPSResult)
          {
             $temp_vlan=v_sql_1_select("select id from vlan where default_name='$lastvlan';");
@@ -223,8 +232,9 @@ EOF;
          if ($res)
          {
             $this->switch_in_db=true;
-            $this->switch_id=v_sql_1_select("select id from switch where ip='{$this->switch_ip}' limit 1");
-            $this->logger->logit("New switch entry {$this->switch_ip}, please update the description.");
+            $query="select id from switch where ip='{$this->switch_ip}' limit 1;";
+	    $this->props['switch_id']=v_sql_1_select($query);
+            $this->logger->logit("New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.");
          }
          else
          {
@@ -240,8 +250,9 @@ EOF;
          if ($res)
          {
             $this->port_in_db=true;
-            $this->port_id=v_sql_1_select("select id from port where name='{$this->port_name}' and switch='{$this->switch_id}' limit 1;");
-            $this->logger->logit("New port {$this->port_name} in switch {$this->switch_ip}"); 
+	    $query="select id from port where name='{$this->port_name}' and switch='{$this->switch_id}' limit 1;";
+            $this->props['port_id']=v_sql_1_select($query);
+            $this->logger->logit("New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"); 
          }
          else
          {
@@ -252,19 +263,44 @@ EOF;
       return true;
    }
 
-   public function update()
+   public function patch_information()
    {
-      $query="update port set last_activity=NOW(), last_vlan='{$this->last_vlan}' where id='{$this->port_id}'";
-      $res=mysql_query($query);
-      if ($res)
+      if ($this->conf->lastseen_patch_lookup)
       {
-         return true;
+         return $this->patch_details.'('.$this->users_in_office.')';
       }
       else
       {
-         $this->logger->logit(mysql_error(),LOG_ERROR);
+         $this->logger->logit("Option lastseen_patch_lookup not enabled\n",LOG_WARNING);
          return false;
       }
+   }   
+
+   public function update()
+   {
+      if ($this->isPortInDB())
+      {
+         $query="update port set last_activity=NOW(), last_vlan='{$this->last_vlan}' where id='{$this->port_id}'";
+         $res=mysql_query($query);
+         if ($res)
+         {
+            return true;
+         }
+         else
+         {
+            $this->logger->logit(mysql_error(),LOG_ERROR);
+            return false;
+         }
+      }
+      else 
+      {
+         return false;
+      }
+   }
+
+   protected function getPortID()
+   {
+      return $this->port_id;
    }
 }
 
