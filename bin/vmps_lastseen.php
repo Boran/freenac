@@ -96,9 +96,16 @@ do
                   $GLOBALS["PORT"]   = $result->getPort();
                   $GLOBALS["HOST"] = $result->getEndDevice();
                   $GLOBALS["CONF"] = Settings::getInstance();
+
+	          #Passing of information between objects
 	          $HOST->onPortID($PORT->getPortID());
 		  $HOST->inOfficeID($PORT->getOfficeID());
 	          $HOST->onVlanID($PORT->getLastVlanID());
+	          $HOST->setPatchInfo($PORT->getPatchInfo());
+	          $HOST->setSwitchInfo($PORT->getSwitchInfo());
+	          $HOST->setPortInfo($PORT->getPortInfo());
+	          
+	          #Call our policy
                   $policy->postconnect();
                }
 	       catch (Exception $e)

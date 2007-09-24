@@ -87,7 +87,7 @@ SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchNam
   LEFT  JOIN vlan v1    ON port.last_vlan = v1.id
 EOF;
          $query .=" WHERE port.name='$portname' and switch.ip='$switchip' LIMIT 1";*/
-         $query="select sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, p.default_vlan, p.last_vlan, p.id as port_id, p.name as port_name, p.default_vlan, l.id as office_id, l.name as office,b.name as building from switch sw left join port p on sw.id=p.switch and p.name='$portname' left join location l on sw.location=l.id left join building b on l.building_id=b.id where sw.ip='$switchip' limit 1;";
+         $query="select sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, sw.comment as switch_comment, p.default_vlan, p.last_vlan, p.id as port_id, p.name as port_name, p.default_vlan, l.id as office_id, l.name as office,b.name as building from switch sw left join port p on sw.id=p.switch and p.name='$portname' left join location l on sw.location=l.id left join building b on l.building_id=b.id where sw.ip='$switchip' limit 1;";
 	 if ($temp=mysql_fetch_one($query))
          {
             $this->props=$temp;
@@ -227,13 +227,14 @@ EOF;
       #Insert switch in database if it doesn't exist
       if (!$this->isSwitchInDB())
       {
-         $query="insert into switch set ip='{$this->switch_ip}', name='unknown';";
+         $query="insert into switch set ip='{$this->switch_ip}', name='unknown',comment='';";
          $res=mysql_query($query);
          if ($res)
          {
-            $this->switch_in_db=true;
             $query="select id from switch where ip='{$this->switch_ip}' limit 1;";
 	    $this->props['switch_id']=v_sql_1_select($query);
+            if ($this->switch_id)
+               $this->switch_in_db=true;
             $this->logger->logit("New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.");
          }
          else
@@ -249,10 +250,14 @@ EOF;
          $res=mysql_query($query);
          if ($res)
          {
-            $this->port_in_db=true;
 	    $query="select id from port where name='{$this->port_name}' and switch='{$this->switch_id}' limit 1;";
             $this->props['port_id']=v_sql_1_select($query);
-            $this->logger->logit("New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"); 
+	    if ($this->port_id)
+	       $this->port_in_db=true;
+            if ($this->conf->lastseen_patch_lookup)
+               $this->logger->logit("New port {$this->port_name}. Location from patchcable: {$this->getPatchInfo()}\n");
+            else
+               $this->logger->logit("New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"); 
          }
          else
          {
@@ -263,7 +268,7 @@ EOF;
       return true;
    }
 
-   public function patch_information()
+   public function getPatchInfo()
    {
       if ($this->conf->lastseen_patch_lookup)
       {
@@ -312,6 +317,19 @@ EOF;
    public function getLastVlanID()
    {
       return $this->last_vlan;
+   }
+
+   public function getSwitchInfo()
+   {
+      if (strcasecmp(trim($this->switch_name),'unknown')==0)
+         return "{$this->switch_ip}({$this->switch_comment})";
+      else
+         return "{$this->switch_name}({$this->switch_comment})"; 
+   }
+
+   public function getPortInfo()
+   {
+      return $this->port_name;
    }
 }
 

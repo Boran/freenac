@@ -273,7 +273,7 @@ class EndDevice extends Common {
 	      if ($this->conf->lastseen_sms)
 	      {
 	          $retval='';
-                  $sms_details=syscall($conf->sms_mac." ".$this->mac, $retval);
+                  $sms_details=syscall($this->conf->sms_mac." ".$this->mac, $retval);
 
                   # Enable PC and set to SMS VLAN
                   if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$sms_details, $matches))
@@ -295,7 +295,7 @@ class EndDevice extends Common {
                      if (!$uid)
                         $uid=0;
                      if ($conf->lastseen_sms_vlan)
-                        $vlan_id=$conf->lastseen_sms_vlan;
+                        $vlan_id=$this->conf->lastseen_sms_vlan;
                      $query="INSERT INTO systems "
                      . "SET LastSeen=NOW(), status=1, class=2,"      # active, GWP
                      .      "description='$txx_name', "   # nt account
@@ -311,8 +311,24 @@ class EndDevice extends Common {
                      $res = mysql_query($query);
                      if ($res)
 		     { 
-                        snmp_restart_port_id($this->port_id);
-		        return true;
+                        // Document the user's details in the alert
+                        $query="SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where username='$txx_name'";
+                        $res = mysql_query($query);
+                        if ($res) 
+	                {
+                           list($sms_details)=mysql_fetch_array($res);
+                           $subject="NAC alert in {$this->patch_info}, $sms_details, port {$this->port_info}\n";
+                           $mesg="New {$this->conf->sms_device} {$this->mac}({$this->getVendor()}) $sms_name, $txx_name, $sms_details, switch {$this->switch_info}\n";
+	                   $this->logger->logit($subject);
+	                   $this->logger->logit($mesg);
+	                   snmp_restart_port_id($this->port_id);
+		           return true;
+	                }
+	                else
+	                {
+	                   $this->logger->logit(mysql_error(),LOG_ERROR);
+                           return false;
+	                }
 		     }
 	             else
 		     {
@@ -326,11 +342,14 @@ class EndDevice extends Common {
 	      #Normal case
 	      {
 	         $query="insert into systems set lastseen=NOW(), status='{$this->conf->set_status_for_unknowns}', name='unknown', vlan='{$this->conf->set_vlan_for_unknowns}',lastport='{$this->port_id}', office='{$this->office_id}', description='".$this->conf->default_user_unknown."', uid='1', mac='{$this->mac}';";
-	         $this->logger->logit($query);
 	         $res=mysql_query($query);
 	         if ($res)
 	         {
 	            $this->db_row['in_db']=true;
+	            $subject="NAC alert {$this->patch_info} port {$this->port_info}\n";
+		    $mesg="New unknown {$this->mac}({$this->getVendor()}), switch {$this->switch_info} Patch: {$this->patch_info}\n";
+	            $this->logger->logit($subject);
+	            $this->logger->logit($mesg);
 	            return true;
 	         }
 	         else
@@ -382,6 +401,46 @@ class EndDevice extends Common {
 	   {
 	      return false;
 	   }
+	}
+
+	public function setPortInfo($var)
+	{
+	   if ($var)
+           {
+	      $this->db_row['port_info']=$var;
+	      return true;
+	   }
+	   else
+	   {
+	      return false;
+	   }
+	}
+
+	public function setSwitchInfo($var)
+	{
+	   if ($var)
+	   {
+	      $this->db_row['switch_info']=$var;
+	      return true;
+	   }
+	   else
+	   {
+	      return false;
+	   }
+	}
+
+	public function setPatchInfo($var)
+	{
+	   if ($var)
+           {
+              $this->db_row['patch_info']=$var;
+              return true;
+           }
+           else
+           {
+              return false;
+           }
+
 	}
 }
 
