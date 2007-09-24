@@ -146,9 +146,10 @@ class BasicPolicy extends Policy {
 	   $PORT->insertIfUnknown();
            $PORT->update();
 	   $HOST->insertIfUnknown();
-	   #$HOST->update();
+	   #print_r($HOST->getAllProps());
+	   $HOST->update();
            #$PORT->getAllProps();
-	   $HOST->getAllProps();
+	   #print_r($HOST->getAllProps());
 	}
 }
  

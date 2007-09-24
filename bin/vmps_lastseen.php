@@ -96,6 +96,9 @@ do
                   $GLOBALS["PORT"]   = $result->getPort();
                   $GLOBALS["HOST"] = $result->getEndDevice();
                   $GLOBALS["CONF"] = Settings::getInstance();
+	          $HOST->onPortID($PORT->getPortID());
+		  $HOST->inOfficeID($PORT->getOfficeID());
+	          $HOST->onVlanID($PORT->getLastVlanID());
                   $policy->postconnect();
                }
 	       catch (Exception $e)

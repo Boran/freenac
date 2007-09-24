@@ -1,7 +1,7 @@
 <?php
 
 /*
- * System Class
+ * EndDevice Class
  *
  * This class represents a row in the systems table in the database.
  * In the current version, the host is identified by its mac address.
@@ -49,7 +49,7 @@ class EndDevice extends Common {
 		   /* query system table */
 		   $sql_query="select s.id as sid, s.mac as mac, s.name as hostname, s.description, s.status, u.id as uid,"
 			   ."u.username, s.r_ip as ip, s.expiry, v.id as vid, v.default_name as vlan_name from systems s"
-			   ." inner join users u on s.uid=u.id inner join vlan v on s.vlan=v.id where s.mac='{$this->mac}'";
+			   ." left join users u on s.uid=u.id inner join vlan v on s.vlan=v.id where s.mac='{$this->mac}' limit 1";
 		   //Found system in database, fill up the properties
 		   if ($temp=mysql_fetch_one($sql_query))
 		   {
@@ -64,6 +64,9 @@ class EndDevice extends Common {
 		      $this->db_row['in_db']=false;
 		      $this->logger->logit("Unknown device {$this->mac}");
 		   }
+		   $this->db_row['port_id']=0;
+		   $this->db_row['office_id']=1;
+		   $this->db_row['lastvlan_id']=1;
 		}
 	}
 
@@ -235,14 +238,15 @@ class EndDevice extends Common {
 		return $this->in_db;
 	}
 
+	#Update EndDevice information in the DB
 	public function update()
 	{
 	   if ($this->inDB())
 	   {
 	      if ($this->isExpired() && $this->conf->disable_expired_devices)
-                 $query="update systems set lastseen=NOW(), lastport='".$this->port->getPortID()."', status=7 where id='{$this->getEndDeviceID()}'";
+	         $query="UPDATE systems SET LastSeen=NOW(), status=7, LastPort={$this->port_id}, LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
 	      else
-	         $query="update systems set lastseen=NOW(), lastport='".$this->port->getPortID()."' where id='{$this->getEndDeviceID()}'";
+	         $query="UPDATE systems SET LastSeen=NOW(), LastPort={$this->port_id}, LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
 	      $res=mysql_query($query);
 	      if ($res)
 	      {
@@ -260,21 +264,123 @@ class EndDevice extends Common {
 	   return $this->sid;
 	}
 
+	#Insert an EndDevice if it is not in the DB
 	public function insertIfUnknown()
 	{
-	   if (!$this->inDB())
+	   if (!$this->inDB() && $this->port_id)
 	   {
-	      $query="insert into systems set lastseen=NOW(), status='{$this->conf->set_status_for_unknowns}', name='unknown', vlan='{$this->conf->default_vlan}',lastport='".self::port->getPortID()."', office='".self::port->office_id."', description='".$this->conf->default_user_unknown."', mac='{$this->mac}';";
-	      $res=mysql_query($query);
-	      if ($res)
+	      #Enterprise only
+	      if ($this->conf->lastseen_sms)
 	      {
-	         return true;
+	          $retval='';
+                  $sms_details=syscall($conf->sms_mac." ".$this->mac, $retval);
+
+                  # Enable PC and set to SMS VLAN
+                  if(preg_match("/Host=(\S+) NtAccount=(\S+) OS=(.+)$/",$sms_details, $matches))
+                  {
+                     $sms_name=$matches[1];
+                     $txx_name= $conf->default_user_unknown;         # default
+                     $txx_name   =$matches[2];
+                     $sms_os     =$matches[3];
+                     $sms_details="";
+                     $this->logger->logit("SMS PC: name=$sms_name, NTaccount=$txx_name, $sms_os, $sms_details");
+                     $os3_id=v_sql_1_select("select id from sys_os3 where value='$sms_os'");
+
+                     insert_user($txx_name);
+                     #logit("Inserted new user $txx_name");
+                     direx_sync_user($txx_name);
+                     #logit("Symced new user $txx_name");
+
+                     $uid=v_sql_1_select("select id from users where username like '$txx_name'");
+                     if (!$uid)
+                        $uid=0;
+                     if ($conf->lastseen_sms_vlan)
+                        $vlan_id=$conf->lastseen_sms_vlan;
+                     $query="INSERT INTO systems "
+                     . "SET LastSeen=NOW(), status=1, class=2,"      # active, GWP
+                     .      "description='$txx_name', "   # nt account
+                     .      "uid='$uid', "
+                     .      "name='$sms_name', "
+                     .      "comment='$sms_details', "
+                     .      "vlan='$vlan_id', "
+                     .      "os3='$os3_id', "
+                     .      "os4='$sms_os', "
+                     .      "lastport='{$this->port_id}', "
+                     .      "office='{$this->office_id}', "
+                     .      "mac='{$this->mac}' ";
+                     $res = mysql_query($query);
+                     if ($res)
+		     { 
+                        snmp_restart_port_id($this->port_id);
+		        return true;
+		     }
+	             else
+		     {
+		        $this->logger->logit(mysql_error(),LOG_ERROR);
+                        return false;
+	 	     }
+                  }
+
 	      }
 	      else
+	      #Normal case
 	      {
-	         $this->logger->logit(mysql_error(),LOG_ERROR);
-	         return false;
+	         $query="insert into systems set lastseen=NOW(), status='{$this->conf->set_status_for_unknowns}', name='unknown', vlan='{$this->conf->set_vlan_for_unknowns}',lastport='{$this->port_id}', office='{$this->office_id}', description='".$this->conf->default_user_unknown."', uid='1', mac='{$this->mac}';";
+	         $this->logger->logit($query);
+	         $res=mysql_query($query);
+	         if ($res)
+	         {
+	            $this->db_row['in_db']=true;
+	            return true;
+	         }
+	         else
+	         {
+	            $this->logger->logit(mysql_error(),LOG_ERROR);
+	            return false;
+	         }
 	      }
+	   }
+	}
+
+	#Linking between Port and EndDevice.
+	public function onPortID($port=0)
+	{
+	   if (is_numeric($port) && ($port>=0))
+	   {
+	      $this->db_row['port_id']=$port;
+	      return true;
+	   }
+	   else
+	   {
+	      return false;
+	   }   
+	}
+
+	#Linking between Port and EndDevice.
+	public function inOfficeID($office=1)
+	{
+	   if (is_numeric($office) && ($office>0))
+	   {
+	      $this->db_row['office_id']=$office;
+	      return true;
+	   }
+	   else
+	   {
+	      return false;
+	   }
+	}
+
+	#Linking between Port and EndDevice.
+	public function onVlanID($vlan=1)
+	{
+	   if (is_numeric($vlan) && ($vlan>=1))
+	   {
+	      $this->db_row['lastvlan_id']=$vlan;
+	      return true;
+	   }
+	   else
+	   {
+	      return false;
 	   }
 	}
 }

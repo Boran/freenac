@@ -298,9 +298,20 @@ EOF;
       }
    }
 
-   protected function getPortID()
+   #These functions are designed to pass information from this class to the EndDevice object in vmps_lastseen
+   public function getPortID()
    {
       return $this->port_id;
+   }
+
+   public function getOfficeID()
+   {
+      return $this->office_id;
+   }
+
+   public function getLastVlanID()
+   {
+      return $this->last_vlan;
    }
 }
 
