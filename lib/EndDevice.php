@@ -49,7 +49,7 @@ class EndDevice extends Common {
 		   /* query system table */
 		   $sql_query="select s.id as sid, s.mac as mac, s.name as hostname, s.description, s.status, u.id as uid,"
 			   ."u.username, s.r_ip as ip, s.expiry, v.id as vid, v.default_name as vlan_name from systems s"
-			   ." left join users u on s.uid=u.id inner join vlan v on s.vlan=v.id where s.mac='{$this->mac}' limit 1";
+			   ." left join users u on s.uid=u.id left join vlan v on s.vlan=v.id where s.mac='{$this->mac}' limit 1";
 		   //Found system in database, fill up the properties
 		   if ($temp=mysql_fetch_one($sql_query))
 		   {
