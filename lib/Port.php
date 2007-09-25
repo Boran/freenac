@@ -131,7 +131,6 @@ EOF;
             else
                $this->props['last_vlan']=0;
          }
-         print_r($this->props);
       }
    }
 
