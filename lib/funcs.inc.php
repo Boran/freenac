@@ -37,6 +37,53 @@ $conf=Settings::getInstance();
 
 db_connect();
 
+//
+// Insert a new user, if not already in the Users table.
+//
+function insert_user ($username) {
+    ## Is this user already in out "users" table?
+    $query="SELECT username from users WHERE username='".$username."' ";
+      debug2("$query");
+      $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
+
+    ## The select query had no effect, so assume its a new user.
+    if (mysql_affected_rows()==0) {
+
+      ## TBD: Is this new user in our organisation? We should
+      ##      really only set manual_direx_sync for "foreign" users.
+      $query="INSERT INTO users SET LastSeenDirectory=now(), manual_direx_sync='1', "
+        .      "username='".$username."'";
+      #$query="INSERT INTO users SET LastSeenDirectory=now(),  "
+      #  .      "username='".$username."'";
+      debug2("$query");
+      $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
+
+      $str = "New user added for Directory: $username" ;
+        debug2($str);
+        log2db('info', $str);
+    }
+}
+
+function snmp_restart_port_id($port_id)
+{
+   if (is_numeric($port_id) && ($port_id>0))
+   {
+      $query="select p.name as port, s.ip as switch from port p inner join switch s on p.switch=s.id where p.id='$port_id' limit 1;";
+      $result=mysql_fetch_one($query);
+      $port=$result['port'];
+      $switch=$result['switch'];
+      snmp_restart_port($port,$switch);
+   }
+}
+
+function snmp_restart_port($port, $switch) {
+  global $lastseen_sms_restart;
+  if ($lastseen_sms_restart) {
+     $answer=syscall("./restart_port $port $switch");
+     debug1($answer);
+     logit("snmp_restart_port: $answer");
+  }
+}
 
 
 /* Connect to DB */
