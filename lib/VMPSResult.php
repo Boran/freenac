@@ -55,7 +55,7 @@ final class VMPSResult	extends Result		//Disallow inheriting from this class
    protected $port=NULL;
    protected $system=NULL;
 
-   public function __construct($tmac, $tswitch,$tport,$tresult,$tlastvlan)
+   public function __construct($tmac, $tswitch,$tport,$tresult,$tlastvlan='--NONE--')
    {	
       //Set our internal properties
       //Could we set our properties only once per request that comes into VMPS
