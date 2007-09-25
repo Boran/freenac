@@ -55,7 +55,7 @@ class EndDevice extends Common {
 		   {
                       $this->db_row=$temp;
 		      $this->db_row['in_db']=true;
-                      if ($this->vid == 0)
+                      if (($object instanceof VMPSRequest) && ($this->vid == 0))
 	                 DENY();
 		   }
 		   else 
