@@ -70,7 +70,9 @@ class Port extends Common
             //logit("new Port(): invalid parameters, switchip=$switchip, portname=$portname");
             return undef;
          }
-
+         
+	 if (($object instanceof VMPSResult) && (!$lastvlan))
+            $lastvlan="--NONE--";
          // Returns an array containing all variables defined in the config table
          // TBD: query is a first draft, there is probably too much in there.
          /*$query=<<<EOF
@@ -129,6 +131,7 @@ EOF;
             else
                $this->props['last_vlan']=0;
          }
+         print_r($this->props);
       }
    }
 
@@ -224,6 +227,7 @@ EOF;
 
    public function insertIfUnknown()
    {
+      $counter=0;
       #Insert switch in database if it doesn't exist
       if (!$this->isSwitchInDB())
       {
@@ -236,6 +240,7 @@ EOF;
             if ($this->switch_id)
                $this->switch_in_db=true;
             $this->logger->logit("New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.");
+            $counter++;
          }
          else
          {
@@ -258,6 +263,7 @@ EOF;
                $this->logger->logit("New port {$this->port_name}. Location from patchcable: {$this->getPatchInfo()}\n");
             else
                $this->logger->logit("New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"); 
+            $counter++;
          }
          else
          {
@@ -265,7 +271,10 @@ EOF;
             return false;
          }
       }
-      return true;
+      if ($counter)
+         return true;
+      else
+         return false;
    }
 
    public function getPatchInfo()
