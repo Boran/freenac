@@ -1,11 +1,6 @@
 <?php
 /**
- * Logger.php
- *
- * Long description for file:
- *
- * This file defines the template Request class. This class doesn't define anything, 
- * it is here only for completeness' sake
+ * Result.php
  *
  * PHP version 5
  *
@@ -20,9 +15,13 @@
  * @version                     SVN: $Id$
 */
 
+/**
+ * Define the Result template class. This class doesn't define anything,
+ * it is here only for completeness' sake
+*/
 abstract class Result {
-   protected $port;
-   protected $system;
+#   protected $port;
+#   protected $system;
 }
 
 ?>

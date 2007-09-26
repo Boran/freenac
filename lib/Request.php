@@ -1,11 +1,6 @@
 <?php
 /**
- * Logger.php
- *
- * Long description for file:
- *
- * This file defines the template Request class. This class doesn't define anything, 
- * it is here only for completeness' sake
+ * Request.php
  *
  * PHP version 5
  *
@@ -20,6 +15,10 @@
  * @version                     SVN: $Id$
 */
 
+/**
+ * Define the Request request class. This class doesn't implement anything,
+ * it is here only for completeness' sake
+*/
 abstract class Request {
 }
 

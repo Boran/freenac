@@ -1,15 +1,12 @@
 <?php
-
 /**
  * CallWrapper.php
  *
- * This class creates proxy-objects, that wrap other objects, and log:
- *  - The methods that were called
- *  - The parameters of the calls
- *  - The return values.
+ * PHP version 5
  *
- * This is the core of the logging / debugging and regression testing.
- * This class extends the {@link Common} class.
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
  *
  * @package			FreeNAC
  * @author			Sean Boran (FreeNAC Core Team)
@@ -20,8 +17,15 @@
  * @link			http://www.freenac.net
  */
  
- 
- 
+/**
+ * This class creates proxy-objects, that wrap other objects, and log:
+ *  - The methods that were called
+ *  - The parameters of the calls
+ *  - The return values.
+ *
+ * This is the core of the logging / debugging and regression testing.
+ * This class extends the {@link Common} class.
+*/ 
 class CallWrapper extends Common {
    protected $object;
 	

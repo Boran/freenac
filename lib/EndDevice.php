@@ -2,9 +2,11 @@
 /**
  * EndDevice.php
  *
- * This class represents a row in the systems table in the database.
- * In the current version, the host is identified by its mac address.
- * 
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation. 
  *
  * @package			FreeNAC
  * @author			Sean Boran (FreeNAC Core Team)
@@ -16,7 +18,11 @@
  * @link			http://www.freenac.net
  */
 
-
+/**
+ * This class represents a row in the systems table in the database.
+ * In the current version, the host is identified by its mac address.
+ * This class extends the {@link Common} class.
+ */
 class EndDevice extends Common 
 {
    private $mac;
@@ -26,7 +32,8 @@ class EndDevice extends Common
    /** The constructor takes the mac address of the system and creates 
    * and instance representing that particular system.
    * Access is read-only.
-   * @param object $object	A copy of the Request  
+   * @param object $object	A copy of the Request 
+   * @throws			Deny if we received an invalid MAC address or if vlan assigned to this device is 0 
    */
    public function __construct($object) 
    {
@@ -132,8 +139,9 @@ class EndDevice extends Common
             return true;    # The original
          if (stristr($this->getVendor(),"parallels")) 
             return true;    # Mac VMWare-alike
-         # Todo: Check with Sean if its okay to think that all Microsoft OUIs are
-         # VirtualPCs ?
+         /**
+         * @todo Check with Sean if its okay to think that all Microsoft OUIs are VirtualPCs?
+         */
 	 # if (stristr(this->getVendor(),"microsoft")) 
          # return true; # VirtualPC
       }
@@ -201,8 +209,9 @@ class EndDevice extends Common
    */
    public function getVendor() 
    {
-      # Todo: Implement a vendor Cache in an arry 
-      # to save an sql statement per request ;-) 
+      /**
+      * @todo Implement a vendor Cache in an arry to save an sql statement per request ;-)
+      */
       $mac=preg_replace('/\./','',$this->mac);
       $prefix="$mac[0]$mac[1]$mac[2]$mac[3]$mac[4]$mac[5]";
       $query="select vendor from ethernet where mac like '%$prefix%';";
@@ -236,6 +245,7 @@ class EndDevice extends Common
    * With this trick, the user can add new fields to the system tables
    * and will be able to access them in the policy as
    * $system->getDBFieldName() without haveing to change this class
+   * @throws		If the db field does not exist, Log Error and Deny as default action
    * @return mixed	Property
    */
    public function __call($methodName, $parameters) {
@@ -248,15 +258,14 @@ class EndDevice extends Common
 	    }
 	 }
       }
-      # If the db field does not exists, Log Error 
       $this->logger->logit("Field $methodName doesn't exist");
-      # Then DENY as default action 
       DENY();
    }
 	
    /**
-   * Get the value of only one var if it exists
-   * @return mixed	Property
+   * Get the value of one property if it exists
+   * @param mixed $key          Property to lookup
+   * @return mixed              The value of the wanted property, or false if such a property doesn't exist
    */
    public function __get($key)                                                  //Get the value of one var
    {
@@ -265,7 +274,10 @@ class EndDevice extends Common
    }
 
    /**
-   * Set the value of only one var if it exists
+   * Set the value of one property if it exists
+   * @param mixed $key          Property to lookup
+   * @param mixed $value        Value to set the desired property to
+   * @throws 			Deny if there was an attempt to set an unknown property
    */
    protected function __set($key,$value)                                                  //Set the value of one var
    {

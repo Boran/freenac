@@ -1,42 +1,6 @@
 <?php
 /**
- * port.php
- *
- * Long description for file:
- *
- * The Port class describes the interfaces to information on Ports and Switches
- * TBD; update the rest of this description
- *
- * CONSTRUCTOR SUMMARY:
- * *	private __construct(array $var_list, array $exclude_list);
- *		Compute the difference of $var_list and $exclude_list and store it in an internal array.
- *	PARAMETERS: 
- *		$var_list : 	An array containing the list of variables defined.
- *		$exclude_list :	The list of variables we want to exclude from our final array.	
- *
- * INTERCEPTOR SUMMARY:
- * *	public __set($key,$value);
- *		Set the key $key with the value $val stored in our internal array. If $key doesn't existe, create it.
- *	PARAMETERS:
- *		$key :		The key in our internal array that we want to set.
- *		$value :	The value we want to assign to this key.
- *
- * *	public __get($key);
- *		Get the value of key $key from our internal array.
- *	PARAMETERS:
- *		$key : 		The key we want to retrieve from our internal array.
- *
- * METHOD SUMMARY: 
- * *	public static getInstance(array $vars=array(),array $list=array('GLOBALS','^_','^HTTP'));
- *		Create an instance of the Settings class if one hasn't been defined yet and return the instance to the calling code.
- *	PARAMETERS:
- *		array $vars:	Array containing the list of vars defined. Ideally, the result of get_defined_vars() should be passed on.
- *				If no $vars has been passed, an empty array will be used.
- *		array $list:	Array containing the list of vars we want to exclude.
- *				If no $list has been passed, a default list, which excludes PHP defined vars, is used.	
- * 
- * * 	public getAllProperties();
- *		Returns the internal array which contains the vars in the configuration files.
+ * Port.php
  *
  * PHP version 5
  *
@@ -53,24 +17,36 @@
  *
  */
 
+/**
+ * The Port class describes the interfaces to information on Ports and Switches
+ * This class extends the {@link Common} class.
+ */
 class Port extends Common
 {
    private $props=array();
+   
+   /** 
+   * The constructor takes the parameters needed to generate a Port object
+   * Access is read-only.
+   * @param object $object      A copy of the Request
+   */
    function __construct($object)
    {
-      parent::__construct();
+      parent::__construct();	
       if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
       {
+         # Get needed parameters from object
          $switchip=$object->switch;
          $portname=$object->port;
          $domain=$object->vtp;
          $lastvlan=$object->lastvlan;
-         // Invalid parameters ?
+         # Invalid parameters?
          if ((strlen($switchip) < 8) || (strlen($portname) <1)) {
-            //logit("new Port(): invalid parameters, switchip=$switchip, portname=$portname");
             return undef;
          }
-         
+        
+         #In case we have a DENY as result from vmpsd_external, so no vlan would come in the object. If so, set vlan to 
+         # '--NONE--' which should deny access 
 	 if (($object instanceof VMPSResult) && (!$lastvlan))
             $lastvlan="--NONE--";
          // Returns an array containing all variables defined in the config table
@@ -92,28 +68,38 @@ EOF;
          $query="select sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, sw.comment as switch_comment, p.default_vlan, p.last_vlan, p.id as port_id, p.name as port_name, p.default_vlan, l.id as office_id, l.name as office,b.name as building from switch sw left join port p on sw.id=p.switch and p.name='$portname' left join location l on sw.location=l.id left join building b on l.building_id=b.id where sw.ip='$switchip' limit 1;";
 	 if ($temp=mysql_fetch_one($query))
          {
+            #Information found in DB.
             $this->props=$temp;
             $this->props['exception_vlan']=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id"
                                 ." inner join switch s on s.id=vs.swid where s.ip='$switchip'");
+            #Initialize control flags
 	    if ($this->switch_ip)
                $this->props['switch_in_db']=true;
             else
                $this->props['switch_in_db']=false;
+
             if ($this->port_name)
                $this->props['port_in_db']=true;
             else
                $this->props['port_in_db']=false;
+            
+            #Just in case we didn't get a port_name from the DB
 	    if (!$this->port_name)
                $this->port_name=$portname;
          }
          else
          {
+            #No information found in DB, so get data from the request
             $this->props['switch_ip']=$switchip;
             $this->props['port_name']=$portname;
             $this->props['switch_name']=gethostbyaddr($switchip);
+            
+            #Initialize control flags
 	    $this->props['switch_in_db']=false;
             $this->props['port_in_db']=false;
 	 }
+
+         #Should we lookup patch information?
          if ($this->conf->lastseen_patch_lookup && $this->port_in_db && $this->office_id)
          {
             $query="SELECT GROUP_CONCAT(Surname) as Surname from users WHERE PhysicalDeliveryOfficeName='" . $this->office . "'";
@@ -123,6 +109,8 @@ EOF;
             $patch_details=v_sql_1_select($query);
             $this->props['patch_details']=$patch_details;
          }
+
+         #If the object is a syslog message, lookup the vlan_id for that vlan and set it to last_vlan
          if ($object instanceof VMPSResult)
          {
             $temp_vlan=v_sql_1_select("select id from vlan where default_name='$lastvlan';");
@@ -134,7 +122,12 @@ EOF;
       }
    }
 
-   protected function __get($key)							//Get the value of one var
+   /**
+   * Get the value of one property if it exists
+   * @param mixed $key		Property to lookup
+   * @return mixed		The value of the wanted property, or false if such a property doesn't exist
+   */
+   protected function __get($key)							
    {
       if (array_key_exists($key,$this->props))
       {
@@ -147,6 +140,12 @@ EOF;
       }      
    }
 
+   /**
+   * Set the value of one property if it exists
+   * @param mixed $key		Property to lookup
+   * @param mixed $value	Value to set the desired property to
+   * @return boolean		True if successful, false otherwise
+   */
    private function __set($key,$value)
    {
       if (array_key_exists($key,$this->props))
@@ -161,11 +160,19 @@ EOF;
       }
    }
 
-   public function getAllProps()						//Get our inner array
+   /**
+   * Return all properties assigned to this system. This method is here only for debugging purposes, please delete it after
+   * @return array      All properties present in this object
+   */
+   public function getAllProps()						
    {
       return $this->props;
    }
 
+   /**
+   * Get the default vlan assigned to a Port
+   * @return mixed	 Vlan assigned to a port, false otherwise
+   */
    public function getPortDefaultVlan()
    {
 	if ($this->conf->use_port_default_vlan)
@@ -177,6 +184,10 @@ EOF;
         }
    }
 
+   /**
+   * Get a vlan based on switch location. This vlan should be used as an exception to the regular process
+   * @return mixed	Vlan to assign, false otherwise
+   */
    public function vlanBySwitchLocation()
    {
       if ($this->conf->vlan_by_switch_location)
@@ -193,10 +204,16 @@ EOF;
       }
    }
 
+   /**
+   * Get the vlan used by a system seen on this same port during the last 2 hours.
+   * This is usefull to assign a vlan for VMs without causing flapping.
+   * @return mixed	Vlan to assign, false otherwise
+   */
    public function getVMVlan()
    {
       if ($this->conf->vm_lan_like_host)
       {
+         #Lookup the last_vlan assigned to the last system which was lastseen on this port in the previous 2 hours
          $query="select s.mac as mac,s.lastvlan as lastvlan from systems s inner join port p on "
                ."s.lastport=p.id inner join switch sw on p.switch=sw.id and p.name='{$this->name}'"
                ." and sw.ip='{$this->switch_ip}' where date_sub(curdate(), interval 2 hour) <= s.lastseen"
@@ -214,16 +231,28 @@ EOF;
       }
    }
  
+   /**
+   * Tell if this switch is in the DB
+   * @return boolean 		Value of the 'switch_in_db' property
+   */
    public function isSwitchInDB()
    {
       return $this->switch_in_db;
    }
 
+   /**
+   * Tell if this port is in the DB
+   * @return boolean            Value of the 'port_in_db' property
+   */
    public function isPortInDB()
    {
       return $this->port_in_db;
    }
 
+   /**
+   * Insert a switch or port into the DB if it doesn't exist.
+   * @return boolean		True if an insert operation was performed, false otherwise
+   */
    public function insertIfUnknown()
    {
       $counter=0;
@@ -234,10 +263,15 @@ EOF;
          $res=mysql_query($query);
          if ($res)
          {
+            #Switch has been inserted, lookup its id
             $query="select id from switch where ip='{$this->switch_ip}' limit 1;";
 	    $this->props['switch_id']=v_sql_1_select($query);
+
+            #If we have its id, change the value of our control flag
             if ($this->switch_id)
                $this->switch_in_db=true;
+
+            #Log it and increase our internal counter to indicate that an insert has been done
             $this->logger->logit("New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.");
             $counter++;
          }
@@ -254,10 +288,15 @@ EOF;
          $res=mysql_query($query);
          if ($res)
          {
+            #Port has been inserted, lookup its id
 	    $query="select id from port where name='{$this->port_name}' and switch='{$this->switch_id}' limit 1;";
             $this->props['port_id']=v_sql_1_select($query);
+
+            #If we have its id, change the value of our control flag
 	    if ($this->port_id)
 	       $this->port_in_db=true;
+
+            #Log it and increase our internal counter to indicate that an insert has been done
             if ($this->conf->lastseen_patch_lookup)
                $this->logger->logit("New port {$this->port_name}. Location from patchcable: {$this->getPatchInfo()}\n");
             else
@@ -270,12 +309,17 @@ EOF;
             return false;
          }
       }
+      #Return true if our counter is greater than zero. Thus we know that an insert operation has been performed
       if ($counter)
          return true;
       else
          return false;
    }
 
+   /**
+   * Get patch information related to this port
+   * @return mixed	Patch information
+   */
    public function getPatchInfo()
    {
       if ($this->conf->lastseen_patch_lookup)
@@ -289,6 +333,10 @@ EOF;
       }
    }   
 
+   /**
+   * Update last_vlan and last_activity fields for this port
+   * @return boolean	True if successful, false otherwise
+   */
    public function update()
    {
       if ($this->isPortInDB())
@@ -312,21 +360,38 @@ EOF;
    }
 
    #These functions are designed to pass information from this class to the EndDevice object in vmps_lastseen
+
+   /**
+   * Get the id for this port
+   * @return integer	Value of the 'port_id' property
+   */
    public function getPortID()
    {
       return $this->port_id;
    }
 
+   /**
+   * Get the id of the office where this port is located
+   * @return integer    Value of the 'office_id' property
+   */
    public function getOfficeID()
    {
       return $this->office_id;
    }
 
+   /**
+   * Get the id of the last_vlan
+   * @return integer    Value of the 'last_vlan' property
+   */
    public function getLastVlanID()
    {
       return $this->last_vlan;
    }
 
+   /**
+   * Get switch information related to this port
+   * @return mixed    Value of the 'switch_ip' and 'switch_comment' properties
+   */
    public function getSwitchInfo()
    {
       if (strcasecmp(trim($this->switch_name),'unknown')==0)
@@ -335,6 +400,10 @@ EOF;
          return "{$this->switch_name}({$this->switch_comment})"; 
    }
 
+   /**
+   * Get port name
+   * @return mixed    Port name
+   */
    public function getPortInfo()
    {
       return $this->port_name;

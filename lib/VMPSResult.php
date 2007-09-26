@@ -1,39 +1,6 @@
 <?php
 /**
- * VMPSRequest.php
- *
- * Long description for file:
- *
- * Singleton to hold values related to a VMPS Request.
- *
- * CONSTRUCTOR SUMMARY:
- * *    private __construct();
- *              Empty
- *
- * INTERCEPTOR SUMMARY:
- * *    final public __set($key,$value);
- *		Avoid overwritting properties related to a VMPS request
- *      PARAMETERS:
- *              $key :          The key in our internal array that we want to set.
- *              $value :        The value we want to assign to this key.
- *
- * *    public __get($key);
- *              Get the value of key $key from our internal array.
- *      PARAMETERS:
- *              $key :          The key we want to retrieve from our internal array.
- *
- * *	final public __clone():
- *		Prevent clonning the instance  
- *
- * METHOD SUMMARY:
- * *    public setValues($mac,$switch,$port,$vtp,$lastvlan);
- *              Set the values of our internal properties to those of a VMPS request
- *      PARAMETERS:
- *		$mac :		MAC address of the connecting device
- *		$switch : 	Switch that sent the request
- *		$port :		Port where this MAC address has been learnt
- *		$vtp :		VTP domain
- *		$lastvlan :	Last vlan used for this device
+ * VMPSResult.php
  *
  * PHP version 5
  *
@@ -49,55 +16,80 @@
 */
 
 
-final class VMPSResult	extends Result		//Disallow inheriting from this class
-{
-   private $props=array();			//Here we hold our internal properties
-   protected $port=NULL;
-   protected $system=NULL;
+include_once "Result.php";
 
-   public function __construct($tmac, $tswitch,$tport,$tresult,$tlastvlan='--NONE--')
+/**
+ * Class that contains information related to a syslog result
+ * This class extends the {@link Result} class
+ */
+final class VMPSResult	extends Result		# Disallow inheriting from this class
+{
+   private $props=array();			# Here we hold our internal properties
+   private static $instance;			# Our instance of this class
+   protected $port;
+   protected $system;
+
+   public function __construct($tmac, $tswitch,$tport,$tvtp,$tlastvlan='--NONE--')
    {	
-      //Set our internal properties
-      //Could we set our properties only once per request that comes into VMPS
-      //and thus avoid rewriting these properties while we are attending that request?
-      if ((strlen($tmac)>0)&&(strlen($tswitch)>0)&&(strlen($tport)>0)&&(strlen($tresult)>0)&&(strlen($tlastvlan)>0))
+      #Sanity checks
+      if ((strlen($tmac)>0)&&(strlen($tswitch)>0)&&(strlen($tport)>0)&&(strlen($tvtp)>0)&&(strlen($tlastvlan)>0))
       {
-         $this->props['result']=$tresult;
-	 $this->props['mac']=$tmac;
+         #Copy what we've received to our internal array
+         $this->props['mac']=$tmac;
          $this->props['switch']=$tswitch;
          $this->props['port']=$tport;
+         $this->props['vtp']=$tvtp;
          $this->props['lastvlan']=$tlastvlan;
+         
+         #Initialize a port and a system objects
 	 $this->port=new CallWrapper(new Port($this));
          $this->system=new CallWrapper(new EndDevice($this));
-         return true;
       }
-      else return false;
    }
   
-   public function __get($key)			//Return the value of a property
+   /**
+   * Get the value of one property if it exists
+   * @param mixed $key          Property to lookup
+   * @return mixed              The value of the wanted property, or false if such a property doesn't exist
+   */
+   public function __get($key)		
    {
-      if (array_key_exists($key,$this->props))	//First look if it exists in our internal array
-         return $this->props[$key];		//If so, return it
+      if (array_key_exists($key,$this->props))	#First look if it exists in our internal array
+         return $this->props[$key];		#If so, return it
       else
-         return NULL;				//Nothing found, return NULL
+         return false;				#Nothing found, return false
    }
 
-   final public function __set($key,$value) {}	//Disallow overriding this method. This prevents our internal
-						//array from being modified by other classes.
+   /**
+   * Disallow overriding this method. This prevents our internal
+   * array from being modified by other classes.
+   */
+   final public function __set($key,$value) {}
 
-   final public function __clone()			//Prevent clonning the instance
+   /**
+   * Prevent clonning the instance
+   * @throws 	Exception indicating that a clone operation cannot be performed
+   */
+   final public function __clone()		
    {
-      throw new Exception("Cannot clone the VMPSResult object");
+      throw new Exception("Cannot clone the VMPSRequest object");
    }
 
+   /**
+   * Get a copy of our EndDevice object
+   * @return object	EndDevice
+   */
    public function getEndDevice()
    {
       return $this->system;
    }
 
+   /**
+   * Get a copy of our Port object
+   * @return object	Port
+   */
    public function getPort()
    {
       return $this->port;
    }
-
 }
