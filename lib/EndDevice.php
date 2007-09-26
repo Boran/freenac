@@ -139,7 +139,7 @@ EOF;
             return true;    # The original
          if (stristr($this->getVendor(),"parallels")) 
             return true;    # Mac VMWare-alike
-	 if (stristr(this->getVendor(),"microsoft")) 
+	 if (stristr($this->getVendor(),"microsoft")) 
             return true;    # VirtualPC
       }
       else
