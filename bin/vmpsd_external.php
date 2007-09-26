@@ -61,7 +61,7 @@ require_once("../lib/exceptions.php");
 require_once("../lib/funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
-$logger->setDebugLevel(2);
+#$logger->setDebugLevel(2);
 #$logger->logToStdErr();
 /* include files */
 /* Load the policy file */
@@ -103,19 +103,26 @@ while ($in && $out) {
 		/* split by space */      	
 		$splitted = explode(" ", $line);
 
-		/* sanity checks, 5 values */
-		if (count($splitted) != 5 || ((strlen($splitted[4]) < 12) || (strlen($splitted[4]) > 17))) {
-			$logger->logit("Invalid request\n");
-			continue;
-		}
-
-		/* extract values */
-		list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
-
 		try {
 
 			// Todo, setup policy object 
 
+		        #If some parameter in the request is missing, DENY
+                        if (empty($splitted[0]) || empty($splitted[1]) || empty($splitted[2])
+                          || empty($splitted[3]) || empty($splitted[4]))
+                        {
+                           $logger->logit("Invalid request\n");
+                           DENY();
+                        }
+
+                        /* sanity checks, 5 values */
+                        if (count($splitted) != 5 || ((strlen($splitted[4]) < 12) || (strlen($splitted[4]) > 17))) {
+                           $logger->logit("Invalid request\n");
+                           DENY();
+                        }
+
+			 /* extract values */
+                         list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
 
 			/* create System Object */
 			#$system = new CallWrapper(new EndDevice($request));
