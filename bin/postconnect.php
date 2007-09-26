@@ -1,7 +1,7 @@
 #!/usr/bin/php -f
 <?
 /**
- * /opt/nac/bin/vmps_lastseen
+ * /opt/nac/bin/postconnect.php
  *
  * Long description for file:
  * FUNCTION:
@@ -14,11 +14,6 @@
  *  such messages and send them to syslog, this this is a daemon normally
  *  detached from the console
  *
- * Note: when debugging, set $debug_flag1=TRUE and run standalone, not
- *       from inittab, otherwise you won't see the debug messages.
- *       If it seems not to be parsing the log, kill it ans init will
- *       restart it.
- *
  * PHP version 5
  *
  * LICENSE: This program is free software; you can redistribute it and/or
@@ -27,10 +22,10 @@
  *
  * @package                     FreeNAC
  * @author                      Sean Boran (FreeNAC Core Team)
- * @copyright           2006 FreeNAC
+ * @copyright           	2007 FreeNAC
  * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version                     SVN: $Id$
- * @link                                http://www.freenac.net
+ * @link                        http://www.freenac.net
  *
  */
 
@@ -100,9 +95,9 @@ do
                   $GLOBALS["CONF"] = Settings::getInstance();
 
 	          #Passing of information between objects
-	          $HOST->onPortID($PORT->getPortID());
-		  $HOST->inOfficeID($PORT->getOfficeID());
-	          $HOST->onVlanID($PORT->getLastVlanID());
+	          $HOST->setPortID($PORT->getPortID());
+		  $HOST->setOfficeID($PORT->getOfficeID());
+	          $HOST->setVlanID($PORT->getLastVlanID());
 	          $HOST->setPatchInfo($PORT->getPatchInfo());
 	          $HOST->setSwitchInfo($PORT->getSwitchInfo());
 	          $HOST->setPortInfo($PORT->getPortInfo());

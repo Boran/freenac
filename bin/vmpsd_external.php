@@ -61,7 +61,7 @@ require_once("../lib/exceptions.php");
 require_once("../lib/funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
-#$logger->setDebugLevel(2);
+$logger->setDebugLevel(2);
 #$logger->logToStdErr();
 /* include files */
 /* Load the policy file */
@@ -93,6 +93,7 @@ $logger->logit("Started\n");
 /* Loop Forever (we are a daemon) */
 while ($in && $out) {
 	/* Read one line from vmpsd and parse it */
+        $logger->logit("Waiting for some input\n");
 	$line=rtrim( fgets($in, 1024) );
 
 	/* If there are some characters */
@@ -111,6 +112,7 @@ while ($in && $out) {
 
 		/* extract values */
 		list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
+
 		try {
 
 			// Todo, setup policy object 

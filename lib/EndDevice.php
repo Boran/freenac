@@ -9,7 +9,6 @@
  * by the Free Software Foundation. 
  *
  * @package			FreeNAC
- * @author			Sean Boran (FreeNAC Core Team)
  * @author			Seiler Thomas (contributer)
  * @author			Hector Ortiz (FreeNAC Core Team)
  * @copyright			2007 FreeNAC
@@ -448,7 +447,7 @@ class EndDevice extends Common
    * Set the port where this EndDevice is 
    * @return boolean	True if successful
    */
-   public function onPortID($port=0)
+   public function setPortID($port=0)
    {
       if (is_numeric($port) && ($port>=0))
       {
@@ -466,7 +465,7 @@ class EndDevice extends Common
    * Set the office where this EndDevice is
    * @return boolean	True if successful
    */
-   public function inOfficeID($office=1)
+   public function setOfficeID($office=1)
    {
       if (is_numeric($office) && ($office>0))
       {
@@ -483,7 +482,7 @@ class EndDevice extends Common
    * Set the lastvlan used by this EndDevice
    * @return boolean	True if successful
    */
-   public function onVlanID($vlan=1)
+   public function setVlanID($vlan=1)
    {
       if (is_numeric($vlan) && ($vlan>=1))
       {

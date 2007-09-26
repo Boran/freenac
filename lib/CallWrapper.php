@@ -9,7 +9,6 @@
  * by the Free Software Foundation.
  *
  * @package			FreeNAC
- * @author			Sean Boran (FreeNAC Core Team)
  * @author			Seiler Thomas (contributer)
  * @copyright			2007 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
@@ -45,7 +44,7 @@ class CallWrapper extends Common {
    */
    public function __call($methodName, $parameters) {
       $value = call_user_func_array(array( $this->object, $methodName ), $parameters);
-      $this->logger->debug(get_class($this->object)."->".$methodName."(".join(",",$parameters).") = ".$value ."\n",2); 
+      $this->logger->debug( get_class($this->object) ."->". $methodName ."(". join(",",$parameters).") = ". $value ."\n",2); 
       return $value;
    }
 }

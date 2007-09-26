@@ -20,8 +20,6 @@
  * it is here only for completeness' sake
 */
 abstract class Result {
-#   protected $port;
-#   protected $system;
 }
 
 ?>

@@ -9,7 +9,6 @@
  * by the Free Software Foundation.
  *
  * @package                     FreeNAC
- * @author                      Sean Boran (FreeNAC Core Team)
  * @author                      Hector Ortiz (FreeNAC Core Team)
  * @copyright           	2007 FreeNAC
  * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2

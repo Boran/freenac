@@ -9,7 +9,9 @@
  * by the Free Software Foundation.
  *
  * @package                     FreeNAC
- * @author                      FreeNAC Core Team
+ * @author                      Sean Boran (FreeNAC Core Team)
+ * @author			Hector Ortiz (FreeNAC Core Team)
+ * @author			Thomas Seiler (contributer)
  * @copyright                   2007 FreeNAC
  * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version                     SVN: $Id$
@@ -65,13 +67,22 @@ SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchNam
   LEFT  JOIN vlan v1    ON port.last_vlan = v1.id
 EOF;
          $query .=" WHERE port.name='$portname' and switch.ip='$switchip' LIMIT 1";*/
-         $query="select sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, sw.comment as switch_comment, p.default_vlan, p.last_vlan, p.id as port_id, p.name as port_name, p.default_vlan, l.id as office_id, l.name as office,b.name as building from switch sw left join port p on sw.id=p.switch and p.name='$portname' left join location l on sw.location=l.id left join building b on l.building_id=b.id where sw.ip='$switchip' limit 1;";
+         $query=<<<EOF
+         SELECT sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, sw.comment as switch_comment, p.default_vlan, p.last_vlan,
+                p.id as port_id, p.name as port_name, p.default_vlan, l.id as office_id, l.name as office,b.name as building
+         FROM switch sw LEFT JOIN port p ON sw.id=p.switch and p.name='$portname' LEFT JOIN location l ON sw.location=l.id
+         LEFT JOIN building b ON l.building_id=b.id WHERE sw.ip='$switchip' limit 1;";
+EOF;
+         #$query="select sw.id as switch_id, sw.ip as switch_ip, sw.name as switch_name, sw.comment as switch_comment, p.default_vlan, p.last_vlan, p.id as port_id, p.name as port_name, p.default_vlan, l.id as office_id, l.name as office,b.name as building from switch sw left join port p on sw.id=p.switch and p.name='$portname' left join location l on sw.location=l.id left join building b on l.building_id=b.id where sw.ip='$switchip' limit 1;";
 	 if ($temp=mysql_fetch_one($query))
          {
             #Information found in DB.
             $this->props=$temp;
-            $this->props['exception_vlan']=v_sql_1_select("select vs.vlan_id from vlanswitch vs inner join vlan v on vs.vid=v.id"
-                                ." inner join switch s on s.id=vs.swid where s.ip='$switchip'");
+            $query=<<<EOF
+            SELECT vs.vlan_id FROM vlanswitch vs INNER JOIN vlan v ON vs.vid=v.id
+            INNER JOIN switch s ON s.id=vs.swid WHERE s.ip='$switchip';
+EOF;
+            $this->props['exception_vlan']=v_sql_1_select($query);
             #Initialize control flags
 	    if ($this->switch_ip)
                $this->props['switch_in_db']=true;
