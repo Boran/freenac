@@ -54,9 +54,11 @@ class EndDevice extends Common
          $this->mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";	  	
       
          # Query systems table 
-         $sql_query="select s.id as sid, s.mac as mac, s.name as hostname, s.description, s.status, u.id as uid,"
-                   ."u.username, s.r_ip as ip, s.expiry, v.id as vid, v.default_name as vlan_name from systems s"
-                   ." left join users u on s.uid=u.id left join vlan v on s.vlan=v.id where s.mac='{$this->mac}' limit 1";
+         $sql_query=<<<EOF
+            SELECT s.id AS sid, s.mac AS mac, s.name as hostname, s.description, s.status, u.id AS uid,
+               u.username, s.r_ip AS ip, s.expiry, v.id AS vid, v.default_name AS vlan_name FROM systems s
+               LEFT JOIN users u ON s.uid=u.id LEFT JOIN vlan v ON s.vlan=v.id WHERE s.mac='{$this->mac}' LIMIT 1;
+EOF;
       
          #System found in database, fill up the properties
          if ($temp=mysql_fetch_one($sql_query))
@@ -72,7 +74,6 @@ class EndDevice extends Common
 	    $this->db_row['status']=0;
 	    $this->db_row['mac']=$this->mac;
 	    $this->db_row['in_db']=false;
-	    $this->logger->logit("Unknown device {$this->mac}");
 	 }
 
          #Initial values for these vars. They'll be modified at some point in the future in this class
@@ -126,7 +127,7 @@ class EndDevice extends Common
 
    /** Is this EndDevice a Virtual Machine ?
    * It is, if the vendor string associated to the first 3 bytes of the mac
-   * contains "vmware" or "parallels"
+   * contains "vmware", "parallels" or "microsoft"
    * @return boolean	Tell whether this EndDevice is a Virtual Machine
    */
    public function isVM()
@@ -138,11 +139,8 @@ class EndDevice extends Common
             return true;    # The original
          if (stristr($this->getVendor(),"parallels")) 
             return true;    # Mac VMWare-alike
-         /**
-         * @todo Check with Sean if its okay to think that all Microsoft OUIs are VirtualPCs?
-         */
-	 # if (stristr(this->getVendor(),"microsoft")) 
-         # return true; # VirtualPC
+	 if (stristr(this->getVendor(),"microsoft")) 
+            return true;    # VirtualPC
       }
       else
       {

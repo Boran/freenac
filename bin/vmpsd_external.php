@@ -93,7 +93,6 @@ $logger->logit("Started\n");
 /* Loop Forever (we are a daemon) */
 while ($in && $out) {
 	/* Read one line from vmpsd and parse it */
-        $logger->logit("Waiting for some input\n");
 	$line=rtrim( fgets($in, 1024) );
 
 	/* If there are some characters */

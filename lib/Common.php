@@ -17,8 +17,8 @@
  */
 
 /**
- * This class should be used as a parent class, since it allows for accessing the config
- * singleton and logging facilities.
+ * Define this common parent class to ensure consistent logging and access to configuration settings.
+ * This class can be extended with 'common' code to simplify derived classes and ensure consistency.
 */
 class Common {
    protected $conf;
