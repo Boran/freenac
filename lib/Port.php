@@ -57,7 +57,8 @@ class Port extends Common
             FROM switch sw LEFT JOIN port p ON sw.id=p.switch and p.name='$portname' LEFT JOIN location l ON sw.location=l.id
             LEFT JOIN building b ON l.building_id=b.id WHERE sw.ip='$switchip' limit 1;
 EOF;
-	 if ($temp=mysql_fetch_one($query))
+	 $this->logger->debug($query,3);
+         if ($temp=mysql_fetch_one($query))
          {
             #Information found in DB.
             $this->props=$temp;
@@ -67,6 +68,7 @@ EOF;
             SELECT vs.vlan_id FROM vlanswitch vs INNER JOIN vlan v ON vs.vid=v.id
                INNER JOIN switch s ON s.id=vs.swid WHERE s.ip='$switchip';
 EOF;
+            $this->logger->debug($query,3);
             $this->props['exception_vlan']=v_sql_1_select($query);
             
             #Initialize control flags
@@ -102,11 +104,13 @@ EOF;
          {
             #If so, lookup Users
             $query="SELECT GROUP_CONCAT(Surname) AS Surname FROM users WHERE PhysicalDeliveryOfficeName='" . $this->office . "'";
+            $this->logger->debug($query,3);
             $users=v_sql_1_select($query);
             $this->props['users_in_office']=$users;
 
             #Then, patchcable information
             $query="SELECT CONCAT(outlet,', {$this->office}, ',comment) FROM patchcable WHERE port='" . $this->port_id . "'";
+            $this->logger->debug($query,3);
             $patch_details=v_sql_1_select($query);
             $this->props['patch_details']=$patch_details;
          }
@@ -114,7 +118,9 @@ EOF;
          #If the object is a syslog message, lookup the vlan_id for that vlan and set it to last_vlan
          if ($object instanceof VMPSResult)
          {
-            $temp_vlan=v_sql_1_select("SELECT id FROM vlan WHERE default_name='$lastvlan';");
+            $query="SELECT id FROM vlan WHERE default_name='$lastvlan';";
+            $this->logger->debug($query,3);
+            $temp_vlan=v_sql_1_select($query);
             if ($temp_vlan>0)
                $this->props['last_vlan']=$temp_vlan;
             else
@@ -221,6 +227,7 @@ EOF;
             AND sw.ip='{$this->switch_ip}' WHERE DATE_SUB(CURDATE(), INTERVAL 2 HOUR) <= s.lastseen
             ORDER BY lastseen DESC LIMIT 1;
 EOF;
+         $this->logger->debug($query,3);
          $vm_vlan=v_sql_1_select($query);
          if ($vm_vlan)
             return $vm_vlan;
@@ -263,11 +270,13 @@ EOF;
       if (!$this->isSwitchInDB())
       {
          $query="INSERT INTO switch SET ip='{$this->switch_ip}', name='{$this->switch_name}',comment='';";
+         $this->logger->debug($query,3);
          $res=mysql_query($query);
          if ($res)
          {
             #Switch has been inserted, lookup its id
             $query="SELECT id FROM switch WHERE ip='{$this->switch_ip}' LIMIT 1;";
+            $this->logger->debug($query,3);
 	    $this->props['switch_id']=v_sql_1_select($query);
 
             #If we have its id, change the value of our control flag
@@ -288,11 +297,13 @@ EOF;
       if (!$this->isPortInDB())
       {
          $query="INSERT INTO port SET name='{$this->port_name}', switch='{$this->switch_id}', last_vlan='{$this->last_vlan}', last_activity=NOW();";
+         $this->logger->debug($query,3);
          $res=mysql_query($query);
          if ($res)
          {
             #Port has been inserted, lookup its id
 	    $query="SELECT id FROM port WHERE name='{$this->port_name}' AND switch='{$this->switch_id}' LIMIT 1;";
+            $this->logger->debug($query,3);
             $this->props['port_id']=v_sql_1_select($query);
 
             #If we have its id, change the value of our control flag
@@ -346,6 +357,7 @@ EOF;
       if ($this->isPortInDB())
       {
          $query="UPDATE port SET last_activity=NOW(), last_vlan='{$this->last_vlan}' WHERE id='{$this->port_id}'";
+         $this->logger->debug($query,3);
          $res=mysql_query($query);
          if ($res)
          {

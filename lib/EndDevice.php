@@ -46,9 +46,9 @@ class EndDevice extends Common
       
          # Sanity check - Is this a valid MAC address ??? 
          if (!preg_match("/^[0-9a-f]{12}$/",$mac)) 
-            DENY();
+            DENY('Invalid MAC address');
          if ($mac === '000000000000') 
-            DENY();
+            DENY('Invalid MAC address');
       
          # Rewrite mac address according to Cisco convention, XXXX.XXXX.XXXX  
          $this->mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";	  	
@@ -60,13 +60,14 @@ class EndDevice extends Common
                LEFT JOIN users u ON s.uid=u.id LEFT JOIN vlan v ON s.vlan=v.id WHERE s.mac='{$this->mac}' LIMIT 1;
 EOF;
       
+         $this->logger->debug($sql_query,3);
          #System found in database, fill up the properties
          if ($temp=mysql_fetch_one($sql_query))
          {
             $this->db_row=$temp;
             $this->db_row['in_db']=true;
             if (($object instanceof VMPSRequest) && ($this->vid == 0))
-               DENY();
+               DENY('VLAN ID assigned to this EndDevice equals zero');
          }
          else 
          {
@@ -211,7 +212,8 @@ EOF;
       */
       $mac=preg_replace('/\./','',$this->mac);
       $prefix="$mac[0]$mac[1]$mac[2]$mac[3]$mac[4]$mac[5]";
-      $query="select vendor from ethernet where mac like '%$prefix%';";
+      $query="SELECT vendor FROM ethernet WHERE mac LIKE '%$prefix%';";
+      $this->logger->debug($query,3);
       $vendor=v_sql_1_select($query);
       $vendor=rtrim($vendor,',');
       return trim($vendor);
@@ -256,7 +258,7 @@ EOF;
 	 }
       }
       $this->logger->logit("Field $methodName doesn't exist");
-      DENY();
+      DENY('Unknown method called');
    }
 	
    /**
@@ -281,7 +283,7 @@ EOF;
       if (array_key_exists($key,$this->db_row))
          $this->db_row[$key]=$value;
       else
-         DENY();
+         DENY('Attempting to set an unknown property');
    }
 
 
@@ -319,6 +321,7 @@ EOF;
          else
             #Normal case, update lastseen, lastport and lastvlan
             $query="UPDATE systems SET LastSeen=NOW(), LastPort={$this->port_id}, LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
+         $this->logger->debug($query,3);
          $res=mysql_query($query);
          if ($res)
          {
@@ -364,12 +367,16 @@ EOF;
                $sms_os     =$matches[3];
                $sms_details="";
                $this->logger->logit("SMS PC: name=$sms_name, NTaccount=$txx_name, $sms_os, $sms_details");
-               $os3_id=v_sql_1_select("select id from sys_os3 where value='$sms_os'");
+               $query="SELECT id FROM sys_os3 WHERE value='$sms_os';";
+               $this->logger->debug($query,3);
+               $os3_id=v_sql_1_select($query);
 
                insert_user($txx_name);
                direx_sync_user($txx_name);
 
-               $uid=v_sql_1_select("select id from users where username like '$txx_name'");
+               $query="select id from users where username like '$txx_name';";
+               $this->logger->debug($query,3);
+               $uid=v_sql_1_select($query);
                if (!$uid)
                   $uid=0;
                if ($conf->lastseen_sms_vlan)
@@ -386,11 +393,13 @@ EOF;
                     .      "lastport='{$this->port_id}', "
                     .      "office='{$this->office_id}', "
                     .      "mac='{$this->mac}' ";
+               $this->logger->debug($query,3);
                $res = mysql_query($query);
                if ($res)
                { 
                   # Document the user's details in the alert
-                  $query="SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) from users where username='$txx_name'";
+                  $query="SELECT CONCAT(Givenname,' ',Surname,' ',Department,' ',Mobile) FROM users WHERE username='$txx_name'";
+                  $this->logger->debug($query,3);
                   $res = mysql_query($query);
                   if ($res) 
                   {
@@ -419,7 +428,8 @@ EOF;
          else
          #Normal case
          {
-            $query="insert into systems set lastseen=NOW(), status='{$this->conf->set_status_for_unknowns}', name='unknown', vlan='{$this->conf->set_vlan_for_unknowns}',lastport='{$this->port_id}', office='{$this->office_id}', description='".$this->conf->default_user_unknown."', uid='1', mac='{$this->mac}';";
+            $query="INSERT INTO systems SET lastseen=NOW(), status='{$this->conf->set_status_for_unknowns}', name='unknown', vlan='{$this->conf->set_vlan_for_unknowns}',lastport='{$this->port_id}', office='{$this->office_id}', description='".$this->conf->default_user_unknown."', uid='1', mac='{$this->mac}';";
+            $this->logger->debug($query,3);
             $res=mysql_query($query);
 	    if ($res)
 	    {

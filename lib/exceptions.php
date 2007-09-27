@@ -27,8 +27,8 @@
 class DenyException extends Exception
 {
    # constructor  	
-   function __construct() {
-      parent::__construct("DENY"); 
+   function __construct($why) {
+      parent::__construct("DENY: ".$why); 
    }
 }
 
@@ -37,8 +37,8 @@ class DenyException extends Exception
  * policy class
  * @throws	DenyException 
  */
-function DENY() {
-   throw new DenyException;
+function DENY($why='') {
+   throw new DenyException($why);
 }
 
 /**
