@@ -106,7 +106,11 @@ class BasicPolicy extends Policy {
 		else if ($HOST->isUnManaged()) 
 		{
                    # Same as "unknown": use default, but alert
-                   #log("Unmanaged device on VMPSD port $switch $PORT", "WARN");
+                   $HOST->logger->logit("Unmanaged device on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()}",LOG_WARNING);
+                   if ($CONF->default_vlan)
+                   {
+                      ALLOW($CONF->default_vlan);
+                   }
 
                 } 
 		else 
@@ -129,7 +133,7 @@ class BasicPolicy extends Policy {
                    }
 		}
 		#Default policy
-		DENY('Default policy reached. Unknown device and no default_vlan specified');
+		DENY('Default policy reached. Unknown or unmanaged device and no default_vlan specified');
 	}
 
 	function catch_ALLOW($vlan) 
