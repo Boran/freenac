@@ -129,7 +129,7 @@ class BasicPolicy extends Policy {
                    }
 		}
 		#Default policy
-		DENY();
+		DENY('Default policy reached. Unknown device and no default_vlan specified');
 	}
 
 	function catch_ALLOW($vlan) 

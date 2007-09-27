@@ -61,7 +61,7 @@ require_once("../lib/exceptions.php");
 require_once("../lib/funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
-#$logger->setDebugLevel(2);
+#$logger->setDebugLevel(1);
 #$logger->logToStdErr();
 /* include files */
 /* Load the policy file */
@@ -112,13 +112,13 @@ while ($in && $out) {
                           || empty($splitted[3]) || empty($splitted[4]))
                         {
                            $logger->logit("Invalid request\n");
-                           DENY();
+                           DENY('Invalid request');
                         }
 
                         /* sanity checks, 5 values */
                         if (count($splitted) != 5 || ((strlen($splitted[4]) < 12) || (strlen($splitted[4]) > 17))) {
                            $logger->logit("Invalid request\n");
-                           DENY();
+                           DENY('Invalid request');
                         }
 
 			 /* extract values */
@@ -145,14 +145,14 @@ while ($in && $out) {
 					if (method_exists($policy,catch_ALLOW))
 					{
 						if ($e instanceof DenyException)
-						   DENY();
+						   DENY($e->getMessage());
 						else
 						   ALLOW($policy->catch_ALLOW($e->getDecidedVlan()));
 					}
 					else 
 					{
 						if ($e instanceof DenyException)
-						   DENY();
+						   DENY($e->getMessage());
 						else 
 						   ALLOW($e->getDecidedVlan());
 					}
@@ -173,7 +173,7 @@ while ($in && $out) {
 	 		}
  	    
  	  		/* This is the default action */
- 	  		DENY();
+ 	  		DENY('Default action');
  	    }
  	    catch (DenyException $e) {
  	  		fputs($out, "DENY\n");
