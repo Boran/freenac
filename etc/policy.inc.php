@@ -106,12 +106,11 @@ class BasicPolicy extends Policy {
 		else if ($HOST->isUnManaged()) 
 		{
                    # Same as "unknown": use default, but alert
-                   $HOST->logger->logit("Unmanaged device on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()}",LOG_WARNING);
+                   $this->logger->logit("Unmanaged device on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()}",LOG_WARNING);
                    if ($CONF->default_vlan)
                    {
                       ALLOW($CONF->default_vlan);
                    }
-
                 } 
 		else 
 		{   

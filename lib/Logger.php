@@ -19,14 +19,23 @@
 * Define the Logger class which is a Singleton which provides for logging facilities.
 *
 * This class uses the constants defined by Syslog, which are listed as follows:
-*    LOG_EMERG   0       System is unusable
-*    LOG_ALERT   1       Action must be taken immediately
-*    LOG_CRIT    2       Critical conditions
-*    LOG_ERROR   3       Error conditions
-*    LOG_WARNING 4       Warning conditions
-*    LOG_NOTICE  5       Normal, but significant condition
-*    LOG_INFO    6       Informational message
-*    LOG_DEBUG   7       Debug-level-message
+*   - LOG_EMERG   0       System is unusable
+*   - LOG_ALERT   1       Action must be taken immediately
+*   - LOG_CRIT    2       Critical conditions
+*   - LOG_ERROR   3       Error conditions
+*   - LOG_WARNING 4       Warning conditions
+*   - LOG_NOTICE  5       Normal, but significant condition
+*   - LOG_INFO    6       Informational message
+*   - LOG_DEBUG   7       Debug-level-message
+*
+* Example usage:
+*	$logger=Logger::getInstance();		Needed, before other lines
+*	$logger->setDebugLevel(3);		Log debug1,2,3 (default is only 1)
+*	$logger->logToStdErr();			If you don't want to use syslog
+*	$logger->logit("Hello world");		Will appear in syslog or stderr
+*	$logger->debug("Hello debug world");	Will be prefixed "debug1"
+*	$logger->debug("Hello debug world",3);	Will be prefixed "debug3"
+*	
 */
 final class Logger
 {
@@ -39,6 +48,8 @@ final class Logger
    private $identifier=NULL;
    private $facility=NULL;
    private $stderr=false;
+   private $httpd_log=false;			//Log to webserver log?
+   private $email_alert=false;			//Send Err or higher via email
    
    /**
    * Open logging facilities and start output buffering
@@ -47,7 +58,7 @@ final class Logger
    {
       define_syslog_variables();
       ob_start();
-      $this->identifier=basename($_SERVER['SCRIPT_FILENAME'],'.php'); #Get script's name as identifier
+      $this->identifier=basename($_SERVER['SCRIPT_FILENAME']); #Get script's name as identifier
       $this->openFacility();   		#Open logging facilities
    }
 
@@ -66,7 +77,7 @@ final class Logger
    */
    public function logToStdErr($var=true)	//Redirect logging to stderr
    {
-      if ($var)
+      if (is_bool($var))
       {
          closelog();		#Close syslog
          $this->stderr=$var;    
@@ -74,6 +85,30 @@ final class Logger
       else
       {
          $this->openFacility(); #Open logging facilities
+      }
+   }
+
+   /**
+   * Redirect logging to Email
+   * @param boolean $var	Activate or deactivate LogToEmail. Default is to activate ($var=true)
+   */
+   public function setLogToEmail($var=true)       //Redirect logging to stderr
+   {
+      if (is_bool($var))
+      {
+         $this->email_alert=$var;
+      }
+   }
+
+   /**
+   * Redirect logging to Webserver log
+   * @param boolean $var	Activate or deactivate webserver logging. Default is to activate ($var=true)
+   */
+   public function setLogToHttpd($var=true)       //Redirect logging to stderr
+   {
+      if (is_bool($var))
+      {
+         $this->httpd_log=$var;
       }
    }
  
