@@ -90,11 +90,11 @@ final class Logger
    }
 
    /**
-   * Divert logging to StdErr
-   * @param boolean $var        Activate or deactivate StdErr logging. Default is to activate ($var=true)
+   * Divert logging to httpd
+   * @param boolean $var        Activate or deactivate httpd logging. Default is to activate ($var=true)
    * @return boolean 		True if successful, false otherwise
    */
-   public function setLogToEmail($var=true)
+   public function setLogToHttpd($var=true)
    {
       if (is_bool($var))
       {
@@ -124,30 +124,6 @@ final class Logger
       }
    }
 
-   /**
-   * Redirect logging to Email
-   * @param boolean $var	Activate or deactivate LogToEmail. Default is to activate ($var=true)
-   */
-   public function setLogToEmail($var=true)       //Redirect logging to stderr
-   {
-      if (is_bool($var))
-      {
-         $this->email_alert=$var;
-      }
-   }
-
-   /**
-   * Redirect logging to Webserver log
-   * @param boolean $var	Activate or deactivate webserver logging. Default is to activate ($var=true)
-   */
-   public function setLogToHttpd($var=true)       //Redirect logging to stderr
-   {
-      if (is_bool($var))
-      {
-         $this->httpd_log=$var;
-      }
-   }
- 
    /**
    * Set the script name which will be displayed in syslog
    * @param mixed $name		Name to set to

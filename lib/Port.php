@@ -41,19 +41,21 @@ class Port extends Common
       if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
       {
          # Get needed parameters from object
-         $switchip=$object->switch;
-         $portname=$object->port;
-         $domain=$object->vtp;
-         $lastvlan=$object->lastvlan;
+         $switchip=trim($object->switch);
+         $portname=trim($object->port);
+         $domain=trim($object->vtp);
+         $lastvlan=trim($object->lastvlan);
+   
+         #In case we have a DENY as result from vmpsd_external, so no vlan would come in the object. If so, set vlan to
+         # '--NONE--' which should deny access
+         if (($object instanceof VMPSResult) && (!$lastvlan))
+            $lastvlan="--NONE--";
+         
          # Invalid parameters?
          if ((strlen($switchip) < 8) || (strlen($portname) <1)) {
-            return undef;
+            DENY('Invalid parameters');
          }
         
-         #In case we have a DENY as result from vmpsd_external, so no vlan would come in the object. If so, set vlan to 
-         # '--NONE--' which should deny access 
-	 if (($object instanceof VMPSResult) && (!$lastvlan))
-            $lastvlan="--NONE--";
          $query=<<<EOF
          SELECT sw.id AS switch_id, sw.ip AS switch_ip, sw.name AS switch_name, sw.comment AS switch_comment, p.default_vlan, p.last_vlan,
             p.id AS port_id, p.name AS port_name, p.default_vlan, l.id AS office_id, l.name AS office,b.name AS building

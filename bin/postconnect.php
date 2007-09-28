@@ -72,15 +72,22 @@ do
       $regs=array();
       if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs))
       {
-         $success=$regs[2];
-         $mac=$regs[3];
-         $vlan=$regs[4];
-         $switch=$regs[5];
-         $port=rtrim($regs[6]);
+         $success=trim($regs[2]);
+         $mac=trim($regs[3]);
+         $vlan=trim($regs[4]);
+         $switch=trim($regs[5]);
+         $port=trim($regs[6]);
          $details="$regs[1]";
-         $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
+         
+         #Maybe there is no vlan because answer was a DENY, in such case, set to '--NONE--'
          if (!$vlan)
             $vlan='--NONE--';
+
+         #If there are empty parameters, go to next request
+         if (empty($switch) || empty($port) || empty($success) || empty($vlan) || empty($mac))
+            continue;
+         
+         $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
 	 try 
          {
             $result=new VMPSResult($mac,$switch,$port,$success,$vlan);
