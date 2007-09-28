@@ -38,7 +38,7 @@ class EndDevice extends Common
    {
       #If we don't receive an object, DENY
       if (!$object)
-         DENY();
+         DENY('No object received in constructor');
       parent::__construct();
       if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
       {
@@ -88,7 +88,7 @@ EOF;
       else
       {
          #Object is an unknown instance
-         DENY();
+         DENY('Unknown instance of object passed to the constructor');
       } 
    }
 

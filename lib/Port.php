@@ -34,6 +34,9 @@ class Port extends Common
    */
    function __construct($object)
    {
+      #If we don't receive an object, DENY
+      if (!$object)
+         DENY('No object received in constructor');
       parent::__construct();	
       if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
       {
@@ -126,6 +129,11 @@ EOF;
             else
                $this->props['last_vlan']=0;
          }
+      }
+      else
+      {
+         #Object is an unknown instance
+         DENY('Unknown instance of object passed to the constructor');
       }
    }
 
