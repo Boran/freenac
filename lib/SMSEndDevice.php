@@ -1,9 +1,39 @@
 <?php
+/**
+ * SMSEndDevice.php
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package                     FreeNAC
+ * @author                      Hector Ortiz (FreeNAC Core Team)
+ * @copyright                   2007 FreeNAC
+ * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version                     SVN: $Id$
+ * @link                        http://www.freenac.net
+ */
+
+/**
+ * This class represents a row in the systems table in the database.
+ * In the current version, the host is identified by its mac address.
+ * This class is a specialization for the EndDevice class overriding the
+ * functionality of 'insertIfUnknown' to insert an SMS device.
+ * This class extends the {@link EndDevice} class.
+ */
 
 class SMSEndDevice extends EndDevice
 {
 
-   public function insertInUnknown()
+   /**
+   * Override default insertIfUnknown function.
+   * Try to insert an SMS device. If the device is not an SMS device, call
+   * parent insertIfUnknown method to perform a normal insert
+   * @return boolean		True if an insert operation was performed, false otherwise
+   */
+   public function insertIfUnknown()
    {
       if (!$this->inDB() && $this->port_id)
       {
@@ -81,11 +111,11 @@ class SMSEndDevice extends EndDevice
             }
             else
             {
-               return parent::insertIfUnknown();
+               #Device is not an SMS device, perform normal insert
+	       return parent::insertIfUnknown();
             }
-        }
+         }
       }
    }
-
 }
 ?>

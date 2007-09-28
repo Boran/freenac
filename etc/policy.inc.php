@@ -15,8 +15,8 @@
  
 class BasicPolicy extends Policy {
 
-	#public function __construct($SMS_HOST,$PORT) {
-        #   parent::__construct($SMS_HOST,$PORT);
+	#public function __construct($HOST,$PORT) {
+        #   parent::__construct($HOST,$PORT);
 	#}
 
 /*        public function HealthOK() {
@@ -93,24 +93,25 @@ class BasicPolicy extends Policy {
 		$CONF=$GLOBALS['CONF'];
 		$PORT=$GLOBALS['PORT'];
 		$REQUEST=$GLOBALS['REQUEST'];
-                $SMS_HOST=new CallWrapper(new SMSEndDevice($REQUEST));   // initialise the SMS module
-		if ($SMS_HOST->isExpired() || $SMS_HOST->isKilled())
+ 		$HOST=$GLOBALS['HOST'];
+
+		if ($HOST->isExpired() || $HOST->isKilled())
 			ALLOW($CONF->vlan_for_killed);
-		if ($SMS_HOST->isActive())
+		if ($HOST->isActive())
 		{
 			if ($vlan=$PORT->vlanBySwitchLocation())
 				ALLOW($vlan);
 			else
-				ALLOW($SMS_HOST->getVlanId());
+				ALLOW($HOST->getVlanId());
 		} 
-		else if ($SMS_HOST->isUnManaged()) 
+		else if ($HOST->isUnManaged()) 
 		{
                    # Same as "unknown": use default, but alert
-                   $this->logger->logit("Unmanaged device {$SMS_HOST->getMAC()}({$SMS_HOST->getHostName()}) on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()}",LOG_WARNING);
+                   $this->logger->logit("Unmanaged device {$HOST->getMAC()}({$HOST->getHostName()}) on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()}",LOG_WARNING);
                 } 
 		#UNKNOWN AND UNMANAGED SYSTEMS
 		#Check for VMs: special case, use vlan of VM host
-	        if ($SMS_HOST->isVM()) 
+	        if ($HOST->isVM()) 
                 {
                    if ($vlan=$PORT->getVMVlan())
                       ALLOW($vlan); #Retrieve the vlan from the host device
@@ -135,16 +136,24 @@ class BasicPolicy extends Policy {
 
 	public function postconnect()
         {
-	   $HOST=$GLOBALS['HOST'];
            $CONF=$GLOBALS['CONF'];
            $PORT=$GLOBALS['PORT'];
-           $REQUEST=$GLOBALS['REQUEST'];
+           $RESULT=$GLOBALS['RESULT'];
+	   $SMS_HOST=new CallWrapper(new SMSEndDevice($RESULT));
+ 
+           #Passing of information between objects
+           $SMS_HOST->setPortID($PORT->getPortID());
+           $SMS_HOST->setOfficeID($PORT->getOfficeID());
+           $SMS_HOST->setVlanID($PORT->getLastVlanID());
+           $SMS_HOST->setPatchInfo($PORT->getPatchInfo());
+           $SMS_HOST->setSwitchInfo($PORT->getSwitchInfo());
+           $SMS_HOST->setPortInfo($PORT->getPortInfo());
 	   
 	   $PORT->insertIfUnknown();
            $PORT->update();
 	   
-	   $HOST->insertIfUnknown();
-	   $HOST->update();
+	   $SMS_HOST->insertIfUnknown();
+	   $SMS_HOST->update();
 	}
 }
  
