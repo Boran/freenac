@@ -36,6 +36,9 @@ class EndDevice extends Common
    */
    public function __construct($object) 
    {
+      #If we don't receive an object, DENY
+      if (!$object)
+         DENY();
       parent::__construct();
       if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
       {
@@ -81,6 +84,11 @@ EOF;
          $this->db_row['port_id']=0;
          $this->db_row['office_id']=1;
 	 $this->db_row['lastvlan_id']=1;
+      }
+      else
+      {
+         #Object is an unknown instance
+         DENY();
       } 
    }
 
