@@ -15,8 +15,8 @@
  
 class BasicPolicy extends Policy {
 
-	#public function __construct($HOST,$PORT) {
-        #   parent::__construct($HOST,$PORT);
+	#public function __construct($SMS_HOST,$PORT) {
+        #   parent::__construct($SMS_HOST,$PORT);
 	#}
 
 /*        public function HealthOK() {
@@ -90,47 +90,40 @@ class BasicPolicy extends Policy {
 		
 
 		}*/
-		$HOST=$GLOBALS['HOST'];
 		$CONF=$GLOBALS['CONF'];
 		$PORT=$GLOBALS['PORT'];
 		$REQUEST=$GLOBALS['REQUEST'];
-		if ($HOST->isExpired() || $HOST->isKilled())
+                $SMS_HOST=new CallWrapper(new SMSEndDevice($REQUEST));   // initialise the SMS module
+		if ($SMS_HOST->isExpired() || $SMS_HOST->isKilled())
 			ALLOW($CONF->vlan_for_killed);
-		if ($HOST->isActive())
+		if ($SMS_HOST->isActive())
 		{
 			if ($vlan=$PORT->vlanBySwitchLocation())
 				ALLOW($vlan);
 			else
-				ALLOW($HOST->getVlanId());
+				ALLOW($SMS_HOST->getVlanId());
 		} 
-		else if ($HOST->isUnManaged()) 
+		else if ($SMS_HOST->isUnManaged()) 
 		{
                    # Same as "unknown": use default, but alert
-                   $this->logger->logit("Unmanaged device on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()}",LOG_WARNING);
-                   if ($CONF->default_vlan)
-                   {
-                      ALLOW($CONF->default_vlan);
-                   }
+                   $this->logger->logit("Unmanaged device {$SMS_HOST->getMAC()}({$SMS_HOST->getHostName()}) on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()}",LOG_WARNING);
                 } 
-		else 
-		{   
-		   #UNKNOWN SYSTEMS
-		   #Check for VMs: special case, use vlan of VM host
-	           if ($HOST->isVM()) 
-                   {
-                      if ($vlan=$PORT->getVMVlan())
-                         ALLOW($vlan); #Retrieve the vlan from the host device
-                   }
-
-                   #Port has a default vlan
-                   if ($vlan=$PORT->getPortDefaultVlan()) {
+		#UNKNOWN AND UNMANAGED SYSTEMS
+		#Check for VMs: special case, use vlan of VM host
+	        if ($SMS_HOST->isVM()) 
+                {
+                   if ($vlan=$PORT->getVMVlan())
                       ALLOW($vlan); #Retrieve the vlan from the host device
-                   } 
-                   else if ($CONF->default_vlan) 
-                   {
-                      ALLOW($CONF->default_vlan);
-                   }
-		}
+                }
+
+                #Port has a default vlan
+                if ($vlan=$PORT->getPortDefaultVlan()) {
+                   ALLOW($vlan); #Retrieve the vlan from the host device
+                } 
+                else if ($CONF->default_vlan) 
+                {
+                   ALLOW($CONF->default_vlan);
+                }
 		#Default policy
 		DENY('Default policy reached. Unknown or unmanaged device and no default_vlan specified');
 	}
@@ -142,17 +135,16 @@ class BasicPolicy extends Policy {
 
 	public function postconnect()
         {
-	   $HOST=$GLOBALS['HOST'];
+	   $HOST=$GLOBALS['SMS_HOST'];
            $CONF=$GLOBALS['CONF'];
            $PORT=$GLOBALS['PORT'];
            $REQUEST=$GLOBALS['REQUEST'];
+	   
 	   $PORT->insertIfUnknown();
            $PORT->update();
+	   
 	   $HOST->insertIfUnknown();
-	   #print_r($HOST->getAllProps());
 	   $HOST->update();
-           #$PORT->getAllProps();
-	   #print_r($HOST->getAllProps());
 	}
 }
  

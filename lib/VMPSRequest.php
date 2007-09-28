@@ -16,8 +16,6 @@
 */
 
 
-include_once "Request.php";
-
 /**
  * Class that contains information related to a VMPS request
  * This class extends the {@link Request} class
@@ -42,8 +40,8 @@ final class VMPSRequest	extends Request		# Disallow inheriting from this class
          $this->props['lastvlan']=$tlastvlan;
          
          #Initialize a port and a system objects
-	 $this->port=new CallWrapper(new Port($this));
-         $this->system=new CallWrapper(new EndDevice($this));
+	 $this->system=new CallWrapper(new EndDevice($this));
+         $this->port=new CallWrapper(new Port($this));
       }
    }
   
