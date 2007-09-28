@@ -29,12 +29,12 @@
 *   - LOG_DEBUG   7       Debug-level-message
 *
 * Example usage:
-*	$logger=Logger::getInstance();		Needed, before other lines
-*	$logger->setDebugLevel(3);		Log debug1,2,3 (default is only 1)
-*	$logger->logToStdErr();			If you don't want to use syslog
-*	$logger->logit("Hello world");		Will appear in syslog or stderr
-*	$logger->debug("Hello debug world");	Will be prefixed "debug1"
-*	$logger->debug("Hello debug world",3);	Will be prefixed "debug3"
+*   - $logger=Logger::getInstance();		Needed, before other lines
+*   - $logger->setDebugLevel(3);		Log debug1,2,3 (default is only 1)
+*   - $logger->logToStdErr();			If you don't want to use syslog
+*   - $logger->logit("Hello world");		Will appear in syslog or stderr
+*   - $logger->debug("Hello debug world");	Will be prefixed "debug1"
+*   - $logger->debug("Hello debug world",3);	Will be prefixed "debug3"
 *	
 */
 final class Logger
@@ -72,10 +72,46 @@ final class Logger
    }
 
    /**
+   * Divert logging to Email
+   * @param boolean $var        Activate or deactivate LogToEmail logging. Default is to activate ($var=true)
+   * @return boolean		True if successful, false otherwise
+   */
+   public function setLogToEmail($var=true)
+   {
+      if (is_bool($var))
+      {
+         $this->email_alert=true;
+         return true; 
+      }
+      else
+      {
+         return false;
+      }
+   }
+
+   /**
+   * Divert logging to StdErr
+   * @param boolean $var        Activate or deactivate StdErr logging. Default is to activate ($var=true)
+   * @return boolean 		True if successful, false otherwise
+   */
+   public function setLogToEmail($var=true)
+   {
+      if (is_bool($var))
+      {
+         $this->httpd_log=true;
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+
+   /**
    * Divert logging to StdErr
    * @param boolean $var	Activate or deactivate StdErr logging. Default is to activate ($var=true)
    */
-   public function logToStdErr($var=true)	//Redirect logging to stderr
+   public function setLogToStdErr($var=true)	//Redirect logging to stderr
    {
       if (is_bool($var))
       {
@@ -162,6 +198,16 @@ final class Logger
    }
  
    /**
+   * Log a message to the HTTPD log
+   * This method is a wrapper around the error_log function
+   * @return boolean		True if successful, false otherwise
+   */
+   public function loghttpd($message='')
+   {
+      return error_log($message,0);
+   }
+   
+   /**
    * Log a message. 
    * @param mixed $message		Message to log
    * @param integer $criticality 	How critical is this message? Default is informational
@@ -177,14 +223,25 @@ final class Logger
          {
             fputs(STDERR,$message);
             ob_flush();
-            return true;
          }
          else
          {
             syslog($criticality,$message); 		#Log it through syslog
             ob_flush();
-            return true;
          }
+         if ($this->httpd_log)
+         {
+            $this->loghttpd($message);			#Should we log to Weblog?
+         }
+         if ($this->email_alert)
+         {
+            error_log($message,1,"root");		#TBD: Use a variable for email?
+         }
+         #if ($this->file_log)
+         #{
+         #   error_log($message,3,"/var/log/mylog");	#TBD: Use a ariable for mail?
+         #}
+         return true;
       }
       else
       { 
