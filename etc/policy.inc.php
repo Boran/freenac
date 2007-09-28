@@ -135,7 +135,7 @@ class BasicPolicy extends Policy {
 
 	public function postconnect()
         {
-	   $HOST=$GLOBALS['SMS_HOST'];
+	   $HOST=$GLOBALS['HOST'];
            $CONF=$GLOBALS['CONF'];
            $PORT=$GLOBALS['PORT'];
            $REQUEST=$GLOBALS['REQUEST'];
