@@ -109,13 +109,11 @@ class SMSEndDevice extends EndDevice
                   return false;
                }
             }
-            else
-            {
-               #Device is not an SMS device, perform normal insert
-	       return parent::insertIfUnknown();
-            }
          }
+         #Device is not an SMS device or option not enabled, perform normal insert
+         return parent::insertIfUnknown();
       }
    }
+
 }
 ?>
