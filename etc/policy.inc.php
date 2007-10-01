@@ -156,21 +156,21 @@ class BasicPolicy extends Policy {
            $CONF=$GLOBALS['CONF'];
            $PORT=$GLOBALS['PORT'];
            $RESULT=$GLOBALS['RESULT'];
-	   $SMS_HOST=new CallWrapper(new SMSEndDevice($RESULT));
+ 	   $HOST=$GLOBALS['HOST']
  
            #Passing of information between objects
-           $SMS_HOST->setPortID($PORT->getPortID());
-           $SMS_HOST->setOfficeID($PORT->getOfficeID());
-           $SMS_HOST->setVlanID($PORT->getLastVlanID());
-           $SMS_HOST->setPatchInfo($PORT->getPatchInfo());
-           $SMS_HOST->setSwitchInfo($PORT->getSwitchInfo());
-           $SMS_HOST->setPortInfo($PORT->getPortInfo());
+           $HOST->setPortID($PORT->getPortID());
+           $HOST->setOfficeID($PORT->getOfficeID());
+           $HOST->setVlanID($PORT->getLastVlanID());
+           $HOST->setPatchInfo($PORT->getPatchInfo());
+           $HOST->setSwitchInfo($PORT->getSwitchInfo());
+           $HOST->setPortInfo($PORT->getPortInfo());
 	   
 	   $PORT->insertIfUnknown();
            $PORT->update();
 	   
-	   $SMS_HOST->insertIfUnknown();
-	   $SMS_HOST->update();
+	   $HOST->insertIfUnknown();
+	   $HOST->update();
 	}
 }
  
