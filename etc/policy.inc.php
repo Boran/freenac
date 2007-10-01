@@ -156,7 +156,7 @@ class BasicPolicy extends Policy {
            $CONF=$GLOBALS['CONF'];
            $PORT=$GLOBALS['PORT'];
            $RESULT=$GLOBALS['RESULT'];
- 	   $HOST=$GLOBALS['HOST']
+ 	   $HOST=$GLOBALS['HOST'];
  
            #Passing of information between objects
            $HOST->setPortID($PORT->getPortID());
