@@ -20,7 +20,7 @@
  * @link				http://www.freenac.net
  *
  */
-require_once "funcs.inc";
+require_once "funcs.inc.php";
 $logger="logger -t vmps_log -p local5.info";
 
 ## Connect to DB

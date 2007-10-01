@@ -34,8 +34,7 @@
  *
  */
 
-require_once "funcs.inc";
-require_once "etc/port_scan.inc";
+require_once "funcs.inc.php";
 $output=TRUE;
 
 #Compatibility with old vars

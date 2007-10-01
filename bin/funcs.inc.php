@@ -1,6 +1,6 @@
 <?php
 /**
- * /opt/nac/bin/funcs.inc
+ * /opt/nac/bin/funcs.inc.php
  *
  * Long description for file:
  * common PHP functions used by several scripts
@@ -31,6 +31,11 @@ function __autoload($classname)
 require_once 'etc/config.inc';
 
 $conf=Settings::getInstance();
+
+function vlanId2Name($vlanID) {
+          // Todo: Proper Error Handling, and use better Database abstraction
+      return v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
+}
 
 function is_field_active($field)
 {
@@ -313,6 +318,17 @@ function snmp_restart_port($port, $switch) {
   }
 }
 
+function snmp_restart_port_id($port_id)
+{
+   if (is_numeric($port_id) && ($port_id>0))
+   {
+      $query="select p.name as port, s.ip as switch from port p inner join switch s on p.switch=s.id where p.id='$port_id' limit 1;";
+      $result=mysql_fetch_one($query);
+      $port=$result['port'];
+      $switch=$result['switch'];
+      snmp_restart_port($port,$switch);
+   }
+}
 
 function lookup_vendor_mac($mac) {
   global $connect;

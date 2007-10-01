@@ -24,7 +24,7 @@
 
 $debug_flag1=FALSE;
 
-require_once "funcs.inc";
+require_once "funcs.inc.php";
 
 define_syslog_variables();
 openlog("dump_ports", LOG_PID,  LOG_LOCAL5);

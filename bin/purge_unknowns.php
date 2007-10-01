@@ -29,7 +29,7 @@
 $debug_flag1=FALSE;
 #$debug_flag1=TRUE;
 
-require_once "funcs.inc";               # settings & functions
+require_once "funcs.inc.php";               # settings & functions
 
 # We don't have PHP5, so need some compat stuff
 #require_once 'PHP/Compat.php';

@@ -26,7 +26,7 @@
 $debug_flag1=FALSE;
 #$debug_flag1=TRUE;
 
-require_once 'funcs.inc';
+require_once 'funcs.inc.php';
 
 define_syslog_variables();
 openlog("cron_restart_port", LOG_PID, LOG_LOCAL5);

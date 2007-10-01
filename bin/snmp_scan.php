@@ -42,8 +42,8 @@
 # Php weirdness: change to script dir, then look for includes
 chdir(dirname(__FILE__));
 set_include_path("../:./:/opt/nac/");
-require_once "bin/funcs.inc";               # Load settings & common functions
-require_once "snmp_defs.inc";
+require_once "bin/funcs.inc.php";               # Load settings & common functions
+require_once "snmp_defs.inc.php";
 
 define_syslog_variables();              # not used yet, but anyway..
 openlog("snmp_scan.php", LOG_PID, LOG_LOCAL5);

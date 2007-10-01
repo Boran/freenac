@@ -26,7 +26,7 @@
 # main
 
 # initialize
-require_once "funcs.inc";  
+require_once "funcs.inc.php";  
 define_syslog_variables();
 openlog("ad_user_sync", LOG_PID , LOG_LOCAL5);
 # configure logging

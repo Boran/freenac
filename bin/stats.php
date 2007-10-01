@@ -21,7 +21,7 @@
  *
  */
 
-require_once "funcs.inc";
+require_once "funcs.inc.php";
 db_connect();
 
 $query="select id from vstatus";

@@ -24,7 +24,7 @@
 chdir(dirname(__FILE__));
 set_include_path("./:../");
 
-require_once('bin/funcs.inc');
+require_once('bin/funcs.inc.php');
 
 define_syslog_variables();
 openlog("nac_updates", LOG_PID , LOG_LOCAL5);

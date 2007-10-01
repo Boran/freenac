@@ -27,7 +27,7 @@ $debug_flag1=TRUE;
 $debug_flag2=TRUE;
 
 $subject="VMPS flapping";
-require_once "funcs.inc";               # Load settings & common functions
+require_once "funcs.inc.php";               # Load settings & common functions
 
 $tmp1="$argv[0].tmp1";
 $message="";

@@ -58,10 +58,10 @@ chdir(dirname(__FILE__));
 set_include_path("./:../");
 
 require_once("../lib/exceptions.php");
-require_once("../lib/funcs.inc.php");
+require_once("./funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
-#$logger->setDebugLevel(1);
+$logger->setDebugLevel(2);
 #$logger->logToStdErr();
 /* include files */
 /* Load the policy file */

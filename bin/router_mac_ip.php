@@ -38,7 +38,7 @@ $debug_to_syslog=true;
 $mysql_write1=true;                    # Just test or actually write DB changes??
 $mysql_write2=true;                    # Just test or actually write DB changes??
 
-require_once "funcs.inc";               # Load settings & common functions
+require_once "funcs.inc.php";               # Load settings & common functions
 
 define_syslog_variables();              # not used yet, but anyway..
 openlog("router_mac_ip", LOG_PID, LOG_LOCAL5);

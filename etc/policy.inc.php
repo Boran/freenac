@@ -96,11 +96,22 @@ class BasicPolicy extends Policy {
  		$HOST=$GLOBALS['HOST'];
 
 		if ($HOST->isExpired() || $HOST->isKilled())
-			ALLOW($CONF->vlan_for_killed);
+                {
+		    	if ($CONF->vlan_for_killed)
+   			{
+				$this->logger->logit("Killed or expired system {$HOST->getMAC()}({$HOST->getHostName()}) on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()}. Assigning vlan ". vlanId2Name($CONF->vlan_for_killed));
+				ALLOW($CONF->vlan_for_killed);
+			}
+			else
+				DENY("Expired or killed system and no vlan_for_killed defined");
+                }
 		if ($HOST->isActive())
 		{
 			if ($vlan=$PORT->vlanBySwitchLocation())
+			{
+				$this->logger->logit("Exception. Assigning vlan by switch location");
 				ALLOW($vlan);
+			}
 			else
 				ALLOW($HOST->getVlanId());
 		} 
@@ -114,16 +125,22 @@ class BasicPolicy extends Policy {
 	        if ($HOST->isVM()) 
                 {
                    if ($vlan=$PORT->getVMVlan())
+		   {
+		      $this->logger->logit("Device {$HOST->getMAC()} on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()} is a VM. Assigning vlan of previous authenticated host");
                       ALLOW($vlan); #Retrieve the vlan from the host device
+		   }
                 }
 
                 #Port has a default vlan
-                if ($vlan=$PORT->getPortDefaultVlan()) {
-                   ALLOW($vlan); #Retrieve the vlan from the host device
+                if ($vlan=$PORT->getPortDefaultVlan()) 
+		{
+                   	$this->logger->logit("Device {$HOST->getMAC()} on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()} is unknown or unmanaged. Assigning port default vlan");
+			ALLOW($vlan); #Retrieve the vlan from the host device
                 } 
                 else if ($CONF->default_vlan) 
                 {
-                   ALLOW($CONF->default_vlan);
+                   	$this->logger->logit("Device {$HOST->getMAC()} on port {$PORT->getPortInfo()}, switch {$PORT->getSwitchInfo()} is unknown or unmanaged. Assigning global default vlan");
+			ALLOW($CONF->default_vlan);
                 }
 		#Default policy
 		DENY('Default policy reached. Unknown or unmanaged device and no default_vlan specified');
