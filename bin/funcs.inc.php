@@ -312,7 +312,7 @@ function cv_input($str){
 function snmp_restart_port($port, $switch) {
   global $lastseen_sms_restart;
   if ($lastseen_sms_restart) {
-     $answer=syscall("./restart_port $port $switch");
+     $answer=syscall("./restart_port.php $port $switch");
      debug1($answer);
      logit("snmp_restart_port: $answer");
   }
@@ -360,6 +360,16 @@ function array_isearch($str,$array)                     //Search the array for a
       {
          return $k;
       }
+   }
+   return false;
+}
+
+function array_multi_isearch($str,$array)
+{
+   foreach($array as $k)
+   {
+      if (array_isearch($str,$k))
+         return $k;
    }
    return false;
 }

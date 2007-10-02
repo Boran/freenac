@@ -197,6 +197,8 @@ final class Logger
       {
          if ($this->stderr)				#Should we log to stderr?
          {
+            $message=trim($message);
+            $message.="\n";
             fputs(STDERR,$message);
             ob_flush();
          }

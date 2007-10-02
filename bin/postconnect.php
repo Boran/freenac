@@ -38,7 +38,7 @@ require_once("./funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
 #$logger->setDebugLevel(2);
-#$logger->logToStdErr();
+#$logger->setLogToStdErr();
 
 /* Load the policy file */
 require_once "../etc/policy.inc.php";
@@ -70,7 +70,7 @@ do
       if (strlen($line)<=0) 
          continue;
       $regs=array();
-      if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs))
+      if (ereg("(.*) TEST: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs))
       {
          $success=trim($regs[2]);
          $mac=trim($regs[3]);
