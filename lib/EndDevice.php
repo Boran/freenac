@@ -24,8 +24,8 @@
  */
 class EndDevice extends Common 
 {
-   private $mac;
-   private $db_row = array();
+   protected $mac;
+   protected $db_row = array();
 	
 
    /** The constructor takes the mac address of the system and creates 
