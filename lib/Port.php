@@ -444,11 +444,21 @@ EOF;
          return NULL;
    }
 
+   /**
+   * Get location information about where the port is, to help sysadmin to know where a certain event has happened
+   * This method is used for alerting
+   * @return mixed	String containing port location information
+   */
    public function getPortInfoForAlertSubject()
    {
       return "{$this->office}@{$this->building}, {$this->patch_details}, port {$this->port_name}";
    }
 
+   /**
+   * Get location information about where the port is, to help sysadmin to know where a certain event has happened
+   * This method is used for alerting
+   * @return mixed      String containing port location information
+   */
    public function getPortInfoForAlertMessage()
    {
       return "switch {$this->switch_ip}({$this->switch_name}: {$this->switch_comment}) {$this->users_in_office} {$this->patch_details}";   

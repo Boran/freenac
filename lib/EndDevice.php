@@ -522,8 +522,9 @@ EOF;
    }
 
    /**
-   *
-   *
+   * Set port location information to be used to generate an alert
+   * @param mixed $var		Port location information
+   * @return boolean		True on success
    */
    public function setPortInfoForAlertSubject($var)
    {
@@ -538,6 +539,11 @@ EOF;
       }
    }
 
+   /**
+   * Set port location information to be used to generate an alert
+   * @param mixed $var          Port location information
+   * @return boolean            True on success
+   */
    public function setPortInfoForAlertMessage($var)
    {
       if ($var)
