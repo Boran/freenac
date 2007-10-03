@@ -367,8 +367,10 @@ EOF;
 	 if ($res)
 	 {
 	    $this->db_row['in_db']=true;
-	    $subject="NAC alert {$this->patch_info} port {$this->port_info}\n";
-	    $mesg="New unknown {$this->mac}({$this->getVendor()}), switch {$this->switch_info} Patch: {$this->patch_info}\n";
+	    #$subject="NAC alert in {$this->office}, {$this->patch_info} port {$this->port_info}\n";
+            $subject="NAC alert in {$this->alert_subject}";
+	    #$mesg="New unknown {$this->mac}({$this->getVendor()}), switch {$this->switch_info} Patch: {$this->patch_info}\n";
+            $mesg="New unknown {$this->mac}({$this->getVendor()}), {$this->alert_message}";
 	    $this->logger->logit($subject);
 	    $this->logger->logit($mesg);
             if ($this->notify)
@@ -511,6 +513,36 @@ EOF;
       {
          $var=trim($var);
          $this->db_row['notify']=$var;
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+
+   /**
+   *
+   *
+   */
+   public function setPortInfoForAlertSubject($var)
+   {
+      if ($var)
+      {
+         $this->db_row['alert_subject']=$var;
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+
+   public function setPortInfoForAlertMessage($var)
+   {
+      if ($var)
+      {
+         $this->db_row['alert_message']=$var;
          return true;
       }
       else

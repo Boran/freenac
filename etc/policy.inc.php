@@ -162,9 +162,12 @@ class BasicPolicy extends Policy {
            $HOST->setPortID($PORT->getPortID());
            $HOST->setOfficeID($PORT->getOfficeID());
            $HOST->setVlanID($PORT->getLastVlanID());
-           $HOST->setPatchInfo($PORT->getPatchInfo());
+           /*$HOST->setPatchInfo($PORT->getPatchInfo());
            $HOST->setSwitchInfo($PORT->getSwitchInfo());
-           $HOST->setPortInfo($PORT->getPortInfo());
+           $HOST->setPortInfo($PORT->getPortInfo());*/
+           $HOST->setPortInfoForAlertSubject($PORT->getPortInfoForAlertSubject());
+           $HOST->setPortInfoForAlertMessage($PORT->getPortInfoForAlertMessage());
+           $HOST->setNotifyInfo($PORT->getNotifyInfo());
 	   
 	   $PORT->insertIfUnknown();
            $PORT->update();
