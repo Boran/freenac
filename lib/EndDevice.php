@@ -324,11 +324,18 @@ EOF;
       {
          #Check if it's not expired
          if ($this->isExpired() && $this->conf->disable_expired_devices)
+         {
             #If so, set its state to 'killed'
             $query="UPDATE systems SET LastSeen=NOW(), status=7, LastPort={$this->port_id}, LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
+            $string="Expired device {$this->hostname}({$this->mac}) has been refused network access and its status has been set to killed. Expiration date: {$this->expiry}";
+            $this->logger->logit($string);
+            log2db('info',$string);
+         }
          else
+         {
             #Normal case, update lastseen, lastport and lastvlan
             $query="UPDATE systems SET LastSeen=NOW(), LastPort={$this->port_id}, LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
+         }
          $this->logger->debug($query,3);
          $res=mysql_query($query);
          if ($res)

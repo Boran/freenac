@@ -294,7 +294,9 @@ EOF;
                $this->switch_in_db=true;
 
             #Log it and increase our internal counter to indicate that an insert has been done
-            $this->logger->logit("New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.");
+            $string="New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.";
+            $this->logger->logit($string);
+            log2db('info',$string);
             $counter++;
          }
          else
@@ -323,9 +325,11 @@ EOF;
             #Log it and increase our internal counter to indicate that an insert has been done. Also, if we have patchcable
             #information, add it to the log message
             if ($this->conf->lastseen_patch_lookup)
-               $this->logger->logit("New port {$this->port_name}. Location from patchcable: {$this->getPatchInfo()}\n");
+               $string="New port {$this->port_name}. Location from patchcable: {$this->getPatchInfo()}";
             else
-               $this->logger->logit("New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"); 
+               $string="New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"; 
+            $this->logger->logit($string);
+            log2db('info',$string);
             $counter++;
          }
          else
