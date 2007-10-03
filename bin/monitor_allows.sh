@@ -32,7 +32,7 @@ messagecount=10;
 if [ -s $tempfile2 ] ; then
 
   # Log events to vmpslog table, so GUI can see it.
-  cat $tempfile2| /opt/nac/bin/vmps_log
+  cat $tempfile2| /opt/nac/bin/vmps_log.php
 
   echo " " >> $tempfile2
   echo "This email was generated from the root cron on `uname -n` by $0" >> $tempfile2

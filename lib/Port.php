@@ -57,7 +57,7 @@ class Port extends Common
          }
         
          $query=<<<EOF
-         SELECT sw.id AS switch_id, sw.ip AS switch_ip, sw.name AS switch_name, sw.comment AS switch_comment, p.default_vlan, p.last_vlan,
+         SELECT sw.id AS switch_id, sw.ip AS switch_ip, sw.name AS switch_name, sw.comment AS switch_comment, sw.notify AS notify, p.default_vlan, p.last_vlan,
             p.id AS port_id, p.name AS port_name, p.default_vlan, l.id AS office_id, l.name AS office,b.name AS building
             FROM switch sw LEFT JOIN port p ON sw.id=p.switch and p.name='$portname' LEFT JOIN location l ON sw.location=l.id
             LEFT JOIN building b ON l.building_id=b.id WHERE sw.ip='$switchip' limit 1;
@@ -430,6 +430,18 @@ EOF;
    public function getPortInfo()
    {
       return $this->port_name;
+   }
+
+   /**
+   * Get list of people to notify about problems related to this switch
+   * @return mixed	List of emails, NULL if nothing is defined
+   */
+   public function getNotifyInfo()
+   {
+      if ($this->notify)
+         return $this->notify;
+      else
+         return NULL;
    }
 }
 

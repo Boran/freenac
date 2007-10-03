@@ -371,6 +371,9 @@ EOF;
 	    $mesg="New unknown {$this->mac}({$this->getVendor()}), switch {$this->switch_info} Patch: {$this->patch_info}\n";
 	    $this->logger->logit($subject);
 	    $this->logger->logit($mesg);
+            if ($this->notify)
+               $this->logger->mailit($subject,$mesg,$this->notify);
+            $this->logger->mailit($subject,$mesg);
 	    return true;
 	 }
 	 else
@@ -384,7 +387,8 @@ EOF;
    # Linking between Port and EndDevice ---------------------------------------
 
    /**
-   * Set the port where this EndDevice is 
+   * Set the port where this EndDevice is on
+   * @param integer $port	Port id where this device is on. Default is 0
    * @return boolean	True if successful
    */
    public function setPortID($port=0)
@@ -403,6 +407,7 @@ EOF;
 	
    /**
    * Set the office where this EndDevice is
+   * @param integer $office	Office id where this device is. Default is 1
    * @return boolean	True if successful
    */
    public function setOfficeID($office=1)
@@ -420,6 +425,7 @@ EOF;
 
    /**
    * Set the lastvlan used by this EndDevice
+   * @param integer $vlan	Last vlan id where this device was lastseen. Default is 1
    * @return boolean	True if successful
    */
    public function setVlanID($vlan=1)
@@ -438,6 +444,7 @@ EOF;
    /**
    * Set the Port information where this device is on 
    * Used for alerting
+   * @param mixed $var		Port information
    * @return boolean    True if successful
    */
    public function setPortInfo($var)
@@ -456,6 +463,7 @@ EOF;
    /**
    * Set the Switch information where this device is on
    * Used for alerting
+   * @param mixed $var		Switch information
    * @return boolean    True if successful
    */
    public function setSwitchInfo($var)
@@ -474,6 +482,7 @@ EOF;
    /**
    * Set the Patch information where this device is on
    * Used for alerting
+   * @param mixed $var		Patch information
    * @return boolean    True if successful
    */
    public function setPatchInfo($var)
@@ -481,6 +490,27 @@ EOF;
       if ($var)
       {
          $this->db_row['patch_info']=$var;
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+
+   /**
+   * Set the Notify information. 
+   * This will send an email to the specified users
+   * Used for alerting
+   * @param mixed $var		List of emails to send an alert to
+   * @return boolean	True if successful
+   */
+   public function setNotifyInfo($var)
+   {
+      if ($var && (strlen($var)>0))
+      {
+         $var=trim($var);
+         $this->db_row['notify']=$var;
          return true;
       }
       else

@@ -70,7 +70,7 @@ do
       if (strlen($line)<=0) 
          continue;
       $regs=array();
-      if (ereg("(.*) TEST: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs))
+      if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs))
       {
          $success=trim($regs[2]);
          $mac=trim($regs[3]);
@@ -108,6 +108,7 @@ do
 	          $HOST->setPatchInfo($PORT->getPatchInfo());
 	          $HOST->setSwitchInfo($PORT->getSwitchInfo());
 	          $HOST->setPortInfo($PORT->getPortInfo());
+		  $HOST->setNotifyInfo($PORT->getNotifyInfo());
 	          
 	          #Call our policy
                   $policy->postconnect();

@@ -228,6 +228,23 @@ final class Logger
    }
 
    /**
+   * Send an email to root
+   * This is a wrapper around the php mail function
+   * @return boolean			True is mail successfully sent, false otherwise
+   */
+   public function mailit($subject,$message,$to='root')
+   {
+      if (strlen($message) > 0)
+      {
+         return mail($to, $subject, $message);
+      }
+      else
+      {
+         return false;
+      }
+   }
+
+   /**
    * Wrapper around the logit method. Log a message only if the specified level for this function
    * is less or equal than the current debugging level.
    * @param mixed $msg			Message to log
