@@ -158,7 +158,14 @@ class BasicPolicy extends Policy {
            $RESULT=$GLOBALS['RESULT'];
  	   $HOST=$GLOBALS['HOST'];
  
+	   #Insert a switch or port if unknown
+           $PORT->insertIfUnknown();
+           #Update port information
+           $PORT->update();
+	   
            #Passing of information between objects
+           #If a switch or port got inserted into the database, now we have information
+           #to pass onto the HOST object
            $HOST->setPortID($PORT->getPortID());
            $HOST->setOfficeID($PORT->getOfficeID());
            $HOST->setVlanID($PORT->getLastVlanID());
@@ -169,10 +176,9 @@ class BasicPolicy extends Policy {
            $HOST->setPortInfoForAlertMessage($PORT->getPortInfoForAlertMessage());
            $HOST->setNotifyInfo($PORT->getNotifyInfo());
 	   
-	   $PORT->insertIfUnknown();
-           $PORT->update();
-	   
-	   $HOST->insertIfUnknown();
+           #Insert End device if unknown
+           $HOST->insertIfUnknown();
+           #Update its info
 	   $HOST->update();
 	}
 }
