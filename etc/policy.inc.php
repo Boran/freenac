@@ -33,11 +33,11 @@ class BasicPolicy extends Policy {
 
         public function reportDecision($vlan)
         {
-           if ($vlan>1)
+           if (is_numeric($vlan))
            {
               $PORT=$GLOBALS['PORT'];
               $HOST=$GLOBALS['HOST'];
-              $this->logger->logit("Answer: Device {$HOST->getmac()}({$HOST->gethostname()},{$HOST->getusername()}) on switch {$PORT->getswitch_ip()}({$PORT->getswitch_name()}), port {$PORT->getport_name()}, office {$PORT->getoffice()}@{$PORT->getbuilding()} has been placed in vlan ".vlanId2Name($vlan));
+              $this->logger->logit("Note: Device {$HOST->getmac()}({$HOST->gethostname()},{$HOST->getusername()}) on switch {$PORT->getswitch_ip()}({$PORT->getswitch_name()}), port {$PORT->getport_name()}, office {$PORT->getoffice()}@{$PORT->getbuilding()} has been placed in vlan ".vlanId2Name($vlan));
            }
         }        
 
