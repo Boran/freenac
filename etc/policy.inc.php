@@ -31,7 +31,7 @@ class BasicPolicy extends Policy {
 		}
         }*/
 
-        public function reportDecision($vlan)
+        public function reportDecision($vlan=0)
         {
            if (is_numeric($vlan))
            {
@@ -153,6 +153,7 @@ class BasicPolicy extends Policy {
 			ALLOW($CONF->default_vlan);
                 }
 		#Default policy
+                $this->reportDecision();
 		DENY('Default policy reached. Unknown or unmanaged device and no default_vlan specified');
 	}
 
