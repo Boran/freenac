@@ -1,9 +1,6 @@
 #!/bin/sh
 #
 # /etc/init.d/vmps
-# Suse Linux:
-#   ln -s /etc/init.d/vmps /sbin/rcvmps
-#   chkconfig vmps_lastseen on
 #
 ### BEGIN INIT INFO
 # Provides:       vmps
@@ -18,37 +15,29 @@
 
 case "$1" in
 start)
-	[ -f /opt/nac/bin/vmpsd ] || exit 1
-
-	#[ -f /opt/nac/bin/vmpsd ] && \
-	#    [ -f /etc/vlan.db ] || exit 1
-
         #-l  log level
         #  o   0x0100 -- fatal errors only
-        #  o   0x0200 -- informational messages
+        #  o   0x0200 -- informational messages  [IMPORTANT]
         #  o   0x0400 -- print warnings
         #  o   0x0800 -- print debug messages; very verbose
-        #  o   0x0001 -- system
+        #  o   0x0001 -- system           [IMPORTANT]
         #  o   0x0002 -- parser
         #  o   0x0004 -- vqp
         #  Good: 0x0804 and bit less: 0x0F04
-        #  RECOMMENDED: Minimal, with enough for vmps_lastseen: 0x0204
-
+        #  Minimal, without enough for vmps_lastseen: 0x0204
 
         # Make sure mysql started
         sleep 5
 
-        /opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0204
 
         ## Add the '-a A.B.C.D' parameter if the machine has more than
         ## one interface to specific on which interface to bind vmpsd
 	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0804 -a 192.168.245.40
-        #/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0804
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0801 -a 192.168.245.40
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0201 -a 192.168.245.40
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0204 -a 192.168.245.40
+        /opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external.php  -l 0x0204 -a 192.168.245.40
 
-	# manual tests:
-	#/usr/local/bin/vmpsd -d -f /etc/vlan.db -l 0x0F08 -a 192.168.245.19
-	#/usr/local/bin/vmpsd -f /etc/vlan.db -l 0x0F04 -a 192.168.245.19
-	#/usr/local/bin/vmpsd -f /etc/vlan.db -l 0x0804 -a 192.168.245.19
 	;;
 
 reload)
