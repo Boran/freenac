@@ -26,8 +26,8 @@ set_include_path("./:../");
 
 require_once('bin/funcs.inc.php');
 
-define_syslog_variables();
-openlog("nac_updates", LOG_PID , LOG_LOCAL5);
+$logger->setDebugLevel(0);
+#$logger->setLogToStdErr();
 
 $new_revision=trim(@file_get_contents('http://www.freenac.net/updates/revision'));
 

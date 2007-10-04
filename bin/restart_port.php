@@ -35,9 +35,8 @@ chdir(dirname(__FILE__));
 set_include_path("../:./");
 require_once "bin/funcs.inc.php";               # Load settings & common functions
 
-define_syslog_variables();                  # not used yet, but anyway..
-openlog("restart_port", LOG_PID , LOG_LOCAL5);
-
+$logger->setDebugLevel(0);
+#$logger->setLogToStdErr();
 
 //
 //------------------------------------------ Functions ------------------------------------------------

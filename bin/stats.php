@@ -1,4 +1,4 @@
-#!/usr/bin/php -- -f
+#!/usr/bin/php -f
 <?php
 /**
  * /opt/nac/bin/stats

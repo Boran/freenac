@@ -26,10 +26,10 @@
  */
 
 
-$debug_flag1=FALSE;
-#$debug_flag1=TRUE;
-
 require_once "funcs.inc.php";               # settings & functions
+
+$logger->setDebugLevel(0);
+#$logger->setLogToStdErr();
 
 # We don't have PHP5, so need some compat stuff
 #require_once 'PHP/Compat.php';
@@ -37,9 +37,6 @@ require_once "funcs.inc.php";               # settings & functions
 
 $connection_timeout=20;  #seconds for initial connection
 $fgets_timeout=2;        #seconds to wait for results
-
-define_syslog_variables();
-openlog("vmps_purge_unknowns", LOG_PID,  LOG_LOCAL5);
 
 
 ## Connect to DB
@@ -53,10 +50,10 @@ openlog("vmps_purge_unknowns", LOG_PID,  LOG_LOCAL5);
 ## variable is in config.inc
 if (($conf->unknown_purge) && ($conf->unknown_purge>10)) {
   #echo("variable unknown_purge= ".$conf->unknown_purge."\n");
-  syslog(LOG_INFO, "unknown purge days= ".$conf->unknown_purge);
+  $logger->logit("unknown purge days= ".$conf->unknown_purge);
 
 } else {
-  syslog(LOG_INFO, "invalid variable unknown_purge, value= ".$conf->unknown_purge);
+  $logger->logit("invalid variable unknown_purge, value= ".$conf->unknown_purge);
   echo("purge_unknowns: invalid variable unknown_purge, value= ".$conf->unknown_purge."\n");
   exit -1;
 }
@@ -71,7 +68,7 @@ $query="select mac,vlan,description,lastport,lastseen from systems where name li
   while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
     #printf("/opt/vmps/purge_unknowns: %s %s %s %s %s %s\n", $line[0], $line[1], $line[2], $line[3], $line[4] );
     
-    syslog(LOG_INFO, $line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
+    $logger->logit($line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
     log2db('info', 'purge_unknowns: '.$line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
   }
 
@@ -81,8 +78,7 @@ $query="DELETE from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(N
   if (!$res) { die('Invalid query: ' . mysql_error()); }
 
 log2db('info', 'purge_unknowns: completed');
-syslog(LOG_INFO, 'completed');
+$logger->logit('completed');
 
-closelog();
 mysql_close($connect);
 ?>

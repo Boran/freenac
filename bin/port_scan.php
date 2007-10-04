@@ -37,6 +37,9 @@
 require_once "funcs.inc.php";
 $output=TRUE;
 
+$logger->setDebugLevel(0);
+#$logger->setLogToStdErr();
+
 #Compatibility with old vars
 if (!$conf->scan_directory && $conf->nmap_scan_directory)
    $scan_directory=$conf->nmap_scan_directory;
@@ -60,8 +63,6 @@ else
 
 check_requirements();
 //If we get up to this point, life is good
-define_syslog_variables();
-openlog("port_scan", LOG_PID , LOG_LOCAL5);
 $queries['number']=0;
 $queries['messages']=0;
 $flagscannow=0;
@@ -70,7 +71,7 @@ for ($i=0;$i<$argc;$i++)
    if ($argv[$i]=="--scannow")
       $flagscannow++;
    else if ($argv[$i]=="--verbose")
-      $debug_flag1=true;      
+      $logger->setDebugLevel(1);      
 }  
 if ($flagscannow)
    $output=FALSE;
@@ -176,12 +177,12 @@ function check_requirements()  //Checks for required functions and tables struct
 
 function message($string)
 {
-   global $output,$debug_flag1,$output_to_syslog;
-   if (($output===TRUE)&&($debug_flag1===FALSE))
+   global $output,$logger,$output_to_syslog;
+   if (($output===TRUE)&&(!$logger->getDebugLevel()))
    {
       if ($output_to_syslog===TRUE)
       {
-         logit($string);
+         $logger->logit($string);
          //log2db('info',$string);
       }   
       else
@@ -906,7 +907,7 @@ function date_diff($date1, $date2,$what) //Time difference between the timestamp
 
 function parse_scanfile($scan_file,$list)
 {
-   global $flagscannow;
+   global $flagscannow,$logger;
    $timestamp=date('Y-m-d H:i:s');
    $info=array();
    if (file_exists($scan_file))
@@ -1019,7 +1020,7 @@ function parse_scanfile($scan_file,$list)
    }
    else check_and_abort("File $scan_file not found\n",0);
    $info['equipments']=$i;
-   if (($flagscannow)||($debug_flag1))
+   if (($flagscannow)||($logger->getDebugLevel()))
    {
       $temp="";
       for ($j=0;$j<$i;$j++)

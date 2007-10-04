@@ -31,50 +31,49 @@ function __autoload($classname)
 require_once 'etc/config.inc';
 
 $conf=Settings::getInstance();
+$logger=Logger::getInstance();
 
+/**
+* Converts a vlan id to a vlan name
+* @param integer $vlanID 	Vlan ID
+* @return mixed 		Vlan name
+*/
 function vlanId2Name($vlanID) {
-          // Todo: Proper Error Handling, and use better Database abstraction
-      return v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
-}
-
-function is_field_active($field)
-{
-   $temp=v_sql_1_select("select value from config where name like '$field';");
-   debug2("is_field_active: select value from config where name like '$field';");
-   if (!empty($temp)&&((strcmp(trim($temp),"true")==0)||($temp==1)))
-      return true;
-   else
-      return false;
-}
-
-function is_vm($mac)
-{
-   $counter=0;
-   $parts=explode(".",$mac);
-   $temp_mac=$parts[0].$parts[1].$parts[2];
-   $query="select mac from ethernet where vendor like '%vmware%';";
-   debug2("is_vm: $query");
-   $res=mysql_query($query);
-   if ($res)
+   // Todo: Proper Error Handling, and use better Database abstraction
+   if (is_numeric($vlanID))
    {
-      while ($rows=mysql_fetch_array($res,MYSQL_ASSOC))
-      {
-         if (stripos($temp_mac,$rows['mac'])!==FALSE)
-            $counter++;
-      }
+      $vlan_name=v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
+      if ($vlan_name)
+         return $vlan_name;
+      else
+         return '--NONE--';
    }
-   if ($counter>0)
-      return true;
-   else return false;
+   else
+   {
+      return '--NONE--';
+   }
 }
 
-function get_last_index($oid)                                                   //Get the last number of an SNMP OID
+/**
+* Get the last number of an SNMP OID
+* The OID is separated by dots and we use them as a separator.
+* Example: OID=1.2.3.4.5.6.7.8
+*	   Returns: 8
+* @param mixed $oid		OID of interest
+* @return mixed			Last part of the OID. 
+*/
+function get_last_index($oid)                                                  
 {
    $temp=explode('.',$oid);
    return $temp[count($temp)-1];
 }
 
-function turn_on_port($port_index)                                              //Turn on port. Port index must be from SNMP
+/**
+* Turn on a determined port identified by its index.
+* @param mixed	$port_index		Port index according to SNMP
+* @return boolean			True if port was successfully switched on, false otherwise
+*/
+function turn_on_port($port_index)                                             
 {
    global $switch,$snmp_rw,$snmp_port;
 
@@ -87,7 +86,12 @@ function turn_on_port($port_index)                                              
    else return true;
 }
 
-function turn_off_port($port_index)                                             //Shut port down. Port index must be from SNMP
+/**
+* Turn off a determined port identified by its index.
+* @param mixed  $port_index             Port index according to SNMP
+* @return boolean                       True if port was successfully switched off, false otherwise
+*/
+function turn_off_port($port_index)                                            
 {
    global $switch,$snmp_rw,$snmp_port;
    $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
@@ -99,9 +103,13 @@ function turn_off_port($port_index)                                             
    else return true;
 }
 
-
-
-function time_diff($date1,$date2)  //Returns the difference between 2 dates in secs
+/**
+* Returns the difference between 2 dates in secs
+* @param mixed $date1			Date to substract from
+* @param mixed $date2			Date
+* @return mixed				Difference in second between those 2 dates
+*/
+function time_diff($date1,$date2)
 {
    $temp=explode(' ',$date1);
    $time_info_1=explode(':',$temp[1]);
@@ -116,38 +124,25 @@ function time_diff($date1,$date2)  //Returns the difference between 2 dates in s
 }
 
 function debug1($msg) {
-  global $debug_flag1, $conf;
+  global $logger;
   $msg=rtrim($msg);
-  if (($debug_flag1==TRUE) && (strlen($msg)>0) ) {
-    if ($conf->debug_to_syslog) {
-      syslog(LOG_INFO, "Debug1: $msg");
-    } else {
-      echo "Debug1: $msg\n";
-    }
+  if (strlen($msg)>0) {
+     $logger->debug($msg);
   }
 }
 
 function debug2($msg) {
-  global $debug_flag2, $conf;
+  global $logger;
   $msg=rtrim($msg);
-  if (($debug_flag2==TRUE) && (strlen($msg)>0) ) {
-    if ($conf->debug_to_syslog) {
-      syslog(LOG_INFO, "Debug2: $msg");
-    } else {
-      echo "Debug2: $msg\n";
-    }
+  if (strlen($msg)>0) {
+     $logger->debug($msg,2);
   }
 }
 
 function logit($msg) {
-  global $debug_flag1, $logit_to_stdout;
+  global $logger;
   $msg=rtrim($msg);
-  syslog(LOG_INFO, "$msg");
-
-  # Write a message on stdout too?
-  if ($logit_to_stdout) {
-    echo "logit: $msg";
-  }
+  $logger->logit($msg);
 }
 
 ## log2db: write key events to naclog which is visible from the GUI
@@ -175,13 +170,13 @@ function log2db($level, $msg)
 }
 
 
-## log2db3: write to naclog if $debug_flag3
+## log2db3: write to naclog if debug level=3 
 function log2db3($msg)
 {
-  global $connect, $debug_flag3;
+  global $connect, $logger;
   $level='debug';
   $msg=rtrim($msg);
-  if (($debug_flag3==TRUE) && (strlen($msg)>0) ) {
+  if (($logger->getDebugLevel()==3) && (strlen($msg)>0) ) {
     db_connect();                 // just in case its not connected
     #$query="INSERT INTO naclog "
     $query="INSERT DELAYED INTO naclog "
@@ -193,7 +188,9 @@ function log2db3($msg)
   }
 }
 
-
+/**
+* Creates a connection to the MySQL database with the parameters defined in config.inc
+*/
 function db_connect()
 {
   global $connect, $dbhost, $dbuser, $dbpass, $dbname;
@@ -204,10 +201,12 @@ function db_connect()
      or die("Could not select DB: " . mysql_error());;
 }
 
-/* syscall
+/**
  * Abstract calling of unix commands.
  * Problem: popen does not pass back command success
  * so syscall cannot say if the command works.
+ * @param mixed $command	Command to be executed
+ * @return mixed		Result from that command
  */
 function syscall($command){
    $result='';
@@ -222,10 +221,17 @@ function syscall($command){
    #  logit("syscall error ", $proc);
    #  return undef;
    }
-   
 }
 
-function remove_type($element)                          //Remove the type of one element and leave only the value
+/**
+* Remove the type of one element and leave only the value.
+* This function is to be used when performing SNMP operations
+* Example: INTEGER:33
+	   Returns: 33
+* @param mixed $element		Element to remove type from
+* @return mixed 		Value without type
+*/
+function remove_type($element)                          
 {
    $temp=explode(':',$element);
    $element=trim($temp[1]);
@@ -330,28 +336,6 @@ function snmp_restart_port_id($port_id)
    }
 }
 
-function lookup_vendor_mac($mac) {
-  global $connect;
-
-  $mac = preg_replace('/-|\.|\s/', '', $mac);        #remove space, dash, dots
-  $mac="$mac[0]$mac[1]$mac[2]$mac[3]$mac[4]$mac[5]"; # Keep first 6 digits
-  $query="SELECT vendor from ethernet WHERE mac='" . $mac . "' ";
-  #debug1("$query\n");
-  $res = mysql_query($query, $connect);
-  if (!$res) { die('Invalid query: ' . mysql_error()); }
-
-  if (mysql_num_rows($res) ==0) {
-    $result='unknown';      # no entry
-    #debug1("Etherner vendor not found");
-
-  } else {
-    $resultarray=mysql_fetch_array($res, MYSQL_NUM);
-    $result=$resultarray[0];
-  }
-  #debug1("Ethernet vendor=$result");
-  return $result;
-}
-
 function array_isearch($str,$array)                     //Search the array for a given value and return its key
 {
    foreach($array as $k => $v)
@@ -397,7 +381,6 @@ function array_find_value($str,$array,$token,$number)   //Search the array for a
    }
    return false;
 }
-
 
 function str_get_last($string,$token,$number)           //Return the last parts of a tokenized string
 {
@@ -449,75 +432,6 @@ function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC add
       return true;                                                                      //Yes, the MAC is on this port
    else
       return false;                                                                     //No, MAC is not using this port
-}
-
-
-## old: delete later #############
-function mailit($switch, $msg) {
-  ## These should be set in config.inc
-  global $conf;
-
-  if ($conf->mail_user!=="") {
-    debug1("Sending email alert to ".$conf->mail_user);
-    mail($conf->mail_user, "VMPS alert on $switch", $msg);
-  }
-  # Send an email to super user, for the relevant switch
-  # each switch has its own email alias "vmps.SWITCH@domain"
-  if ($conf->maildomain!=="0" ) {
-    debug1("Sending email alert to vmps.$switch@".$conf->maildomain);
-    mail("vmps.$switch@".$conf->maildomain, "VMPS notification on $switch", $msg);
-  }
-}
-
-function notify2($switch, $msg, $subject) {
-  global $connect, $conf;
-  db_connect();
-
-  ## 1. Sent email to sysadmin 
-  if ($conf->mail_user!=="") {    # usually for root
-    debug1("Sending email alert to ".$conf->mail_user);
-    #mail($mail_user, "VMPS alert on $switch", $msg);
-    mail($conf->mail_user, $subject, $msg);
-  }
-
-  ## 2. Lookup notify list for that switch, email them too.
-  $query="select notify from switch WHERE name='" . $switch . "'";
-  $res = mysql_query($query, $connect);
-  if (!$res) { die('Invalid query: ' . mysql_error()); }
-  if (mysql_num_rows($res)==1) {
-    $resultarray=mysql_fetch_array($res, MYSQL_NUM);
-    $notify_users=$resultarray[0];
-
-    debug1("Sending email alert to $notify_users");
-    mail($notify_users, $subject, $msg);
-
-  } else {
-    ## TBD: error?
-  }
-}
-
-function notify($switch, $msg) {
-  global $connect, $conf;
-  db_connect();
-
-  if ($conf->mail_user!=="") {    # usually for root
-    debug1("Sending email alert to ".$conf->mail_user);
-    mail($conf->mail_user, "VMPS alert on $switch", $msg);
-  }
-
-  $query="select notify from switch WHERE name='" . $switch . "'";
-  $res = mysql_query($query, $connect);
-  if (!$res) { die('Invalid query: ' . mysql_error()); }
-  if (mysql_num_rows($res)==1) {
-    $resultarray=mysql_fetch_array($res, MYSQL_NUM);
-    $notify_users=$resultarray[0];
-
-    debug1("Sending email alert to $notify_users");
-    mail($notify_users, "VMPS alert on $switch", $msg);
-
-  } else {
-    ## TBD: error?
-  }
 }
 
 ## send SQL and expect just one row to change
@@ -583,33 +497,6 @@ function normalise_mac($old_mac) {
   return $mac;
 }
 
-
-//
-// Insert a new user, if not already in the Users table.
-// 
-function insert_user ($username) {
-    ## Is this user already in out "users" table?
-    $query="SELECT username from users WHERE username='".$username."' ";
-      debug2("$query");
-      $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
-
-    ## The select query had no effect, so assume its a new user.
-    if (mysql_affected_rows()==0) {
-
-      ## TBD: Is this new user in our organisation? We should
-      ##      really only set manual_direx_sync for "foreign" users.
-      $query="INSERT INTO users SET LastSeenDirectory=now(), manual_direx_sync='1', "
-        .      "username='".$username."'";
-      #$query="INSERT INTO users SET LastSeenDirectory=now(),  "
-      #  .      "username='".$username."'";
-      debug2("$query");
-      $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
-
-      $str = "New user added for Directory: $username" ;
-        debug2($str);
-        log2db('info', $str);
-    }
-}
 
 //
 // Execute query and return assoc array

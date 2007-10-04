@@ -266,7 +266,6 @@ EOF;
 	 }
       }
       $this->logger->logit("Field $methodName doesn't exist");
-      DENY('Unknown method called');
    }
 	
    /**

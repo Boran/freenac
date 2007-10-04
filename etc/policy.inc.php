@@ -31,6 +31,16 @@ class BasicPolicy extends Policy {
 		}
         }*/
 
+        public function reportDecision($vlan)
+        {
+           if ($vlan>1)
+           {
+              $PORT=$GLOBALS['PORT'];
+              $HOST=$GLOBALS['HOST'];
+              $this->logger->logit("Answer: Device {$HOST->getmac()}({$HOST->gethostname()},{$HOST->getusername()}) on switch {$PORT->getswitch_ip()}({$PORT->getswitch_name()}), port {$PORT->getport_name()}, office {$PORT->getoffice()}@{$PORT->getbuilding()} has been placed in vlan ".vlanId2Name($vlan));
+           }
+        }        
+
         public function preconnect() { 
 		
 /*		#TODO: HUB_DETECTION, VLAN_BY_SWITCH_LOCATION
@@ -148,7 +158,8 @@ class BasicPolicy extends Policy {
 
 	function catch_ALLOW($vlan) 
 	{
-		return $vlan;
+	   $this->reportDecision($vlan);	
+           return $vlan;
 	}
 
 	public function postconnect()

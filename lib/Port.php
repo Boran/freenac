@@ -140,6 +140,29 @@ EOF;
    }
 
    /**
+   * Universal Accessor Method
+   * We are redirecting all unresolved method calls to this handler,
+   * so that we can emulate arbitraty accessor methods.
+   * With this trick, the user can add new fields to the system tables
+   * and will be able to access them in the policy as
+   * $system->getDBFieldName() without haveing to change this class
+   * @throws            If the db field does not exist, Log Error and Deny as default action
+   * @return mixed      Property
+   */
+   public function __call($methodName, $parameters) {
+      # If methodname starts with get
+      if (substr($methodName,0,3) == "get") {
+         $dbfieldname = substr($methodName,3);
+         foreach(array_keys($this->props) as $key) {
+            if (strtolower($key) == strtolower($dbfieldname)) {
+               return $this->props[$key];
+            }
+         }
+      }
+      $this->logger->logit("Field $methodName doesn't exist");
+   }
+
+   /**
    * Get the value of one property if it exists
    * @param mixed $key		Property to lookup
    * @return mixed		The value of the wanted property, or false if such a property doesn't exist

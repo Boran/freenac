@@ -113,7 +113,7 @@ final class Logger
    */
    public function setLogToStdErr($var=true)	//Redirect logging to stderr
    {
-      if (is_bool($var))
+      if (is_bool($var) && ($var==true))
       {
          closelog();		#Close syslog
          $this->stderr=$var;    
@@ -286,6 +286,15 @@ final class Logger
       {
          return false;
       }
+   }
+
+   /**
+   * Get the current debugging level.
+   * @return integer		Current debug level
+   */
+   public function getDebugLevel()
+   {
+      return $this->debug_level;
    }
 
    /**

@@ -45,15 +45,13 @@ set_include_path("../:./:/opt/nac/");
 require_once "bin/funcs.inc.php";               # Load settings & common functions
 require_once "snmp_defs.inc.php";
 
-define_syslog_variables();              # not used yet, but anyway..
-openlog("snmp_scan.php", LOG_PID, LOG_LOCAL5);
+$logger->setDebugLevel(0);
+#$logger->setLogToStdErr();
 
 db_connect();
 
 
 // Enable debugging to understand how the script works
-  $debug_flag1=true;
-  $debug_flag2=false;
   $debug_to_syslog=true;
 // allow performance measurements
    $mtime = microtime();
@@ -63,7 +61,7 @@ db_connect();
 
 
 if ($snmp_dryrun) {
-  $debug_flag2=true;
+  $logger->setDebugLevel(2);
   $domysql=false;
 } else {
   $domysql=true;
@@ -82,8 +80,7 @@ function print_usage() {
 
 function print_vlans() {
 	global $snmp_ro, $default_user_unknown;
-	global $debug_flag1;
-	global $debug_flag2;
+	global $logger;
 	$switches =  mysql_fetch_all("SELECT * FROM switch");
 	$vlan = array();
 	foreach ($switches as $switchrow) {

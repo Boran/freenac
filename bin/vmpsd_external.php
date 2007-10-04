@@ -61,8 +61,8 @@ require_once("../lib/exceptions.php");
 require_once("./funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
-#$logger->setDebugLevel(2);
-#$logger->setLogToStdErr();
+$logger->setDebugLevel(0);
+$logger->setLogToStdErr(false);
 /* include files */
 /* Load the policy file */
 require_once "../etc/policy.inc.php";

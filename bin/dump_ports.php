@@ -22,13 +22,10 @@
  */
 
 
-$debug_flag1=FALSE;
-
 require_once "funcs.inc.php";
 
-define_syslog_variables();
-openlog("dump_ports", LOG_PID,  LOG_LOCAL5);
-
+$logger->setDebugLevel(0);
+#$logger->setLogToStdErr();
 
 ## Connect to DB
   $connect=mysql_connect($dbhost, $dbuser, $dbpass)
@@ -40,7 +37,7 @@ $msg='';
 #$query="SELECT (SELECT swgroup FROM switch where switch.ip=systems.switch) as Stockwerk, port, (SELECT name from switch where switch.ip=systems.switch) as switch, switch as ip,  vlan, (SELECT value from vlan where vlan.id=systems.vlan) as Vlan_name from systems ORDER BY switch;";
 #$query="select sw.swgroup as Stockwerk,p.name,sw.name as switch,sw.ip as ip, v.default_id as vlan, v.default_name as vlan_name from switch sw  inner join port p on p.switch=sw.id right join systems s on s.lastport=p.id inner join vlan v on s.vlan=v.id  order by sw.ip;";
 $query="select sw.swgroup as Stockwerk,p.name,sw.name as switch,sw.ip as ip, v.default_id as vlan, v.default_name as vlan_name from switch sw  inner join port p on p.switch=sw.id inner join systems s on s.lastport=p.id inner join vlan v on s.vlan=v.id  order by sw.ip";
-if ($debug_flag1) { $query=$query . " LIMIT 10"; }
+if ($logger->getDebugLevel()) { $query=$query . " LIMIT 10"; }
 
   debug1($query);
   $res = mysql_query($query, $connect);
@@ -64,11 +61,11 @@ if ($debug_flag1) { $query=$query . " LIMIT 10"; }
 
 
 #log2db('info', 'dump_ports: completed');
-syslog(LOG_INFO, 'completed');
-if ($conf->mail_user!=="") {
-  mail($conf->mail_user, "VMPS dump_ports", $msg);
-}
+$logger->logit('completed');
+if ($conf->mail_user)
+   $logger->mailit("VMPS dump_ports",$msg,$conf->mail_user);
+else
+   $logger->mailit("VMPS dump_ports",$msg);
 
-closelog();
 mysql_close($connect);
 ?>

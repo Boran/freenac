@@ -27,12 +27,9 @@
 
 # initialize
 require_once "funcs.inc.php";  
-define_syslog_variables();
-openlog("ad_user_sync", LOG_PID , LOG_LOCAL5);
 # configure logging
-$logit_to_stdout = TRUE;
-$debug_flag1 = FALSE;
-$debug_to_syslog = FALSE;
+$logger->setDebugLevel(0);
+#$logger->setLogToStdErr();
 
 debug1("variables from configfile: ".$conf->ad_server." | ".$ad_user." | ".$ad_password." | " . print_r($conf->ad_base_user_dn, TRUE));
 
@@ -83,7 +80,7 @@ elseif( $argc > 3 ) {
 
 # start main tasks
 if( $test ) {
-	$debug_flag1 = TRUE;
+	$logger->setDebugLevel(1);
 	logit('Testing AD server connection only');
 	query_AD();	
 }

@@ -30,8 +30,6 @@
  *
  */
 
-$debug_flag1=false;
-$debug_flag2=false;
 
 # Debugging
 $debug_to_syslog=true;
@@ -40,8 +38,8 @@ $mysql_write2=true;                    # Just test or actually write DB changes?
 
 require_once "funcs.inc.php";               # Load settings & common functions
 
-define_syslog_variables();              # not used yet, but anyway..
-openlog("router_mac_ip", LOG_PID, LOG_LOCAL5);
+$logger->setDebugLevel(0);
+#$logger->setLogToStdErr();
 
 // allow performance measurements
    $mtime = microtime();
