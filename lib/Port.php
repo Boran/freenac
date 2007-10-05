@@ -255,8 +255,8 @@ EOF;
       {
          #Lookup the last_vlan assigned to the last system which was lastseen on this port in the previous 2 hours
          $query=<<<EOF
-         SELECT s.mac AS mac,s.lastvlan AS lastvlan FROM systems s INNER JOIN port p ON
-            s.lastport=p.id INNER JOIN switch sw ON p.switch=sw.id AND p.name='{$this->name}'
+         SELECT s.lastvlan AS lastvlan FROM systems s INNER JOIN port p ON
+            s.lastport=p.id INNER JOIN switch sw ON p.switch=sw.id AND p.name='{$this->port_name}'
             AND sw.ip='{$this->switch_ip}' WHERE DATE_SUB(CURDATE(), INTERVAL 2 HOUR) <= s.lastseen
             ORDER BY lastseen DESC LIMIT 1;
 EOF;
@@ -387,7 +387,7 @@ EOF;
 
    /**
    * Update last_vlan and last_activity fields for this port
-   * @return boolean	True if successful, false otherwise
+   * @return mixed	Port name and switch ip and name from updated port, false if no updated was performed
    */
    public function update()
    {
@@ -398,7 +398,7 @@ EOF;
          $res=mysql_query($query);
          if ($res)
          {
-            return true;
+            return "{$this->port_name} {$this->switch_ip}({$this->switch_name})";
          }
          else
          {

@@ -314,7 +314,7 @@ EOF;
 
    /**
    * Update EndDevice information in the DB
-   * @return boolean	True if a successful update operation was performed, false otherwise
+   * @return mixed	MAC address and hostname of the updated system, or false if no update was performed
    */
    public function update()
    {
@@ -326,7 +326,7 @@ EOF;
          {
             #If so, set its state to 'killed'
             $query="UPDATE systems SET LastSeen=NOW(), status=7, LastPort={$this->port_id}, LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
-            $string="Expired device {$this->hostname}({$this->mac}) has been refused network access and its status has been set to killed. Expiration date: {$this->expiry}";
+            $string="Note: Expired device {$this->hostname}({$this->mac}) has been refused network access and its status has been set to killed. Expiration date: {$this->expiry}";
             $this->logger->logit($string);
             log2db('info',$string);
          }
@@ -339,7 +339,7 @@ EOF;
          $res=mysql_query($query);
          if ($res)
          {
-            return true;
+            return "{$this->mac}({$this->hostname})";
          }
          else
          {
@@ -377,8 +377,8 @@ EOF;
             $subject="NAC alert in {$this->alert_subject}";
 	    #$mesg="New unknown {$this->mac}({$this->getVendor()}), switch {$this->switch_info} Patch: {$this->patch_info}\n";
             $mesg="New unknown {$this->mac}({$this->getVendor()}), {$this->alert_message}";
-	    $this->logger->logit($subject);
-	    $this->logger->logit($mesg);
+	    $this->logger->debug($subject,2);
+	    $this->logger->debug("Note: $mesg",1);
             if ($this->notify)
                $this->logger->mailit($subject,$mesg,$this->notify);
             $this->logger->mailit($subject,$mesg);
