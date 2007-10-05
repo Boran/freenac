@@ -1,4 +1,4 @@
-#!/usr/bin/php -f
+#!/usr/bin/php -- -f
 <?php
 /**
  * /opt/nac/bin/portscan
@@ -37,8 +37,8 @@
 require_once "funcs.inc.php";
 $output=TRUE;
 
-$logger->setDebugLevel(0);
-#$logger->setLogToStdErr();
+$logger->setDebugLevel(3);
+$logger->setLogToStdErr(false);
 
 #Compatibility with old vars
 if (!$conf->scan_directory && $conf->nmap_scan_directory)
@@ -575,8 +575,10 @@ function check_service($ip,$port,$protocol,$banner)  //With this function we che
 
 function execute_query($query)	
 {
+   global $logger;
    db_connect();
    $res=mysql_query($query);
+   $logger->debug($query,3);
    if (!$res)
    { echo "Cannot execute query $query because ".mysql_error()."\n"; }
    return $res;
