@@ -37,7 +37,7 @@
 require_once "funcs.inc.php";
 $output=TRUE;
 
-$logger->setDebugLevel(3);
+$logger->setDebugLevel(0);
 $logger->setLogToStdErr(false);
 
 #Compatibility with old vars
