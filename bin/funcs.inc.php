@@ -75,12 +75,12 @@ function get_last_index($oid)
 */
 function turn_on_port($port_index)                                             
 {
-   global $switch,$snmp_rw,$snmp_port;
+   global $switch,$snmp_rw,$snmp_port,$logger;
 
    $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
    if (!snmpset($switch,$snmp_rw,$oid,'i',1))
    {
-      echo "\tCouldn't turn on port $port.\n";
+      $logger->logit("\tCouldn't turn on port $port.\n");
       return false;
    }
    else return true;
@@ -93,11 +93,11 @@ function turn_on_port($port_index)
 */
 function turn_off_port($port_index)                                            
 {
-   global $switch,$snmp_rw,$snmp_port;
+   global $switch,$snmp_rw,$snmp_port,$logger;
    $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
    if (!snmpset($switch,$snmp_rw,$oid,'i',2))
    {
-      echo "\tCouldn't shut down port $port.\n";
+      $logger->logit("\tCouldn't shut down port $port.\n");
       return false;
    }
    else return true;
@@ -160,7 +160,7 @@ function log2db($level, $msg)
     #  . "SET what='" . mysql_real_escape_string($msg )  . "', "
     #  . "host='"     . mysql_real_escape_string($_SERVER["HOSTNAME"]) . "', "
     #  . "priority='$level' ";
-    #echo "$query\n";
+    #$logger->logit("$query\n");
     $res = mysql_query($query, $connect);
     if (!$res) { die('Cannot write to vmplog table: ' . mysql_error()); }
   }
@@ -182,7 +182,7 @@ function log2db3($msg)
     $query="INSERT DELAYED INTO naclog "
       . "SET what='" . $msg   . "', "
       . "priority='" . $level . "' ";
-    #echo "$query\n";
+    #$logger->logit("$query\n");
     $res = mysql_query($query, $connect);
     if (!$res) { die('Cannot write to vmplog table: ' . mysql_error()); }
   }
@@ -254,7 +254,7 @@ function ping_mac($mac)
   
   $query="SELECT r_ip from systems "
         . " WHERE mac='" . $mac . "'";
-        #echo("$query\n");
+        #$logger->logit("$query\n");
         $res= mysql_query($query, $connect);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
 
@@ -274,18 +274,18 @@ function ping_mac($mac)
      $answer=syscall("ping -c 3 -w 1 $ip");
      syscall("killall ping");
      if ( preg_match("/0 received,/m", $answer) ) {
-       #echo "Ping Error: $answer\n";
+       #$logger->logit "Ping Error: $answer\n";
        logit("Ping Error no answer: $answer");
        return false;
 
      } else if ( preg_match("/\d+ received,/m", $answer) ) {
-       #echo "Ping OK\n";
+       #$logger->logit "Ping OK\n";
        logit("Ping OK: $answer");
        #logit("Ping OK");
        return true;
 
      } else {
-       #echo "Ping Error: $answer\n";
+       #$logger->logit "Ping Error: $answer\n";
        logit("Ping Error: $answer");
        return false;
      }
@@ -316,7 +316,7 @@ function cv_input($str){
 }
 
 function snmp_restart_port($port, $switch) {
-  global $lastseen_sms_restart;
+  global $lastseen_sms_restart,$logger;
   if ($lastseen_sms_restart) {
      $answer=syscall("./restart_port.php $port $switch");
      debug1($answer);
@@ -393,12 +393,12 @@ function str_get_last($string,$token,$number)           //Return the last parts 
 
 function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC address is on a certain port using SNMP
 {
-   global $snmp_ro;                                     //Read Only community
+   global $snmp_ro,$logger;                                     //Read Only community
 
    $macs_on_vlan=@snmprealwalk($switch,"$snmp_ro@$vlan",'1.3.6.1.2.1.17.4.3.1.1');      //Obtain MAC address table
    if (empty($macs_on_vlan))
    {
-      logit("Couldn't establish communication with $switch using the SNMP_RO community.");
+      $logger->logit("Couldn't establish communication with $switch using the SNMP_RO community.");
       return false;
    }
    $macs_on_vlan=array_map("remove_type",$macs_on_vlan);
@@ -478,21 +478,21 @@ function normalise_mac($old_mac) {
   // Add zero to fill to 2 digits where needed, e.g.
   // convert 0:0:c:7:ac:1 to 00:00:0c:07:ac:01
   $digits=split(':',$old_mac);              # get one string per "part"
-  #echo "Join= " . join('', $digits) . "\n";
+  #$logger->logit("Join= " . join('', $digits) . "\n");
   $digits = preg_replace('/^([0-9a-fA-F])$/', '0${1}', $digits); 
   $mac = join(':', $digits);
 
   #$mac = preg_replace('/^([0-9a-fA-F]):/', '0${1}:',  $mac);  # start
   #$mac = preg_replace('/:([0-9a-fA-F]):/S', ':0${1}:', $mac);  # middle 
   #$mac = preg_replace('/:([0-9a-fA-F])$/', ':0${1}',  $mac);  # end
-  #echo "$mac\n";
+  #$logger->logit("$mac\n");
 
   // remove space, dash, dots, colon
   $mac = preg_replace('/-|\.|\s|:/', '', $mac); 
 
   # Add . every 4 digits
   $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
-  #echo "$mac\n";
+  #$logger->logit("$mac\n");
 
   return $mac;
 }
@@ -502,7 +502,7 @@ function normalise_mac($old_mac) {
 // Execute query and return assoc array
 //   Assuming a table t1 with 2 Fields Code and Value:
 //   $r= mysql_fetch_all("SELECT * from t1")
-//   foreach ($r as $row) { echo "$row[Code], $row[Value]\n";
+//   foreach ($r as $row) { $logger->logit("$row[Code], $row[Value]\n");
 //
 function mysql_fetch_all($query){
   $r=@mysql_query($query);
@@ -515,7 +515,7 @@ function mysql_fetch_all($query){
 }
 
 function mysql_fetch_one($query){
-  #echo "QUERY: $query\n";
+  #$logger->logit("QUERY: $query\n");
   $r=@mysql_query($query);
   if($err=mysql_errno())return $err;
   if(@mysql_num_rows($r))
@@ -526,12 +526,12 @@ function mysql_fetch_one($query){
 // Execute query and return assoc array
 //   Assuming a table t1 with 2 Fields Code and Value:
 //   $r= mssql_fetch_all("SELECT * from t1")
-//   foreach ($r as $row) { echo "$row[Code], $row[Value]\n";}
+//   foreach ($r as $row) { $logger->logit("$row[Code], $row[Value]\n");}
 //
 function mssql_fetch_all($query){
   $r=@mssql_query($query);
   if (! $r) { 
-    echo "Cannot execute query " .mssql_get_last_message();
+    $logger->logit("Cannot execute query " .mssql_get_last_message());
     return -1;
   }
 
@@ -542,7 +542,8 @@ function mssql_fetch_all($query){
 }
 
 function mssql_fetch_one($query){
-  #echo "QUERY: $query\n";
+  #global $logger;
+  #$logger->logit("QUERY: $query\n");
   $r=@mssql_query($query);
   if($err=mssql_errno())return $err;
   if(@mssql_num_rows($r))

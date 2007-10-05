@@ -38,7 +38,7 @@ require_once "funcs.inc.php";
 $output=TRUE;
 
 $logger->setDebugLevel(0);
-$logger->setLogToStdErr(false);
+$logger->setLogToStdOut();
 
 #Compatibility with old vars
 if (!$conf->scan_directory && $conf->nmap_scan_directory)
@@ -77,13 +77,13 @@ if ($flagscannow)
    $output=FALSE;
 
 message("Doing port_scan to sytems... Please wait...\n");
-debug1("port_scan started");
+$logger->debug("port_scan started");
 $file_timestamp=date('Y-m-d H:i:s');
 $file_timestamp=str_replace(' ','-',$file_timestamp);
 
 $scan_results=$scan_directory."/scan-$file_timestamp.xml";   	//Scan file
-debug1("Scan file: $scan_results");		//Parameters from port_scan.inc
-debug1("Nmap flags: ".$conf->nmap_flags);
+$logger->debug("Scan file: $scan_results");		//Parameters from port_scan.inc
+$logger->debug("Nmap flags: ".$conf->nmap_flags);
 if (($what_units_time<0)||($what_units_time>6)||($what_units_time==2))
    $string=$time_threshold." hours";
 else if ($what_units_time==0)
@@ -98,12 +98,12 @@ else if ($what_units_time==5)
    $string=$time_threshold." months";
 else if ($what_units_time==6)
    $string=$time_threshold." years";
-debug1("Last_seen threshold: $string");
+$logger->debug("Last_seen threshold: $string");
 if ($argc==1)				//Running mode
-   debug1("Running mode: Normal");
+   $logger->debug("Running mode: Normal");
 else if ($flagscannow)
-   debug1("Running mode: Scannow");
-else debug1("Running mode: Manual"); 
+   $logger->debug("Running mode: Scannow");
+else $logger->debug("Running mode: Manual"); 
 $list=scan($scan_results,$conf->nmap_flags);		//Scan network with those flags	
 $var=parse_scanfile($scan_results,$list);		//Parse the xml file
 if ($var['equipments']>0)			
@@ -113,7 +113,7 @@ else
 
 syscall("rm $scan_results");
 message("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
-debug1("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
+$logger->debug("port_scan finished normally. ".$var['equipments']." hosts scanned\n");
 if ($flagscannow)
    log2db('info',"port_scan finished normally. ".$var['equipments']." hosts scanned");
 
@@ -122,8 +122,6 @@ function check_requirements()  //Checks for required functions and tables struct
    global $conf,$what_units_time, $scan_directory, $time_threshold, $which_nmap;
    $functions=get_defined_functions();
    $functions=$functions['user']; //A little bit of paranoia :)
-   if (!in_array('debug1',$functions))
-      check_and_abort("Function debug1 not defined in funcs.inc\n",0);
    if (!in_array('logit',$functions))
       check_and_abort("Function logit not defined in funcs.inc\n",0);
    if (!in_array('db_connect',$functions))
@@ -186,7 +184,11 @@ function message($string)
          //log2db('info',$string);
       }   
       else
-         echo $string;
+      {
+         $logger->setLogToStdOut();
+         $logger->logit($string);
+         $logger->setLogToStdOut(false);
+      }
    }
 }
 
@@ -204,15 +206,15 @@ function validate($string)
 
 function do_something($query)			//Let's do something with our structure
 {
+   global $logger;
    $queries=$query['number'];   		//How many queries we have?
    $messages=$query['messages'];   		//How many messages?
    for ($i=0;$i<$queries;$i++)
    {
-      #echo $query['query'][$i]."\n";  
       execute_query($query['query'][$i]);   	//Execute the queries
    }
    for ($i=0;$i<$messages;$i++)
-        debug1($query['message'][$i]);   	//And display the messages
+        $logger->debug($query['message'][$i]);   	//And display the messages
 }
 
 function update_queries($mesg,$what)
@@ -580,7 +582,7 @@ function execute_query($query)
    $res=mysql_query($query);
    $logger->debug($query,3);
    if (!$res)
-   { echo "Cannot execute query $query because ".mysql_error()."\n"; }
+   { $logger->logit("Cannot execute query $query because ".mysql_error()."\n"); }
    return $res;
 }
 
@@ -628,17 +630,17 @@ function add_entry($data)	//A new host in our network that needs to be added to 
 
 function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specified in the file "port_scan.inc" and the location for our XML file
 {
-   global $which_nmap;
+   global $which_nmap,$logger;
    syscall("touch ".$xml_file);	//Just to avoid an error while running from cron
    $scan=$which_nmap." ".$nmap_flags." -oX ".$xml_file." ";
    $list=get_ips();		//We need some IPs to scan
    for ($i=0;$i<$list['counter'];$i++) //Put those ips in a string
    {
       message("Scanning host ".$list['ip'][$i]."\n");
-      debug1("Scanning host ".$list['ip'][$i]);
+      $logger->debug("Scanning host ".$list['ip'][$i]);
       $hosts.=" ".$list['ip'][$i];
    }
-   debug1("Total number of hosts to scan: ".$list['counter']);
+   $logger->debug("Total number of hosts to scan: ".$list['counter']);
    $scan.=$hosts;		//Now our command line is complete
    syscall($scan);		//Scan
    return($list);
@@ -646,14 +648,14 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
 
 function check_and_abort($message,$resource)	//This function checks if there is a problem with an important query and aborts. It is also used to abort the script because we want to do it
 {
-   global $scan_results;
+   global $scan_results,$logger;
    if (!is_resource($resource))		//Let's abort just for fun
    {
       syscall("rm $scan_results");
       message($message);
       message("port_scan ended abnormally.\n");
-      debug1($message);
-      debug1("port_scan ended abnormally.\n");
+      $logger->debug($message);
+      $logger->debug("port_scan ended abnormally.\n");
       //log2db('err',$message);
       //log2db('err',"port_scan ended abnormally.");
       exit();
@@ -664,8 +666,8 @@ function check_and_abort($message,$resource)	//This function checks if there is 
       syscall("rm $scan_results");
       message($message);
       message("port_scan ended abnormally.\n");
-      debug1($message);
-      debug1("port_scan ended abnormally.\n");
+      $logger->debug($message);
+      $logger->debug("port_scan ended abnormally.\n");
       //log2db('err',$message);
       //log2db('err',"port_scan ended abnormally.");
       exit();
@@ -698,7 +700,7 @@ function ip_to_bin($ip)
 
 function get_ips()	//This function will get some ips to scan
 {
-   global $what_units_time, $time_threshold, $argc, $argv,$flagscannow,$queries;
+   global $what_units_time, $time_threshold, $argc, $argv,$flagscannow,$queries,$logger;
    $timestamp=date('Y-m-d H:i:s');
    $ips="";
    $list=array();
@@ -810,16 +812,16 @@ function get_ips()	//This function will get some ips to scan
       $counter=0;
       $number=0;
       check_and_abort("Nothing to scan. No networks defined in subnets.\n",$res1);
-      debug1("Networks defined in subnets");
+      $logger->debug("Networks defined in subnets");
       while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
       {
          $network[$number]['ip']=$result1['ip_address'];
          $network[$number]['netmask']=$result1['ip_netmask'];
          $network[$number]['dontscan']=$result['dontscan'];
-         debug1($result1['ip_address'].'/'.$result1['ip_netmask']);
+         $logger->debug($result1['ip_address'].'/'.$result1['ip_netmask']);
          $number++;
       }
-      debug1("Number of networks defined in subnets: $number");
+      $logger->debug("Number of networks defined in subnets: $number");
       for ($l=0;$l<$devices['counter'];$l++)
       {
          $candidate=0;
@@ -873,7 +875,7 @@ function get_ips()	//This function will get some ips to scan
                $notscanned=array_diff($temp_1,$temp_2);
                foreach($notscanned as $rejected_ip)
                {
-                  debug1($rejected_ip." doesn't meet criteria specified in subnets table\n");
+                  $logger->debug($rejected_ip." doesn't meet criteria specified in subnets table\n");
                   logit($rejected_ip." doesn't meet criteria specified in subnets table\n");
 		  log2db('info',$rejected_ip." doesn't meet criteria specified in subnets table");
                }
@@ -928,7 +930,7 @@ function parse_scanfile($scan_file,$list)
          {
             for ($i=0;$i<$list['counter'];$i++)
             {
-               debug1($list['ip'][$i]." is down\n");
+               $logger->debug($list['ip'][$i]." is down\n");
                logit($list['ip'][$i]." is down\n");
                log2db('info',$list['ip'][$i]." is down");
             }
@@ -1028,14 +1030,14 @@ function parse_scanfile($scan_file,$list)
       for ($j=0;$j<$i;$j++)
       {
          $temp[$j]=$info[$j]['ip'];
-         debug1($temp[$j]." is up");
+         $logger->debug($temp[$j]." is up");
       }
       if (isset($temp)&&is_array($temp))
          if (isset($list)&&is_array($list))
             $hosts_down=array_diff($list['ip'],$temp);
       foreach($hosts_down as $down)
       {
-         debug1($down." is down\n");
+         $logger->debug($down." is down\n");
          logit($down." is down\n");
          log2db('info',$down." is down");
       }
@@ -1054,7 +1056,7 @@ function parse_scanfile($scan_file,$list)
          execute_query($query);
       }
    }
-   debug1("Total number of hosts up: ".$info['equipments']);
+   $logger->debug("Total number of hosts up: ".$info['equipments']);
    return($info);
 }
 ?>

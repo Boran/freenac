@@ -48,6 +48,7 @@ final class Logger
    private $identifier=NULL;
    private $facility=NULL;
    private $stderr=false;
+   private $stdout=false;
    private $httpd_log=false;			//Log to webserver log?
    private $email_alert=false;			//Send Err or higher via email
    
@@ -78,32 +79,29 @@ final class Logger
    */
    public function setLogToEmail($var=true)
    {
-      if (is_bool($var))
+      if (is_bool($var) && ($var===true))
       {
          $this->email_alert=true;
-         return true; 
       }
       else
       {
-         return false;
+         $this->email_alert=false;
       }
    }
 
    /**
    * Divert logging to httpd
    * @param boolean $var        Activate or deactivate httpd logging. Default is to activate ($var=true)
-   * @return boolean 		True if successful, false otherwise
    */
    public function setLogToHttpd($var=true)
    {
-      if (is_bool($var))
+      if (is_bool($var) && ($var===true))
       {
          $this->httpd_log=true;
-         return true;
       }
       else
       {
-         return false;
+         $this->httpd_log=false;
       }
    }
 
@@ -113,13 +111,32 @@ final class Logger
    */
    public function setLogToStdErr($var=true)	//Redirect logging to stderr
    {
-      if (is_bool($var) && ($var==true))
+      if (is_bool($var) && ($var===true))
       {
          closelog();		#Close syslog
-         $this->stderr=$var;    
+         $this->stderr=true;
       }
       else
       {
+         $this->stderr=false;
+         $this->openFacility(); #Open logging facilities
+      }
+   }
+
+   /**
+   * Divert logging to StdOut
+   * @param boolean $var        Activate or deactivate StdOut logging. Default is to activate ($var=true)
+   */
+   public function setLogToStdOut($var=true)    //Redirect logging to stderr
+   {
+      if (is_bool($var) && ($var===true))
+      {
+         closelog();            #Close syslog
+         $this->stdout=true;
+      }
+      else
+      {
+         $this->stdout=false;
          $this->openFacility(); #Open logging facilities
       }
    }
@@ -200,6 +217,13 @@ final class Logger
             $message=trim($message);
             $message.="\n";
             fputs(STDERR,$message);
+            ob_flush();
+         }
+         else if ($this->stdout)
+         {
+            $message=trim($message);
+            $message.="\n";
+            fputs(STDOUT,$message);
             ob_flush();
          }
          else

@@ -29,7 +29,7 @@
 require_once "funcs.inc.php";  
 # configure logging
 $logger->setDebugLevel(0);
-#$logger->setLogToStdErr();
+$logger->setLogToStdOut();
 
 debug1("variables from configfile: ".$conf->ad_server." | ".$ad_user." | ".$ad_password." | " . print_r($conf->ad_base_user_dn, TRUE));
 
@@ -148,7 +148,7 @@ function query_AD() {
 
 # Insert new or update existing user information
 function fill_db($users) {
-	global $exchange;
+	global $exchange,$logger;
 	
 	logit('Updating user table');
 	
@@ -189,8 +189,8 @@ function fill_db($users) {
 		
 		
 		if( $account ) {	# make sure each entry processed has an account name
-			echo($account);
-			echo(mysql_real_escape_string($account));
+			#$logger->logit($account);
+			$logger->logit(mysql_real_escape_string($account));
 
 			$check_query = sprintf("SELECT username from users where username = '%s'",
 				mysql_real_escape_string($account)

@@ -36,7 +36,7 @@ set_include_path("../:./");
 require_once "bin/funcs.inc.php";               # Load settings & common functions
 
 $logger->setDebugLevel(0);
-#$logger->setLogToStdErr();
+$logger->setLogToStdOut(false);
 
 //
 //------------------------------------------ Functions ------------------------------------------------
@@ -44,6 +44,7 @@ $logger->setDebugLevel(0);
 
 function print_usage($code)
 {
+   global $logger;
    $usage=<<<EOF
 USAGE: restart_port port switch 
 
@@ -56,7 +57,7 @@ OPTIONS:
         -h		Display this help screen	
 
 EOF;
-   echo $usage;
+   $logger->logit($usage);
    exit($code);
 }
 
@@ -95,11 +96,11 @@ switch($j)
       print_usage(1);
       break;
    case 1:
-      echo "Port and switch must be specified\n";
+      $logger->logit("Port and switch must be specified\n");
       print_usage(1);
       break;
    case 2:
-      echo "Switch must be specified\n";
+      $logger->logit("Switch must be specified\n");
       print_usage(1);
       break;
    case 3:
@@ -107,7 +108,7 @@ switch($j)
       $port=$command_line[1];
       break;
    default:
-      echo "Only one port can be restarted at the time\n";
+      $logger->logit( "Only one port can be restarted at the time\n");
       print_usage(1);
       break;
 }
@@ -115,23 +116,20 @@ switch($j)
 //
 //Ok, here we go ----------------------------------------- main stuff ------------------------------------------
 //
-
-debug1("Port $port on $switch");
-logit("Port restart try: $port on switch $switch");
+$logger->debug("Port $port on $switch");
+$logger->logit("Port restart try: $port on switch $switch");
 
 $ports_on_switch=snmprealwalk($switch,$snmp_rw,'1.3.6.1.2.1.31.1.1.1.1');	//Get the list of ports on the switch
 if (empty($ports_on_switch))
 {
-   echo "ABORTED: Could not contact switch $switch or unknown Switch.\n";
-   logit("ABORTED: Could not contact switch $switch or unknown Switch");
+   $logger->logit( "ABORTED: Could not contact switch $switch or unknown Switch.\n");
    exit(2);
 }
 $ports_on_switch=array_map("remove_type",$ports_on_switch);		//We are only interested in the string
 $port_oid=array_search($port,$ports_on_switch);				//Is the port from the command line present in this switch?
 if (empty($port_oid))
 {
-   echo "Port $port not found on switch $switch\n";
-   logit("Port $port not found on switch $switch");
+   $logger->logit( "Port $port not found on switch $switch\n");
    log2db('info',"Port $port not found on switch $switch");
    exit(1);
 }
@@ -142,20 +140,20 @@ if (turn_off_port($port_index))
 {
    if (turn_on_port($port_index))
    {
-      logit("Port successfully restarted $port on switch $switch");
+      $logger->logit("Port successfully restarted $port on switch $switch");
       log2db('info',"Port successfully restarted $port on switch $switch");
       exit(0);
    }
    else
    {
-      logit("Port $port on switch $switch couldn't be restarted");
+      $logger->logit("Port $port on switch $switch couldn't be restarted");
       log2db('info',"Port $port on switch $switch couldn't be restarted");
       exit(1);
    }
 }
 else
 {
-   logit("Port $port on switch $switch couldn't be restarted");
+   $logger->logit("Port $port on switch $switch couldn't be restarted");
    log2db('info',"Port $port on switch $switch couldn't be restarted");
    exit(1);
 }

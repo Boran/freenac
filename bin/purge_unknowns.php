@@ -29,7 +29,7 @@
 require_once "funcs.inc.php";               # settings & functions
 
 $logger->setDebugLevel(0);
-#$logger->setLogToStdErr();
+$logger->setLogToStdOut();
 
 # We don't have PHP5, so need some compat stuff
 #require_once 'PHP/Compat.php';
@@ -49,12 +49,10 @@ $fgets_timeout=2;        #seconds to wait for results
 ## Ensure purge at least 10 days old.
 ## variable is in config.inc
 if (($conf->unknown_purge) && ($conf->unknown_purge>10)) {
-  #echo("variable unknown_purge= ".$conf->unknown_purge."\n");
   $logger->logit("unknown purge days= ".$conf->unknown_purge);
 
 } else {
-  $logger->logit("invalid variable unknown_purge, value= ".$conf->unknown_purge);
-  echo("purge_unknowns: invalid variable unknown_purge, value= ".$conf->unknown_purge."\n");
+  $logger->logit("purge_unknowns: invalid variable unknown_purge, value= ".$conf->unknown_purge);
   exit -1;
 }
 

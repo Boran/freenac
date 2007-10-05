@@ -25,7 +25,7 @@
 require_once "funcs.inc.php";
 
 $logger->setDebugLevel(0);
-#$logger->setLogToStdErr();
+#$logger->setLogToStdOut();
 
 ## Connect to DB
   $connect=mysql_connect($dbhost, $dbuser, $dbpass)
@@ -52,7 +52,7 @@ if ($logger->getDebugLevel()) { $query=$query . " LIMIT 10"; }
     while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
       #debug1($line[0]);
       if ($line[0]!=NULL) {
-        #echo("$line[0];$line[1];$line[2];$line[3];$line[4]\n");
+        #$logger->logit("$line[0];$line[1];$line[2];$line[3];$line[4]\n");
         $msg=$msg ."$line[0];$line[1];$line[2];$line[3];$line[4]\n";
       }
     }

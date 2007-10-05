@@ -42,11 +42,11 @@
 # Php weirdness: change to script dir, then look for includes
 chdir(dirname(__FILE__));
 set_include_path("../:./:/opt/nac/");
-require_once "bin/funcs.inc.php";               # Load settings & common functions
-require_once "snmp_defs.inc.php";
+require_once "./funcs.inc.php";               # Load settings & common functions
+require_once "./snmp_defs.inc.php";
 
-$logger->setDebugLevel(0);
-#$logger->setLogToStdErr();
+$logger->setDebugLevel(1);
+$logger->setLogToStdOut(false);
 
 db_connect();
 
@@ -69,13 +69,13 @@ if ($snmp_dryrun) {
 
 
 function print_usage() {
-	echo "snmp_scan.php - Usage\n";
-	echo " -switch [name] - only scan a given switch (require switch name)\n";
-	echo " -vlan [name]   - only scan a given vlan (require vlan default_name)\n";
-	echo " -listvlans     - list all vlans\n";
-	echo " -help          - print usage\n";
-	echo " (no args) : will scan all switches and all vlans\n";
-	echo "\n";
+	$logger->logit("snmp_scan.php - Usage\n");
+	$logger->logit(" -switch [name] - only scan a given switch (require switch name)\n");
+	$logger->logit(" -vlan [name]   - only scan a given vlan (require vlan default_name)\n");
+	$logger->logit(" -listvlans     - list all vlans\n");
+	$logger->logit(" -help          - print usage\n");
+	$logger->logit(" (no args) : will scan all switches and all vlans\n");
+	$logger->logit("\n");
 };
 
 function print_vlans() {
@@ -100,16 +100,16 @@ function print_vlans() {
 	$first = TRUE;
 		foreach ($vlan_ids as $vlan_id => $switches) {
 			if (count($vlan_ids) == 1) {
-				echo "$vlan_id\t";
+				$logger->logit("$vlan_id\t");
 				printf("%-16s",  substr($vlan_name,0,14));
-				echo "\t- Switches : ".rtrim($switches,',')."\n";
+				$logger->logit("\t- Switches : ".rtrim($switches,',')."\n");
 			} else {
 				if (!$first) {
-					echo "VLAN $vlan_name :\n";
+					$logger->logit("VLAN $vlan_name :\n");
 					$first = FALSE;
 				};
-				echo " :\n";
-				echo "\t - $vlan_id : ".rtrim($switches,',')."\n";
+				$logger->logit(" :\n");
+				$logger->logit("\t - $vlan_id : ".rtrim($switches,',')."\n");
 			};
 		};
 	};
@@ -138,20 +138,20 @@ function print_vlans() {
 
 if (!$singlesw) {
     $switches =  mysql_fetch_all("SELECT * FROM switch WHERE scan=1");
-	logit("Scanning all switches in the Database");
+	$logger->logit("Scanning all switches in the Database");
 	log2db("info", "Scanning all switches in the Database");
 } else {
     $switches =  mysql_fetch_all("SELECT * FROM switch WHERE name='$singleswitch'");
-	logit("Scanning one switch: $singleswitch");
+	$logger->logit("Scanning one switch: $singleswitch");
 	log2db('info', "Scanning only one switch: $singleswitch");
 };
 if (!$singlevl) {
 	$vlans =  mysql_fetch_all("SELECT * FROM vlan WHERE default_id != 0 AND default_id != 1");
 	# default, don't need to log
-	debug1("Scanning all VLANs");
+	$logger->debug("Scanning all VLANs");
 } else {
 	$vlans = mysql_fetch_all("SELECT * FROM vlan WHERE default_name='$singlevlan'");
-	logit("Scanning only one vlan : $singlevlan");
+	$logger->logit("Scanning only one vlan : $singlevlan");
 	logdb('info', "Scanning only one vlan : $singlevlan");
 };
 
@@ -162,7 +162,7 @@ if (!$singlevl) {
 		$switchid = $switchrow['id'];
 		$switchip = $switchrow['ip'];
 
-		logit("Start scanning  ($switchid) $switchip ");
+		$logger->logit("Start scanning  ($switchid) $switchip ");
 		$switch_ifaces = walk_ports($switchip,$snmp_ro);
 // first, switch details
                 foreach ($switch_ifaces as $if)
@@ -199,7 +199,7 @@ if (!$singlevl) {
                             $res=mysql_query($query);
                             if (!res)
                             {
-                               debug1("Port ".$if['name']." on switch $switchid couldn't be updated");
+                               $logger->debug("Port ".$if['name']." on switch $switchid couldn't be updated");
                             }
                          }
                          else			//No, insert it
@@ -212,7 +212,7 @@ if (!$singlevl) {
                             $res=mysql_query($query);
                             if (!res)
                             {
-                               debug1("Port ".$if['name']." on switch $switchid couldn't be inserted");
+                               $logger->debug("Port ".$if['name']." on switch $switchid couldn't be inserted");
                             }
  
                          }
@@ -224,11 +224,11 @@ if (!$singlevl) {
 		if ($hw || $sw) { 
 		        //In some switches, the string 'WS' is not found. This string tells us what the hardware is
 			//If we don't find the hardware, at least let's update the software we found
-			debug1("($switchid) $switchip : HW = $hw / SW = $sw");
+			$logger->debug("($switchid) $switchip : HW = $hw / SW = $sw");
 			 $query = "UPDATE switch SET hw='$hw',sw='$sw' WHERE id=$switchid;";
 			if($domysql) { mysql_query($query) or die("Unable to update switch info\n"); };
 		} else {
-			debug1("($switchid) $switchip  impossible to get HW or SW");
+			$logger->debug("($switchid) $switchip  impossible to get HW or SW");
 		};
 
 // then get hosts
@@ -243,12 +243,12 @@ if (!$singlevl) {
 						$sid = mac_exist($mac['mac']);
 						if ($sid) {
 							$query = "UPDATE systems SET LastPort='$portid', LastSeen=NOW() WHERE id=$sid;";
-							debug1("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - update host ");
+							$logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - update host ");
 						} else {
 					
 							$query = 'INSERT INTO systems (name, mac, LastPort, vlan, status,LastSeen,description) VALUES ';
 							$query .= "('unknown','".$mac['mac']."',$portid,".get_vlanid($vlanid).",3,NOW(),'$default_user_unknown');";
-							debug1("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
+							$logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
 						};
 						if($domysql) { mysql_query($query) or die("unable to query $query\n"); };
 						unset($query);
@@ -259,7 +259,7 @@ if (!$singlevl) {
 		};
 	};
    } else {
-	logit("Error - no switch scanned");
+	$logger->logit("Error - no switch scanned");
    };
 # $router_mac_ip_ignore_mac
  // measure performance
@@ -268,6 +268,6 @@ if (!$singlevl) {
    $mtime = $mtime[1] + $mtime[0];
    $endtime = $mtime;
    $totaltime = ($endtime - $starttime);
-   debug1("Time taken= ".$totaltime." seconds\n");
-   #logit("Time taken= ".$totaltime." seconds\n");
+   $logger->debug("Time taken= ".$totaltime." seconds\n");
+   #$logger->logit("Time taken= ".$totaltime." seconds\n");
 ?>

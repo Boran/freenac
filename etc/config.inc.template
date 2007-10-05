@@ -24,7 +24,7 @@
 #require_once "/opt/nac/enterprise/config_en.inc";
 
 
-## MySQL DB settings for all scripts
+## MySQnL DB settings for all scripts
   $dbhost="localhost";
   $dbname="opennac";
   $dbuser="inventwrite";
@@ -41,4 +41,13 @@
 
 ## router_mac_ip
   $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";    # SNMP Read
+
+## Microsoft WSUS patch status  queries
+  $wsus_dbuser ="USER1";              # read-only user for queries
+  $wsus_dbpass ="PASS1";              # keep this secret!
+
+## McAfee EPO Anti-virus server queries
+  $epo_dbuser ="USER1";              # read-only user for queries
+  $epo_dbpass ="PASS1";              # keep this secret!
+
 ?>

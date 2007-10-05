@@ -26,7 +26,7 @@ $subject="VMPS flapping";
 require_once "funcs.inc.php";               # Load settings & common functions
 
 $logger->setDebugLevel(0);
-#$logger->setLogToStdErr();
+$logger->setLogToStdOut();
 
 $tmp1="$argv[0].tmp1";
 $message="";
@@ -60,7 +60,7 @@ function react($cnt, $switch, $port)
   #$query="SELECT location,comment, (SELECT name FROM switch WHERE ip=switch), (SELECT notify FROM switch WHERE ip=switch) FROM inventory.port "
   #  . "WHERE switch='$switch' AND name='$port'";
   $query="select l.name, s.comment, s.name, s.notify from port p inner join switch s on p.switch=s.id and s.ip='$switch' and p.name='$port' inner join location l on l.id=s.location;";
-    #echo $query;
+    #$logger->logit( $query);
     $res = mysql_query($query);
     if (!$res) { die('Invalid query: ' . mysql_error()); }
   $row=mysql_fetch_array($res, MYSQL_NUM);
@@ -83,15 +83,15 @@ function react($cnt, $switch, $port)
       $regs=array();         
       #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
       if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch $switch port $port", $line, $regs) ) {
-        #echo "FOUND: {$regs[0]}\n";
-        #echo "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n";
+        #$logger->logit( "FOUND: {$regs[0]}\n");
+        #$logger->logit( "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n");
         $success=$regs[2];
         $mac=$regs[3];     $vlan=$regs[4];
         $details="$regs[1]";
         $mac2="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
         #debug2("mac=$mac2 vlan=$vlan switch=$switch port=$port");
-        #echo("$regs[1] mac=$mac2 vlan=$vlan switch=$switch port=$port\n");
-        #echo("$regs[1] $mac2 vlan=$vlan\n");
+        #$logger->logit("$regs[1] mac=$mac2 vlan=$vlan switch=$switch port=$port\n");
+        #$logger->logit("$regs[1] $mac2 vlan=$vlan\n");
 
         #msg("$regs[1] $mac2 vlan=$vlan\n\n");
         $logs .= "$regs[1] $mac2 vlan=$vlan\n\n";
@@ -167,7 +167,7 @@ function react($cnt, $switch, $port)
         $res = mysql_query($query);
         if (!$res) { die('Invalid query: ' . mysql_error()); }
       $row=mysql_fetch_array($res, MYSQL_NUM);
-      #echo("Problem: $row[0] $mac $row[4], User=$row[2], Office=$row[3] $row[2], $row[5]\n");
+      #$logger->logit("Problem: $row[0] $mac $row[4], User=$row[2], Office=$row[3] $row[2], $row[5]\n");
       #msg("Problem: $row[0] $mac $row[4], User=$row[2], Office=$row[3] $row[2], $row[5]\n");
       msg("Problem: $row[0] $mac, $row[5]\n");
 
@@ -180,20 +180,20 @@ function react($cnt, $switch, $port)
         ## DO SOMETHING: switch vlan
         $best_lan_num=v_sql_1_select("SELECT id FROM vlan WHERE default_name='$best_vlan'");
         $query="UPDATE systems SET vlan='$best_vlan_num' WHERE mac='$mac2'";
-          #echo($query ."\n");
+          #$logger->logit($query ."\n");
           $res = mysql_query($query) 
             OR die("Error in UPDATE DB-Query: " . mysql_error());
           if (mysql_affected_rows()!=1) {
-            echo "Query error: $query\n"; 
+            $logger->logit("Query error: $query\n"); 
             msg("Query error: $query\n"); 
           }
 
-        #echo("DECISION: Change $mac vlan to $best_vlan - $best_vlan_num since $best_vlan and $vlan are in the same group $othervlangroup\n");
+        #$logger->logit("DECISION: Change $mac vlan to $best_vlan - $best_vlan_num since $best_vlan and $vlan are in the same group $othervlangroup\n");
         msg("==> DECISION: automatically changing $mac vlan to $best_vlan  - $best_vlan_num since $best_vlan and $vlan are in the same group $othervlangroup\n");
         log2db('warn', "$email_subject: automatically changing $mac to $best_vlan - $best_vlan_num since $best_vlan and $vlan are in the same group $othervlangroup");
 
       } else {
-        #echo("DECISION: Disable $mac since $best_vlan and $vlan are not in the same group ($new_vlan_group-$othervlangroup)\n");
+        #$logger->logit("DECISION: Disable $mac since $best_vlan and $vlan are not in the same group ($new_vlan_group-$othervlangroup)\n");
         msg("\n==> RECOMMENDATION: Disable $mac since $best_vlan and $vlan are not in the same group ($new_vlan_group-$othervlangroup)\n");
         log2db('warn', "$email_subject: RECOMMENDATION emailed to superuser: Disable $mac since $best_vlan and $vlan are not in the same group");
       }
@@ -262,7 +262,7 @@ function react($cnt, $switch, $port)
 ## --- main () ----
 
   # first get the most resent log messags
-  #echo $tail;
+  #$logger->logit $tail;
   unset($answer);
   #$answer=explode("\n", syscall("$tail"));  # save all log entries in $tmp1
   #$answer=syscall("ls");  # save all log entries in $tmp1
@@ -282,9 +282,9 @@ function react($cnt, $switch, $port)
   # do a grep on the newest log messages
   #unset($answer);
   $answer=explode("\n", syscall("$cmd")); 
-  #echo $cmd;
+  #$logger->logit($cmd);
   for ($j = 0; $j < count($answer); $j++){
-      #echo "$answer[$j]\n";
+      #$logger->logit("$answer[$j]\n");
       #debug2($answer[$j]);
 
       # 2 192.168.245.85 port Fa0/4
