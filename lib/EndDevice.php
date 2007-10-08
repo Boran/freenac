@@ -339,7 +339,7 @@ EOF;
          $res=mysql_query($query);
          if ($res)
          {
-            $this->logger->debug("Note: {$this->mac}({$this->hostname}) has been updated");
+            $this->logger->debug("Note: End device {$this->mac}({$this->hostname}) has been updated");
             return "{$this->mac}({$this->hostname})";
          }
          else
