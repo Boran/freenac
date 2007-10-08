@@ -46,6 +46,21 @@ EOF;
          return $this->ports;
       }
    }
+
+   public function isPortOpen($port)
+   {
+      if ($port && is_numeric($port))
+      {
+         if (array_search($port,$this->ports))
+            return true;
+         else
+            return false;
+      }
+      else
+      {
+         return false;
+      }
+   }
 }
 
 ?>
