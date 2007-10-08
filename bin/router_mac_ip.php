@@ -1,7 +1,7 @@
 #!/usr/bin/php -f
 <?php
 /**
- * /opt/nac/bin/router_mac
+ * bin/router_mac
  *
  * Long description for file:
  * Get MAC / IP table of active hosts from core routers
@@ -31,14 +31,14 @@
  */
 
 
+require_once "funcs.inc.php";               # Load settings & common functions
 # Debugging
+$logger->setDebugLevel(1);
+$logger->setLogToStdOut(false);
 $mysql_write1=true;                    # Just test or actually write DB changes??
 $mysql_write2=true;                    # Just test or actually write DB changes??
 
-require_once "funcs.inc.php";               # Load settings & common functions
 
-$logger->setDebugLevel(0);
-$logger->setLogToStdOut(false);
 
 // allow performance measurements
    $mtime = microtime();
@@ -51,8 +51,8 @@ global $connect;
 
 
 if ( !$conf->core_routers ) {   // no results, error?
-   $logger->logit("no routers specified in core_routers variable in config.inc");
-   log2db('info',"no routers specified in core_routers variable in config.inc");
+   $logger->logit("no routers specified in core_routers variable in the config table");
+   log2db('info',"no routers specified in core_routers variable in the config table");
    exit -1;
 }
 
@@ -90,22 +90,28 @@ foreach (split(' ', $conf->core_routers) as $router) {
 
  // go though each pair and update the SYSTEMS table
  for ($i = 0; $i < count($results); $i++){
-  $logger->debug("Pre-match results: " .$results[$i],2);
+  $logger->debug("Pre-match results: " .$results[$i], 2);
 
-  if ( preg_match("/ipNetToMediaPhysAddress\.(\d+)\.(.*) = STRING: (.*)/", $results[$i], $matches) ) {
+  #if ( preg_match("/ipNetToMediaPhysAddress\.(\d+)\.(.*) = STRING: (.*)/", $results[$i], $matches) ) {
+  if ( preg_match("/ipNetToMediaPhysAddress\.(\d+)\.(.*) = .*STRING: (.*)/", $results[$i], $matches) ) {
      $ip=$matches[2];
      #$logger->debug("$ip - $matches[3] ",2);
      $mac=normalise_mac($matches[3]);
      $logger->debug("$ip - $mac ",2);
 
      if ( preg_match($conf->router_mac_ip_ignore_ip, $ip) ) {
-       $logger->debug("Ignore Non relevant Networks: $ip - $mac ",2);
+       $logger->debug("Ignore Non relevant Networks: $ip - $mac ", 2);
        continue;
      }
      if ( preg_match($conf->router_mac_ip_ignore_mac, $mac) ) {
-       $logger->debug("Ignore Non relevant macs: $mac ",2);
+       $logger->debug("Ignore Non relevant macs: $mac ", 2);
        continue;
      }
+
+
+     // suggestion from PB: (Reply from SB: elegant as its just one query, simpler, but very mysql specific?)
+     #$query1="INSERT INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
+     #$query2=" ON DUPLICATE KEY UPDATE r_timestamp=NOW(), r_ip='$ip'";
 
      $query1="UPDATE systems SET r_timestamp=NOW(), r_ip='$ip' ";
      $query2='';
@@ -115,7 +121,7 @@ foreach (split(' ', $conf->core_routers) as $router) {
           if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
             if (in_array($mac,$uk_mac)) {
               $fqdn=gethostbyaddr($ip);
-              $logger->debug("got $fqdn $ip $mac");
+              $logger->debug("router_mac_ip_update_from_dns FQDN=$fqdn IP=$ip MAC=$mac", 1);
               if($fqdn!=$ip) { // We got the host name, now update it
                 // strip domain name
                 list($hostname_only) = split('[.]', $fqdn);
@@ -132,7 +138,8 @@ foreach (split(' ', $conf->core_routers) as $router) {
         if ($mysql_write1) {
           $res = mysql_query($query, $connect);
           if (!$res) { die('Invalid query:' . mysql_error()); }
-          $rowcount=mysql_affected_rows($connect);
+          #$rowcount=mysql_affected_rows($connect);
+          $rowcount=mysql_affected_rows2($connect);
           $logger->debug($query ."==> rows:" .$rowcount,2);
         } else {
           $logger->logit("QUERY DRYRUN: $query\n");
@@ -148,12 +155,13 @@ foreach (split(' ', $conf->core_routers) as $router) {
           // TBD: make sure that all IPs come from our networks? So far, only local
           //      IPs were visible
           $logger->debug("$ip - $mac: new, so insert into systems",2);
-          # TBD: What vlan should we use? In theor it makes no difference, since these device should onyl be unmanaged,
-          # but if thy connect to a VMPS port saome day??
+          # TBD: What vlan should we use? In theory it makes no difference, since these device should only be unmanaged,
+          # but if they connect to a VMPS port saome day??
           # We could use $conf->set_vlan_for_unknowns, or set to '1' which is the default. For now use the latter.
-          $query1="INSERT INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
+          #$query1="INSERT INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
+          $query1="INSERT IGNORE INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
           $query2='';
-          if ( $conf->router_mac_ip_update_from_dns ) {   // flag to disable name lookup
+          if ( $conf->router_mac_ip_update_from_dns ) {   // resolve NAME from DNS
               $fqdn=gethostbyaddr($ip);
               $logger->debug("got $fqdn $ip $mac",2);
               if($fqdn!=$ip) { // We got the host name, now update it
@@ -162,6 +170,8 @@ foreach (split(' ', $conf->core_routers) as $router) {
                 $hostname_only = strtolower($hostname_only);
                 $query2=", name='$hostname_only' ";
               }
+          } else {                                      // set the anme to 'unknown
+                $query2=", name='unknown' ";
           }
           $logger->logit("New unmanaged end-device: mac=$mac ip=$ip dns=$hostname_only");
           $query=$query1 . $query2;
