@@ -509,7 +509,7 @@ function mysql_fetch_all($query){
   if($err=mysql_errno()) return $err;
 
   if(@mysql_num_rows($r))
-    while($row=mysql_fetch_array($r))
+    while($row=mysql_fetch_array($r,MYSQL_ASSOC))
       $result[]=$row;
   return $result;
 }
@@ -519,7 +519,7 @@ function mysql_fetch_one($query){
   $r=@mysql_query($query);
   if($err=mysql_errno())return $err;
   if(@mysql_num_rows($r))
-  return mysql_fetch_array($r);
+  return mysql_fetch_array($r,MYSQL_ASSOC);
 }
 
 //
