@@ -23,9 +23,9 @@
 final class VMPSRequest	extends Request		# Disallow inheriting from this class
 {
    private $props=array();			# Here we hold our internal properties
-   private static $instance;			# Our instance of this class
-   protected $port;
-   protected $system;
+   private static $instance=NULL;			# Our instance of this class
+   public $switch_port=NULL;
+   public $host=NULL;
 
    public function __construct($tmac, $tswitch,$tport,$tvtp,$tlastvlan)
    {	
@@ -40,8 +40,8 @@ final class VMPSRequest	extends Request		# Disallow inheriting from this class
          $this->props['lastvlan']=$tlastvlan;
          
          #Initialize a port and a system objects
-	 $this->system=new CallWrapper(new EndDevice($this));
-         $this->port=new CallWrapper(new Port($this));
+         $this->switch_port=new CallWrapper(new Port($this));
+         $this->host=new CallWrapper(new EndDevice($this));
       }
    }
   

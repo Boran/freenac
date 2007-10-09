@@ -134,11 +134,7 @@ while ($in && $out) {
 				#$policy=new $conf->default_policy();
 				try
 				{
-				   $GLOBALS["REQUEST"] = $request;
-				   $GLOBALS["PORT"]   = $request->getPort();
-				   $GLOBALS["HOST"] = $request->getEndDevice();
-				   $GLOBALS["CONF"] = Settings::getInstance();
-				   $policy->preconnect();
+				   $policy->preconnect($request);
 				}
 				catch(Exception $e)
 				{

@@ -1,6 +1,6 @@
 <?php
 /**
- * VMPSResult.php
+ * SyslogRequest.php
  *
  * PHP version 5
  *
@@ -15,19 +15,16 @@
  * @version                     SVN: $Id$
 */
 
-
-include_once "Result.php";
-
 /**
- * Class that contains information related to a syslog result
+ * Class that contains information related to a syslog request
  * This class extends the {@link Result} class
  */
-final class VMPSResult	extends Result		# Disallow inheriting from this class
+final class SyslogRequest extends Result		# Disallow inheriting from this class
 {
    private $props=array();			# Here we hold our internal properties
-   private static $instance;			# Our instance of this class
-   protected $port;
-   protected $system;
+   private static $instance=NULL;			# Our instance of this class
+   public $switch_port=NULL;
+   public $host=NULL;
 
    public function __construct($tmac, $tswitch,$tport,$tvtp,$tlastvlan='--NONE--')
    {	
@@ -42,8 +39,8 @@ final class VMPSResult	extends Result		# Disallow inheriting from this class
          $this->props['lastvlan']=$tlastvlan;
          
          #Initialize a port and a system objects
-	 $this->port=new CallWrapper(new Port($this));
-         $this->system=new CallWrapper(new EndDevice($this));
+	 $this->switch_port=new CallWrapper(new Port($this));
+         $this->host=new CallWrapper(new EndDevice($this));
       }
    }
   
@@ -81,7 +78,7 @@ final class VMPSResult	extends Result		# Disallow inheriting from this class
    */
    public function getEndDevice()
    {
-      return $this->system;
+      return $this->host;
    }
 
    /**
@@ -90,6 +87,6 @@ final class VMPSResult	extends Result		# Disallow inheriting from this class
    */
    public function getPort()
    {
-      return $this->port;
+      return $this->switch_port;
    }
 }

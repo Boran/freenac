@@ -40,7 +40,7 @@ class EndDevice extends Common
       if (!$object)
          DENY('No object received in constructor');
       parent::__construct();
-      if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
+      if (($object instanceof VMPSRequest) || ($object instanceof SyslogRequest))
       {
          # Normalise mac address format by removing spaces, dashes, dots
          # and collons, and by converting to lower case.
@@ -84,6 +84,14 @@ EOF;
          $this->db_row['port_id']=0;
          $this->db_row['office_id']=1;
 	 $this->db_row['lastvlan_id']=1;
+
+         #Passing of information between objects
+         $this->setPortID($object->switch_port->getPortID());
+         $this->setOfficeID($object->switch_port->getOfficeID());
+         $this->setVlanID($object->switch_port->getLastVlanID());
+         $this->setPortInfoForAlertSubject($object->switch_port->getPortInfoForAlertSubject());
+         $this->setPortInfoForAlertMessage($object->switch_port->getPortInfoForAlertMessage());
+         $this->setNotifyInfo($object->switch_port->getNotifyInfo());
       }
       else
       {

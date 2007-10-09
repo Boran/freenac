@@ -86,34 +86,16 @@ do
          #If there are empty parameters, go to next request
          if (empty($switch) || empty($port) || empty($success) || empty($vlan) || empty($mac))
             continue;
-         
          $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
 	 try 
          {
-            $result=new VMPSResult($mac,$switch,$port,$success,$vlan);
+            $result=new SyslogRequest($mac,$switch,$port,$success,$vlan);
             if ($conf->default_policy)
             {
-               #$policy=new $conf->default_policy();
                try
                {
-                  $GLOBALS["RESULT"] = $result;
-                  $GLOBALS["PORT"]   = $result->getPort();
-                  $GLOBALS["HOST"] = $result->getEndDevice();
-                  $GLOBALS["CONF"] = Settings::getInstance();
-
-	          #Passing of information between objects
-	          $HOST->setPortID($PORT->getPortID());
-		  $HOST->setOfficeID($PORT->getOfficeID());
-	          $HOST->setVlanID($PORT->getLastVlanID());
-	          /*$HOST->setPatchInfo($PORT->getPatchInfo());
-	          $HOST->setSwitchInfo($PORT->getSwitchInfo());
-	          $HOST->setPortInfo($PORT->getPortInfo());*/
-                  $HOST->setPortInfoForAlertSubject($PORT->getPortInfoForAlertSubject());
-                  $HOST->setPortInfoForAlertMessage($PORT->getPortInfoForAlertMessage());
-		  $HOST->setNotifyInfo($PORT->getNotifyInfo());
-	          
 	          #Call our policy
-                  $policy->postconnect();
+                  $policy->postconnect($result);
                }
 	       catch (Exception $e)
 	       {

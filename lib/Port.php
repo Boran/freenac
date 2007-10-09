@@ -38,7 +38,7 @@ class Port extends Common
       if (!$object)
          DENY('No object received in constructor');
       parent::__construct();	
-      if (($object instanceof VMPSRequest) || ($object instanceof VMPSResult))
+      if (($object instanceof VMPSRequest) || ($object instanceof SyslogRequest))
       {
          # Get needed parameters from object
          $switchip=trim($object->switch);
@@ -48,13 +48,13 @@ class Port extends Common
    
          #In case we have a DENY as result from vmpsd_external, so no vlan would come in the object. If so, set vlan to
          # '--NONE--' which should deny access
-         if (($object instanceof VMPSResult) && (!$lastvlan))
+         if (($object instanceof SyslogRequest) && (!$lastvlan))
             $lastvlan="--NONE--";
          
          # Invalid parameters?
-         if ((strlen($switchip) < 8) || (strlen($portname) <1)) {
+         /*if ((strlen($switchip) < 8) || (strlen($portname) <1)) {
             DENY('Invalid parameters');
-         }
+         }*/
         
          $query=<<<EOF
          SELECT sw.id AS switch_id, sw.ip AS switch_ip, sw.name AS switch_name, sw.comment AS switch_comment, sw.notify AS notify, p.default_vlan, p.last_vlan,
@@ -121,7 +121,7 @@ EOF;
          }
 
          #If the object is a syslog message, lookup the vlan_id for that vlan and set it to last_vlan
-         if ($object instanceof VMPSResult)
+         if ($object instanceof SyslogRequest)
          {
             $query="SELECT id FROM vlan WHERE default_name='$lastvlan';";
             $this->logger->debug($query,3);
