@@ -70,9 +70,9 @@ function print_dot_sel() {
 
 function vmps_stuff()
 {
-   global $readuser,$readpass,$sw,$vmpsdot_querydays;
+   global $dbuser,$dbpass,$sw,$vmpsdot_querydays;
    //-------------- main () -------------------
-   db_connect($readuser,$readpass);
+   db_connect($dbuser,$dbpass);
    echo "<br>";
    echo "List all ports used on the specified switch in the last $vmpsdot_querydays days, and which end-devices were seen on each port. For each end device, the node name and assocated user is shown.<br>";
    echo "<br>";

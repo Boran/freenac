@@ -213,8 +213,8 @@ EOF;
 }
 
 function user_tooltip($username) {
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
   $query = "SELECT * FROM users WHERE username = '$username'; ";
   $res = mysql_query($query)  or die ("Unable to query MySQL");
 
@@ -468,8 +468,8 @@ function debug2($msg) {
 }
 
 function get_nmap_id($sid) {
-   global $readuser,$readpass;
-   db_connect($readuser,$readpass);
+   global $dbuser,$dbpass;
+   db_connect($dbuser,$dbpass);
         $sel = "SELECT id FROM nac_hostscanned WHERE sid='".$sid."';";
         $res = mysql_query($sel)  or die ("Unable to query MySQL ($sel)");
         $num = mysql_num_rows($res);
@@ -483,8 +483,8 @@ function get_nmap_id($sid) {
 };
 
 function get_nmap_os($nmap_ip) {
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
         $sel = "SELECT os FROM nac_hostscanned WHERE id='$nmap_ip';";
         $res = mysql_query($sel)  or die ("Unable to query MySQL ($sel)");
         $num = mysql_num_rows($res);
@@ -515,8 +515,8 @@ function validate_input($string) {
 
 function display_os_select($selected) {
   global $connect;
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass); 
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass); 
 
   $query = "SELECT * FROM sys_os ORDER BY value ASC;";
   $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
@@ -538,8 +538,8 @@ function display_os_select($selected) {
 
 function display_class_select($selected) {
   global $connect;
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
 
   $query = "SELECT * FROM sys_class ORDER BY id ASC;";
   $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
@@ -561,8 +561,8 @@ function display_class_select($selected) {
   
 function display_class2_select($selected) {
   global $connect;
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
 
   $query = "SELECT * FROM sys_class2 ORDER BY id ASC;";
   $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
@@ -584,8 +584,8 @@ function display_class2_select($selected) {
 
 function display_vlan_select($selected) {
   global $connect;
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
 
   $query = "SELECT * FROM vlan ORDER BY id ASC;";
   $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
@@ -606,8 +606,8 @@ function display_vlan_select($selected) {
 
 function display_uid_select($selected) {
   global $connect;
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
 
   $query = "SELECT * FROM users ORDER BY Surname ASC;";
   $res = mysql_query($query, $connect)  or die ("Unable to query MySQL ($query)");
@@ -629,8 +629,8 @@ function display_uid_select($selected) {
 
 
 function get_user_email($username) {
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
   $query = "SELECT rfc822mailbox FROM users WHERE id = '$username'; ";
   $res = mysql_query($query)  or die ("Unable to query MySQL ($query)");
   $user = mysql_fetch_array($res);
@@ -639,8 +639,8 @@ function get_user_email($username) {
 };
 
 function get_user_name($username) {
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
   $query = "SELECT * FROM users WHERE id = '$username'; ";
   $res = mysql_query($query)  or die ("Unable to query MySQL ($query)");
   if (mysql_num_rows($res) > 0) {
@@ -704,8 +704,8 @@ function reformat_mac($macdot) {
 function get_vlan_descr($vlan) {
 
   if ($vlan) {
-   global $readuser,$readpass;
-   db_connect($readuser,$readpass);
+   global $dbuser,$dbpass;
+   db_connect($dbuser,$dbpass);
     $query = "SELECT vlan_description FROM vlan WHERE id = '$vlan'";
     echo $query;
     //echo $query;
@@ -718,8 +718,8 @@ function get_vlan_descr($vlan) {
 };
 
 function get_locationid($port) {
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
   $query = "SELECT patchloc.id as patchlocid, switchloc.id as switchlocid FROM port
                   LEFT JOIN patchcable ON patchcable.port = port.id 
                    LEFT JOIN location patchloc ON patchloc.id = patchcable.office 
@@ -739,8 +739,8 @@ function get_locationid($port) {
 };
 
 function get_location($port) {
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
   $query = "SELECT patchloc.id as patchlocid, CONCAT(patchbd.name,' ',patchloc.name) as patchloc,
                    switchloc.id as switchlocid, CONCAT(switchbd.name,' ',switchloc.name) as switchloc
             FROM port
@@ -765,8 +765,8 @@ function get_location($port) {
 };
 
 function print_location($locationid) {
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
   $query = "SELECT building.name as building, location.name as office FROM location
                 LEFT JOIN building on building.id = location.building_id
             WHERE location.id = '$locationid';";
@@ -781,8 +781,8 @@ function print_location($locationid) {
 
 
 function get_switch_name($switch_ip) {
-  global $readuser,$readpass;
-  db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+  db_connect($dbuser,$dbpass);
         $query = "SELECT name FROM switch WHERE ip = '$switch_ip';";
         $res = mysql_query($query);
         if (mysql_num_rows($res) > 0) {
@@ -831,8 +831,8 @@ function get_latestdat() {
 
 function display_dat_select() {
   global $connect;
-  global $readuser,$readpass;
-   db_connect($readuser,$readpass);
+  global $dbuser,$dbpass;
+   db_connect($dbuser,$dbpass);
 
   $datversions = get_datversions();
   $latestdat = get_latestdat();
@@ -852,8 +852,8 @@ function display_dat_select() {
 
 function get_actual_value($mac,$fieldname) {
 	global $connect;
-	global $readuser,$readpass;
-        db_connect($readuser,$readpass);
+	global $dbuser,$dbpass;
+        db_connect($dbuser,$dbpass);
 	$sel = "SELECT $fieldname FROM systems WHERE mac = '$mac';";
 	$res = mysql_query($sel);
 	$list = mysql_fetch_array($res);

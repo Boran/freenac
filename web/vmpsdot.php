@@ -74,7 +74,7 @@ function get_patch($port) {
 };
 
 // ----- main() ----------------
-db_connect($readuser,$readpass);
+db_connect($dbuser,$dbpass);
 
 $sw     = validate_webinput($_REQUEST['sw']);
 $dottype= validate_webinput($_REQUEST['dottype']);

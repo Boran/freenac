@@ -19,8 +19,8 @@ require_once('./funcs.inc');
 
 function allvmps_stuff()
 {
-   global $readuser,$readpass,$vmpsdot_querydays;
-   db_connect($readuser,$readpass);
+   global $dbuser,$dbpass,$vmpsdot_querydays;
+   db_connect($dbuser,$dbpass);
    echo "<br>";
    echo "List all ports used on all switches in the last $vmpsdot_querydays days, and which end-devices were seen on each port. For each end device, the node name and assocated user is shown.<br>";
    echo "<br>";
