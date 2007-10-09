@@ -1,5 +1,5 @@
 #!/usr/bin/php -- -f
-<?
+<?php
 /**
  * /opt/nac/bin/config2db
  *
@@ -16,7 +16,7 @@
  * by the Free Software Foundation.
  *
  * @package                     FreeNAC
- * @author                      Héctor Ortiz (FreeNAC Core Team)
+ * @author                      FreeNAC Core Team
  * @copyright                   2006 FreeNAC
  * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version                     SVN: $Id$
