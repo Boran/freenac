@@ -70,7 +70,8 @@ EOF;
             $this->db_row=$temp;
             $this->db_row['in_db']=true;
             if (($object instanceof VMPSRequest) && ($this->vid == 0))
-               DENY('VLAN ID assigned to this EndDevice equals zero');
+            $this->logger->logit("Note: Device {$this->mac}({$this->hostname}) has vlan zero. It will be blocked");
+            #   DENY('VLAN ID assigned to this EndDevice equals zero');
          }
          else 
          {
