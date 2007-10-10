@@ -39,10 +39,12 @@ use constant RLM_MODULE_UPDATED=>8;
 use constant RLM_MODULE_NUMCODES=>9;
 
 #Avoid hardcoded absolute paths for the location on this script
-$script=abs_path($0);
-@file=split(/\//,$script);
-$slashes=@file;
-for ($i=0;$i<$slashes-2;$i++) {
+#$script=abs_path($ARGV[0]);   # why is orgv[0] empty?
+#$script=abs_path($0);         # does not work, script is empty, why?
+#$script= dirname($0);
+$script=$0;                    # e.g. /opt/nac/bin/rad2vmps
+@file=split(/\//,$script);     # divide path up into seperate directories
+for ($i=0; $i<($#file)-1; $i++) {  # keep all elements except the last two, i.e. '/bin/rad2vmps'
    $path .= "/$file[$i]";
 }
 
@@ -50,7 +52,7 @@ for ($i=0;$i<$slashes-2;$i++) {
 chdir ('/tmp');
 
 #Open configuration file
-open (CONFIG_FILE,"$path/etc/config.inc") or die "Couldn't open the config file";
+open (CONFIG_FILE,"$path/etc/config.inc") or die "Couldn't open the config file: $path/etc/config.inc";
 foreach $line (<CONFIG_FILE>) {
    if ($line =~ /^[\s]*\$vmps_servers[\s]*=[\s]*(.*)[\"\'];/)
    {
@@ -152,7 +154,7 @@ sub sendVQP($) {
               for ($j=0;$j<3;$j++)
               {
                  print $socket "$buf";
-                 usleep(1000000*($j+1));
+                 usleep(3000000*($j+1));
                  sysread($socket,$var,1500,0);
                  if ($var)
                  {
