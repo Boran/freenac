@@ -67,8 +67,11 @@ class BasicPolicy extends Policy {
 				ALLOW($vlan);
 			}
 			else
+                        {
+				$this->reportDecision($REQUEST,$REQUEST->host->getVlanID());
 				#Allow host in its predetermined vlan
 				ALLOW($REQUEST->host->getVlanId());
+                        }
 		} 
 
 		#Handling of Unmanaged systems
