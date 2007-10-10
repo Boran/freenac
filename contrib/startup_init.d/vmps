@@ -32,11 +32,11 @@ start)
 
         ## Add the '-a A.B.C.D' parameter if the machine has more than
         ## one interface to specific on which interface to bind vmpsd
-	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0804 -a 192.168.245.40
-	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0801 -a 192.168.245.40
-	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0201 -a 192.168.245.40
-	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0204 -a 192.168.245.40
-        /opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external.php  -l 0x0204 -a 192.168.245.40
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0804 
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0801
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0201
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0204
+        /opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external.php  -l 0x0204
 
 	;;
 
