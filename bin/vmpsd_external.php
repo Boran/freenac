@@ -1,6 +1,5 @@
 #!/usr/bin/php -f
 <?php
-
 /**
  * /opt/nac/bin/vmpsd_external
  *
@@ -47,7 +46,9 @@
  *
  * @package		FreeNAC
  * @author		Sean Boran (FreeNAC Core Team)
- * @copyright	2006 FreeNAC
+ * @author		Hector Ortiz (FreeNAC Core Team)
+ * @author		Thomas Seiler (Contributer)
+ * @copyright		2006 FreeNAC
  * @license		http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version		SVN: $Id$
  * @link		http://www.freenac.net
@@ -57,183 +58,186 @@
 chdir(dirname(__FILE__));
 set_include_path("./:../");
 
+/**
+* Load exceptions
+*/
 require_once("../lib/exceptions.php");
+
+/**
+* Load settings and common functions
+*/
 require_once("./funcs.inc.php");
-/* Open Syslog channel for logging */
+
+# Open Syslog channel for logging 
 $logger=Logger::getInstance();
 $logger->setDebugLevel(0);
 $logger->setLogToStdErr(false);
-/* include files */
-/* Load the policy file */
+
+/**
+* Load the policy file 
+*/
 require_once "../etc/policy.inc.php";
 
-/*$class_string = file_get_contents("../etc/policy.inc.php");
-$class_string = preg_replace('/<\\?php/','',$class_string);
-$class_string = preg_replace('/\\?>/','',$class_string);
-$class_string = preg_replace('/function\s+[^\(]+\([^\)]*\)[^{]*{/','\0 global $HOST, $PORT, $REQUEST, $CONF;',$class_string);
-echo $class_string;
-eval($class_string);*/
-
-// create policy object
+# Create policy object
 if ($conf->default_policy)
    $policy=new $conf->default_policy();
 else
    die("A default policy hasn't been defined in the config table");
 
-
-
-/* Open stdin and stdout - These connect us to vmpsd */
-#$in = fopen("php://stdin", "r");
-#$out = fopen("php://stdout", "w");
+# Open stdin and stdout - These connect us to vmpsd 
 $in = STDIN;
 $out = STDOUT;
 
+#Variables used to trace where an exception was thrown
+#Helpful if we change our decision in catch_ALLOW method
+$temp_vlan=0;
+$trace=NULL;
+$message=NULL;
+
+#Display a message if everything is fine
 $logger->logit("Started\n");
 
-/* Loop Forever (we are a daemon) */
-while ($in && $out) {
-	/* Read one line from vmpsd and parse it */
-	$line=rtrim( fgets($in, 1024) );
+# Loop Forever (we are a daemon) 
+while ($in && $out) 
+{
+   # Read one line from vmpsd and parse it 
+   $line=rtrim( fgets($in, 1024) );
+   # Clean tracing variables
+   $temp_vlan=0;
+   $trace=NULL;
+   $message=NULL;
+   # If there are some characters 
+   if (strlen($line) > 0) 
+   {
+      # Log Request Start and Input */
+      $logger->debug("----------------------------\n");
+      $logger->debug("$line\n");
+      # split by space       	
+      $splitted = explode(" ", $line);
 
-	/* If there are some characters */
-	if (strlen($line) > 0) {
-		/* Log Request Start and Input */
-		$logger->debug("----------------------------\n");
-		$logger->debug("$line\n");
-		/* split by space */      	
-		$splitted = explode(" ", $line);
+      try 
+      {
+         #If some parameter in the request is missing, DENY
+         if (empty($splitted[0]) || empty($splitted[1]) || empty($splitted[2])
+            || empty($splitted[3]) || empty($splitted[4]))
+         {
+            $logger->logit("Invalid request\n");
+            DENY('Invalid request');
+         }
 
-		try {
+         # sanity checks, 5 values 
+         if (count($splitted) != 5 || ((strlen($splitted[4]) < 12) || (strlen($splitted[4]) > 17))) 
+         {
+            $logger->logit("Invalid request\n");
+            DENY('Invalid request');
+         }
 
-			// Todo, setup policy object 
+         #extract values 
+         list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
 
-		        #If some parameter in the request is missing, DENY
-                        if (empty($splitted[0]) || empty($splitted[1]) || empty($splitted[2])
-                          || empty($splitted[3]) || empty($splitted[4]))
-                        {
-                           $logger->logit("Invalid request\n");
-                           DENY('Invalid request');
-                        }
-
-                        /* sanity checks, 5 values */
-                        if (count($splitted) != 5 || ((strlen($splitted[4]) < 12) || (strlen($splitted[4]) > 17))) {
-                           $logger->logit("Invalid request\n");
-                           DENY('Invalid request');
-                        }
-
-			 /* extract values */
-                         list($domain, $switch, $port, $lastvlan, $mac)=$splitted;
-
-			/* create System Object */
-			#$system = new CallWrapper(new EndDevice($request));
-			#$port = new CallWrapper(new Port($request));
-                        $request=new VMPSRequest($mac,$switch,$port,$domain,$lastvlan);
-			/* Call Default policy */
-			if ($conf->default_policy)
-			{
-				#$policy=new $conf->default_policy();
-				try
-				{
-				   $policy->preconnect($request);
-				}
-				catch(Exception $e)
-				{
-					if (method_exists($policy,catch_ALLOW))
-					{
-						if ($e instanceof DenyException)
-						   DENY($e->getMessage());
-						else
-						   ALLOW($policy->catch_ALLOW($e->getDecidedVlan()));
-					}
-					else 
-					{
-						if ($e instanceof DenyException)
-						   DENY($e->getMessage());
-						else 
-						   ALLOW($e->getDecidedVlan());
-					}
-				}
-                        }
+         # Create request 
+         $request=new VMPSRequest($mac,$switch,$port,$domain,$lastvlan);
+         # Call Default policy 
+         if ($conf->default_policy)
+         {
+            try
+            {
+               $policy->preconnect($request);
+            }
+            catch(Exception $e)
+            {
+               #Store current status of thrown Allow exception
+               if ($e instanceof AllowException)
+               {
+                  $temp_vlan=$e->getDecidedVlan();
+               }
+               $trace=$e->GetTrace();
+               $message=$e->getMessage();
+               # Do we have the catch_ALLOW method?
+               #This method should be used to change our decision
+               if (method_exists($policy,catch_ALLOW))
+               {
+                  #If we have a DENY, rethrow the exception
+                  if ($e instanceof DenyException)
+                     DENY($e->getMessage());
+                  else
+                     #This is an allow, rethink our decision 
+                     $policy->catch_ALLOW($e->getDecidedVlan());
+               }
+               else 
+               {
+                  #Rethrow our decision
+                  if ($e instanceof DenyException)
+                     DENY($e->getMessage());
+                  else 
+                     ALLOW($e->getDecidedVlan());
+               }
+            }
+         }
   
- 			/* In case there was an error, try fallback policy */
- 			if ($conf->fallback_policy) {
-				$policy=new $conf->fallback_policy($system,$port);
- 	 			$logger->logit("Error at default policy, falling back to policy ".
- 	 			     $conf->fallback_policy."\n");
-				#try {
-	 				$policy->preconnect();
-				#} catch(Exception $e) {
-				#	if(function_exists($policy->catchALLOW)) {
-				#	throw new AllowExcetption($policy->catchALLOW($e->getDecidedVlan()));
-				#}
-	 		}
- 	    
- 	  		/* This is the default action */
- 	  		DENY('Default action');
- 	    }
- 	    catch (DenyException $e) {
- 	  		fputs($out, "DENY\n");
- 	  		reportException($e);
- 	    }
- 	    /*catch (KillException $e) {
- 	    	if ($conf->vlan_for_killed) {
- 	    		fputs($out, "ALLOW ".vlanId2name($conf->vlan_for_killed)."\n");
- 	    	} else {
-	 	  		fputs($out, "DENY\n");
-	 	  	}
- 	  		reportException($e);
- 	  		// Todo: let freenac_lastseen know to kill this system via some IPC
- 	    }*/
- 	    catch (AllowException $e) {
- 	  		fputs($out, "ALLOW ".vlanId2name($e->getDecidedVlan())."\n");
- 	  		reportException($e);
- 	    }
- 	    /*catch (UnknownSystemException $e) {
-		if ($conf->default_vlan)
-		   fputs($out,"ALLOW ".vlanId2name($conf->default_vlan)."\n");
-		else
-		   fputs($out, "DENY\n");
-		reportException($e);		
-	    }*/
- 	    catch (Exception $e) {
- 		    fputs($out, "DENY\n");
- 	    	reportException($e);
- 	    }
+         # This is the default action 
+         DENY('Default action');
+      }
+      catch (DenyException $e)
+      {
+         fputs($out, "DENY\n");
+         reportException($e);
+      }
+      catch (AllowException $e) 
+      {
+         fputs($out, "ALLOW ".vlanId2name($e->getDecidedVlan())."\n");
+         reportException($e);
+      }
+      catch (Exception $e) 
+      {
+         fputs($out, "DENY\n");
+         reportException($e);
+      }
  
-		$logger->debug("----------------------------\n");
- 
-      	//ob_flush();               # log buffered outputs
-      	flush();
-    }                // strlen >0
-  	#sleep(1);                 # wait 1 secs, before retrying
-   //ob_flush();               # log buffered outputs
+      $logger->debug("----------------------------\n");
+   }                # strlen >0
 }
 
 
 exit(0);
-// End of Main -----------------------
+# End of Main -----------------------
 
-function reportException(Exception $e) {
-	global $logger;
- 	$t = $e->GetTrace();
- 	$logger->debug($e->getMessage() ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
-}
-
-/*function trace($message) {
-	global $logger;
-        $logger->logit($message,LOG_CRIT);
-	#syslog(LOG_CRIT, $message);
-}*/
-
-
-/*function vlanId2Name($vlanID) {
-	  // Todo: Proper Error Handling, and use better Database abstraction
-      return v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
-}*/
-
-/*function __autoload($classname)
+/**
+* Report where an exception was thrown
+*/
+function reportException(Exception $e) 
 {
-   require_once "../lib/$classname.php";
-}*/
+   global $logger, $temp_vlan, $trace, $message;
+   #Get the proper values to report if a Deny exception was thrown
+   if ($e instanceof DenyException)
+   {
+      if ($trace && $message)
+      {
+         $t = $trace;
+         $msg=$message;
+      }
+      else
+      {
+         $t = $e->GetTrace();
+         $msg = $e->getMessage();
+      }
+   }
+   #Get the proper values to report if an Allow exception was thrown
+   else if ($e instanceof AllowException)
+   {
+      if ($e->GetDecidedVlan() === $temp_vlan)
+      {
+         $t = $trace;
+         $msg = $message;
+      }
+      else
+      {
+         $t = $e->GetTrace();
+         $msg = $e->getMessage();
+      }
+   }
+   #And report it as debug level 1
+   $logger->debug($msg ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
+}
 
 ?>

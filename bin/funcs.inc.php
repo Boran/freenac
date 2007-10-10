@@ -2,7 +2,6 @@
 /**
  * /opt/nac/bin/funcs.inc.php
  *
- * Long description for file:
  * common PHP functions used by several scripts
  *
  * PHP version 5
@@ -20,16 +19,32 @@
  *
  */
 
+
+/**
+* Common PHP functions used by several scripts
+*/
+
 chdir(dirname(__FILE__));
 set_include_path("./:../");
 
+/**
+* Load automagically a file containing the class specified by classname
+* @param object $classname	Class to load
+*/
 function __autoload($classname)
 {
    require_once "../lib/$classname.php";
 }
 
+/**
+* Get configuration variables from config file
+*/
 require_once 'etc/config.inc';
 
+/**
+* @global object $conf		Contains configuration parameters from the config table
+* @global object $logger	Provides for logging facilities
+*/
 $conf=Settings::getInstance();
 $logger=Logger::getInstance();
 
@@ -123,6 +138,12 @@ function time_diff($date1,$date2)
    return $time;
 }
 
+/**
+* Wrapper around the debug method part of the logger object.
+* Logs to debug level 1
+* It will be soon depreciated. Present only for backwards compatibility.
+* @param mixed $msg	Message to log
+*/
 function debug1($msg) {
   global $logger;
   $msg=rtrim($msg);
@@ -131,6 +152,12 @@ function debug1($msg) {
   }
 }
 
+/**
+* Wrapper around the debug method part of the logger object.
+* Logs to debug level 2
+* It will be soon depreciated. Present only for backwards compatibility.
+* @param mixed $msg     Message to log
+*/
 function debug2($msg) {
   global $logger;
   $msg=rtrim($msg);
@@ -139,15 +166,24 @@ function debug2($msg) {
   }
 }
 
+/**
+* Wrapper around the logit method part of the logger object.
+* It will be soon depreciated. Present only for backwards compatibility.
+* @param mixed $msg     Message to log
+*/
 function logit($msg) {
   global $logger;
   $msg=rtrim($msg);
   $logger->logit($msg);
 }
 
-## log2db: write key events to naclog which is visible from the GUI
-##         This should NOT be called from a secondary server, i.e.
-##         avoid it in vmpsd_external
+/**
+* Write key events to naclog which is visible from the GUI
+* This should NOT be called from a secondary server, i.e.
+* avoid it in vmpsd_external
+* @param mixed $level	Level of severity of the message
+* @param mixed $msg	Message to log
+*/
 function log2db($level, $msg)
 {
   global $connect;
@@ -295,26 +331,12 @@ function ping_mac($mac)
    }
 }
 
-// function to change german umlauts into ue, oe, etc.
-// http://ch2.php.net/iconv
-function cv_input($str){
-     $out = "";
-     for ($i = 0; $i<strlen($str);$i++){
-           $ch= ord($str{$i});
-           switch($ch){
-               case 195: $out .= "";break;   
-               case 164: $out .= "ae"; break;
-               case 188: $out .= "ue"; break;
-               case 182: $out .= "oe"; break;
-               case 132: $out .= "Ae"; break;
-               case 156: $out .= "Ue"; break;
-               case 150: $out .= "Oe"; break;
-               default : $out .= chr($ch) ;
-           }
-     }
-     return $out;
-}
-
+/**
+* Wrapper around the restart_port script.
+* Restart a switch port
+* @param mixed $port	Port name 
+* @param mixed $switch	Switch
+*/
 function snmp_restart_port($port, $switch) {
   global $lastseen_sms_restart,$logger;
   if ($lastseen_sms_restart) {
@@ -324,6 +346,11 @@ function snmp_restart_port($port, $switch) {
   }
 }
 
+
+/**
+* Wrapper around snmp_restart_port
+* @param integer $port_id	ID of the port we want to restart
+*/
 function snmp_restart_port_id($port_id)
 {
    if (is_numeric($port_id) && ($port_id>0))
@@ -336,7 +363,13 @@ function snmp_restart_port_id($port_id)
    }
 }
 
-function array_isearch($str,$array)                     //Search the array for a given value and return its key
+/**
+* Perform a case insensitive search for a given value in an array and return its key
+* @param mixed $str	Value to look for
+* @param array $array	Array to look in
+* @return mixed		Key for that value, or false otherwise
+*/
+function array_isearch($str,$array)                    
 {
    foreach($array as $k => $v)
    {
@@ -348,6 +381,12 @@ function array_isearch($str,$array)                     //Search the array for a
    return false;
 }
 
+/**
+* Perform a case insensitive search for a given value in a bi-dimensional array and return its key
+* @param mixed $str     Value to look for
+* @param array $array   Array to look in
+* @return mixed         Key for that value, or false otherwise
+*/
 function array_multi_isearch($str,$array)
 {
    foreach($array as $k)
@@ -358,7 +397,15 @@ function array_multi_isearch($str,$array)
    return false;
 }
 
-function array_find_key($str,$array,$token,$number)     //Search the array for a given key and return its value, but using tokenizers
+/**
+* Search the array for a given key and return its value, but using tokenizers
+* @param mixed $str             String to look for
+* @param array $array           Array where we should look in
+* @param mixed $token           Token to use as a separator
+* @param integer $number        The number of parts we want to return
+* @return mixed                 Desired value or false otherwise
+*/
+function array_find_key($str,$array,$token,$number)   
 {
    foreach($array as $k => $v)
    {
@@ -370,7 +417,15 @@ function array_find_key($str,$array,$token,$number)     //Search the array for a
    return false;
 }
 
-function array_find_value($str,$array,$token,$number)   //Search the array for a given value and return it, but using tokenizers
+/**
+* Search the array for a given value and return it, but using tokenizers
+* @param mixed $str		String to look for
+* @param array $array		Array where we should look in
+* @param mixed $token		Token to use as a separator
+* @param integer $number	The number of parts we want to return
+* @return mixed			Desired value or false otherwise
+*/
+function array_find_value($str,$array,$token,$number)   
 {
    foreach($array as $k => $v)
    {
@@ -382,7 +437,14 @@ function array_find_value($str,$array,$token,$number)   //Search the array for a
    return false;
 }
 
-function str_get_last($string,$token,$number)           //Return the last parts of a tokenized string
+/**
+* Return the last parts of a tokenized string
+* @param $string	String to split
+* @param $token		Token to use to split the string
+* @param $number	How many parts we want to return
+* @return mixed		Desired string
+*/
+function str_get_last($string,$token,$number)          
 {
    $temp=explode($token,$string);
    $tokens=count($temp);
@@ -391,7 +453,15 @@ function str_get_last($string,$token,$number)           //Return the last parts 
    return $final;
 }
 
-function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC address is on a certain port using SNMP
+/**
+* Tell whether a MAC address is on a certain port using SNMP
+* @param mixed $mac	MAC to look for
+* @param mixed $switch	Switch to look on
+* @param mixed $port	Switch port to look on
+* @param mixed $vlan	Vlan we'll use to look for that MAC address
+* @return boolean	True if MAC found on that port, false otherwise
+*/
+function is_mac_on_port($mac,$switch,$port,$vlan)     
 {
    global $snmp_ro,$logger;                                     //Read Only community
 
@@ -434,7 +504,11 @@ function is_mac_on_port($mac,$switch,$port,$vlan)       //Tell whether a MAC add
       return false;                                                                     //No, MAC is not using this port
 }
 
-## send SQL and expect just one row to change
+/**
+* Send SQL and expect just one row to change
+* @param mixed $query   Query to execute
+* @return mixed         Result of the query if successful, or error otherwise
+*/
 function v_sql_1_update($query) {
   #logit($query);
   global $connect;
@@ -453,7 +527,11 @@ function v_sql_1_update($query) {
 }
 
 
-## SQL SQL and expect just one /field/row to return
+/**
+* Send SQL and expect just one /field/row to return
+* @param mixed $query   Query to execute
+* @return mixed         Result of the query if successful, or error otherwise
+*/
 function v_sql_1_select($query) {
   #logit($query);
   global $connect;
@@ -471,7 +549,12 @@ function v_sql_1_select($query) {
 }
 
 
-## Normalise mac address format
+/**
+*  Normalise mac address format
+* Get a MAC address from the from XX:XX:XX:XX:XX:XX and convert it to XXXX.XXXX.XXXX
+* @param mixed $old_mac		MAC address to convert
+* @return mixed 		MACC address converted
+*/
 function normalise_mac($old_mac) {
   $mac = $old_mac;
 
@@ -498,12 +581,14 @@ function normalise_mac($old_mac) {
 }
 
 
-//
-// Execute query and return assoc array
-//   Assuming a table t1 with 2 Fields Code and Value:
-//   $r= mysql_fetch_all("SELECT * from t1")
-//   foreach ($r as $row) { $logger->logit("$row[Code], $row[Value]\n");
-//
+/**
+* Execute query and return assoc array
+*   Assuming a table t1 with 2 Fields Code and Value:
+*   $r= mysql_fetch_all("SELECT * from t1")
+*   foreach ($r as $row) { $logger->logit("$row[Code], $row[Value]\n");
+* @param mixed $query	Query to execute
+* @return mixed		Result of the query if successful, or error otherwise
+*/
 function mysql_fetch_all($query){
   $r=@mysql_query($query);
   if($err=mysql_errno()) return $err;
@@ -514,6 +599,11 @@ function mysql_fetch_all($query){
   return $result;
 }
 
+/**
+* Execute query, fetch one row and return assoc array
+* @param mixed $query   Query to execute
+* @return mixed         Result of the query if successful, or error otherwise
+*/
 function mysql_fetch_one($query){
   #$logger->logit("QUERY: $query\n");
   $r=@mysql_query($query);
@@ -522,12 +612,14 @@ function mysql_fetch_one($query){
   return mysql_fetch_array($r,MYSQL_ASSOC);
 }
 
-//
-// Execute query and return assoc array
-//   Assuming a table t1 with 2 Fields Code and Value:
-//   $r= mssql_fetch_all("SELECT * from t1")
-//   foreach ($r as $row) { $logger->logit("$row[Code], $row[Value]\n");}
-//
+/**
+* Execute query and return assoc array
+*   Assuming a table t1 with 2 Fields Code and Value:
+*   $r= mssql_fetch_all("SELECT * from t1")
+*   foreach ($r as $row) { $logger->logit("$row[Code], $row[Value]\n");}
+* @param mixed $query   Query to execute
+* @return mixed         Result of the query if successful, or error otherwise
+*/
 function mssql_fetch_all($query){
   $r=@mssql_query($query);
   if (! $r) { 
@@ -541,6 +633,11 @@ function mssql_fetch_all($query){
   return $result;
 }
 
+/**
+* Execute query, fetch one row and return assoc array
+* @param mixed $query   Query to execute
+* @return mixed         Result of the query if successful, or error otherwise
+*/
 function mssql_fetch_one($query){
   #global $logger;
   #$logger->logit("QUERY: $query\n");

@@ -117,7 +117,8 @@ class BasicPolicy extends Policy {
 	*/
 	public function catch_ALLOW($vlan) 
 	{
-           return $vlan;
+            //Rethrow the exception
+	    ALLOW($vlan);
 	}
 
 	/**

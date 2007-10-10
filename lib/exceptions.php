@@ -92,12 +92,14 @@ class AllowException extends Exception
  * @param int $vlan	Vlan ID of the VLAN we want to assign
  * @throws	AllowException
  */
-function ALLOW($vlan = -1) {
-   if ($vlan == -1) {
-   /**
-   * @todo Get the default vlan logic straight
-   */
-   $vlan = $defaultvlan;
+function ALLOW($vlan = -1) 
+{
+   if ($vlan == -1) 
+   {
+      /**
+      * @todo Get the default vlan logic straight
+      */
+      $vlan = $defaultvlan;
    }
    throw new AllowException($vlan);
 }

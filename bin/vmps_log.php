@@ -1,11 +1,6 @@
 #!/usr/bin/php -f
 <?php
 /**
- * /opt/nac/bin/vmps_log
- *
- * Long description for file:
- * Update the vmpslog table
- *
  * PHP version 5
  *
  * LICENSE: This program is free software; you can redistribute it and/or
@@ -14,12 +9,20 @@
  *
  * @package			FreeNAC
  * @author			Sean Boran (FreeNAC Core Team)
- * @copyright		2006 FreeNAC
+ * @copyright			2006 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version			SVN: $Id$
  * @link				http://www.freenac.net
  *
  */
+
+/**
+* Update the vmpslog table
+*/
+
+/**
+* Load settings and common functions
+*/
 require_once "funcs.inc.php";
 $logger="logger -t vmps_log -p local5.info";
 

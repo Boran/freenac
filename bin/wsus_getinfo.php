@@ -1,14 +1,6 @@
 #!/usr/bin/php -- -f
 <?php
 /**
- * enterprise/wsus_getinfo
- *
- * Long description for file:
- * Retrieves information from the WSUS database and stored in local mysql
- * table.
- * Beta test with Wsus V2.???
- * Stable release v2.2 testted with Wusus version 3.???
- *
  * PHP version 5
  *
  * LICENSE: This program is free software; you can redistribute it and/or
@@ -24,17 +16,31 @@
  *
  */
 
+/**
+* Retrieves information from the WSUS database and stored in local mysql
+* table.
+* Beta test with Wsus V2.???
+* Stable release v2.2 testted with Wusus version 3.???
+*/
+
 # Php weirdness: change to script dir, then look for includes
 chdir(dirname(__FILE__));
 set_include_path("../:./");
-require_once "./funcs.inc.php";               # Load settings & common functions
+
+/**
+* Load settings and commong functions
+*/
+require_once "./funcs.inc.php";     
+
 $logger->setLogToStdOut();
 $output=true;
 set_time_limit(0);
 
 $verbose=FALSE;
 
-#Simple parsing of command line parameters
+/**
+* Simple parsing of command line parameters
+*/
 for ($i=1;$i<$argc;$i++)
 {
    switch($argv[$i])
@@ -62,6 +68,9 @@ for ($i=1;$i<$argc;$i++)
 $timestamp=date('Y-m-d H:i:s');
 message("Program run on $timestamp",1);
 
+/**
+* Prints script's usage
+*/
 function usage()
 {
    $logger->logit( "Usage: wsus_getinfo [-h][-v[v]][-s]\n");
@@ -72,7 +81,10 @@ function usage()
    exit(1);
 }
 
-function dbwsus_connect() # Connect to the WSUS server
+/**
+* Connect to the WSUS server
+*/
+function dbwsus_connect()
 {
    global $conf,$wsus_dbuser,$wsus_dbpass;
    message("Connect to ".$conf->wsus_dbalias." ".$conf->wsus_db,1);
@@ -91,7 +103,10 @@ function dbwsus_connect() # Connect to the WSUS server
    return true;
 }
 
-function validate($string) # Ensures that $string is mysql safe
+/**
+* Ensures that $string is mysql safe
+*/
+function validate($string)
 {
    rtrim($string,' ');
    if (get_magic_quotes_gpc()) {
@@ -103,7 +118,10 @@ function validate($string) # Ensures that $string is mysql safe
    return $string;
 }
 
-function execute_query($query) # Executes query and displays error message if any
+/**
+* Executes query and displays error message if any
+*/
+function execute_query($query)
 {
    db_connect();
    $res=mysql_query($query);
@@ -115,7 +133,10 @@ function execute_query($query) # Executes query and displays error message if an
    return $res;
 }
 
-function convert_date($date) # This function converts the datetime retrieved from MSSQL into MySQL datetime format
+/**
+*  This function converts the datetime retrieved from MSSQL into MySQL datetime format
+*/
+function convert_date($date)
 {
    $date_array=getdate(strtotime($date));
    $date=$date_array['year'].'-';
@@ -127,7 +148,10 @@ function convert_date($date) # This function converts the datetime retrieved fro
    return $date;
 }
 
-function wsus_dump_computertarget() # Dumps the tbComputerTarget table into our computertarget table
+/**
+* Dumps the tbComputerTarget table into our computertarget tabl
+*/
+function wsus_dump_computertarget()
 {
    message("Function wsus_dump_computertarget",1);
    db_connect();
@@ -160,7 +184,10 @@ function wsus_dump_computertarget() # Dumps the tbComputerTarget table into our 
    else return false;
 }
 
-function wsus_dump_osmap() # Dumps table tbOSMap into our osmap table
+/**
+* Dumps table tbOSMap into our osmap table
+*/
+function wsus_dump_osmap() 
 {
    message("Function wsus_dump_osmap",1);
    if (dbwsus_connect())
@@ -183,7 +210,10 @@ function wsus_dump_osmap() # Dumps table tbOSMap into our osmap table
    else return false;
 }
 
-function wsus_get_osid($majv,$minv,$build,$spmaj,$spmin,$processor) #Gets the OSID 
+/**
+* Get the OSID
+*/
+function wsus_get_osid($majv,$minv,$build,$spmaj,$spmin,$processor)
 {
    message("Function wsus_getosid",1);
    db_connect();
@@ -211,7 +241,10 @@ function wsus_get_osid($majv,$minv,$build,$spmaj,$spmin,$processor) #Gets the OS
    else return false;
 }
 
-function wsus_get_updates_per_computer($id) #Retrieves the installed and needed updates for computer identified by id
+/**
+* Retrieves the installed and needed updates for computer identified by id
+*/
+function wsus_get_updates_per_computer($id) 
 {
    message("Function wsus_get_updates_per_computer for $id",1);
    if (dbwsus_connect())
@@ -280,7 +313,10 @@ function wsus_get_updates_per_computer($id) #Retrieves the installed and needed 
    else return false;
 }
 
-function wsus_dump_updates_for_computers() #This one retrieves the installed and needed updates for every computer
+/**
+* This one retrieves the installed and needed updates for every computer
+*/
+function wsus_dump_updates_for_computers()
 {
    message("Function wsus_dump_updates_for_computers",1);
    db_connect();
@@ -298,6 +334,9 @@ function wsus_dump_updates_for_computers() #This one retrieves the installed and
    return false;
 }
 
+/**
+* Connect data from WSUS with the data stored in the systems table
+*/
 function connect_data()
 {
    db_connect();
@@ -327,7 +366,10 @@ function connect_data()
       return false;
 }
 
-function wsus_dump_updates() #This function gets a list of updates available on the server
+/**
+* Get a list of updates available on the server
+*/
+function wsus_dump_updates()
 {
    global $wsus_language;
    message("Function wsus_dump_updates",1);
@@ -357,7 +399,10 @@ function wsus_dump_updates() #This function gets a list of updates available on 
    else return false;
 }
 
-function message($string,$level) #Not very useful
+/**
+* Print a message
+*/
+function message($string,$level)
 {
    global $output,$logger;
    
