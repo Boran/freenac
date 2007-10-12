@@ -38,7 +38,7 @@ require_once "funcs.inc.php";
 $output=TRUE;
 
 $logger->setDebugLevel(0);
-$logger->setLogToStdOut();
+$logger->setLogToStdOut(true);
 
 #Compatibility with old vars
 if (!$conf->scan_directory && $conf->nmap_scan_directory)
@@ -238,7 +238,8 @@ function do_inventory($data_from_xml)
    for ($i=0;$i<$data_from_xml['equipments'];$i++)	//How many hosts scanned
    {
        $ip=$data_from_xml[$i]['ip'];		//Get ip of one host
-       $query=sprintf("select * from nac_hostscanned where ip='%s';",$ip);
+       $id=$data_from_xml[$i]['sid'];
+       $query=sprintf("select * from nac_hostscanned where sid='%s';",$id);
        $res=execute_query($query);
        if ($res)
        {
@@ -260,14 +261,13 @@ function check_existent($data) 	//This function will check info concerning one h
    $ports=$data['ports'];  			//Number of open ports this time
    $hostname=strtolower($data['hostname']);
    $os=$data['os'];   				//OS system this time
-   $id=0;
-   $query=sprintf("select * from nac_hostscanned where ip='%s';",$ip);
+   $id=$data['sid'];
+   $query=sprintf("select * from nac_hostscanned where sid='%s';",$id);
    $res=execute_query($query);
    if ($res)
    {
       $result=mysql_fetch_array($res, MYSQL_ASSOC);
       $db_ports=mysql_num_rows($res);
-      $id=$result['sid'];   			//Host's id in the database
       $db_ip=$result['ip'];			//Same IP from last time?
       $db_hostname=strtolower($result['hostname']);		//Same hostname from last time?
       $db_os=$result['os'];			//Same OS from last time?
@@ -313,7 +313,7 @@ function check_existent($data) 	//This function will check info concerning one h
       $changes=$host_changed+$os_changed+$mac_changed;
       if($changes>0)
       {
-         $query=sprintf("update nac_hostscanned set hostname='%s',os='%s',timestamp='%s' where id='%d' and ip='%s';",$hostname,$os,$timestamp,$id,$ip);
+         $query=sprintf("update nac_hostscanned set hostname='%s',os='%s',timestamp='%s' where sid='%d' and ip='%s';",$hostname,$os,$timestamp,$id,$ip);
          update_queries($query,'q');
       }
       $query=sprintf("select o.banner as banner,o.timestamp as timestamp, p.name as protocol, s.port as port from nac_openports o inner join services s on o.service=s.id inner join protocols p on s.protocol=p.protocol and o.sid='%s';",$id);
@@ -545,7 +545,7 @@ function check_existent($data) 	//This function will check info concerning one h
 	 {
             $res=execute_query("select s.id as id from services s inner join protocols p on s.protocol=p.protocol and p.name='".$update_prot[$i]."' and s.port='".$update_port[$i]."';");
             $result=mysql_fetch_array($res,MYSQL_ASSOC);            
-            $query=sprintf("update nac_openports set banner='%s',timestamp='%s' where sid='%d' and service='%s';",$update_banner[$i],$timestamp,$id,$result['id']);
+            $query=sprintf("update nac_openports set banner='%s',timestamp=NOW() where sid='%d' and service='%s';",$update_banner[$i],$timestamp,$id,$result['id']);
 	    update_queries($query,'q');
 	 }
          if ($add_counter)
@@ -592,12 +592,12 @@ function add_entry($data)	//A new host in our network that needs to be added to 
    if ((!isset($data))||(!is_array($data)))
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
    $timestamp=date('Y-m-d H:i:s');
-   $res=mysql_query("select id from systems where r_ip='".$data['ip']."' limit 1;");
+   $res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);");
    $result=mysql_fetch_array($res,MYSQL_ASSOC);
    $sid=$result['id'];
    
    #Let's check if it is really a new device, if not, do an update
-   $res=mysql_query("select * from nac_hostscanned where sid='".$sid."'");
+   $res=execute_query("select * from nac_hostscanned where sid='".$sid."'");
    if (mysql_num_rows($res)==0)
    {
       $new=true;
@@ -616,7 +616,7 @@ function add_entry($data)	//A new host in our network that needs to be added to 
          update_queries("Host ".$data['ip']."(".$data['hostname'].") added to the database\n",'m');
       else
          update_queries("Host ".$data['ip']."(".$data['hostname'].") has been updated\n",'m');
-      $query=sprintf("select id from nac_hostscanned where ip='%s' and hostname='%s' and os='%s' and timestamp='%s';",$data['ip'],$data['hostname'],$data['os'],$timestamp);
+      $query=sprintf("select id from nac_hostscanned where ip='%s' and hostname='%s' and os='%s' and timestamp='%s' and sid='%s';",$data['ip'],$data['hostname'],$data['os'],$timestamp,$data['sid']);
       $res=execute_query($query);
       if ($res)
       {
@@ -707,7 +707,7 @@ function get_ips()	//This function will get some ips to scan
    $counter=0;
    if (($argc==2)&&($argv[1]=="--scannow"))
    {
-      $query="select r_ip,name from systems where scannow=1 and r_ip!='NULL';";
+      $query="select id,r_ip,name from systems where scannow=1 and r_ip!='NULL' and r_ip!='' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
       $res=execute_query($query);
       check_and_abort("No systems have the flag \"scannow\" in the systems table\n",$res); 
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
@@ -721,6 +721,7 @@ function get_ips()	//This function will get some ips to scan
             check_and_abort("Illegal value found in systems table.\n",0);
          else
             $devices['hostname'][$counter]=$result['name'];
+         $devices['sid'][$counter]=$result['id'];
          $counter++;
          $query="update systems set scannow=0 where r_ip='".$result['r_ip']."';";
          execute_query($query);
@@ -739,11 +740,11 @@ function get_ips()	//This function will get some ips to scan
       {
          $device=validate($argv[$i]);
          if ($i==1)
-            $query="select r_ip,name from systems where r_ip!='NULL' and r_ip='$device'";
+            $query="select id, r_ip,name from systems where r_ip!='NULL' and r_ip='$device'";
          else
             $query.=" or r_ip='$device'";
       }
-      $query.=';';
+      $query.=' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);';
       $res=execute_query($query);
       check_and_abort("IPs specified are not part of the systems table\n",$res);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
@@ -757,6 +758,7 @@ function get_ips()	//This function will get some ips to scan
             check_and_abort("Illegal value found in systems table.\n",0);
          else
             $devices['hostname'][$counter]=$result['name'];
+         $devices['sid'][$counter]=$result['id'];
          $counter++;
       }
       for ($i=1;$i<$argc;$i++)
@@ -776,13 +778,15 @@ function get_ips()	//This function will get some ips to scan
                check_and_abort("Illegal value found in systems table.\n",0);
             else
                $devices['hostname'][$counter]=$result['name'];
+            $devices['sid'][$counter]=$result['id'];
             $counter++;
          }
       }
    }   
    else if ($argc==1)
    {
-      $query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1 and lastseen!='NULL';";
+      #$query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1 and lastseen!='NULL';";
+      $query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip!='NULL' and status=1 and lastseen!='NULL' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
       $res=execute_query($query);
       check_and_abort("No ip addresses to scan found in systems table.\n",$res);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
@@ -800,10 +804,12 @@ function get_ips()	//This function will get some ips to scan
             check_and_abort("Illegal value found in systems table.\n",0);
          else
             $devices['lastseen'][$counter]=$result['lastseen'];
+         $devices['sid'][$counter]=$result['id'];
          $counter++;
       }
    } 
    $devices['counter']=$counter;
+   $devices['ip']=array_unique($devices['ip']);
    //We got some ips, let's see which ones are candidates to be scanned according to the info provided in the nac_netsallowed table
    $query='select ip_address,ip_netmask,dontscan from subnets where scan=1;'; 
    $res1=execute_query($query);
@@ -817,13 +823,37 @@ function get_ips()	//This function will get some ips to scan
       {
          $network[$number]['ip']=$result1['ip_address'];
          $network[$number]['netmask']=$result1['ip_netmask'];
-         $network[$number]['dontscan']=$result['dontscan'];
+         if ($result1['dontscan'])
+         {
+            $temp=explode(',',$result1['dontscan']);
+            foreach($temp as $ip)
+            {
+               $network[$number]['dontscan'][]=trim($ip);
+               if ($temp_number=array_search(trim($ip),$devices['ip']))
+               {
+                  $keys_to_delete[]=$temp_number; 
+               }
+            }
+         }
          $logger->debug($result1['ip_address'].'/'.$result1['ip_netmask']);
          $number++;
       }
       $logger->debug("Number of networks defined in subnets: $number");
       for ($l=0;$l<$devices['counter'];$l++)
       {
+         $take_into_account=true;
+         if ($keys_to_delete)
+         {
+            foreach($keys_to_delete as $key_to_delete)
+            {
+               if ($key_to_delete==$l)
+               {
+                  $take_into_account=false;
+               }
+            }
+         }
+         if (!$take_into_account)
+            continue;
          $candidate=0;
          for ($i=0;$i<$number;$i++)
          {
@@ -848,6 +878,7 @@ function get_ips()	//This function will get some ips to scan
                {
                   $list['ip'][$counter]=$devices['ip'][$l];
 		  $list['hostname'][$counter]=$devices['hostname'][$l];
+                  $list['sid'][$counter]=$devices['sid'][$l];
                   $counter++;
                }
             }
@@ -861,6 +892,7 @@ function get_ips()	//This function will get some ips to scan
             {
                $list['ip'][$counter]=$devices['ip'][$l];
                $list['hostname'][$counter]=$devices['hostname'][$l];
+               $list['sid'][$counter]=$devices['sid'][$l];
                $counter++;
             }
           }
@@ -939,16 +971,16 @@ function parse_scanfile($scan_file,$list)
                for ($i=0;$i<$list['counter'];$i++) //Grabs devices' ids
                {
                   if ($i==0)
-                     $query="select id from nac_hostscanned where ip='".$list['ip'][$i]."'";
+                     $query="select id, r_ip, name from systems where ip='{$list['ip'][$i]}'";
                   else
                      $query.=" or ip='".$list['ip'][$i]."'";
                }
-               $query.=";";
+               $query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
                $res=execute_query($query);
                if ($res)
                   while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
                   {
-                     $query="update nac_hostscanned set os='Unreachable', timestamp='$timestamp' where id=".$result['id'].";";
+                     $query="update nac_hostscanned set os='Unreachable', timestamp=NOW(), ip='{$result['r_ip']}', hostname='{$result['name']}' where sid='{$result['id']}';";
                      execute_query($query);
                   }
             }
@@ -958,6 +990,7 @@ function parse_scanfile($scan_file,$list)
          {
             $ip_info=$host->address[0];
 	    $temp=$ip_info->attributes(); //Let's retrieve the attributes
+            $info[$i]['sid']=$list['sid'][$i];
             if (isset($temp->addr))
                $info[$i]['ip']=(string)$temp->addr;         //IP address
             else $info[$i]['ip']="NULL";
@@ -1001,10 +1034,10 @@ function parse_scanfile($scan_file,$list)
                      $info[$i]['port'][$j]['portid']=validate($info[$i]['port'][$j]['portid']);
 		     $temp=$port->state->attributes();
                      $temp2=$port->service->attributes(); //Attributes to get the running service
-                     if (isset($temp2->name))		#Description
+                     if (@isset($temp2->name))		#Description
                         $name=(string)$temp2->name;
                      else $name="";
-                     if (isset($temp2->product))
+                     if (@isset($temp2->product))
                         $product=(string)$temp2->product;
                      else $product="";
                      if (isset($temp2->version))
@@ -1043,18 +1076,20 @@ function parse_scanfile($scan_file,$list)
       }
       for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
       {
-         if ($i==0)
-            $query="select id from nac_hostscanned where ip='".$list['ip'][$i]."'";
+         /*if ($i==0)
+            $query="select id, r_ip, name from systems where r_ip='".$list['ip'][$i]."'";
          else
-            $query.=" or ip='".$list['ip'][$i]."'";
+            $query.=" or ip='".$list['ip'][$i]."'";*/
+         $query="update nac_hostscanned set os='Firewalled', timestamp=NOW(), ip='{$list['ip'][$i]}', hostname='{$list['hostname'][$i]}' where sid='{$list['sid'][$i]}';";
+         execute_query($query);
       }
-      $query.=";";
+      /*$query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);"; 
       $res=execute_query($query);
       while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
       {
-         $query="update nac_hostscanned set os='Firewalled', timestamp='$timestamp' where id=".$result['id'].";";
+            $query="update nac_hostscanned set os='Firewalled', timestamp=NOW(), ip='{$result['r_ip']}', hostname='{$result['name']}' where sid='{$result['id']}';";
          execute_query($query);
-      }
+      }*/
    }
    $logger->debug("Total number of hosts up: ".$info['equipments']);
    return($info);
