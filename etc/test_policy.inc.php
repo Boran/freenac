@@ -44,6 +44,16 @@ class BasicPolicy extends Policy {
 		#Health checking of EndDevice
 		if ($REQUEST->host->getHealth() != OK)
                    $this->logger->logit("Health not optimal");
+                
+                #Create a new PortScan object
+                $port_scan=new CallWrapper(new PortScan($REQUEST));
+ 
+                #Check for a dangerous port
+                if ($port_scan->isPortOpen(135))
+                {
+                   $this->logger->logit("Dangerous port open, quarantining...");
+                   #ALLOW(QUARANTINE_VLAN);
+                }
 
 
 		#Handling of Expired and Killed systems
@@ -64,19 +74,9 @@ class BasicPolicy extends Policy {
 		#Handling of active systems
 		if ($REQUEST->host->isActive())
 		{
-			#Should we assign a vlan by switch location?
-			if ($vlan=$REQUEST->switch_port->vlanBySwitchLocation())
-			{
-				#We have an exception. Assign vlan by switch location
-				$this->reportDecision($REQUEST,$vlan,"Exception. Assigning vlan by switch location");
-				ALLOW($vlan);
-			}
-			else
-                        {
-				$this->reportDecision($REQUEST,$REQUEST->host->getVlanID());
-				#Allow host in its predetermined vlan
-				ALLOW($REQUEST->host->getVlanId());
-                        }
+			$this->reportDecision($REQUEST,$REQUEST->host->getVlanID());
+			#Allow host in its predetermined vlan
+			ALLOW($REQUEST->host->getVlanId());
 		} 
 
 		#Handling of Unmanaged systems
@@ -89,16 +89,6 @@ class BasicPolicy extends Policy {
                 } 
 
 		#UNKNOWN AND UNMANAGED SYSTEMS
-		#Check for VMs: special case, use vlan of VM host
-	        if ($REQUEST->host->isVM()) 
-                {
-                   if ($vlan=$REQUEST->switch_port->getVMVlan())
-		   {
-		      $this->reportDecision($REQUEST,$vlan,"VM. Assigning vlan of previous authenticated host");
-                      ALLOW($vlan); #Retrieve the vlan from the host device
-		   }
-                }
-
                 #Port has a default vlan?
                 if ($vlan=$REQUEST->switch_port->getPortDefaultVlan()) 
 		{
@@ -143,9 +133,13 @@ class BasicPolicy extends Policy {
            #Update port information
            $REQUEST->switch_port->update();
 	   
+           #Create a new PortScan object
            $port_scan=new CallWrapper(new PortScan($REQUEST));
 
            #Insert End device if unknown
+           #Since port_scan is a child of EndDevice
+           #If the current connecting device is unknown
+           #call parent method to insert it
            $port_scan->insertIfUnknown();
 
            #Check for a dangerous port
@@ -166,6 +160,7 @@ class BasicPolicy extends Policy {
            }
  
            #Update device's info
+           #Update lastvlan, health and the like for this EndDevice
            $port_scan->update();
 	}
 }
