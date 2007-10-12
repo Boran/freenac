@@ -491,6 +491,15 @@ EOF;
    {
       return "switch {$this->switch_ip}({$this->switch_name}: {$this->switch_comment}) {$this->users_in_office} {$this->patch_details}";   
    }
+
+   /**
+   * Restart port
+   */
+   public function restart()
+   {
+      if ($this->port_id)
+         snmp_restart_port_id($this->port_id);      
+   }
 }
 
 ?>

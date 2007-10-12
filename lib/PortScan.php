@@ -8,20 +8,36 @@ class PortScan extends EndDevice
       if ($this->inDB())
       {
          $query=<<<EOF
-            SELECT s.port, p.name as protocol, s.name as service, o.banner, o.timestamp
-            FROM nac_openports o INNER JOIN services s ON o.service=s.id
-            INNER JOIN protocols p on p.protocol=s.protocol WHERE o.sid={$this->getEndDeviceID()};
+            SELECT ip AS port_scan_ip, 
+            hostname AS port_scan_hostname, 
+            os AS port_scan_os, 
+            timestamp AS port_scan_lastscanned 
+            FROM nac_hostscanned 
+            WHERE sid='{$this->getEndDeviceID()}';
 EOF;
          $this->logger->debug($query,3);
          $res=mysql_query($query);
          if ($res)
          {
-            $open_ports=mysql_num_rows($res);
-            $this->db_row['open_ports']=$open_ports;
-            if ($open_ports > 0)
+            $row=mysql_fetch_assoc($res);
+            foreach ($row as $k => $v)
+               $this->db_row[$k]=$v;
+            $query=<<<EOF
+               SELECT s.port, p.name AS protocol, s.name AS service, o.banner, o.timestamp
+               FROM nac_openports o INNER JOIN services s ON o.service=s.id
+               INNER JOIN protocols p on p.protocol=s.protocol WHERE o.sid='{$this->getEndDeviceID()}';
+EOF;
+            $this->logger->debug($query,3);
+            $res=mysql_query($query);
+            if ($res)
             {
-               while ($row=mysql_fetch_assoc($res))
-                  $this->db_row['ports'][]=$row;
+               $open_ports=mysql_num_rows($res);
+               $this->db_row['open_ports']=$open_ports;
+               if ($open_ports > 0)
+               {
+                  while ($row=mysql_fetch_assoc($res))
+                     $this->db_row['ports'][]=$row;
+               }
             }
          }
       }
@@ -47,14 +63,14 @@ EOF;
       }
    }
 
-   public function isPortOpen($port)
+   public function isPortOpen($port=0,$protocol='TCP')
    {
-      if ($port && is_numeric($port))
+      if ($port && is_numeric($port) && $this->openPorts())
       {
-         if (array_search($port,$this->ports))
-            return true;
-         else
-            return false;
+         foreach($this->ports as $temp_port)
+            if (($temp_port['port']==$port) && (strcasecmp($temp_port['protocol'],trim($protocol))==0))
+               return true;
+         return false;
       }
       else
       {

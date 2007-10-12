@@ -18,6 +18,16 @@
  */
 
 /**
+* Health status(es) (Note: The Oxford English Dict defines the plural of status as statuses, but the Latin plural is status
+* Pick the one you like the best :) )
+*/
+define('UNKNOWN',0);
+define('OK',1);
+define('TRANSITION',4);
+define('QUARANTINE',5);
+define('INFECTED',6);
+
+/**
  * This class represents a row in the systems table in the database.
  * In the current version, the host is identified by its mac address.
  * This class extends the {@link Common} class.
@@ -26,7 +36,6 @@ class EndDevice extends Common
 {
    protected $mac;
    protected $db_row = array();
-	
 
    /** The constructor takes the mac address of the system and creates 
    * and instance representing that particular system.
@@ -58,7 +67,7 @@ class EndDevice extends Common
       
          # Query systems table 
          $sql_query=<<<EOF
-            SELECT s.id AS sid, s.mac AS mac, s.name as hostname, s.description, s.status, u.id AS uid,
+            SELECT s.id AS sid, s.health, s.mac AS mac, s.name as hostname, s.description, s.status, u.id AS uid,
                u.username, s.r_ip AS ip, s.expiry, v.id AS vid, v.default_name AS vlan_name FROM systems s
                LEFT JOIN users u ON s.uid=u.id LEFT JOIN vlan v ON s.vlan=v.id WHERE s.mac='{$this->mac}' LIMIT 1;
 EOF;
@@ -69,6 +78,8 @@ EOF;
          {
             $this->db_row=$temp;
             $this->db_row['in_db']=true;
+            if (!$this->db_row['health'])
+               $this->db_row['health']=UNKNOWN;
             if (($object instanceof VMPSRequest) && ($this->vid == 0))
             $this->logger->logit("Note: Device {$this->mac}({$this->hostname}) has vlan zero. It will be blocked");
             #   DENY('VLAN ID assigned to this EndDevice equals zero');
@@ -79,6 +90,7 @@ EOF;
 	    $this->db_row['status']=0;
 	    $this->db_row['mac']=$this->mac;
 	    $this->db_row['in_db']=false;
+            $this->db_row['health']=UNKNOWN;
 	 }
 
          #Initial values for these vars. They'll be modified at some point in the future in this class
@@ -334,7 +346,7 @@ EOF;
          if ($this->isExpired() && $this->conf->disable_expired_devices)
          {
             #If so, set its state to 'killed'
-            $query="UPDATE systems SET LastSeen=NOW(), status=7, LastPort={$this->port_id}, LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
+            $query="UPDATE systems SET LastSeen=NOW(), status=7, LastPort={$this->port_id}, health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
             $string="Note: Expired device {$this->hostname}({$this->mac}) has been refused network access and its status has been set to killed. Expiration date: {$this->expiry}";
             $this->logger->logit($string);
             log2db('info',$string);
@@ -342,7 +354,7 @@ EOF;
          else
          {
             #Normal case, update lastseen, lastport and lastvlan
-            $query="UPDATE systems SET LastSeen=NOW(), LastPort={$this->port_id}, LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
+            $query="UPDATE systems SET LastSeen=NOW(), LastPort={$this->port_id}, health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
          }
          $this->logger->debug($query,3);
          $res=mysql_query($query);
@@ -377,7 +389,15 @@ EOF;
       if (!$this->inDB() && $this->port_id)
       {
          #Normal case
-         $query="INSERT INTO systems SET lastseen=NOW(), status='{$this->conf->set_status_for_unknowns}', name='unknown', vlan='{$this->conf->set_vlan_for_unknowns}',lastport='{$this->port_id}', office='{$this->office_id}', description='".$this->conf->default_user_unknown."', uid='1', mac='{$this->mac}';";
+         $query=<<<EOF
+            INSERT INTO systems SET lastseen=NOW(), 
+            status='{$this->conf->set_status_for_unknowns}', 
+            name='unknown', vlan='{$this->conf->set_vlan_for_unknowns}',
+            lastport='{$this->port_id}', 
+            office='{$this->office_id}', 
+            description='".$this->conf->default_user_unknown."', uid='1', 
+            health='{$this->health}', mac='{$this->mac}';
+EOF;
          $this->logger->debug($query,3);
          $res=mysql_query($query);
 	 if ($res)
@@ -565,6 +585,24 @@ EOF;
       if ($var)
       {
          $this->db_row['alert_message']=$var;
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+
+   /**
+   * Set the health status for this device
+   * @param integer $status	Status we want to set this device to
+   * @return boolean		True if the health status has been changed, false otherwise
+   */
+   public function setHealth($status)
+   {
+      if (is_integer($status))
+      {
+         $this->db_row['health']=$status;
          return true;
       }
       else
