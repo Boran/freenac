@@ -102,8 +102,8 @@ EOF;
          $this->setPortID($object->switch_port->getPortID());
          $this->setOfficeID($object->switch_port->getOfficeID());
          $this->setVlanID($object->switch_port->getLastVlanID());
-         $this->setPortInfoForAlertSubject($object->switch_port->getPortInfoForAlertSubject());
-         $this->setPortInfoForAlertMessage($object->switch_port->getPortInfoForAlertMessage());
+         $this->setAlertSubject($object->switch_port->getAlertSubject());
+         $this->setAlertMessage($object->switch_port->getAlertMessage());
          $this->setNotifyInfo($object->switch_port->getNotifyInfo());
       }
       else
@@ -562,7 +562,7 @@ EOF;
    * @param mixed $var		Port location information
    * @return boolean		True on success
    */
-   public function setPortInfoForAlertSubject($var)
+   public function setAlertSubject($var)
    {
       if ($var)
       {
@@ -580,7 +580,7 @@ EOF;
    * @param mixed $var          Port location information
    * @return boolean            True on success
    */
-   public function setPortInfoForAlertMessage($var)
+   public function setAlertMessage($var)
    {
       if ($var)
       {
@@ -602,6 +602,10 @@ EOF;
    {
       if (is_integer($status))
       {
+         if ($this->hostname)
+            $this->logger->debug("Device {$this->mac}({$this->getHostname()} has changed health status from {$this->health} to $status",2);
+         else
+            $this->logger->debug("Device {$this->mac} has changed health status from {$this->health} to $status",2);
          $this->db_row['health']=$status;
          return true;
       }

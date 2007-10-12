@@ -477,7 +477,7 @@ EOF;
    * This method is used for alerting
    * @return mixed	String containing port location information
    */
-   public function getPortInfoForAlertSubject()
+   public function getAlertSubject()
    {
       return "{$this->office}@{$this->building}, {$this->patch_details}, port {$this->port_name}";
    }
@@ -487,7 +487,7 @@ EOF;
    * This method is used for alerting
    * @return mixed      String containing port location information
    */
-   public function getPortInfoForAlertMessage()
+   public function getAlertMessage()
    {
       return "switch {$this->switch_ip}({$this->switch_name}: {$this->switch_comment}) {$this->users_in_office} {$this->patch_details}";   
    }
