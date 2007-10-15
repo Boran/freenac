@@ -28,7 +28,8 @@ $logger->setDebugLevel(0);
 #$logger->setLogToStdOut();
 
 $query=<<<EOF
-SELECT p.name AS port, 
+SELECT p.id, 
+   p.name AS port, 
    s.ip AS switch, 
    p.auth_profile, 
    v.default_name AS vlan 
@@ -56,11 +57,14 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       $command="./snmp_set_port.php {$row['switch']} {$row['port']} -s {$row['vlan']}";
       $logger->logit($command);
       syscall($command);
-      
+      $query="UPDATE PORT SET auth_profile='2' WHERE id='{$row['id']}';";
+      $logger->logit($command);
+      mysql_query($query); 
    }
    else if ($row['auth_profile']=='2')
    {
-      #Program port as dynamic
+      #Program port as dynamic. In fact, it shouldn't get up to this point, because in the query we are looking only for
+      #ports whose auth_profile==1. This part is here only to show how it should be for dynamic ports
       $command="./snmp_set_port.php {$row['switch']} {$row['port']} -d";
       $logger->logit($command);
       syscall($command);
