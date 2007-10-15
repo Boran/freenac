@@ -102,6 +102,34 @@ function turn_on_port($port_index)
 }
 
 /**
+* Get the snmp port index
+* @param mixed $port	Port name to look for.  
+* @param mixed $switch	Switch to ask
+* @return mixed		Port index if found, false otherwise
+*/
+function get_snmp_port_index($port,$switch)
+{
+   global $snmp_rw;
+   $ports_on_switch=snmprealwalk($switch,$snmp_rw,'1.3.6.1.2.1.31.1.1.1.1');       //Get the list of ports on the switch
+   if (empty($ports_on_switch))
+   {
+      $logger->logit( "ABORTED: Could not contact switch $switch or unknown Switch.\n");
+      return false;
+   }
+   $ports_on_switch=array_map("remove_type",$ports_on_switch);             //We are only interested in the string
+   $port_oid=array_search($port,$ports_on_switch);                         //Is the port in this switch?
+   if (empty($port_oid))
+   {
+      $logger->logit( "Port $port not found on switch $switch\n");
+      log2db('info',"Port $port not found on switch $switch");
+      return false;
+   }
+
+   return get_last_index($port_oid);
+}
+
+
+/**
 * Turn off a determined port identified by its index.
 * @param mixed  $port_index             Port index according to SNMP
 * @return boolean                       True if port was successfully switched off, false otherwise

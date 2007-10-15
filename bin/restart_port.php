@@ -119,22 +119,12 @@ switch($j)
 $logger->debug("Port $port on $switch");
 $logger->logit("Port restart try: $port on switch $switch");
 
-$ports_on_switch=snmprealwalk($switch,$snmp_rw,'1.3.6.1.2.1.31.1.1.1.1');	//Get the list of ports on the switch
-if (empty($ports_on_switch))
+$port_index=get_snmp_port_index($port,$switch);					//Get the index
+if (!$port_index)
 {
-   $logger->logit( "ABORTED: Could not contact switch $switch or unknown Switch.\n");
-   exit(2);
-}
-$ports_on_switch=array_map("remove_type",$ports_on_switch);		//We are only interested in the string
-$port_oid=array_search($port,$ports_on_switch);				//Is the port from the command line present in this switch?
-if (empty($port_oid))
-{
-   $logger->logit( "Port $port not found on switch $switch\n");
-   log2db('info',"Port $port not found on switch $switch");
+   $logger->logit("Port not found on switch");
    exit(1);
 }
-
-$port_index=get_last_index($port_oid);					//Port found, get the index
 
 if (turn_off_port($port_index))
 {
