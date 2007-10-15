@@ -31,17 +31,16 @@ $query=<<<EOF
 SELECT p.id, 
    p.name AS port, 
    s.ip AS switch, 
-   p.auth_profile, 
+   p.set_authprofile, 
    v.default_name AS vlan 
    FROM port p 
    INNER JOIN switch s 
    ON p.switch=s.id 
    INNER JOIN vlan v 
    ON p.set_staticvlan=v.id
-   WHERE p.auth_profile=1;
+   WHERE p.set_authprofile=1;
 EOF;
 $logger->debug($query);
-
 $res=mysql_query($query);
 if (!$res)
 {
@@ -51,14 +50,14 @@ if (!$res)
 
 while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
 {
-   if ($row['auth_profile']=='1') && ($row['vlan'])
+   if (($row['set_authprofile']=='1') && ($row['vlan']))
    {
       #Program port as static
       $command="./snmp_set_port.php {$row['switch']} {$row['port']} -s {$row['vlan']}";
       $logger->logit($command);
       syscall($command);
-      $query="UPDATE PORT SET auth_profile='2' WHERE id='{$row['id']}';";
-      $logger->logit($command);
+      $query="UPDATE port SET set_authprofile='2' WHERE id='{$row['id']}';";
+      $logger->debug($query); 
       mysql_query($query); 
    }
    else if ($row['auth_profile']=='2')
