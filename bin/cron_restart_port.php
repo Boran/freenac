@@ -32,7 +32,7 @@ $logger->setDebugLevel(0);
 function restart_port($switch, $port) {
   global $conf;
   if ($conf->check_port_restart) {
-     $answer=syscall("php restart_port $port $switch");
+     $answer=syscall("php restart_port.php $port $switch");
      #logit($answer);
      debug1($answer);
   }
