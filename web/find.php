@@ -31,7 +31,7 @@ set_include_path("./:../");
 // include configuration
 require_once('./config.inc');
 // include functions
-require_once('./funcs.inc');
+require_once('./webfuncs.inc');
 // include pear module (if activated in config)
 if ($xls_output){
         require_once "Spreadsheet/Excel/Writer.php";

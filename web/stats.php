@@ -5,7 +5,7 @@ set_include_path("./:../");
 // include configuration
 require_once('./config.inc');
 // include functions
-require_once('./funcs.inc');
+require_once('./webfuncs.inc');
 
 include_once('defs.inc');
 $stattypes = array("class","class2","os","os1","os2","os3","switch","vlan","vlan_group","dat");
