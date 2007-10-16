@@ -344,7 +344,6 @@ function page()
                    $sql.=' WHERE id=\''.$_REQUEST['id'].'\';';
                    // update the given data set
                    mysql_query($sql) or die('Query failed: ' . mysql_error());
-echo $sql;
                    // Update OK
                    // log what we have done
                    $sql="INSERT INTO guilog (who, host, datetime, priority, what) VALUES ('$uname','$remote_host',NOW(),'info','Updated system: ".$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';
