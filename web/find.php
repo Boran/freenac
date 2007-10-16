@@ -39,7 +39,7 @@ if ($xls_output){
 
 function page()
 {
-   global $dbhost, $dbuser, $dbname, $dbpass,$rights;
+   global $dbhost, $dbuser, $dbname, $dbpass,$rights,$showdhcp;
    //session setup
    session_name('FreeNAC');
    session_start();
@@ -150,7 +150,7 @@ function page()
    if ($_REQUEST['action']=='edit'){
         // check that what we got is a number
         if (is_numeric($_REQUEST['id'])){
-                $sql=' SELECT sys.id, sys.name, sys.mac, sys.status, sys.vlan, lvlan.default_name as lastvlan, sys.uid as user, sys.office, port.name as port, sys.lastseen, swloc.name as location, swi.name as switch, sys.r_ip as lastip, sys.r_timestamp as lastipseen, sys.comment, eth.vendor
+                $sql=' SELECT sys.id, sys.name, sys.mac, sys.status, sys.vlan, lvlan.default_name as lastvlan, sys.uid as user, sys.office, port.name as port, sys.lastseen, swloc.name as location, swi.name as switch, sys.r_ip as lastip, sys.r_timestamp as lastipseen, sys.comment, eth.vendor, dhcp_fix, dhcp_ip
                         FROM systems as sys LEFT JOIN vlan as lvlan ON sys.lastvlan=lvlan.id LEFT JOIN port as port ON port.id=sys.lastport LEFT JOIN switch as swi ON port.switch=swi.id LEFT JOIN location as swloc ON swloc.id=swi.location LEFT JOIN ethernet as eth ON (SUBSTR(sys.mac,1,4)=SUBSTR(eth.mac,1,4) AND SUBSTR(sys.mac,6,2)=SUBSTR(eth.mac,5,2))
                         WHERE sys.id=\''.$_REQUEST['id'].'\';';
                 $result=mysql_query($sql) or die('Query failed: ' . mysql_error());
@@ -216,6 +216,16 @@ function page()
                    echo '<tr><td>LastSeen:</td><td>'."\n";
                    echo (is_null($row['lastseen'])?'NEVER':$row['lastseen'])."\n";
                    echo '</td></tr>'."\n";
+		   // DHCP Fix IP
+		   if ($showdhcp) {
+			echo '<tr><td>Fix DHCP IP<td>'."\n";
+			if ($row['dhcp_fix'] == 1) {
+				echo '<input name="dhcp_fix" type=checkbox value="dhcp_fix" checked> to ';
+			} else {
+				echo '<input name="dhcp_fix" type=checkbox value="dhcp_fix"> to ';
+			};
+			echo '<input name="dhcp_ip" type=text value="'.$row['dhcp_ip'].'">';
+	           };	
                    // Comment
                    echo '<tr><td>Comment:</td><td>'."\n";
                    echo '<input name="comment" type="text" value="'.stripslashes($row['comment']).'"/>'."\n";
@@ -321,12 +331,20 @@ function page()
                    $sql.=($_REQUEST['office']!=''?', office='.$_REQUEST['office'].'':'');
                    // got comment?
                    $sql.=($_REQUEST['comment']!=''?', comment=\''.$_REQUEST['comment'].'\'':'');
+		   // DHCP ?
+			// TODO : validate dhcp_ip as ip address
+		   if ($showdhcp) {
+			if (($_REQUEST['dhcp_fix'] == 'dhcp_fix') && ($_REQUEST['dhcp_ip'] != '')) {
+				 $sql.=", dhcp_fix=1, dhcp_ip='".$_REQUEST['dhcp_ip']."'";
+			};
+		   };
                    // set what we know for sure (changedate, changeuser,...)
                    $sql.=', changedate=NOW(), changeuser=\'WEBGUI\'';
                    // where?
                    $sql.=' WHERE id=\''.$_REQUEST['id'].'\';';
                    // update the given data set
                    mysql_query($sql) or die('Query failed: ' . mysql_error());
+echo $sql;
                    // Update OK
                    // log what we have done
                    $sql="INSERT INTO guilog (who, host, datetime, priority, what) VALUES ('$uname','$remote_host',NOW(),'info','Updated system: ".$_REQUEST['name'].', '.$_REQUEST['mac'].', WEBGUI, '.$_REQUEST['comment'].', '.$_REQUEST['office'].', '.$row['port'].', '.$row['switch'].', vlan'.$_REQUEST['vlan'].'\');';

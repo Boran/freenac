@@ -64,4 +64,7 @@
 #  ## vmpsdot.php
     $dotcmd = 'neato';                                  # graphviz executable (cf `man dot` for choices)
 
+## Show DHCP parts ?
+   $showdhcp = FALSE;
+
 ?>
