@@ -55,4 +55,18 @@
     $ad_user = 'cn=administrator,cn=users,dc=asdf,dc=asdf';    # AD user with read privileges on AD
     $ad_password = 'gggggg';                                   # AD users's password
 
+## DHCP Configuration file generator
+## contrib/generate_dhcp.php
+/* Don't forget to make a backup of your dhcp configuration before uncommenting
+   $dhcp_configfile = "/etc/dhcp/dhcpd.conf";		
+   $dhcp_defaults = "
+		default-lease-time 36000;
+		max-lease-time 72000;
+		authoritative;
+		use-host-decl-names on;
+		ddns-update-style ad-hoc;
+   ";
+*/
+  
+
 ?>

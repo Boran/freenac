@@ -669,7 +669,46 @@ function get_vlan_color($vlan) {
   return('#FFFFFF');
 };
 
+$netmask[32] = '255.255.255.255';
+$netmask[31] = '255.255.255.254';
+$netmask[30] = '255.255.255.252';
+$netmask[29] = '255.255.255.248';
+$netmask[28] = '255.255.255.240';
+$netmask[27] = '255.255.255.224';
+$netmask[26] = '255.255.255.192';
+$netmask[25] = '255.255.255.128';
+$netmask[24] = '255.255.255.0';
+$netmask[23] = '255.255.254.0';
+$netmask[22] = '255.255.252.0';
+$netmask[21] = '255.255.248.0';
+$netmask[20] = '255.255.240.0';
+$netmask[19] = '255.255.224.0';
+$netmask[18] = '255.255.192.0';
+$netmask[17] = '255.255.128.0';
+$netmask[16] = '255.255.0.0';
+$netmask[15] = '255.254.0.0';
+$netmask[14] = '255.252.0.0';
+$netmask[13] = '255.248.0.0';
+$netmask[12] = '255.240.0.0';
+$netmask[11] = '255.224.0.0';
+$netmask[10] = '255.192.0.0';
+$netmask[9] = '255.128.0.0';
+$netmask[8] = '255.0.0.0';
+$netmask[7] = '254.0.0.0';
+$netmask[6] = '252.0.0.0';
+$netmask[5] = '248.0.0.0';
+$netmask[4] = '240.0.0.0';
+$netmask[3] = '224.0.0.0';
+$netmask[2] = '192.0.0.0';
+$netmask[1] = '128.0.0.0';
+
+/**
+ * Format mac from aa:bb:cc:dd:ee:ff to aabb.ccdd.eeff
+ * @param string $macdouble MAC (aa:bb:cc:dd:ee:ff)
+ * @return string $mac MAC (aabb.ccdd.eeff)
+ */
 function format_mac($macdouble) {
+
   $numbers = explode(':',$macdouble);
 
   $dot=1;
@@ -687,6 +726,11 @@ function format_mac($macdouble) {
   return($mac);
 };
 
+/**
+ * Format mac from aabb.ccdd.eeff to aa:bb:cc:dd:ee:ff
+ * @param string $macdot MAC (aa:bb:cc:dd:ee:ff)
+ * @return string $mac MAC (aabb.ccdd.eeff)
+ */
 function reformat_mac($macdot) {
   $numbers = explode('.',$macdot);
 
