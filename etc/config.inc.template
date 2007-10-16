@@ -50,4 +50,9 @@
   $epo_dbuser ="USER1";              # read-only user for queries
   $epo_dbpass ="PASS1";              # keep this secret!
 
+## LDAP coniguration settings (Active Directory)
+## ad_user_sync
+    $ad_user = 'cn=administrator,cn=users,dc=asdf,dc=asdf';    # AD user with read privileges on AD
+    $ad_password = 'gggggg';                                   # AD users's password
+
 ?>
