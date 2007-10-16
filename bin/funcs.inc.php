@@ -676,6 +676,50 @@ function mssql_fetch_one($query){
   return mssql_fetch_array($r);
 }
 
+/**
+ * Since we could not reliably count affected rows after mysql operations
+ * see also http://php.net/manual/en/function.mysql-info.php
+ * USAGE:
+ * $vals = get_mysql_info($linkid);
+ * if($vals['rows_matched'] == 0){
+ *    mysql_query("INSERT INTO table values('val1','val2', 'valetc')", $linkid);
+ * }
+ */
+function get_mysql_info($linkid = null)
+{
+    $linkid? $strInfo = mysql_info($linkid) : $strInfo = mysql_info();
+
+    $return = array();
+    ereg("Records: ([0-9]*)", $strInfo, $records);
+    ereg("Duplicates: ([0-9]*)", $strInfo, $dupes);
+    ereg("Warnings: ([0-9]*)", $strInfo, $warnings);
+    ereg("Deleted: ([0-9]*)", $strInfo, $deleted);
+    ereg("Skipped: ([0-9]*)", $strInfo, $skipped);
+    ereg("Rows matched: ([0-9]*)", $strInfo, $rows_matched);
+    ereg("Changed: ([0-9]*)", $strInfo, $changed);
+
+    $return['records'] = $records[1];
+    $return['duplicates'] = $dupes[1];
+    $return['warnings'] = $warnings[1];
+    $return['deleted'] = $deleted[1];
+    $return['skipped'] = $skipped[1];
+    $return['rows_matched'] = $rows_matched[1];
+    $return['changed'] = $changed[1];
+
+    return $return;
+}
+
+function mysql_affected_rows2($linkid = null)
+{
+    global $logger;
+
+    $linkid? $strInfo = mysql_info($linkid) : $strInfo = mysql_info();
+    if (ereg("Records: ([0-9]*)", $strInfo, $count) == false) {
+      ereg("Rows matched: ([0-9]*)", $strInfo, $count);
+    }
+    $logger->debug("mysql_affected_rows2: count=$count[1], $strInfo", 3);
+    return $count[1];
+}
 
 ### EOF ###
 ?>
