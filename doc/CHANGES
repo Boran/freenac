@@ -8,9 +8,23 @@ This reports, but does not commit any changes.
 History of this Branch 2.2
 ===========================
 
----- Changes V2.2 RC3 (SVN tag TBD)
+---- Changes V2.2 RC3 (SVN tag 876)
 
-
+ * Most documentation is now gone. You can browse our documentation
+   online in http://www.freenac.net and comment and contribute to 
+   enhance it. 
+ * Added some functions in funcs.inc
+ * Better Web GUI integration
+	Delete button
+ * Modifications to port_scan
+ 	Added --verbose switch to activate debug1
+	Modified to support new and old variables
+	Removed config file
+ * Renamed config options in Windows GUI
+ * Deleted unnecessary information from config.inc.template
+ * Modifications to vmps_lastseen
+	When unknown detected via SMS, update the os4 field, not just os2 
+ * DB structure and fields for the config table have been updated	
 
 ---- Changes from V2.2 RC1 to V2.2 RC2 (SVN tag 776)
  * Web 1 and Web 2 were put together into a single interface /web
