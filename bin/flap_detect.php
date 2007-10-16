@@ -49,7 +49,7 @@ function msg($msg1)
 
 function react($cnt, $switch, $port)
 {
-  global $tmp1, $connect, $message, $logs, $subject;
+  global $tmp1, $connect, $message, $logs, $subject,$logger;
   $arr1=array(); $arr2=array();
   $best_vlan=0;  $best_count=0;
   $logs="";
