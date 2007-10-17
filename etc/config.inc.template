@@ -41,4 +41,9 @@
 
 ## router_mac_ip
   $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";    # SNMP Read
+
+## LDAP coniguration settings (Active Directory)
+## ad_user_sync
+    $ad_user = 'cn=administrator,cn=users,dc=domain,dc=com';    # AD user with read privileges on AD
+    $ad_password = 'password'; 
 ?>
