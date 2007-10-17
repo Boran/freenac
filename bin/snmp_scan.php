@@ -45,8 +45,8 @@ set_include_path("../:./:/opt/nac/");
 require_once "./funcs.inc.php";               # Load settings & common functions
 require_once "./snmp_defs.inc.php";
 
-$logger->setDebugLevel(1);
-$logger->setLogToStdOut();
+$logger->setDebugLevel(0);
+$logger->setLogToStdOut(false);
 
 db_connect();
 
