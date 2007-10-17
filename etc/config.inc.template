@@ -52,8 +52,8 @@
 
 ## LDAP coniguration settings (Active Directory)
 ## ad_user_sync
-    $ad_user = 'cn=administrator,cn=users,dc=asdf,dc=asdf';    # AD user with read privileges on AD
-    $ad_password = 'gggggg';                                   # AD users's password
+    $ad_user = 'cn=administrator,cn=users,dc=domain,dc=com';    # AD user with read privileges on AD
+    $ad_password = 'password';                                   # AD users's password
 
 ## DHCP Configuration file generator
 ## contrib/generate_dhcp.php
