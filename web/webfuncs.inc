@@ -393,18 +393,6 @@ function create_xls($result){
         $xls->close();
 }
 
-?>
-<?php
-#
-#  functions.inc
-#
-#  2006.05.25/Sean Boran: Production
-#  2006.01.24/Thomas Dagonnier: First prototype
-#
-#  Copyright (C) 2006 Swisscom
-#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
-####################################
-
 
 $big_sel = "SELECT s.id as sid, inventory as inventory, s.mac as mac, v.default_id as vlan, v.default_name as vlanname, vstatus.value as status,
 	s.name as ComputerName, u.username as user, s.comment, s.ChangeDate, LastSeen, LastPort, sysbd.name as building, 
