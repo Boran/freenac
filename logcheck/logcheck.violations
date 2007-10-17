@@ -56,6 +56,9 @@ vmpsd: .*DENY
 Exec-Program output: Logon failure
 Exec-Program output: Account locked out
 Exec-Program output: No such user
+VMPS server .* seems to be down
+Couldn't open the config file
+vmps_servers not defined in config\.inc
 # debug for now:
 Exec-Program output: NT_KEY
 
@@ -64,3 +67,5 @@ AAA_AUTHEN_STATUS_ERROR
 
 #Switch events
 DOT11-7-AUTH_FAILED.*
+
+

@@ -591,9 +591,11 @@ function insert_user ($username) {
 //   $r= mysql_fetch_all("SELECT * from t1")
 //   foreach ($r as $row) { echo "$row[Code], $row[Value]\n";
 //
-function mysql_fetch_all($query){
+function mysql_fetch_all($query)
+{
   $r=@mysql_query($query);
-  if($err=mysql_errno()) return $err;
+  if($err=mysql_errno()) 
+    return $err;
 
   if(@mysql_num_rows($r))
     while($row=mysql_fetch_array($r))
@@ -601,12 +603,16 @@ function mysql_fetch_all($query){
   return $result;
 }
 
-function mysql_fetch_one($query){
+function mysql_fetch_one($query) 
+{
   #echo "QUERY: $query\n";
   $r=@mysql_query($query);
-  if($err=mysql_errno())return $err;
+  if($err=mysql_errno()) {
+    logit("mysql_fetch_one: $err");
+    return $err;
+  }
   if(@mysql_num_rows($r))
-  return mysql_fetch_array($r);
+    return mysql_fetch_array($r);
 }
 
 //
@@ -615,7 +621,8 @@ function mysql_fetch_one($query){
 //   $r= mssql_fetch_all("SELECT * from t1")
 //   foreach ($r as $row) { echo "$row[Code], $row[Value]\n";}
 //
-function mssql_fetch_all($query){
+function mssql_fetch_all($query)
+{
   $r=@mssql_query($query);
   if (! $r) { 
     echo "Cannot execute query " .mssql_get_last_message();
@@ -628,7 +635,8 @@ function mssql_fetch_all($query){
   return $result;
 }
 
-function mssql_fetch_one($query){
+function mssql_fetch_one($query)
+{
   #echo "QUERY: $query\n";
   $r=@mssql_query($query);
   if($err=mssql_errno())return $err;
@@ -636,6 +644,47 @@ function mssql_fetch_one($query){
   return mssql_fetch_array($r);
 }
 
+/**
+ * reliably could affected rows after mysql operations
+ * see also http://php.net/manual/en/function.mysql-info.php
+ * USAGE:
+ * $vals = get_mysql_info($linkid);
+ * if($vals['rows_matched'] == 0){
+ *    mysql_query("INSERT INTO table values('val1','val2', 'valetc')", $linkid);
+ * }
+ */
+function get_mysql_info($linkid = null)
+{
+    $linkid? $strInfo = mysql_info($linkid) : $strInfo = mysql_info();
+   
+    $return = array();
+    ereg("Records: ([0-9]*)", $strInfo, $records);
+    ereg("Duplicates: ([0-9]*)", $strInfo, $dupes);
+    ereg("Warnings: ([0-9]*)", $strInfo, $warnings);
+    ereg("Deleted: ([0-9]*)", $strInfo, $deleted);
+    ereg("Skipped: ([0-9]*)", $strInfo, $skipped);
+    ereg("Rows matched: ([0-9]*)", $strInfo, $rows_matched);
+    ereg("Changed: ([0-9]*)", $strInfo, $changed);
+   
+    $return['records'] = $records[1];
+    $return['duplicates'] = $dupes[1];
+    $return['warnings'] = $warnings[1];
+    $return['deleted'] = $deleted[1];
+    $return['skipped'] = $skipped[1];
+    $return['rows_matched'] = $rows_matched[1];
+    $return['changed'] = $changed[1];
+   
+    return $return;
+}
+function mysql_affected_rows2($linkid = null) 
+{
+    $linkid? $strInfo = mysql_info($linkid) : $strInfo = mysql_info();
+    if (ereg("Records: ([0-9]*)", $strInfo, $count) == false) {
+      ereg("Rows matched: ([0-9]*)", $strInfo, $count);
+    }
+    #logit("mysql_affected_rows2: count=$count[1], $strInfo");
+    return $count[1];
+}
 
 ### EOF ###
 ?>

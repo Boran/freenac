@@ -54,8 +54,8 @@ global $connect;
 
 
 if ( !$conf->core_routers ) {   // no results, error?
-   logit("no routers specified in core_routers variable in config.inc");
-   log2db('info',"no routers specified in core_routers variable in config.inc");
+   logit("no routers specified in core_routers variable in the config table");
+   log2db('info',"no routers specified in core_routers variable in the config table");
    exit -1;
 }
 
@@ -113,6 +113,9 @@ foreach (split(' ', $conf->core_routers) as $router) {
      $query1="UPDATE systems SET r_timestamp=NOW(), r_ip='$ip' ";
      $query2='';
      $where= " WHERE mac='$mac'";
+     // suggestion from PB: (quite elegant as one query, simpler, but very mysql specific?)
+	#$query1="INSERT INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
+	#$query2=" ON DUPLICATE KEY UPDATE r_timestamp=NOW(), r_ip='$ip'";
 
           // if this mac has no associated name i.e. 'unknown', try to get the fqdn for it
           if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
@@ -135,8 +138,9 @@ foreach (split(' ', $conf->core_routers) as $router) {
         if ($mysql_write1) {
           $res = mysql_query($query, $connect);
           if (!$res) { die('Invalid query:' . mysql_error()); }
-          $rowcount=mysql_affected_rows($connect);
-          debug2($query ."==> rows:" .$rowcount);
+          #$rowcount=mysql_affected_rows($connect);
+          $rowcount=mysql_affected_rows2($connect);
+          debug2("$query ==> rowcount:$rowcount, " .mysql_info());
         } else {
           echo("QUERY DRYRUN: $query\n");
         }
@@ -151,10 +155,11 @@ foreach (split(' ', $conf->core_routers) as $router) {
           // TBD: make sure that all IPs come from our networks? So far, only local
           //      IPs were visible
           debug2("$ip - $mac: new, so insert into systems");
-          # TBD: What vlan should we use? In theor it makes no difference, since these device should onyl be unmanaged,
+          # TBD: What vlan should we use? In theory it makes no difference, since these device should onyl be unmanaged,
           # but if thy connect to a VMPS port saome day??
           # We could use $conf->set_vlan_for_unknowns, or set to '1' which is the default. For now use the latter.
-          $query1="INSERT INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
+          #$query1="INSERT INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
+          $query1="INSERT IGNORE INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
           $query2='';
           if ( $conf->router_mac_ip_update_from_dns ) {   // flag to disable name lookup
               $fqdn=gethostbyaddr($ip);
@@ -170,10 +175,11 @@ foreach (split(' ', $conf->core_routers) as $router) {
           $query=$query1 . $query2;
           if ($mysql_write2) {
             if (!mysql_query($query,$connect)) { die('Invalid query: '.mysql_error()); }
+            debug2($query ."==> rows:" .mysql_affected_rows2($connect)); 
           } else {
             echo("QUERY DRYRUN: $query\n");
           }
-        } else if ($rowcount == -1) {   # problem
+        } else if (($rowcount == -1) || ($rowcount == '')) {   # problem
           logit("Error query failed: $query");
 
         } else if ($rowcount > 1) {   # problem: duplicates

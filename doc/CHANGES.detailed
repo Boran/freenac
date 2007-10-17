@@ -1,14 +1,186 @@
 =====================================================================================================================
-                               Detailed Changelog for project FreeNAC 2.2 RC2 and later
-                               (extracted from the Subversion commit log)
+                                        Changelog for project 'FreeNAC 2.2'
 =====================================================================================================================
 
+	 * vmps.exe (boran)
+		/WindowsGUI/vmps.exe
 
+	 * add mysql_affected_rows2() (boran)
+		/bin/funcs.inc
 
+	 * router_mac_ip: SQL UPDATE was sometimes returning the wrong number of rows, add mysql_affected_rows2() (boran)
+		/bin/router_mac_ip
 
+	 * new logcheck violations (boran)
+		/logcheck/logcheck.violations
 
+	 * Removed references to unnecesary mysql accounts
 
-===== V2.2 RC2 ======================================================================================================
+	 * Deleted commentaries and unnecessary MySQL user/pass (boran)
+		/web/funcs.inc
+		/web/config.inc.template
+
+	 * SB: insert all new unknown MACs, with IP, DNS name, and make as status unmanaged (boran)
+		/bin/router_mac_ip
+
+	 * Modified to support new and old variables (h_ortiz)
+		/bin/port_scan
+
+	 * SB: Rename config options: NmapEnabled=>nmap_enabled, StaticInvEnabled=>static_inv,
+    PatchCableEnabled =>patchcable_lookups (boran)
+		/WindowsGUI/CHANGELOG.txt
+		/WindowsGUI/vmps.exe
+
+	 * Inverted order of parameters for snmp_restart_port (boran)
+		/bin/funcs.inc
+
+	 * Display switch name when an communication error occurs (boran)
+		/bin/restart_port
+
+	 * Added --verbose switch to activate debug1 (boran)
+		/bin/port_scan
+
+	 * Template config file for port_scan no longer exists (h_ortiz)
+		/etc/port_scan.inc.template
+
+	 * DB structure and fields for the config table have been updated (h_ortiz)
+		/contrib/opennac_db.tar.gz
+
+	 * configuration file now has been cleaned (h_ortiz)
+		/etc/config.inc.template
+
+	 * Handle 1 and 0 to cast a boolean (h_ortiz)
+		/bin/Settings.php
+
+	 * Web interface has now better integration (h_ortiz)
+		/web/config.inc
+		/web/tmp
+
+	 * Web interface has now better integration
+
+	 * SB: When unknown detected via SMS, update the os4 field, not just os2 (boran)
+		/bin/vmps_lastseen
+
+	 * Moved rdiff.readme to doc/contrib (boran)
+		/contrib/rdiff.readme
+
+	 * Add readme for rdiff (boran)
+		/doc/contrib/rdiff.readme
+
+	 * Purging documentation which is already in the website
+
+	 * README moved one level up (boran)
+		/BRANCH_2.2.txt
+		/README
+		/CHANGELOG
+
+	 * v2.2.0.137/03.09.07/SB: 'New Inventories' button was showing a blank list. Add Wsus support (see Edit->Wsus and Reports->Wsus), is wsus_enabled is set in the config table. (boran)
+		/WindowsGUI/README.WinGUI.txt
+		/WindowsGUI/CHANGELOG.txt
+		/WindowsGUI/vmps.exe
+
+	 * web1 and web2 directories now deleted (boran)
+		/web1
+		/web2
+
+	 * README: adapted release date (boran)
+		/doc/README
+
+	 * List of key changes in V2.2 RC2 (boran)
+		/doc/CHANGES
+
+	 * Delete obsolete documents
+
+	 * Check after syscall (boran)
+		/bin/router_mac_ip
+
+	 * Fixes to flap_detect (boran)
+		/bin/funcs.inc
+		/bin/flap_detect
+
+	 * Doc cleanup: Delete many text files that are now out of date, and point to the online installation Guide. Add an INSTALL file with a link.
+
+	 * Inverted order of parameters to restart_port (h_ortiz)
+		/bin/funcs.inc
+
+	 * Remove absolute path to restart_port (h_ortiz)
+		/bin/funcs.inc
+
+	 * Added snmp_defs and snmp_scan (h_ortiz)
+		/bin/snmp_defs.inc
+		/bin/snmp_scan.php
+
+	 * Fixed variable holding value of mysql_real_escape_string (h_ortiz)
+		/web/funcs.inc
+
+	 * Links now pointing to the new website (boran)
+		/doc/webintro/index.html
+
+	 * Ignore events redefined (boran)
+		/logcheck/logcheck.ignore
+
+	 * Regular expression has been shortened (boran)
+		/bin/logv
+
+	 * Disable slow queries (boran)
+		/contrib/etc/my.cnf
+
+	 * Logrotation file for radius (boran)
+		/contrib/logrotate.d/radius
+
+	 * v2.2.0.134/13.08.07/SB:   
+  . Fix bug that did not allow new switches to be added.
+  . Administration->Vlans: do not allow index number to be edited. Change 'vid' to 'Number' title in the location dependant vlans.  
+  . Overview: when unknown is pressed down, list systems with status=unknown,
+    not with a name '*unknown*'.
+  . Edit: The 'copy' button beside 'Query DNS' fixed (dataset now in edit mode)
+    to copy system name and confirm the change. The IP address is now correctly
+    displayed too. (boran)
+		/WindowsGUI/CHANGELOG.txt
+		/WindowsGUI/vmps.exe
+
+	 * Add switch insert query (boran)
+		/contrib/migration_2.1_to_2.2/DelphiQueryMigration.txt
+
+	 * sb:doc: Add a reference to the new website with install/tech/user guides. Deleted some old doc.
+
+	 * vmps.exe: new switches could not be inserted
+
+	 * Report username and host when someone has performed changes in the write interface (h_ortiz)
+		/web/write/index.php
+
+	 * Allow to delete records from the write interface (h_ortiz)
+		/web/write/index.php
+
+	 * add bin/monitor2.sh (boran)
+		/bin/monitor2.sh
+
+	 * spelling (boran)
+		/doc/cisco_switch.txt
+
+	 * DOT11-7-AUTH_FAILED (boran)
+		/logcheck/logcheck.violations
+
+	 * v2.2.0.130/11.07.07/SB: 
+  . Disabled refreshes on the ServerLog tab for now, there is an issue with the refresh query generated by Delphi:
+SELECT * FROM naclog where naclog.id=144391 order by id desc limit 0.500;
+  . Administrator->Config: add a navigator and filter row (boran)
+		/doc/troubleshooting.txt
+		/WindowsGUI/CHANGELOG.txt
+		/WindowsGUI/vmps.exe
+
+	 * sb: update troubleshooting notes, add sw_ciscocmd.txt (boran)
+		/doc/sw_config_catos.txt
+		/doc/troubleshooting.txt
+		/doc/sw_ciscocmd.txt
+
+	 * sb: add freenacVM.demo.2.1, pointing to new freenacwen (boran)
+		/WindowsGUI/freenacVM.demo.2.1/vmps.xml
+		/WindowsGUI/freenacVM.demo.2.1/vmps.exe
+		/WindowsGUI/freenacVM.demo.2.1
+
+	 * Changelog for 2.2 RC2 (h_ortiz)
+		/CHANGELOG
 
 	 * Instructions on how to import config files into the db (For 2.2 RC2) (h_ortiz)
 		/doc/README.config2db.important
@@ -442,5 +614,5 @@
 	 * Creating branch 2.2
 
 
-Changelog generated on 21-06-2007. It includes changes from revision 548 up to revision 718 of the FreeNAC SVN
+Changelog generated on 16-10-2007. It includes changes from revision 548 up to revision 928 of the FreeNAC SVN
 
