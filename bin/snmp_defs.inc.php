@@ -62,19 +62,19 @@ $snmp_vlan['name'] =		'1.3.6.1.4.1.9.9.46.1.3.1.1.4';
 
 $snmp_port['type'] = 		'1.3.6.1.4.1.9.9.68.1.2.2.1.1';			// 1 - static; 2 - dynamic; 3 - multivlan
 $snmp_port['trunk'] = 		'1.3.6.1.4.1.9.9.46.1.6.1.1.14';		// 1 - trunking; 2 - ot trunking
-$snmp_port['stp'] =		'1.3.6.1.4.1.9.9.82.1.9.3.1.2';			// 1 - true; 2 - false
+#$snmp_port['stp'] =		'1.3.6.1.4.1.9.9.82.1.9.3.1.2';			// 1 - true; 2 - false
 #$snmp_port['802.1x'] =		'1.3.6.1.4.1.9.5.1.19.1.1.20';			// 1 - Port support for 802.1x; 2 - No support for 802.1x on this port
 
 $snmp_port['ad_status'] = 	'1.3.6.1.2.1.2.2.1.7';	// 1 - up; 2 - down; 3 - testing;
-$snmp_port['op_status'] = 	'1.3.6.1.2.1.2.2.1.8';	// 1 - up; 2 - down; 3 - testing; 4 - unknown; 5 - dormant; 6 - notpresent; 7 - lowerLayerDown
-$snmp_port['dot1x_control'] =	'1.1.8802.1.1.1.1.2.1.1.6';  // 1 - forceUnauthorized; 2 - auto; 3 - forceAuthorized
-$snmp_port['dot1x_status'] =	'1.1.8802.1.1.1.1.2.1.1.5';  // 1 - authorized; 2 - unauthorized;
-$snmp_port['dot1x_state'] = 	'1.1.8802.1.1.1.1.2.1.1.1';  	// 1 - initialize; 2 - disconnected; 3 - connecting;
+#$snmp_port['op_status'] = 	'1.3.6.1.2.1.2.2.1.8';	// 1 - up; 2 - down; 3 - testing; 4 - unknown; 5 - dormant; 6 - notpresent; 7 - lowerLayerDown
+#$snmp_port['dot1x_control'] =	'1.1.8802.1.1.1.1.2.1.1.6';  // 1 - forceUnauthorized; 2 - auto; 3 - forceAuthorized
+#$snmp_port['dot1x_status'] =	'1.1.8802.1.1.1.1.2.1.1.5';  // 1 - authorized; 2 - unauthorized;
+#$snmp_port['dot1x_state'] = 	'1.1.8802.1.1.1.1.2.1.1.1';  	// 1 - initialize; 2 - disconnected; 3 - connecting;
 							   	// 4 - authenticating; 5 - authenticated; 6 - aborting;
 								// 7 - held; 8 - forceAuth; 9 - forceUnauth
-$snmp_port['dot1x_eapolrx'] = 	'1.1.8802.1.1.1.1.2.2.1.1';	//Number of valid EAPOL frames received
-$snmp_port['dot1x_quietp'] = 	'1.1.8802.1.1.1.1.2.1.1.7';
-$snmp_port['dot1x_authtxp'] =	'1.1.8802.1.1.1.1.2.1.1.8';
+#$snmp_port['dot1x_eapolrx'] = 	'1.1.8802.1.1.1.1.2.2.1.1';	//Number of valid EAPOL frames received
+#$snmp_port['dot1x_quietp'] = 	'1.1.8802.1.1.1.1.2.1.1.7';
+#$snmp_port['dot1x_authtxp'] =	'1.1.8802.1.1.1.1.2.1.1.8';
 $vmps_reconfirm = 		'1.3.6.1.4.1.9.9.68.1.1.4';	// 2 to reconfirm
 $write_command['old'] = 	'1.3.6.1.4.1.9.2.1.54';	//1 to write
 $write_command['source'] =	'1.3.6.1.4.1.9.9.96.1.1.1.1.3';	//2 for running config
@@ -125,6 +125,7 @@ function walk_ports($switch,$snmp_ro) {
 	snmp_set_enum_print(TRUE); 
         global $snmp_ifaces; // query to get all interfaces
         global $snmp_if; // sub-queries with interfaces characteristics
+	global $snmp_port;
 #	ob_start("callback"); 
 	$iface = array();
         debug2("snmprealwalk $switch $snmp_ro $snmp_ifaces");
@@ -162,6 +163,7 @@ function walk_ports($switch,$snmp_ro) {
                     $iface[$idx]['vmps'] = is_port_vmps($myiface);
             };
 
+  
 // big debug
 /*
 	foreach ($iface as $idx => $myiface) {
@@ -172,6 +174,28 @@ function walk_ports($switch,$snmp_ro) {
 	};
 */
 	
+		};
+
+		if (count($index) > 0) {
+            foreach ($snmp_port as $field => $query) {
+                    foreach($index as $idx) {
+                            $iface[$idx][$field] = '';
+                    };
+                    debug2("snmprealwalk $switch $query");
+                    $walk = snmprealwalk($switch,$snmp_ro,$query);
+                    foreach ($walk as $oid => $value) {
+                            $oids = explode('.',$oid);
+                            $idx = $oids[count($oids)-1];
+                            $iface[$idx][$field] = $value;
+                    };
+                    unset($walk);
+
+            };
+
+            foreach ($iface as $idx => $myiface) {
+                    $iface[$idx]['vmps'] = is_port_vmps($myiface);
+            };
+
 		};
 
 #	ob_flush();
