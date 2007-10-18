@@ -34,7 +34,7 @@
 require_once "funcs.inc.php";               # Load settings & common functions
 # Debugging
 $logger->setDebugLevel(1);
-$logger->setLogToStdOut(true);
+$logger->setLogToStdOut(false);
 $mysql_write1=true;                    # Just test or actually write DB changes??
 $mysql_write2=true;                    # Just test or actually write DB changes??
 
@@ -77,22 +77,26 @@ if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
 
 foreach (split(' ', $conf->core_routers) as $router) {
  $count_updates=0;
- // query interface list 
-$results=@snmprealwalk($router, $snmp_ro, 'ipNetToMediaPhysAddress');
- if ( !$results ) {   // no results, error?
+ // query interface list and split into an array
+ $logger->debug($router_snmpwalk." $router ipNetToMediaPhysAddress\n",2);
+ $results=explode("\n", syscall($router_snmpwalk." $router ipNetToMediaPhysAddress"));
+
+
+ if (( count($results) === 0 ) || (!strpos($results[0],'ipNetToMediaPhysAddress'))){   // no results, error?
    $logger->logit("No results retrieved from router $router: SNMP errors?");
-   continue;
+   $logger->debug($results[$i],2);
+   #log2db('info',"No results retrieved from router $router: SNMP errors?");
  }
- else {
-   $results=array_map("remove_type",$results);
- }
- // go through each pair and update the SYSTEMS table
- foreach ($results as $k => $v) {
+
+ // go though each pair and update the SYSTEMS table
+ for ($i = 0; $i < count($results); $i++){
   $logger->debug("Pre-match results: " .$results[$i], 2);
 
-     $ip=ltrim(str_get_last($k,'.',4),'.');
+  #if ( preg_match("/ipNetToMediaPhysAddress\.(\d+)\.(.*) = STRING: (.*)/", $results[$i], $matches) ) {
+  if ( preg_match("/ipNetToMediaPhysAddress\.(\d+)\.(.*) = .*STRING: (.*)/", $results[$i], $matches) ) {
+     $ip=$matches[2];
      #$logger->debug("$ip - $matches[3] ",2);
-     $mac=normalise_mac($v);
+     $mac=normalise_mac($matches[3]);
      $logger->debug("$ip - $mac ",2);
 
      if ( preg_match($conf->router_mac_ip_ignore_ip, $ip) ) {
@@ -185,6 +189,7 @@ $results=@snmprealwalk($router, $snmp_ro, 'ipNetToMediaPhysAddress');
 
         }   
 
+  }
  }
 
  # Don't write to the GUI logging table any more, its too noisy/frequent

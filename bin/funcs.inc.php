@@ -297,9 +297,7 @@ function syscall($command){
 */
 function remove_type($element)                          
 {
-   $temp=explode(':',$element);
-   $element=trim($temp[1]);
-   return trim($element,'"');
+   return trim(substr($element,strpos($element,':')+1,strlen($element)));
 }
 
 function ping_mac2($mac,$switch,$port,$vlan)
