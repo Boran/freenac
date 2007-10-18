@@ -370,7 +370,8 @@ EOF;
                   $result=-1;
                }
             }
-         }   
+         }
+         return $result;   
       }
    }
    else 

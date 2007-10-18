@@ -406,7 +406,7 @@ EOF;
             name='unknown', vlan='{$this->conf->set_vlan_for_unknowns}',
             lastport='{$this->port_id}', 
             office='{$this->office_id}', 
-            description='".$this->conf->default_user_unknown."', uid='1', 
+            description='{$this->conf->default_user_unknown}', uid='1', 
             health='{$this->health}', mac='{$this->mac}';
 EOF;
          $this->logger->debug($query,3);
