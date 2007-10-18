@@ -700,14 +700,14 @@ function ip_to_bin($ip)
 
 function get_ips()	//This function will get some ips to scan
 {
-   global $what_units_time, $time_threshold, $argc, $argv,$flagscannow,$queries,$logger;
+   global $what_units_time, $time_threshold, $argc, $argv,$flagscannow,$queries,$logger,$conf;
    $timestamp=date('Y-m-d H:i:s');
    $ips="";
    $list=array();
    $counter=0;
    if (($argc==2)&&($argv[1]=="--scannow"))
    {
-      $query="select id,r_ip,name from systems where scannow=1 and r_ip!='NULL' and r_ip!='' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
+      $query="select id,r_ip,name from systems where scannow=1 and r_ip!='NULL' and r_ip!='' and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
       $res=execute_query($query);
       check_and_abort("No systems have the flag \"scannow\" in the systems table\n",$res); 
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
@@ -744,7 +744,7 @@ function get_ips()	//This function will get some ips to scan
          else
             $query.=" or r_ip='$device'";
       }
-      $query.=' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);';
+      $query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
       $res=execute_query($query);
       check_and_abort("IPs specified are not part of the systems table\n",$res);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
@@ -786,7 +786,10 @@ function get_ips()	//This function will get some ips to scan
    else if ($argc==1)
    {
       #$query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1 and lastseen!='NULL';";
-      $query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip!='NULL' and status=1 and lastseen!='NULL' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
+      if ($conf->scan_unmanaged)
+         $query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip!='NULL' and status=1 or status=3 and lastseen!='NULL' and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
+      else
+         $query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip!='NULL' and status=1 and lastseen!='NULL' and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
       $res=execute_query($query);
       check_and_abort("No ip addresses to scan found in systems table.\n",$res);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
