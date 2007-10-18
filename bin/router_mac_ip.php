@@ -93,6 +93,10 @@ $results=@snmprealwalk($router, $snmp_ro, 'ipNetToMediaPhysAddress');
      $ip=ltrim(str_get_last($k,'.',4),'.');
      #$logger->debug("$ip - $matches[3] ",2);
      $mac=normalise_mac($v);
+
+     #Check for an invalid mac
+     if (strcasecmp($mac,'ffff.ffff.ffff')==0)
+        continue;
      $logger->debug("$ip - $mac ",2);
 
      if ( preg_match($conf->router_mac_ip_ignore_ip, $ip) ) {
