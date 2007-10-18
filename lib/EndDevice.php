@@ -65,6 +65,16 @@ class EndDevice extends Common
          # Rewrite mac address according to Cisco convention, XXXX.XXXX.XXXX  
          $this->mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";	  	
       
+         # This bit will be used for hub detection, if enabled
+         if ($this->conf->detect_hubs && ($object instanceof VMPSRequest))
+         {
+            $query = "SELECT id FROM vlan WHERE default_name='{$object->lastvlan}'";
+            $this->logger->debug($query,3); 
+            $this->db_row['newvlan_id']=v_sql_1_select($query);
+            if (! $this->db_row['newvlan_id'])
+               $this->db_row['newvlan_id'] = 0;
+         }
+
          # Query systems table 
          $sql_query=<<<EOF
             SELECT s.id AS sid, s.health, s.mac AS mac, s.name as hostname, s.description, s.status, u.id AS uid,
@@ -73,6 +83,7 @@ class EndDevice extends Common
 EOF;
       
          $this->logger->debug($sql_query,3);
+
          #System found in database, fill up the properties
          if ($temp=mysql_fetch_one($sql_query))
          {
@@ -81,7 +92,7 @@ EOF;
             if (!$this->db_row['health'])
                $this->db_row['health']=UNKNOWN;
             if (($object instanceof VMPSRequest) && ($this->vid == 0))
-            $this->logger->logit("Note: Device {$this->mac}({$this->hostname}) has vlan zero. It will be blocked");
+               $this->logger->logit("Note: Device {$this->mac}({$this->hostname}) has vlan zero. It will be blocked");
             #   DENY('VLAN ID assigned to this EndDevice equals zero');
          }
          else 

@@ -308,6 +308,77 @@ function ping_mac2($mac,$switch,$port,$vlan)
       return false;
 }
 
+function detect_hub ($device, $port)
+{
+   if ($conf->detect_hubs)
+   {
+      #Get vlan_groups
+      $query = "SELECT vlan_group FROM vlan WHERE id='{$device->getNewVlan_id()}';";
+      $logger->debug($query,3);
+      $new_vlan_group = v_sql_1_select($query);
+      
+      $query = "SELECT vlan_group FROM vlan WHERE id='{$device->getLastVlan_id()}';";
+      $logger->debug($query,3);
+      $last_vlan_group = v_sql_1_select($query);
+
+      if ($last_vlan_group == $new_vlan_group)
+      {
+         #Stay with the existing vlan, to preserve connectivity
+         $result = $lvlan_id;
+      }
+      else
+      {
+         #Use the normal vlan for this device
+         $result = $nvlan_id;
+      }
+
+      $query=<<<EOF
+SELECT sid, AuthVlan, AuthLast FROM vmpsauth WHERE
+   TIME_TO_SEC(TIMEDIFF(NOW(), AuthLast)) < 7500 AND
+   sid!='{$device->getSid()}' AND 
+   AuthVlan!='{$device->getNewVlan_id()}' AND
+   AuthPort='{$port->getPort_id()}' ORDER BY AuthLast DESC;";
+EOF;
+      $logger->debug($query,3);
+      $res = mysql_query($query);
+      if (!$res)
+         return false;
+      if (mysql_num_rows($res) > 0)
+      {
+         while (list($othersid, $tempvlan, $authlast)=mysql_fetch_array($res,MYSQL_NUM))
+         {
+            $query = "SELECT mac FROM systems WHERE id='$othersid';";
+            $logger->debug($query,3);
+            $other_mac = v_sql_1_select($query);
+
+            $query = "SELECT default_id FROM vlan WHERE id='$tempvlan';";
+            $logger->debug($query,3);
+            $other_vlan = v_sql_1_select($query);
+
+            if (ping_mac2($other_mac, $port->getSwitch_Name(), $port->getPort_Name(),$other_vlan))
+            {
+               $query = "SELECT vlan_group FROM vlan WHERE id='$other_vlan';";
+               $logger->debug($query,3);
+               $other_vlan_group = v_sql_1_select($query);
+               if ($other_vlan_group == $new_vlan_group)
+               {
+                  $result = $other_vlan;
+                  continue;
+               }
+               else
+               {
+                  $result=-1;
+               }
+            }
+         }   
+      }
+   }
+   else 
+   {
+      return false;
+   }
+}
+
 function ping_mac($mac)
 # Return: true=Ping successful
 {
