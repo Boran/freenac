@@ -1,7 +1,7 @@
 #!/usr/bin/php -f 
 <?
 /**
- * /opt/nac/bin/ping_switch.php
+ * bin/ping_switch.php
  *
  * Long description for file:
  *
@@ -11,7 +11,7 @@
  *      Catalyst 2940 (IOS), 3560 (IOS), 2948 (CatOS), 2960G (IOS)
  *
  * USAGE :
- *      /opt/nac/bin/ping_switch.php
+ *      bin/ping_switch.php
  *
  * PHP version 5
  *
@@ -34,7 +34,7 @@ set_include_path("../:./");
 require_once "bin/funcs.inc.php";               # Load settings & common functions
 require_once "bin/snmp_defs.inc.php";
 
-$logger->setDebugLevel(0);
+$logger->setDebugLevel(0);       // 0=errors only, 1=medium, 3=queries
 $logger->setLogToStdOut(false);
 
 // allow performance measurements
@@ -48,7 +48,7 @@ $starttime = $mtime;
 db_connect();
 
 #Look up the switches in the database
-$query = "SELECT id, ip FROM switch WHERE scan='1'";
+$query = "SELECT id, ip, name, hw, sw FROM switch WHERE scan='1'";
 $logger->debug($query,2);
 $res = mysql_query($query);
 if (!$res)
@@ -61,14 +61,22 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
 {
    $switch_ip = $row['ip'];
    $switch_id = $row['id'];
-   $logger->debug("Querying switch $switch_ip for ports' status");
+   $logger->debug("Querying switch {$row['name']}, $switch_ip, {$row['hw']}, {$row['sw']} for port status");
    
    #Query switch for list of ports and their status
    $status_of_ports = @snmprealwalk($switch_ip, $snmp_rw, $snmp_port['ad_status']);
    $ports_on_switch = @snmprealwalk($switch_ip, $snmp_rw, $snmp_if['name']);
    if ( !$ports_on_switch || !$status_of_ports )
    {
-      $logger->logit("Couldn't communicate with switch $switch_ip");
+      $logger->logit("Could not communicate with switch $switch_ip");
+      # Update switch's last_monitored: set=2, meaning "down" and note when we polled
+      $query = "UPDATE switch set up=2, last_monitored=NOW() where id='$switch_id';";
+      $logger->debug($query,2);
+      $final = mysql_query($query);
+      if (! $final)
+      {
+         $logger->logit(mysql_error(), LOG_ERROR);
+      }
       continue;
    }
    #Clean values
@@ -105,7 +113,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
          $status=3;
 
       # Update port's info in the DB
-      $query = "UPDATE port SET up='$status', last_monitor=NOW() WHERE id='$port_id';";
+      $query = "UPDATE port SET up='$status', last_monitored=NOW() WHERE id='$port_id';";
       $logger->debug($query,2);
       $final = mysql_query($query);
       if (!$final)
@@ -114,8 +122,8 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       }
       
    }
-   # Update switch's last_monitor
-   $query = "UPDATE switch set last_monitor=NOW() where id='$switch_id';";
+   # Update switch's last_monitored
+   $query = "UPDATE switch set up=1, last_monitored=NOW() where id='$switch_id';";
    $logger->debug($query,2);
    $final = mysql_query($query);
    if (! $final)
