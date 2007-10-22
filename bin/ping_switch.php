@@ -37,6 +37,11 @@ require_once "bin/snmp_defs.inc.php";
 $logger->setDebugLevel(0);
 $logger->setLogToStdOut(false);
 
+// allow performance measurements
+$mtime = microtime();
+$mtime = explode(" ",$mtime);
+$mtime = $mtime[1] + $mtime[0];
+$starttime = $mtime;
 //
 //---------------------------------------  Main stuff ----------------------------------------------------------
 //
@@ -100,15 +105,32 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
          $status=3;
 
       # Update port's info in the DB
-      $query = "UPDATE port SET get_status='$status', last_monitor=NOW() WHERE id='$port_id';";
+      $query = "UPDATE port SET up='$status', last_monitor=NOW() WHERE id='$port_id';";
       $logger->debug($query,2);
-      mysql_query($query);
+      $final = mysql_query($query);
+      if (!$final)
+      {
+         $logger->logit(mysql_error(), LOG_ERROR);
+      }
       
    }
    # Update switch's last_monitor
    $query = "UPDATE switch set last_monitor=NOW() where id='$switch_id';";
    $logger->debug($query,2);
-   mysql_query($query);
+   $final = mysql_query($query);
+   if (! $final)
+   {
+      $logger->logit(mysql_error(), LOG_ERROR);
+   }
 }
+
+// measure performance
+$mtime = microtime();
+$mtime = explode(" ",$mtime);
+$mtime = $mtime[1] + $mtime[0];
+$endtime = $mtime;
+$totaltime = ($endtime - $starttime);
+$logger->debug("Time taken= ".$totaltime." seconds\n");
+
 exit(0);
 ?>
