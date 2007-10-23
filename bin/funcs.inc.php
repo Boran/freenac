@@ -170,6 +170,20 @@ function time_diff($date1,$date2)
 * Wrapper around the debug method part of the logger object.
 * Logs to debug level 1
 * It will be soon depreciated. Present only for backwards compatibility.
+* @param mixed $msg Message to log
+*/
+function debug($msg) {
+   global $logger;
+   $msg=rtrim($msg);
+   if (strlen($msg)>0) {
+      $logger->debug($msg);
+   }
+} 
+
+/**
+* Wrapper around the debug method part of the logger object.
+* Logs to debug level 1
+* It will be soon depreciated. Present only for backwards compatibility.
 * @param mixed $msg	Message to log
 */
 function debug1($msg) {
