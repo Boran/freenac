@@ -314,6 +314,14 @@ function remove_type($element)
    return trim(substr($element,strpos($element,':')+1,strlen($element)));
 }
 
+/**
+* Ping a MAC address on a specific switch port
+* @param mixed $mac	MAC address to ping
+* @param mixed $switch	Switch we want to query
+* @param mixed $port	switch port we want to query
+* @param mixed $vlan	VLAN to use to perform the query
+* @return boolean	True if MAC has been found on the switch port
+*/
 function ping_mac2($mac,$switch,$port,$vlan)
 {
    if (is_mac_on_port($mac,$switch,$port,$vlan))
@@ -322,6 +330,12 @@ function ping_mac2($mac,$switch,$port,$vlan)
       return false;
 }
 
+/**
+* Detect if a hub is attached to a certain port
+* If a hub is detected, suggest another vlan to avoid port flapping.
+* So far it is only an adaptation from the old algorithm
+* It hasn't been tested yet
+*/
 function detect_hub ($device, $port)
 {
    if ($conf->detect_hubs)
