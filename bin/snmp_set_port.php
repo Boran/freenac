@@ -47,6 +47,7 @@ $dynamic=false;
 
 function print_usage($code)
 {
+   global $logger;
    $usage=<<<EOF
 USAGE: set_port switch port [OPTIONS]
 
