@@ -49,7 +49,7 @@ function print_usage($code)
 {
    global $logger;
    $usage=<<<EOF
-USAGE: set_port switch port [OPTIONS]
+USAGE: snmp_set_port.php switch port [OPTIONS]
 
 	Web:      http://www.freenac.net/
 	Email:    opennac-devel@lists.sourceforge.net
