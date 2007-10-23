@@ -35,7 +35,7 @@ SELECT p.id,
    FROM port p
    INNER JOIN switch s
    ON p.switch=s.id
-   WHERE p.set_shutdown=1;
+   WHERE p.shutdown=1;
 EOF;
 $logger->debug($query);
 $res=mysql_query($query);
@@ -59,7 +59,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       if (turn_off_port($port_index))
       {
          $string="Port $port on switch $switch was successfully shutdown";
-         $query = "update port set set_shutdown='0' where id = '{$row['id']}';";
+         $query = "update port set shutdown='0' where id = '{$row['id']}';";
          $logger->logit($query);
          mysql_query($query);
       }

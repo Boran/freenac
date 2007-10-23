@@ -194,9 +194,9 @@ if (!$singlevl) {
                             else 
                                $comment=mysql_real_escape_string($if['description']);
                             if (($port_type=='static')&&($vlan))
-                               $query="update port set auth_profile='$type_id',comment='$comment', last_monitor=NOW(), get_status='{$if['ad_status']}', last_vlan='$vlan' where id='".$result['id']."';";
+                               $query="update port set auth_profile='$type_id',comment='$comment', last_monitored=NOW(), get_status='{$if['ad_status']}', last_vlan='$vlan' where id='".$result['id']."';";
                             else
-                               $query="update port set auth_profile='$type_id', get_status='{$if['ad_status']}', last_monitor=NOW(), comment='$comment' where id='".$result['id']."';";
+                               $query="update port set auth_profile='$type_id', get_status='{$if['ad_status']}', last_monitored=NOW(), comment='$comment' where id='".$result['id']."';";
                             $res=mysql_query($query);
                             if (!res)
                             {
@@ -207,9 +207,9 @@ if (!$singlevl) {
                          {
                             $comment=mysql_real_escape_string($if['description']);
                             if (($port_type=='static')&&($vlan))
-                               $query="insert into port set switch='$switchid', name='".$if['name']."',get_status='{$if['ad_status']}',comment='$comment',auth_profile='$type_id',last_vlan='$vlan',last_monitor=NOW()";
+                               $query="insert into port set switch='$switchid', name='".$if['name']."',get_status='{$if['ad_status']}',comment='$comment',auth_profile='$type_id',last_vlan='$vlan',last_monitored=NOW()";
                             else
-                               $query="insert into port set switch='$switchid', name='".$if['name']."',get_status='{$if['ad_status']}',comment='$comment',auth_profile='$type_id',last_monitor=NOW()";
+                               $query="insert into port set switch='$switchid', name='".$if['name']."',get_status='{$if['ad_status']}',comment='$comment',auth_profile='$type_id',last_monitored=NOW()";
                             $res=mysql_query($query);
                             if (!res)
                             {

@@ -37,7 +37,7 @@ SELECT p.id,
    INNER JOIN switch s 
    ON p.switch=s.id 
    INNER JOIN vlan v 
-   ON p.set_staticvlan=v.id
+   ON p.staticvlan=v.id
    WHERE p.set_authprofile=1;
 EOF;
 $logger->debug($query);
