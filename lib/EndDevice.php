@@ -78,7 +78,7 @@ class EndDevice extends Common
          # Query systems table 
          $sql_query=<<<EOF
             SELECT s.id AS sid, s.health, s.mac AS mac, s.name as hostname, s.description, s.status, u.id AS uid,
-               u.username, s.r_ip AS ip, s.expiry, v.id AS vid, v.default_name AS vlan_name FROM systems s
+               u.username, s.r_ip AS ip, s.expiry, s.email_on_connect, v.id AS vid, v.default_name AS vlan_name FROM systems s
                LEFT JOIN users u ON s.uid=u.id LEFT JOIN vlan v ON s.vlan=v.id WHERE s.mac='{$this->mac}' LIMIT 1;
 EOF;
       
@@ -116,6 +116,10 @@ EOF;
          $this->setAlertSubject($object->switch_port->getAlertSubject());
          $this->setAlertMessage($object->switch_port->getAlertMessage());
          $this->setNotifyInfo($object->switch_port->getNotifyInfo());
+
+         #Send an email alert on connect?
+         if ($this->status && ($object instanceof SyslogRequest) && $this->db_row['email_on_connect'])
+            $this->logger->mailit("{$this->mac}($this->hostname) is connecting to the network",$this->alert_message.$this->alert_subject,$this->db_row['email_on_connect']);
       }
       else
       {
