@@ -901,7 +901,7 @@ function set_port_as_dynamic($switch,$port)
 
 function set_port_as_static($switch, $port, $vlan)
 {
-   global $snmp_rw, $snmp_port, $snmp_if;
+   global $snmp_rw, $snmp_port, $snmp_if, $logger;
    if ( ! $ports_on_switch = ports_on_switch($switch) )              //Get the list of ports on the switch
    {
       return false;						# Error handling in ports_on_switch
