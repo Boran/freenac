@@ -182,15 +182,8 @@ if ($read_from_db)
       {
          $port=$result1['port_name'];
    
-         if ( ! $port_index = get_snmp_index($port,$ports_on_switch))                  	//Get port's index
+         if (set_port_as_dynamic($switch,$port))    //Try to set port as dynamic
          {
-            $logger->logit("\tPort $port not found on switch $switch\n");
-            continue;
-         }
-      
-         if (set_port_as_dynamic($switch,$port_index))    //Try to set port as dynamic
-         {
-            $logger->logit("\tPort $port successfully set to dynamic.\n");
             $counter++;
          } 
       }

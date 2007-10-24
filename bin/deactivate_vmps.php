@@ -148,15 +148,6 @@ while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
 {
    $switch=$result['ip'];
    $logger->logit( "Deactivating VMPS on switch $switch\n");
-   if ( ! $ports_on_switch=ports_on_switch($switch))      	//Get the list of ports on the switch
-   {
-      continue;
-   }
-   
-   if ( ! $vlans_on_switch=vlans_on_switch($switch)) 			 	//Lookup of VLANs in the switch
-   {
-      continue;
-   }
 
    $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.auth_profile='2' and sw.ip='$switch';";
    while (!$res1=mysql_query($query));						//Execute query
@@ -167,22 +158,9 @@ while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       $port=$result1['port_name'];
       $static_vlan=$result1['vlan'];
    
-      if ( ! $port_index = get_snmp_index($port,$ports_on_switch))             	//Is the port present in this switch?
-      {
-         $logger->logit( "\tPort $port not found on switch $switch\n");
-         continue;
-      }
-      
-      if ( ! $vlan = get_snmp_index($static_vlan,$vlans_on_switch))            	//Is the VLAN present in the switch?
-      {
-         $logger->logit( "\tVLAN $static_vlan not found on switch $switch.\n");
-         continue;
-      }
-
-      if (set_port_as_static($switch, $port_index, $vlan))
+      if (set_port_as_static($switch, $port, $static_vlan))
       {
          fprintf($file,"%s,%s,%s\n",$switch,$port,$static_vlan);
-         $logger->logit( "\tPort $port successfully set to static with VLAN $static_vlan.\n");
          $counter++;
       }
    }

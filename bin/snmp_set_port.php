@@ -144,25 +144,11 @@ switch($j)
 //Ok, here we go ----------------------------------------- main stuff ------------------------------------------
 //
 
-if (! $ports_on_switch = ports_on_switch($switch))	//Get the list of ports on the switch
-{
-   $logger->logit( "Check that you have properly typed the switch name or ip and your SNMP_RW community.\n");
-   exit(1);
-}
-
-if ( ! $port_index = get_snmp_index($port,$ports_on_switch))	//Is the port from the command line present in this switch?
-{
-   $logger->logit( "Port $port not found on switch $switch\n");
-   exit(1);
-}
-
-
 if ($dynamic)					//Configure port to be used with VMPS
 {
-   if (set_port_as_dynamic($switch, $port_index))
+   if (set_port_as_dynamic($switch, $port))
    {
-      $logger->logit( "Port $port successfully set to dynamic.");
-      log2db('info', "Port $port successfully set to dynamic.");
+      log2db('info', "Port $port on switch $switch successfully set to dynamic.");
    }
    else
    {
@@ -171,20 +157,8 @@ if ($dynamic)					//Configure port to be used with VMPS
 }
 else if ($static)							//Configure as static
 {
-  if ( ! $vlans_on_switch = vlans_on_switch($switch))			//Lookup of VLAN in the switch
+  if (set_port_as_static($switch,$port,$static_vlan))
   {
-     exit(1);
-  }
-  
-  if ( ! $vlan = get_snmp_index($static_vlan, $vlans_on_switch))	//Is the VLAN present in the switch?
-  {
-     $logger->logit( "VLAN $static_vlan not found on switch $switch.\n");
-     exit(1);
-  }
-  
-  if (set_port_as_static($switch,$port_index,$vlan))
-  {
-     $logger->logit( "Port $port successfully set to static with VLAN $static_vlan.");
      log2db('info',"Port $port successfully set to static with VLAN $static_vlan.");
   }
   else
