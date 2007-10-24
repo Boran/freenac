@@ -148,20 +148,16 @@ while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
 {
    $switch=$result['ip'];
    $logger->logit( "Deactivating VMPS on switch $switch\n");
-   $ports_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_if['name']);      	//Get the list of ports on the switch
-   if (empty($ports_on_switch))
+   if ( ! $ports_on_switch=ports_on_switch($switch))      	//Get the list of ports on the switch
    {
-      $logger->logit( "\tCouldn't establish communication with $switch with the defined parameters.\n");
       continue;
    }
-   $ports_on_switch=array_map("remove_type",$ports_on_switch);             	//We are only interested in the string
-   $vlans_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_vlan['name']);  	//Lookup of VLAN in the switch
-   if (empty($vlans_on_switch))
+   
+   if ( ! $vlans_on_switch=vlans_on_switch($switch)) 			 	//Lookup of VLANs in the switch
    {
-     $logger->logit( "\tCouldn't establish communication with $switch. This may be due to a network failure.\n");
-     continue;
+      continue;
    }
-   $vlans_on_switch=array_map("remove_type",$vlans_on_switch);
+
    $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.auth_profile='2' and sw.ip='$switch';";
    while (!$res1=mysql_query($query));						//Execute query
    $total_ports+=mysql_num_rows($res1);
@@ -171,41 +167,23 @@ while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       $port=$result1['port_name'];
       $static_vlan=$result1['vlan'];
    
-      $port_oid=array_search($port,$ports_on_switch);                         	//Is the port present in this switch?
-      if (empty($port_oid))
+      if ( ! $port_index = get_snmp_index($port,$ports_on_switch))             	//Is the port present in this switch?
       {
          $logger->logit( "\tPort $port not found on switch $switch\n");
          continue;
       }
-      $port_index=get_last_index($port_oid);                                  	//Port found, get the index
       
-      $vlan_oid=array_search($static_vlan,$vlans_on_switch);                	//Is the VLAN present in the switch?
-      if (empty($vlan_oid))
+      if ( ! $vlan = get_snmp_index($static_vlan,$vlans_on_switch))            	//Is the VLAN present in the switch?
       {
          $logger->logit( "\tVLAN $static_vlan not found on switch $switch.\n");
          continue;
       }
-      $vlan=get_last_index($vlan_oid);                                      	//VLAN found, get the index
 
-      if (turn_off_port($port_index))							//Shut down port to configure it
+      if (set_port_as_static($switch, $port_index, $vlan))
       {
-         $oid=$snmp_port['type'].'.'.$port_index;
-         if (snmpset($switch,$snmp_rw,$oid,'i',1))                             	//Set port to static
-         {
-            $oid=$snmp_if['vlan'].'.'.$port_index;
-            fprintf($file,"%s,%s,",$switch,$port);
-            if (snmpset($switch,$snmp_rw,$oid,'i',$vlan))                      	//And set the VLAN on that port
-            {
-               fprintf($file,"%s\n",$static_vlan);
-               if (turn_on_port($port_index))						//Done, turn it on
-               {
-                  $logger->logit( "\tPort $port successfully set to static with VLAN $static_vlan.\n");
-                  $counter++;
-               }
-            }
-            else
-               fprintf($file,"\n");
-         }
+         fprintf($file,"%s,%s,%s\n",$switch,$port,$static_vlan);
+         $logger->logit( "\tPort $port successfully set to static with VLAN $static_vlan.\n");
+         $counter++;
       }
    }
    if ($counter>0)

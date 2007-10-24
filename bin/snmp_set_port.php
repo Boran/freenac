@@ -144,89 +144,52 @@ switch($j)
 //Ok, here we go ----------------------------------------- main stuff ------------------------------------------
 //
 
-$ports_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_if['name']);	//Get the list of ports on the switch
-if (empty($ports_on_switch))
+if (! $ports_on_switch = ports_on_switch($switch))	//Get the list of ports on the switch
 {
-   $logger->logit( "Couldn't establish communication with $switch with the defined parameters.\n");
    $logger->logit( "Check that you have properly typed the switch name or ip and your SNMP_RW community.\n");
    exit(1);
 }
-$ports_on_switch=array_map("remove_type",$ports_on_switch);		//We are only interested in the string
-$port_oid=array_search($port,$ports_on_switch);				//Is the port from the command line present in this switch?
-if (empty($port_oid))
+
+if ( ! $port_index = get_snmp_index($port,$ports_on_switch))	//Is the port from the command line present in this switch?
 {
    $logger->logit( "Port $port not found on switch $switch\n");
    exit(1);
 }
-$port_index=get_last_index($port_oid);					//Port found, get the index
-$oid=$snmp_port['ad_status'].'.'.$port_index;
 
-if (!turn_off_port($port_index))
+
+if ($dynamic)					//Configure port to be used with VMPS
 {
-   exit(1);
-}
-
-$oid=$snmp_port['type'].'.'.$port_index; 
-
-if ($dynamic)								//Configure port to be used with VMPS
-{
-  if (snmpset($switch,$snmp_rw,$oid,'i',2))				//Set port as dynamic 
-  {
-     if (turn_on_port($port_index))
-     {
-        $logger->logit( "Port $port successfully set to dynamic.\n");
-        exit(0);
-     }
-     else
-        exit(1);
-  }
-  else
-  {
-     $logger->logit( "An error ocurred while communicating with the switch.\n");
-     exit(1);
-  }
+   if (set_port_as_dynamic($switch, $port_index))
+   {
+      $logger->logit( "Port $port successfully set to dynamic.");
+      log2db('info', "Port $port successfully set to dynamic.");
+   }
+   else
+   {
+      exit(1);
+   }
 }
 else if ($static)							//Configure as static
 {
-  $vlans_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_vlan['name']);	//Lookup of VLAN in the switch
-  if (empty($vlans_on_switch))
+  if ( ! $vlans_on_switch = vlans_on_switch($switch))			//Lookup of VLAN in the switch
   {
-     $logger->logit( "Couldn't establish communication with $switch. This may be due to a network failure.\n");
-     turn_on_port($port_index);
      exit(1);
   }
-  $vlans_on_switch=array_map("remove_type",$vlans_on_switch);
-  $vlan_oid=array_search($static_vlan,$vlans_on_switch);		//Is the VLAN present in the switch?
-  if (empty($vlan_oid))
+  
+  if ( ! $vlan = get_snmp_index($static_vlan, $vlans_on_switch))	//Is the VLAN present in the switch?
   {
      $logger->logit( "VLAN $static_vlan not found on switch $switch.\n");
-     turn_on_port($port_index);
      exit(1);
   }
-  $vlan=get_last_index($vlan_oid);					//VLAN found, get the index
-  if (snmpset($switch,$snmp_rw,$oid,'i',1))				//Set port to static
+  
+  if (set_port_as_static($switch,$port_index,$vlan))
   {
-     $oid=$snmp_if['vlan'].'.'.$port_index;					
-     if (snmpset($switch,$snmp_rw,$oid,'i',$vlan))			//And set the VLAN on that port
-     {
-        if (turn_on_port($port_index))
-        {
-           $logger->logit( "Port $port successfully set to static with VLAN $static_vlan.\n");
-           exit(0);
-        }
-        else
-           exit(1);
-     }
-     else
-     {
-        $logger->logit( "An error ocurred while communicating with the switch.\n");
-        exit(1);
-     }
+     $logger->logit( "Port $port successfully set to static with VLAN $static_vlan.");
+     log2db('info',"Port $port successfully set to static with VLAN $static_vlan.");
   }
   else
   {
-     $logger->logit( "An error ocurred while communicating with the switch.\n");
-     exit(1);
+     exit(1);    // error written to syslog by set_port_as_static
   }
 }
 

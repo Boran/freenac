@@ -169,13 +169,10 @@ if ($read_from_db)
    {
       $switch=$result['ip'];
       $logger->logit("Activating VMPS on switch $switch\n");
-      $ports_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_if['name']);      	//Get the list of ports on the switch
-      if (empty($ports_on_switch))
+      if ( ! $ports_on_switch = ports_on_switch($switch) )      	//Get the list of ports on the switch
       {
-         $logger->logit("\tCouldn't establish communication with $switch with the defined parameters.\n");
          continue;
       }
-      $ports_on_switch=array_map("remove_type",$ports_on_switch);             	//We are only interested in the string
 
       $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.auth_profile='2' and sw.ip='$switch';";
       while (!$res1=mysql_query($query));						//Execute query
@@ -185,25 +182,16 @@ if ($read_from_db)
       {
          $port=$result1['port_name'];
    
-         $port_oid=array_search($port,$ports_on_switch);                         	//Is the port present in this switch?
-         if (empty($port_oid))
+         if ( ! $port_index = get_snmp_index($port,$ports_on_switch))                  	//Get port's index
          {
             $logger->logit("\tPort $port not found on switch $switch\n");
             continue;
          }
-         $port_index=get_last_index($port_oid);                                  	//Port found, get the index
       
-         if (turn_off_port($port_index))							//Shut down port to configure it
+         if (set_port_as_dynamic($switch,$port_index))    //Try to set port as dynamic
          {
-            $oid=$snmp_port['type'].'.'.$port_index;
-            if (snmpset($switch,$snmp_rw,$oid,'i',2))                             	//Set port to dynamic
-            {
-               if (turn_on_port($port_index))							//Done, turn it on
-               {
-                  $logger->logit("\tPort $port successfully set to dynamic.\n");
-                  $counter++;
-               }
-            }
+            $logger->logit("\tPort $port successfully set to dynamic.\n");
+            $counter++;
          } 
       }
       if ($counter>0)
@@ -279,36 +267,26 @@ else
       if (empty($switch))
          continue;
       $logger->logit("Activating VMPS on switch $switch\n");
-      $ports_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_if['name']);        //Get the list of ports on the switch
-      if (empty($ports_on_switch))
+      if ( ! $ports_on_switch = ports_on_switch($switch))        //Get the list of ports on the switch
       {
-         $logger->logit("\tCouldn't establish communication with $switch with the defined parameters.\n");
          continue;
       }
-      $ports_on_switch=array_map("remove_type",$ports_on_switch);               //We are only interested in the string
       $counter=0;
+      
       foreach($ports as $port)
       {
-         $port_oid=array_search($port,$ports_on_switch);                                //Is the port present in this switch?
-         if (empty($port_oid))
+         if (! $port_index = get_snmp_index($port,$ports_on_switch))            //Is the port present in this switch?
          {
             $logger->logit("\tPort $port not found on switch $switch\n");
             continue;
          }
-         $port_index=get_last_index($port_oid);                                         //Port found, get the index
 
-         if (turn_off_port($port_index))                                                        //Shut down port to configure it
+         if (set_port_as_dynamic($switch,$port_index))    //Try to set port as dynamic
          {
-            $oid=$snmp_port['type'].'.'.$port_index;
-            if (snmpset($switch,$snmp_rw,$oid,'i',2))                                   //Set port to dynamic
-            {
-               if (turn_on_port($port_index))                                                   //Done, turn it on
-               {
-                  $logger->logit("\tPort $port successfully set to dynamic.\n");
-                  $counter++;
-               }
-            }
+            $logger->logit("\tPort $port successfully set to dynamic.\n");
+            $counter++;
          }
+
       }
       if ($counter>0)
       {
