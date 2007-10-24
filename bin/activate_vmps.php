@@ -1,7 +1,7 @@
 #!/usr/bin/php -- -f
 <?
 /**
- * enterprise/deactivate_vmps
+ * bin/activate_vmps.php
  *
  * Long description for file:
  *
@@ -33,12 +33,13 @@ chdir(dirname(__FILE__));
 set_include_path("../:./");
 require_once "./funcs.inc.php";               # Load settings & common functions
 require_once "./snmp_defs.inc.php";
+$logger->setDebugLevel(0);
 $logger->setLogToStdOut();
 
 function print_usage($code)
 {
    $usage=<<<EOF
-USAGE: activate_vmps [switches...] [OPTIONS]
+USAGE: activate_vmps.php [switches...] [OPTIONS]
 
         Web:      http://www.freenac.net/
         Email:    opennac-devel@lists.sourceforge.net
@@ -136,7 +137,7 @@ else
    }
    $query.=";";
 }
-   
+$logger->debug($query,3);   
 
 if ($read_from_db)
 {
@@ -168,16 +169,22 @@ if ($read_from_db)
    while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
    {
       $switch=$result['ip'];
-      $logger->logit("Activating VMPS on switch $switch\n");
+
+      $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.auth_profile='2' and sw.ip='$switch';";
+      $logger->debug($query,3);
+      while (!$res1=mysql_query($query));						//Execute query
+      $rows=mysql_num_rows($res1);
+      if ($rows == 0)
+         continue;
+      $total_ports+=$rows;
+      
       if ( ! $ports_on_switch = ports_on_switch($switch) )      	//Get the list of ports on the switch
       {
          continue;
       }
 
-      $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.auth_profile='2' and sw.ip='$switch';";
-      while (!$res1=mysql_query($query));						//Execute query
-      $total_ports+=mysql_num_rows($res1);
       $counter=0;
+      $logger->logit("Activating VMPS on switch $switch\n");
       while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
       {
          $port=$result1['port_name'];

@@ -33,6 +33,7 @@ chdir(dirname(__FILE__));
 set_include_path("../:./");
 require_once "bin/funcs.inc.php";               # Load settings & common functions
 require_once "bin/snmp_defs.inc.php";
+$logger->setDebugLevel(0);
 $logger->setLogToStdOut();
 
 function print_usage($code)
@@ -126,6 +127,7 @@ else
    }
    $query.=";";
 }
+$logger->debug($query,3);
 
 while (!$res=mysql_query($query));
 $total_switches=mysql_num_rows($res);
@@ -136,6 +138,7 @@ if (($argc>1)&&(mysql_num_rows($res)==0))
 }
 
 $counter=0;
+$affected_ports=0;
 $total_ports=0;
 $file=fopen($file_name,'w');
 if (!$file)
@@ -147,11 +150,14 @@ if (!$file)
 while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
 {
    $switch=$result['ip'];
-   $logger->logit( "Deactivating VMPS on switch $switch\n");
-
    $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.auth_profile='2' and sw.ip='$switch';";
+   $logger->debug($query,3);
    while (!$res1=mysql_query($query));						//Execute query
-   $total_ports+=mysql_num_rows($res1);
+   $rows=mysql_num_rows($res1);
+   if ($rows == 0)
+      continue;
+   $total_ports+=$rows;
+   $logger->logit( "Deactivating VMPS on switch $switch\n");
    $counter=0;
    while ($result1=mysql_fetch_array($res1,MYSQL_ASSOC))
    {
@@ -174,24 +180,28 @@ while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
       log2db('info',"deactivate_vmps: ".$string);
    }
 
-   $text=array_map("remove_type",@snmprealwalk($switch,$snmp_rw,$snmp_sw['descr']));          //Determine if switch is IOS
-   $ios=0;
-   foreach($text as $string)
+   $descr=@snmprealwalk($switch,$snmp_rw,$snmp_sw['descr']);
+   if ($descr)
    {
-      if (strpos($string,'IOS'))
-         $ios++;
+      $text=array_map("remove_type",$descr);          //Determine if switch is IOS
+      $ios=0;
+      foreach($text as $string)
+      {
+         if (strpos($string,'IOS'))
+            $ios++;
+      }
    }
    $old=0;
    $written=0;
    if ($ios)                                                                                 //Switch is an IOS, perform a 'wr' using the old way
    {
-      if (snmpset($switch,$snmp_rw,$write_command['old'].'.0','i',1))
+      if (@snmpset($switch,$snmp_rw,$write_command['old'].'.0','i',1))
       {
          $old++;
          $written++;
          $logger->logit( "\tCurrent configuration saved to switch $switch\n\n");
       }
-      else if (snmpset($switch,$snmp_rw,$write_command['old'],'i',1))
+      else if (@snmpset($switch,$snmp_rw,$write_command['old'],'i',1))
       {
          $old++;
          $written++;
@@ -201,9 +211,9 @@ while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
    if ($ios&&!$old)                                                                          //Old way didn't work, try the new one
    {                                                                                         //NOTE: This code below hasn't been tested
       $rand_val=rand(1,999);
-      if (snmpset($switch,$snmp_rw,$write_command['source'].'.'.$rand_val,'i',2))
+      if (@snmpset($switch,$snmp_rw,$write_command['source'].'.'.$rand_val,'i',2))
       {
-         if (snmpset($switch,$snmp_rw,$write_command['destination'].'.'.$rand_val,'i',1))
+         if (@snmpset($switch,$snmp_rw,$write_command['destination'].'.'.$rand_val,'i',1))
          {
             if (snmpset($switch,$snmp_rw,$write_command['execute'].'.'.$rand_val,'i',4))
                $written++;
@@ -212,14 +222,15 @@ while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
    }
    if ($ios&&!$written)
    {
-      $logger->logit( "\tCouldn't save current configuration to switch $switch\n\n");
+      $logger->logit( "\tCouldn't save current configuration to switch $switch. Does this switch support a RW community?\n\n");
    }
+   $affected_ports+=$counter;
 }
 fclose($file);
 if ($j==1)
 {
    $total_db=v_sql_1_select("select count(*) from port where auth_profile='2';");
-   $string="Switches in total: $total_switches\tPorts affected: $total_ports out of $total_ports\tNumber of ports to be affected (from db): $total_db";
+   $string="Switches in total: $total_switches\tPorts affected: $affected_ports out of $total_ports\tNumber of ports to be affected (from db): $total_db";
    $logger->logit( "$string\n");
    $logger->setLogToStdOut(false);
    $logger->logit($string);
