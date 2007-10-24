@@ -52,7 +52,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    if ($row['port'] && $row['switch'])
    {
       #Get its snmp_port_index
-      $port_index=get_snmp_port_index($row['port'],$row['switch']);
+      $port_index=get_snmp_port_index($row['switch'], $row['port']);
       $switch = $row['switch'];
       $port = $row['port'];
       #And try to turn it off

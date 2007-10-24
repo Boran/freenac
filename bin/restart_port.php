@@ -119,16 +119,16 @@ switch($j)
 $logger->debug("Port $port on $switch");
 $logger->logit("Port restart try: $port on switch $switch");
 
-$port_index=get_snmp_port_index($port,$switch);					//Get the index
+$port_index=get_snmp_port_index($switch, $port);					//Get the index
 if (!$port_index)
 {
    $logger->logit("Port not found on switch");
    exit(1);
 }
 
-if (turn_off_port($port_index))
+if (turn_off_port($switch, $port, $port_index))
 {
-   if (turn_on_port($port_index))
+   if (turn_on_port($switch, $port, $port_index))
    {
       $logger->logit("Port successfully restarted $port on switch $switch");
       log2db('info',"Port successfully restarted $port on switch $switch");

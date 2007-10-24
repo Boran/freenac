@@ -148,7 +148,11 @@ if ($dynamic)					//Configure port to be used with VMPS
 {
    if (set_port_as_dynamic($switch, $port))
    {
-      log2db('info', "Port $port on switch $switch successfully set to dynamic.");
+      $string="Port $port on switch $switch successfully set to dynamic.";
+      log2db('info', $string);
+      $logger->setLogToStdOut(false);
+      $logger->logit($string);
+      $logger->setLogToStdOut(true);
    }
    else
    {
@@ -159,7 +163,11 @@ else if ($static)							//Configure as static
 {
   if (set_port_as_static($switch,$port,$static_vlan))
   {
-     log2db('info',"Port $port successfully set to static with VLAN $static_vlan.");
+     $string="Port $port successfully set to static with VLAN $static_vlan.";
+     log2db('info',$string);
+     $logger->setLogToStdOut(false);
+     $logger->logit($string);
+     $logger->setLogToStdOut(true);
   }
   else
   {

@@ -40,6 +40,7 @@ function __autoload($classname)
 * Get configuration variables from config file
 */
 require_once 'etc/config.inc';
+require_once 'bin/snmp_defs.inc.php';
 
 /**
 * @global object $conf		Contains configuration parameters from the config table
@@ -88,17 +89,33 @@ function get_last_index($oid)
 * @param mixed	$port_index		Port index according to SNMP
 * @return boolean			True if port was successfully switched on, false otherwise
 */
-function turn_on_port($port_index)                                             
+function turn_on_port($switch,$port,$port_index=false)                                             
 {
-   global $switch,$snmp_rw,$snmp_port,$logger;
-
-   $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
-   if (!snmpset($switch,$snmp_rw,$oid,'i',1))
+   global $snmp_rw,$snmp_port,$logger;
+   if ($switch && $port)
    {
-      $logger->logit("Could not turn on $switch port index $port_index");
+      if ( ! $port_index)
+      {
+         if ( ! $port_index = get_snmp_port_index($switch, $port))
+         {
+            return false;
+         }
+      }
+      $oid=$snmp_port['ad_status'].'.'.$port_index;
+      if (!snmpset($switch,$snmp_rw,$oid,'i',1))
+      {
+         $logger->logit("Could not turn on $switch port index $port_index");
+         return false;
+      }
+      else 
+      {
+         return true;
+      }
+   }
+   else
+   {
       return false;
    }
-   else return true;
 }
 
 /**
@@ -107,25 +124,26 @@ function turn_on_port($port_index)
 * @param mixed $switch	Switch to ask
 * @return mixed		Port index if found, false otherwise
 */
-function get_snmp_port_index($port,$switch)
+function get_snmp_port_index($switch,$port)
 {
-   global $snmp_rw;
-   $ports_on_switch=snmprealwalk($switch,$snmp_rw,'1.3.6.1.2.1.31.1.1.1.1');       //Get the list of ports on the switch
-   if (empty($ports_on_switch))
+   if ($switch && $port)
    {
-      $logger->logit( "ABORTED: Could not contact switch $switch or unknown Switch.\n");
-      return false;
-   }
-   $ports_on_switch=array_map("remove_type",$ports_on_switch);             //We are only interested in the string
-   $port_oid=array_search($port,$ports_on_switch);                         //Is the port in this switch?
-   if (empty($port_oid))
-   {
-      $logger->logit( "Port $port not found on switch $switch\n");
-      log2db('info',"Port $port not found on switch $switch");
-      return false;
-   }
+      if ( ! $ports_on_switch = ports_on_switch($switch) )              //Get the list of ports on the switch
+      {
+         return false;       	                                   # Error handling in ports_on_switch
+      }
 
-   return get_last_index($port_oid);
+      if ( ! $snmp_port_index = get_snmp_index($port,$ports_on_switch))                   //Get port's index
+      {
+         $logger->logit("Port $port not found on switch $switch");
+         return false;
+      }
+      return $snmp_port_index;
+   }
+   else
+   {
+      return false;
+   }
 }
 
 
@@ -134,16 +152,33 @@ function get_snmp_port_index($port,$switch)
 * @param mixed  $port_index             Port index according to SNMP
 * @return boolean                       True if port was successfully switched off, false otherwise
 */
-function turn_off_port($port_index)                                            
+function turn_off_port($switch, $port, $port_index=false)                                            
 {
-   global $switch,$snmp_rw,$snmp_port,$logger;
-   $oid='1.3.6.1.2.1.2.2.1.7'.'.'.$port_index;
-   if (!snmpset($switch,$snmp_rw,$oid,'i',2))
+   global $snmp_rw,$snmp_port,$logger;
+   if ($switch && $port)
    {
-      $logger->logit("\tCouldn't shut down port $port.\n");
+      if ( ! $port_index)
+      {
+         if ( ! $port_index = get_snmp_port_index($switch, $port))
+         {
+            return false; 
+         }
+      }
+      $oid=$snmp_port['ad_status'].'.'.$port_index;
+      if (!snmpset($switch,$snmp_rw,$oid,'i',2))
+      {
+         $logger->logit("Couldn't shut down port $port.");
+         return false;
+      }
+      else 
+      {
+         return true;
+      }
+   }
+   else
+   {
       return false;
    }
-   else return true;
 }
 
 /**
@@ -822,14 +857,21 @@ function mysql_affected_rows2($linkid = null)
 function ports_on_switch($switch)
 {
    global $logger, $snmp_rw, $snmp_if;
-   $ports_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_if['name']);        //Get the list of ports on the switch
-   if (empty($ports_on_switch))
+   if ($switch)
    {
-      $logger->logit("Couldn't establish communication with $switch with the defined parameters.");
+      $ports_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_if['name']);        //Get the list of ports on the switch
+      if (empty($ports_on_switch))
+      {
+         $logger->logit("Couldn't establish communication with $switch with the defined parameters.");
+         return false;
+      }
+      $ports_on_switch=array_map("remove_type",$ports_on_switch);               //We are only interested in the value
+      return $ports_on_switch;
+   }
+   else
+   {
       return false;
    }
-   $ports_on_switch=array_map("remove_type",$ports_on_switch);               //We are only interested in the value
-   return $ports_on_switch;
 }
 
 function vlans_on_switch($switch)
@@ -856,26 +898,23 @@ function get_snmp_index($what, $where)
    return $what_index;
 }
 
-function set_port_as_dynamic($switch,$port)
+function set_port_as_dynamic($switch,$port, $snmp_port_index=false)
 {
    global $snmp_rw, $snmp_port, $logger;
-   if ( ! $ports_on_switch = ports_on_switch($switch) )              //Get the list of ports on the switch
+   if (! $snmp_port_index)
    {
-      return false;                                             # Error handling in ports_on_switch
+      if ( ! $snmp_port_index = get_snmp_port_index($switch, $port))                   //Get port's index
+      {
+         return false;
+      }
    }
 
-   if ( ! $snmp_port_index = get_snmp_index($port,$ports_on_switch))                   //Get port's index
-   {
-      $logger->logit("Port $port not found on switch $switch\n");
-      return false;
-   }
-
-   if (turn_off_port($snmp_port_index))                                           //Shut down port to configure it
+   if (turn_off_port($switch, $port, $snmp_port_index))                                           //Shut down port to configure it
    {
       $oid=$snmp_port['type'].'.'.$snmp_port_index;
       if (snmpset($switch,$snmp_rw,$oid,'i',2))                                   //Set port to dynamic
       {
-         if (turn_on_port($snmp_port_index))                                      //Done, turn it on
+         if (turn_on_port($switch, $port, $snmp_port_index))                                      //Done, turn it on
          {
             $logger->logit("Port $port on switch $switch successfully set to dynamic.");
             return true;
@@ -899,18 +938,15 @@ function set_port_as_dynamic($switch,$port)
    }
 }
 
-function set_port_as_static($switch, $port, $vlan)
+function set_port_as_static($switch, $port, $vlan,$snmp_port_index=false)
 {
    global $snmp_rw, $snmp_port, $snmp_if, $logger;
-   if ( ! $ports_on_switch = ports_on_switch($switch) )              //Get the list of ports on the switch
+   if (! $snmp_port_index)
    {
-      return false;						# Error handling in ports_on_switch
-   }
-
-   if ( ! $snmp_port_index = get_snmp_index($port,$ports_on_switch))                   //Get port's index
-   {
-      $logger->logit("Port $port not found on switch $switch");
-      return false;
+      if ( ! $snmp_port_index = get_snmp_port_index($switch, $port))                   //Get port's index
+      {
+         return false;
+      }
    }
 
    if ( ! $vlans_on_switch=vlans_on_switch($switch))                            //Lookup of VLANs in the switch
@@ -924,7 +960,7 @@ function set_port_as_static($switch, $port, $vlan)
       return false;
    }
    
-   if (turn_off_port($snmp_port_index))                                      //Shut down port to configure it
+   if (turn_off_port($switch, $port, $snmp_port_index))                                      //Shut down port to configure it
    {
       $oid=$snmp_port['type'].'.'.$snmp_port_index;
       if (snmpset($switch,$snmp_rw,$oid,'i',1))                              //Set port to static
@@ -932,7 +968,7 @@ function set_port_as_static($switch, $port, $vlan)
          $oid=$snmp_if['vlan'].'.'.$snmp_port_index;
          if (snmpset($switch,$snmp_rw,$oid,'i',$snmp_vlan_index))                       //And set the VLAN on that port
          {
-            if (turn_on_port($snmp_port_index))                                           //Done, turn it on
+            if (turn_on_port($switch, $port, $snmp_port_index))                                           //Done, turn it on
             {
                $logger->logit("Port $port on switch $switch successfully set to static with vlan $vlan");
                return true;

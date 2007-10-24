@@ -24,7 +24,7 @@
 
 require_once 'funcs.inc.php';
 
-$logger->setDebugLevel(1);
+$logger->setDebugLevel(0);
 $logger->setLogToStdOut();
 
 $query=<<<EOF
@@ -53,18 +53,17 @@ if (!$res)
 while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
 {
    # Check if we have a port name and a switch ip
+   $dont_restart=0;
    if ($row['port'] && $row['switch'])
    {
       #Get its snmp_port_index
-      $port_index=get_snmp_port_index($row['port'],$row['switch']);
+      $port_index=get_snmp_port_index($row['switch'],$row['port']);
 
       ## Program ports as static or dynamic
       if (($row['auth_profile']=='1') && ($row['vlan']))
       {
-         #Program port as static
-         $command="./snmp_set_port.php {$row['switch']} {$row['port']} -s {$row['vlan']}";
-         $logger->logit($command);
-         syscall($command);
+         set_port_as_static($row['switch'], $row['port'], $row['vlan'], $port_index);
+         $dont_restart++;
          //$query="UPDATE port SET auth_profile='2' WHERE id='{$row['id']}';";
          //$logger->debug($query, 3); 
          //$result = mysql_query($query); 
@@ -75,19 +74,18 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       }
       else if ($row['auth_profile']=='2')
       {
-         #Program port as dynamic. 
-         $command="./snmp_set_port.php {$row['switch']} {$row['port']} -d";
-         $logger->logit($command);
-         syscall($command);
+         set_port_as_dynamic($row['switch'], $row['port'], $port_index);
+         $dont_restart++;
       }
 
       # Shut down the port
       if ($row['shutdown'])
       {
          #Try to turn it off
-         if (turn_off_port($port_index))
+         if (turn_off_port($row['switch'], $row['port'], $port_index))
          {
             $string="Port {$row['port']} on switch {$row['switch']} was successfully shutdown";
+            $dont_restart++;
             //$query = "UPDATE port SET shutdown='0' WHERE id = '{$row['id']}';";
             //$logger->debug($query, 3);
             //$result = mysql_query($query);
@@ -105,11 +103,11 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       }
 
       #Restart port
-      if ($row['restart_now'])
+      if ( ! $dont_restart)
       {
-         if (turn_off_port($port_index))
+         if (turn_off_port($row['switch'], $row['port'], $port_index))
          {
-            if (turn_on_port($port_index))
+            if (turn_on_port($row['switch'], $row['port'], $port_index))
             {
                $logger->logit("Port successfully restarted {$row['port']} on switch {$row['switch']}");
                log2db('info',"Port successfully restarted {$row['port']} on switch {$row['switch']}");
