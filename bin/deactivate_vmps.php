@@ -1,7 +1,7 @@
 #!/usr/bin/php -- -f
 <?
 /**
- * enterprise/deactivate_vmps
+ * bin/deactivate_vmps.php
  *
  * Long description for file:
  *
@@ -11,7 +11,7 @@
  *      Catalyst 2940 (IOS), 3560 (IOS), 2948 (CatOS)
  *
  * USAGE :
- *     	deactivate_vmps [switches...]
+ *     	deactivate_vmps.php [switches...]
  *
  * PHP version 5
  *
@@ -39,7 +39,7 @@ $logger->setLogToStdOut();
 function print_usage($code)
 {
    $usage=<<<EOF
-USAGE: deactivate_vmps [switches...] [OPTIONS]
+USAGE: deactivate_vmps.php [switches...] [OPTIONS]
 
         Web:      http://www.freenac.net/
         Email:    opennac-devellists.sourceforge.net
