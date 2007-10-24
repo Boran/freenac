@@ -311,7 +311,7 @@ function syscall($command){
 */
 function remove_type($element)                          
 {
-   return trim(substr($element,strpos($element,':')+1,strlen($element)));
+   return trim(trim(substr($element,strpos($element,':')+1,strlen($element))),'"');
 }
 
 /**
