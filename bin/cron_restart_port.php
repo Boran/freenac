@@ -27,6 +27,17 @@ require_once 'funcs.inc.php';
 $logger->setDebugLevel(0);
 $logger->setLogToStdOut(false);
 
+$file_name='cron_restart_port.pid';
+#Check for PID file
+if (file_exists($file_name))
+{
+   $logger->logit("A previous instance of cron_restart_port.php is still running.");
+   exit(1);
+}
+#Create PID file
+$file=fopen($file_name,'w') or die("Can't write PID file");
+fclose($file);
+
 $query=<<<EOF
 SELECT p.id, 
    p.name AS port, 
@@ -49,8 +60,11 @@ $res=mysql_query($query);
 if (!$res)
 {
    $logger->logit(mysql_error());
+   #Delete PID file
+   unlink($file_name);
    exit(1);
 }
+
 
 while ($row = mysql_fetch_array($res, MYSQL_ASSOC))
 {
@@ -60,7 +74,11 @@ while ($row = mysql_fetch_array($res, MYSQL_ASSOC))
 
 #No ports have restart_now=1;
 if ( ! $switch_ports)
+{
+   #Delete PID file
+   unlink($file_name);
    exit();
+}
 
 foreach ($switch_ports as $switch => $properties)
 {
@@ -151,4 +169,6 @@ if ( mysql_num_rows($res) )
    }
 }
 
+#Delete PID file
+unlink($file_name);
 ?>
