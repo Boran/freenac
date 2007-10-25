@@ -24,8 +24,8 @@
 
 require_once 'funcs.inc.php';
 
-$logger->setDebugLevel(0);
-$logger->setLogToStdOut(false);
+$logger->setDebugLevel(3);
+$logger->setLogToStdOut(true);
 
 $file_name='cron_restart_port.pid';
 #Check for PID file

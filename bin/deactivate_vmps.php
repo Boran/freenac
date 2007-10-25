@@ -1,4 +1,4 @@
-#!/usr/bin/php -- -f
+#!/usr/bin/php 
 <?
 /**
  * bin/deactivate_vmps.php
@@ -38,6 +38,7 @@ $logger->setLogToStdOut();
 
 function print_usage($code)
 {
+   global $logger;
    $usage=<<<EOF
 USAGE: deactivate_vmps.php [switches...] [OPTIONS]
 
