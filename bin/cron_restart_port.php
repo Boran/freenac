@@ -25,7 +25,7 @@
 require_once 'funcs.inc.php';
 
 $logger->setDebugLevel(0);
-$logger->setLogToStdOut();
+$logger->setLogToStdOut(false);
 
 $query=<<<EOF
 SELECT p.id, 
