@@ -36,10 +36,10 @@ SELECT p.id,
    p.restart_now,
    v.default_name AS vlan 
    FROM port p 
+   LEFT JOIN vlan v
+   ON p.staticvlan=v.id
    INNER JOIN switch s 
    ON p.switch=s.id 
-   INNER JOIN vlan v 
-   ON p.staticvlan=v.id
    WHERE p.restart_now=1;
 EOF;
 $logger->debug($query, 3);
@@ -64,13 +64,6 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       {
          set_port_as_static($row['switch'], $row['port'], $row['vlan'], $port_index);
          $dont_restart++;
-         //$query="UPDATE port SET auth_profile='2' WHERE id='{$row['id']}';";
-         //$logger->debug($query, 3); 
-         //$result = mysql_query($query); 
-         //if ( ! $result)
-         //{
-         //   $logger->logit(mysql_error(), LOG_ERROR);
-         //}
       }
       else if ($row['auth_profile']=='2')
       {
@@ -86,13 +79,6 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
          {
             $string="Port {$row['port']} on switch {$row['switch']} was successfully shutdown";
             $dont_restart++;
-            //$query = "UPDATE port SET shutdown='0' WHERE id = '{$row['id']}';";
-            //$logger->debug($query, 3);
-            //$result = mysql_query($query);
-            //if ( ! $result)
-            //{
-            //   $logger->logit(mysql_error(), LOG_ERROR);
-            //}
          }
          else
          {
