@@ -139,7 +139,7 @@ foreach ($switch_ports as $switch => $properties)
    }
 }
 
-/*if ( mysql_num_rows($res) )
+if ( mysql_num_rows($res) )
 {
    # Ok, we are done, reset the restart_now flag, for ALL ports
    $query = "UPDATE port SET restart_now=0;";
@@ -149,6 +149,6 @@ foreach ($switch_ports as $switch => $properties)
    {
       $logger->logit(mysql_error(),LOG_ERROR);
    }
-}*/
+}
 
 ?>
