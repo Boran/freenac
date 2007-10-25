@@ -912,11 +912,12 @@ function set_port_as_dynamic($switch,$port, $snmp_port_index=false)
    if (turn_off_port($switch, $port, $snmp_port_index))                                           //Shut down port to configure it
    {
       $oid=$snmp_port['type'].'.'.$snmp_port_index;
-      if (snmpset($switch,$snmp_rw,$oid,'i',2))                                   //Set port to dynamic
+      if (@snmpset($switch,$snmp_rw,$oid,'i',2))                                   //Set port to dynamic
       {
          if (turn_on_port($switch, $port, $snmp_port_index))                                      //Done, turn it on
          {
             $logger->logit("Port $port on switch $switch successfully set to dynamic.");
+            log2db('info',"Port $port on switch $switch successfully set to dynamic.");
             return true;
          }
          else
@@ -927,7 +928,8 @@ function set_port_as_dynamic($switch,$port, $snmp_port_index=false)
       }
       else
       {
-         $logger->logit("A communication problem with $switch occurred");
+         $logger->logit("A communication problem with $switch occurred. Maybe $port is a trunk port?");
+         turn_on_port($switch, $port, $snmp_port_index);
          return false;
       }
    }
@@ -971,6 +973,7 @@ function set_port_as_static($switch, $port, $vlan,$snmp_port_index=false)
             if (turn_on_port($switch, $port, $snmp_port_index))                                           //Done, turn it on
             {
                $logger->logit("Port $port on switch $switch successfully set to static with vlan $vlan");
+               log2db('info',"Port $port on switch $switch successfully set to static with vlan $vlan");
                return true;
             }
             else
