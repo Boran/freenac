@@ -24,7 +24,7 @@
 
 require_once 'funcs.inc.php';
 
-$logger->setDebugLevel(3);
+$logger->setDebugLevel(0);
 $logger->setLogToStdOut();
 
 $query=<<<EOF
