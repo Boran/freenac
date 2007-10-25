@@ -1,11 +1,11 @@
 #!/usr/bin/php -f
-<?php
+<?
 /**
- * /opt/nac/bin/cron_restart_port
+ * /opt/nac/bin/cron_program_port.php
  *
  * Long description for file:
- * Go though the port table and check for the restart flag, and 
- * restart the ports via SNMP (if this option is enabled in config.inc)
+ * Go through the port table and check for the program flag, and
+ * program the ports via SNMP 
  *
  * PHP version 5
  *
@@ -13,57 +13,142 @@
  * modify it under the terms of the GNU General Public License as published
  * by the Free Software Foundation.
  *
- * @package			FreeNAC
- * @author			Sean Boran (FreeNAC Core Team)
- * @copyright		2006 FreeNAC
- * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- * @version			SVN: $Id$
- * @link				http://www.freenac.net
+ * @package                     FreeNAC
+ * @author                      Hector Ortiz (FreeNAC Core Team)
+ * @copyright           	2007 FreeNAC
+ * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version                     SVN: $Id$
+ * @link                                http://www.freenac.net
  *
  */
 
 require_once 'funcs.inc.php';
 
-$logger->setDebugLevel(0);
-#$logger->setLogToStdErr();
+$logger->setDebugLevel(3);
+$logger->setLogToStdOut();
 
-#####-- functions
-
-function restart_port($switch, $port) {
-  global $conf;
-  if ($conf->check_port_restart) {
-     $answer=syscall("php restart_port.php $port $switch");
-     #logit($answer);
-     debug1($answer);
-  }
+$query=<<<EOF
+SELECT p.id, 
+   p.name AS port, 
+   s.ip AS switch, 
+   s.name AS switch_name,
+   p.auth_profile, 
+   p.shutdown,
+   p.restart_now,
+   v.default_name AS vlan 
+   FROM port p 
+   LEFT JOIN vlan v
+   ON p.staticvlan=v.id
+   INNER JOIN switch s 
+   ON p.switch=s.id 
+   WHERE p.restart_now=1
+   ORDER BY s.ip ASC;
+EOF;
+$logger->debug($query, 3);
+$res=mysql_query($query);
+if (!$res)
+{
+   $logger->logit(mysql_error());
+   exit(1);
 }
 
+while ($row = mysql_fetch_array($res, MYSQL_ASSOC))
+{
+   foreach ($row as $k => $v)
+      $switch_ports[$row['switch']][$k][]=$v;
+}
 
-#####-- main() -------
+#No ports have restart_now=1;
+if ( ! $switch_ports)
+   exit();
 
-## Connect to DB
-  db_connect();
+foreach ($switch_ports as $switch => $properties)
+{
+   #Retrieve the list of ports from the switch. If we don't get it, go to the next switch
+   if ( ! $ports_on_switch =  ports_on_switch($switch))
+      continue;
+   for ($i=0; $i<count($properties['port']); $i++)
+   {
+      $port = $properties['port'][$i];
+      $dont_restart=0;
+      #If we have an empty port name, go to the next one
+      if (! $port)
+         continue;
+      #Get the index for this port
+      $port_index = get_snmp_index($port, $ports_on_switch);
+      if (! $port_index)
+         continue;
+ 
+      ## Check if it is not a trunk port
+      if ($properties['auth_profile'][$i] == '3')
+      {
+         $logger->logit("Port $port on switch $switch({$properties['switch_name'][$i]}) is a trunk port and cannot be programmed");
+         continue;
+      }
+      ## Program port as static or dynamic
+      else if (($properties['auth_profile'][$i] == '1') && ($properties['vlan'][$i]))
+      {
+         set_port_as_static($switch, $port, $properties['vlan'][$i], $port_index);
+         $dont_restart++;
+      }
+      else if ($properties['auth_profile'][$i] == '2')
+      {
+         set_port_as_dynamic($switch, $port, $port_index);
+         $dont_restart++;
+      }
 
-debug1("cron_restart_port");
+      # Shut down the port
+      if ($properties['shutdown'][$i])
+      {
+         #Try to turn it off
+         if (turn_off_port($switch, $port, $port_index))
+         {
+            $string="Port $port on switch $switch({$properties['switch_name'][$i]}) was successfully shutdown";
+            $dont_restart++;
+         }
+         else
+         {
+            $string="Port $port on switch $switch({$properties['switch_name'][$i]}) could not be shutdown";
+         }
+         $logger->logit($string);
+         log2db('info', $string);
+      }
 
-#$query="SELECT switch,name,comment FROM port WHERE restart_now='1'";
-$query="SELECT switch.name as switchname, switch.ip as switchip,port.name,port.comment FROM port INNER JOIN switch on port.switch=switch.id WHERE restart_now='1'";
-  $res = mysql_query($query);
-  if (!$res) { die('Invalid query: ' . mysql_error()); }
+      #Restart port
+      if ( ! $dont_restart)
+      {
+         if (turn_off_port($switch, $port, $port_index))
+         {
+            if (turn_on_port($switch, $port, $port_index))
+            {
+               $string="Port $port successfully restarted on switch $switch({$properties['switch_name'][$i]})";
+            }
+            else
+            {
+               $string="Port $port on switch $switch({$properties['switch_name'][$i]}) couldn't be restarted";
+            }
+         }
+         else
+         {
+            $string="Port $port on switch $switch({$properties['switch_name'][$i]}) couldn't be restarted";
+         }
+         $logger->logit($string);
+         log2db('info',$string);
+      }
+   
+   }
+}
 
-  while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
-    logit(            "restart_port switch $line[0] $line[1], $line[2], $line[3], $line[4]");
-    log2db('info', "restart_port switch $line[0] $line[1], $line[2], $line[3], $line[4]");
-    #$switch=v_sql_1_select("select ip from switch where id='$line[0]'");
-    $switch=$line[1];
-    restart_port($switch, $line[2]);
-  }
+if ( mysql_num_rows($res) )
+{
+   # Ok, we are done, reset the restart_now flag, for ALL ports
+   $query = "UPDATE port SET restart_now=0;";
+   $logger->debug($query, 3);
+   $result = mysql_query($query);
+   if ( ! $result)
+   {
+      $logger->logit(mysql_error(),LOG_ERROR);
+   }
+}
 
-# Now reset the flag, since its done
-$query="UPDATE port SET restart_now='0' ";
-  debug1($query);
-  $res2 = mysql_query($query, $connect);
-  if (!$res2) { die('Invalid query: ' . mysql_error()); }
-
-mysql_close($connect);
 ?>
