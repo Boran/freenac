@@ -361,7 +361,7 @@ EOF;
          if ($this->isExpired() && $this->conf->disable_expired_devices)
          {
             #If so, set its state to 'killed'
-            $query="UPDATE systems SET LastSeen=NOW(), status=7, LastPort={$this->port_id}, health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
+            $query="UPDATE systems SET LastSeen=NOW(), email_on_connect='', status=7, LastPort={$this->port_id}, health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
             $string="Note: Expired device {$this->hostname}({$this->mac}) has been refused network access and its status has been set to killed. Expiration date: {$this->expiry}";
             $this->logger->logit($string);
             log2db('info',$string);
@@ -369,13 +369,13 @@ EOF;
          else
          {
             #Normal case, update lastseen, lastport and lastvlan
-            $query="UPDATE systems SET LastSeen=NOW(), LastPort={$this->port_id}, health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
+            $query="UPDATE systems SET LastSeen=NOW(), LastPort={$this->port_id}, email_on_connect='', health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
          }
          $this->logger->debug($query,3);
          $res=mysql_query($query);
          if ($res)
          {
-            $this->logger->debug("Note: End device {$this->mac}({$this->hostname}) has been updated");
+            $this->logger->logit("Note: End device {$this->mac}({$this->hostname}) has been updated");
             return "{$this->mac}({$this->hostname})";
          }
          else

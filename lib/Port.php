@@ -398,7 +398,7 @@ EOF;
          $res=mysql_query($query);
          if ($res)
          {
-            $this->logger->debug("Note: Port {$this->port_name} {$this->switch_ip}({$this->switch_name}) has been updated");
+            $this->logger->logit("Note: Port {$this->port_name} {$this->switch_ip}({$this->switch_name}) has been updated");
             return "{$this->port_name} {$this->switch_ip}({$this->switch_name})";
          }
          else

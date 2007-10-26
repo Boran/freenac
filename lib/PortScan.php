@@ -138,6 +138,21 @@ EOF;
          return false;
       }
    }
+
+   public function scan()
+   {
+      $query="UPDATE systems SET scannow='1' where id='{$this->sid}';";
+      $res = mysql_query($query);
+      if ($res)
+      {
+         return true;
+      }
+      else
+      {
+         $this->logger->logit(mysql_error(),LOG_ERROR);
+         return false;
+      }
+   }
 }
 
 ?>
