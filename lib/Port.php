@@ -391,6 +391,39 @@ EOF;
    */
    public function update()
    {
+      #Check if function was called from inside postconnect, if not, stop further processing
+      $backtrace = debug_backtrace();
+      $do_nothing=0;
+      if (strcasecmp($backtrace[2]['class'],'CallWrapper')==0)
+      {
+         if (strcasecmp($backtrace[4]['function'],'postconnect')!=0)
+         {
+            $this->logger->logit("Update method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting updating",LOG_WARNING);
+            return false;
+         }
+         else
+         {
+            $do_nothing++;
+         }
+      }
+      else if (strcasecmp($backtrace[0]['class'],'Port')==0)
+      {
+         if (strcasecmp($backtrace[1]['function'],'postconnect')!=0)
+         {
+            $this->logger->logit("Update method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting updating",LOG_WARNING);
+            return false;
+         }
+         else
+         {
+            $do_nothing++;
+         }
+      }
+      else
+      {
+         $this->logger->logit("Update method can only be called from a postconnect method, condition not met, aborting updating",LOG_WARNING);
+         return false;
+      }
+
       if ($this->isPortInDB())
       {
          $query="UPDATE port SET last_activity=NOW(), last_vlan='{$this->last_vlan}' WHERE id='{$this->port_id}'";
