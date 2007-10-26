@@ -1,4 +1,4 @@
-#!/usr/bin/php -f 
+#!/usr/bin/php  
 <?
 /**
  * bin/ping_switch.php
@@ -37,6 +37,55 @@ require_once "bin/snmp_defs.inc.php";
 $logger->setDebugLevel(0);       // 0=errors only, 1=medium, 3=queries
 $logger->setLogToStdOut(false);
 
+//
+//------------------------------------------ Functions ------------------------------------------------
+//
+
+function print_usage($code)
+{
+   global $logger;
+   $usage=<<<EOF
+USAGE: ping_switch.php switch1 switch2 ... [OPTIONS]
+
+        Web:      http://www.freenac.net/
+        Email:    opennac-devel@lists.sourceforge.net
+
+DESCRIPTION: Ping switch ports to know if they are up or down.
+
+OPTIONS:
+        -h              Display this help screen
+
+EOF;
+   $logger->logit( $usage);
+   exit($code);
+}
+
+if ($argc!=1)
+   $options=getopt("h");
+if ($options)
+{
+   if (array_key_exists('h',$options))
+      print_usage(0);
+}
+
+//
+//Take parameters off the command line
+//
+
+$j=0;
+for ($i=0;$i<$argc;$i++)
+{
+   switch($argv[$i])
+   {
+      case '-h':
+         break;
+      default:
+         $command_line[$j]=$argv[$i];
+         $j++;
+         break;
+   }
+}
+
 // allow performance measurements
 $mtime = microtime();
 $mtime = explode(" ",$mtime);
@@ -48,7 +97,17 @@ $starttime = $mtime;
 db_connect();
 
 #Look up the switches in the database
-$query = "SELECT id, ip, name, hw, sw FROM switch WHERE scan='1'";
+if ($argc == 1) 
+   $query = "SELECT id, ip, name, hw, sw FROM switch WHERE scan='1'";
+else
+{
+   $query = "SELECT id, ip, name, hw, sw FROM switch WHERE scan='1' AND";
+   for ($i=1; $i<$j; $i++)
+   if ($i==1)
+      $query.=" ip='{$command_line[$i]}' OR name='{$command_line[$i]}'";
+   else
+      $query.=" OR ip='{$command_line[$i]}' OR name='{$command_line[$i]}'";
+}
 $logger->debug($query,2);
 $res = mysql_query($query);
 if (!$res)
@@ -92,7 +151,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       $logger->logit(mysql_error(),LOG_ERROR);
       continue;
    }
-   
+   $ports_up = 0; 
    while ($port_row = mysql_fetch_array($result, MYSQL_ASSOC))
    {
       $port_id = $port_row['id'];
@@ -120,10 +179,13 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       {
          $logger->logit(mysql_error(), LOG_ERROR);
       }
-      
+      $ports_up++;
    }
    # Update switch's last_monitored
-   $query = "UPDATE switch set up=1, last_monitored=NOW() where id='$switch_id';";
+   if ($ports_up)
+      $query = "UPDATE switch set up=1, last_monitored=NOW() where id='$switch_id';";
+   else
+      $query = "UPDATE switch set up=2, last_monitored=NOW() where id='$switch_id';";
    $logger->debug($query,2);
    $final = mysql_query($query);
    if (! $final)
