@@ -103,7 +103,7 @@ function turn_on_port($switch,$port,$port_index=false)
          }
       }
       $oid=$snmp_port['ad_status'].'.'.$port_index;
-      $logger->debug("Setting $oid to 1 in $switch",3);
+      $logger->debug("Setting $oid to 1 in $switch (Turning on)",3);
       if (!snmpset($switch,$snmp_rw,$oid,'i',1))
       {
          $logger->logit("Could not turn on $switch port index $port_index");
@@ -168,7 +168,7 @@ function turn_off_port($switch, $port, $port_index=false)
          }
       }
       $oid=$snmp_port['ad_status'].'.'.$port_index;
-      $logger->debug("Setting $oid to 2 in $switch",3);
+      $logger->debug("Setting $oid to 2 in $switch (Turning off)",3);
       if (!snmpset($switch,$snmp_rw,$oid,'i',2))
       {
          $logger->logit("Couldn't shut down port $port.");
@@ -872,8 +872,8 @@ function ports_on_switch($switch)
          return false;
       }
       $ports_on_switch=array_map("remove_type",$ports_on_switch);               //We are only interested in the value
-      $logger->debug(print_r($ports_on_switch),3);
-      return $ports_on_switch;
+      $logger->debug(print_r($ports_on_switch,true),3);
+     return $ports_on_switch;
    }
    else
    {
@@ -893,7 +893,7 @@ function vlans_on_switch($switch)
      return false;
    }
    $vlans_on_switch=array_map("remove_type",$vlans_on_switch);
-   $logger->debug(print_r($vlans_on_switch),3);
+   $logger->debug(print_r($vlans_on_switch,true),3);
    return $vlans_on_switch;
 }
 
@@ -924,7 +924,7 @@ function set_port_as_dynamic($switch,$port, $snmp_port_index=false)
    {
       $oid=$snmp_port['type'].'.'.$snmp_port_index;
       $logger->debug("Setting $oid to 2 in $switch (dynamic)",3);
-      if (@snmpset($switch,$snmp_rw,$oid,'i',2))                                   //Set port to dynamic
+      if (snmpset($switch,$snmp_rw,$oid,'i',2))                                   //Set port to dynamic
       {
          if (turn_on_port($switch, $port, $snmp_port_index))                                      //Done, turn it on
          {
