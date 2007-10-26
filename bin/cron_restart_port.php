@@ -1,4 +1,4 @@
-#!/usr/bin/php -f
+#!/usr/bin/php 
 <?
 /**
  * /opt/nac/bin/cron_program_port.php
@@ -145,6 +145,7 @@ foreach ($switch_ports as $switch => $properties)
       {
          if (turn_off_port($switch, $port, $port_index))
          {
+            turn_off_port($switch, $port, $port_index); 	#CatOS issues?
             if (turn_on_port($switch, $port, $port_index))
             {
                $string="Port $port successfully restarted on switch $switch({$properties['switch_name'][$i]})";
