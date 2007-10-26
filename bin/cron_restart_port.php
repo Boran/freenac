@@ -24,8 +24,8 @@
 
 require_once 'funcs.inc.php';
 
-$logger->setDebugLevel(3);
-$logger->setLogToStdOut(true);
+$logger->setDebugLevel(0);
+$logger->setLogToStdOut(false);
 
 $file_name='cron_restart_port.pid';
 #Check for PID file
@@ -85,6 +85,10 @@ foreach ($switch_ports as $switch => $properties)
    #Retrieve the list of ports from the switch. If we don't get it, go to the next switch
    if ( ! $ports_on_switch =  ports_on_switch($switch))
       continue;
+   #Retrieve vlan membership type for the switch ports
+   if ( ! $vm_type = vm_type($switch))
+      continue;
+
    for ($i=0; $i<count($properties['port']); $i++)
    {
       $port = $properties['port'][$i];
@@ -111,8 +115,12 @@ foreach ($switch_ports as $switch => $properties)
       }
       else if ($properties['auth_profile'][$i] == '2')
       {
-         set_port_as_dynamic($switch, $port, $port_index);
-         $dont_restart++;
+         #Check if the port is static. If it is, program it, otherwise, don't do anything (CatOS issues)?
+         if (array_find_key($port_index, $vm_type, '.', 1) == '1')
+         {
+            set_port_as_dynamic($switch, $port, $port_index);
+            $dont_restart++;
+         }
       }
 
       # Shut down the port

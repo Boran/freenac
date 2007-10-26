@@ -881,20 +881,50 @@ function ports_on_switch($switch)
    }
 }
 
+function vm_type($switch)
+{
+   global $logger, $snmp_rw, $snmp_port;
+   if ($switch)
+   {
+      $logger->debug("Retrieving vlan membership types on $switch",2);
+      $logger->debug("Sending {$snmp_port['type']} to $switch",3);
+      $vm_type=@snmprealwalk($switch, $snmp_rw, $snmp_port['type']);
+      if (empty($vm_type))
+      {
+         $logger->logit( "Couldn't establish communication with $switch with the defined parameters");
+         return false;
+      }
+      $vm_type=array_map("remove_type",$vm_type);
+      $logger->debug(print_r($vm_type,true),3);
+      return $vm_type;
+   }
+   else
+   {
+      return false;
+   }
+}
+
 function vlans_on_switch($switch)
 {
    global $logger, $snmp_rw, $snmp_vlan;
-   $logger->debug("Retrieving vlans on $switch",2);
-   $logger->debug("Sending {$snmp_vlan['name']} to $switch",3);
-   $vlans_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_vlan['name']);         //Lookup of VLAN in the switch
-   if (empty($vlans_on_switch))
+   if ($switch)
    {
-     $logger->logit( "Couldn't establish communication with $switch with the defined parameters");
-     return false;
+      $logger->debug("Retrieving vlans on $switch",2);
+      $logger->debug("Sending {$snmp_vlan['name']} to $switch",3);
+      $vlans_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_vlan['name']);         //Lookup of VLAN in the switch
+      if (empty($vlans_on_switch))
+      {
+         $logger->logit( "Couldn't establish communication with $switch with the defined parameters");
+         return false;
+      }
+      $vlans_on_switch=array_map("remove_type",$vlans_on_switch);
+      $logger->debug(print_r($vlans_on_switch,true),3);
+      return $vlans_on_switch;
    }
-   $vlans_on_switch=array_map("remove_type",$vlans_on_switch);
-   $logger->debug(print_r($vlans_on_switch,true),3);
-   return $vlans_on_switch;
+   else
+   {
+      return false;
+   }
 }
 
 function get_snmp_index($what, $where)
