@@ -506,9 +506,13 @@ function snmp_restart_port($port, $switch) {
   global $lastseen_sms_restart,$logger;
   #if ($lastseen_sms_restart) 
   {
-     $answer=syscall("./restart_port.php $port $switch");
+     /*$answer=syscall("./restart_port.php $port $switch");
      debug1($answer);
-     logit("snmp_restart_port: $answer");
+     logit("snmp_restart_port: $answer");*/
+     if (turn_off_port($switch, $port) && turn_off_port($switch, $port))
+        return turn_on_port($switch, $port);
+     else
+        return false;
   }
 }
 
