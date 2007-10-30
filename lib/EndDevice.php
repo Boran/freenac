@@ -117,9 +117,6 @@ EOF;
          $this->setAlertMessage($object->switch_port->getAlertMessage());
          $this->setNotifyInfo($object->switch_port->getNotifyInfo());
 
-         #Send an email alert on connect?
-         if ($this->status && ($object instanceof SyslogRequest) && $this->db_row['email_on_connect'])
-            $this->logger->mailit("{$this->mac}($this->hostname) is connecting to the network",$this->alert_message.$this->alert_subject,$this->db_row['email_on_connect']);
       }
       else
       {
@@ -349,48 +346,78 @@ EOF;
    }
 
    /**
+   * Catch DB inserts.
+   * Check if the function is called from a postconnect method in an object which is a child of Policy.
+   * This function should be called from inside the update method. To prevent inserting of code in other methods, new code
+   * should be added.
+   * This is a basic checking, in the future this code may be enhanced.
+   * @return boolean		True if function was called from a valid method, false otherwise
+   */
+   function check_calling_method()
+   {
+      $backtrace = debug_backtrace();
+      array_shift($backtrace);	//Remove call to check_calling_method from the backtrace;
+      $ok=0;
+      $valid_methods=array('update','insertIfUnknown');
+      #Check if we are calling from a valid method
+      if (in_array($backtrace[0]['function'],$valid_methods))
+      {
+         #Check if we are using callwrapper
+         if ( (strcasecmp($backtrace[2]['class'],'Callwrapper')==0) && (strcasecmp($backtrace[2]['function'],'__call')==0))
+         {
+            #Check if the class is a child of Policy and if calling method is postconnect
+            if ( ($backtrace[4]['class'] instanceof Policy) && (strcasecmp($backtrace[4]['function'],'postconnect')!=0) )
+            {
+               $this->logger->logit("{$backtrace[0]['function']} method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting insert operation",LOG_WARNING);
+               return false;
+            }
+            else
+            {
+               $ok++;
+            }
+         }
+         #Not using callwrapper
+         else if (strcasecmp($backtrace[0]['class'],'EndDevice')==0)
+         {
+            #Check if the class is a child of Policy and if calling method is postconnect
+            if (($backtrace[1]['class'] instanceof Policy) && (strcasecmp($backtrace[1]['function'],'postconnect')!=0))
+            {
+               $this->logger->logit("{$backtrace[0]['function']} method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting insert operation",LOG_WARNING);
+               return false;
+            }
+            else
+            {
+               $ok++;
+            }
+         }
+         else
+         {
+            $this->logger->logit("{$backtrace[0]['function']} method can only be called from a postconnect method, condition not met, aborting insert operation",LOG_WARNING);
+            return false;
+         }
+      }
+      if ($ok)
+         return true;
+      else 
+         return false;
+   }
+
+   /**
    * Update EndDevice information in the DB
    * @return mixed	MAC address and hostname of the updated system, or false if no update was performed
    */
    public function update()
    {
-      #Check if function was called from inside postconnect, if not, stop further processing
-      $backtrace = debug_backtrace();
-      $do_nothing=0;
-      if (strcasecmp($backtrace[2]['class'],'CallWrapper')==0)
+      #Chech if the system is in the DB, and then perform the update
+      if ($this->check_calling_method() && $this->inDB())
       {
-         if (strcasecmp($backtrace[4]['function'],'postconnect')!=0)
+         #Send an email alert on connect?
+         if ( $this->db_row['email_on_connect'] )
          {
-            $this->logger->logit("Update method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting updating",LOG_WARNING);
-            return false;
+            $this->logger->mailit("{$this->mac}($this->hostname) is connecting to the network",$this->alert_message.$this->alert_subject,$this->db_row['email_on_connect']);
+            log2db('info',("{$this->mac}($this->hostname) is connecting to the network");
          }
-         else
-         {
-            $do_nothing++;
-         }
-      }
-      else if (strcasecmp($backtrace[0]['class'],'EndDevice')==0)
-      {
-         if (strcasecmp($backtrace[1]['function'],'postconnect')!=0)
-         {
-            $this->logger->logit("Update method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting updating",LOG_WARNING);
-            return false;
-         }
-         else
-         {
-            $do_nothing++;
-         }
-      }
-      else
-      {
-         $this->logger->logit("Update method can only be called from a postconnect method, condition not met, aborting updating",LOG_WARNING);
-         return false;
-      }
-      
 
-      #Chech if the system is in the DB, and the perform the update
-      if ($this->inDB())
-      {
          #Check if it's not expired
          if ($this->isExpired() && $this->conf->disable_expired_devices)
          {
@@ -435,7 +462,7 @@ EOF;
    */
    public function insertIfUnknown()
    {
-      if (!$this->inDB() && $this->port_id)
+      if ($this->check_calling_method() && !$this->inDB() && $this->port_id)
       {
          #Normal case
          $query=<<<EOF

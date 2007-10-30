@@ -299,71 +299,76 @@ EOF;
    public function insertIfUnknown()
    {
       $counter=0;
-      #Insert switch in database if it doesn't exist
-      if (!$this->isSwitchInDB())
+      if ($this->check_calling_method())
       {
-         $query="INSERT INTO switch SET ip='{$this->switch_ip}', name='{$this->switch_name}',comment='';";
-         $this->logger->debug($query,3);
-         $res=mysql_query($query);
-         if ($res)
+         #Insert switch in database if it doesn't exist
+         if (!$this->isSwitchInDB())
          {
-            #Switch has been inserted, lookup its id
-            $query="SELECT id FROM switch WHERE ip='{$this->switch_ip}' LIMIT 1;";
+            $query="INSERT INTO switch SET ip='{$this->switch_ip}', name='{$this->switch_name}',comment='';";
             $this->logger->debug($query,3);
-	    $this->props['switch_id']=v_sql_1_select($query);
+            $res=mysql_query($query);
+            if ($res)
+            {
+               #Switch has been inserted, lookup its id
+               $query="SELECT id FROM switch WHERE ip='{$this->switch_ip}' LIMIT 1;";
+               $this->logger->debug($query,3);
+	       $this->props['switch_id']=v_sql_1_select($query);
 
-            #If we have its id, change the value of our control flag
-            if ($this->switch_id)
-               $this->switch_in_db=true;
+               #If we have its id, change the value of our control flag
+               if ($this->switch_id)
+                  $this->switch_in_db=true;
 
-            #Log it and increase our internal counter to indicate that an insert has been done
-            $string="New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.";
-            $this->logger->logit($string);
-            log2db('info',$string);
-            $counter++;
-         }
-         else
-         {
-            $this->logger->logit(mysql_error(),LOG_ERROR);
-            return false;
-         }   
-      }
-      #Insert port in database if it doesn't exist
-      if (!$this->isPortInDB())
-      {
-         $query="INSERT INTO port SET name='{$this->port_name}', switch='{$this->switch_id}', last_vlan='{$this->last_vlan}', last_activity=NOW();";
-         $this->logger->debug($query,3);
-         $res=mysql_query($query);
-         if ($res)
-         {
-            #Port has been inserted, lookup its id
-	    $query="SELECT id FROM port WHERE name='{$this->port_name}' AND switch='{$this->switch_id}' LIMIT 1;";
-            $this->logger->debug($query,3);
-            $this->props['port_id']=v_sql_1_select($query);
-
-            #If we have its id, change the value of our control flag
-	    if ($this->port_id)
-	       $this->port_in_db=true;
-
-            #Log it and increase our internal counter to indicate that an insert has been done. Also, if we have patchcable
-            #information, add it to the log message
-            if ($this->conf->lastseen_patch_lookup)
-               $string="New port {$this->port_name}. Location from patchcable: {$this->getPatchInfo()}";
+               #Log it and increase our internal counter to indicate that an insert has been done
+               $string="New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.";
+               $this->logger->logit($string);
+               log2db('info',$string);
+               $counter++;
+            }
             else
-               $string="New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"; 
-            $this->logger->logit($string);
-            log2db('info',$string);
-            $counter++;
+            {
+               $this->logger->logit(mysql_error(),LOG_ERROR);
+               return false;
+            }   
          }
-         else
+         #Insert port in database if it doesn't exist
+         if (!$this->isPortInDB())
          {
-            $this->logger->logit(mysql_error(),LOG_ERROR);
-            return false;
+            $query="INSERT INTO port SET name='{$this->port_name}', switch='{$this->switch_id}', last_vlan='{$this->last_vlan}', last_activity=NOW();";
+            $this->logger->debug($query,3);
+            $res=mysql_query($query);
+            if ($res)
+            {
+               #Port has been inserted, lookup its id
+	       $query="SELECT id FROM port WHERE name='{$this->port_name}' AND switch='{$this->switch_id}' LIMIT 1;";
+               $this->logger->debug($query,3);
+               $this->props['port_id']=v_sql_1_select($query);
+
+               #If we have its id, change the value of our control flag
+	       if ($this->port_id)
+	          $this->port_in_db=true;
+
+               #Log it and increase our internal counter to indicate that an insert has been done. Also, if we have patchcable
+               #information, add it to the log message
+               if ($this->conf->lastseen_patch_lookup)
+                  $string="New port {$this->port_name}. Location from patchcable: {$this->getPatchInfo()}";
+               else
+                  $string="New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"; 
+               $this->logger->logit($string);
+               log2db('info',$string);
+               $counter++;
+            }
+            else
+            {
+               $this->logger->logit(mysql_error(),LOG_ERROR);
+               return false;
+            }
          }
+         #Return true if our counter is greater than zero. Thus we know that an insert operation has been performed
+         if ($counter)
+            return "{$this->port_name} {$this->switch_ip}({$this->switch_name})";
+         else
+            return false;
       }
-      #Return true if our counter is greater than zero. Thus we know that an insert operation has been performed
-      if ($counter)
-         return true;
       else
          return false;
    }
@@ -386,45 +391,69 @@ EOF;
    }   
 
    /**
+   * Catch DB inserts.
+   * Check if the function is called from a postconnect method in an object which is a child of Policy.
+   * This function should be called from inside the update method. To prevent inserting of code in other methods, new code
+   * should be added.
+   * This is a basic checking, in the future this code may be enhanced.
+   * @return boolean            True if function was called from a valid method, false otherwise
+   */
+   function check_calling_method()
+   {
+      $backtrace = debug_backtrace();
+      array_shift($backtrace);  //Remove call to check_calling_method from the backtrace;
+      $ok=0;
+      $valid_methods=array('update','insertIfUnknown');
+      #Check if we are calling from a valid method
+      if (in_array($backtrace[0]['function'],$valid_methods))
+      {
+         #Check if we are using callwrapper
+         if ( (strcasecmp($backtrace[2]['class'],'Callwrapper')==0) && (strcasecmp($backtrace[2]['function'],'__call')==0))          
+         {
+            #Check if the class is a child of Policy and if calling method is postconnect
+            if ( ($backtrace[4]['class'] instanceof Policy) && (strcasecmp($backtrace[4]['function'],'postconnect')!=0) )
+            {
+               $this->logger->logit("{$backtrace[0]['function']} method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting insert operation",LOG_WARNING);
+               return false;
+            }
+            else             
+            {
+               $ok++;
+            }
+         }
+         #Not using callwrapper
+         else if (strcasecmp($backtrace[0]['class'],'Port')==0)
+         {
+            #Check if the class is a child of Policy and if calling method is postconnect
+            if (($backtrace[1]['class'] instanceof Policy) && (strcasecmp($backtrace[1]['function'],'postconnect')!=0))
+            {
+               $this->logger->logit("{$backtrace[0]['function']} method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting insert operation",LOG_WARNING);
+               return false;
+            }
+            else
+            {
+               $ok++;
+            }
+         }
+         else
+         {
+            $this->logger->logit("{$backtrace[0]['function']} method can only be called from a postconnect method, condition not met, aborting insert operation.",LOG_WARNING);
+            return false;
+         }
+      }
+      if ($ok)
+         return true;
+      else
+         return false;
+   }
+
+   /**
    * Update last_vlan and last_activity fields for this port
    * @return mixed	Port name and switch ip and name from updated port, false if no updated was performed
    */
    public function update()
    {
-      #Check if function was called from inside postconnect, if not, stop further processing
-      $backtrace = debug_backtrace();
-      $do_nothing=0;
-      if (strcasecmp($backtrace[2]['class'],'CallWrapper')==0)
-      {
-         if (strcasecmp($backtrace[4]['function'],'postconnect')!=0)
-         {
-            $this->logger->logit("Update method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting updating",LOG_WARNING);
-            return false;
-         }
-         else
-         {
-            $do_nothing++;
-         }
-      }
-      else if (strcasecmp($backtrace[0]['class'],'Port')==0)
-      {
-         if (strcasecmp($backtrace[1]['function'],'postconnect')!=0)
-         {
-            $this->logger->logit("Update method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting updating",LOG_WARNING);
-            return false;
-         }
-         else
-         {
-            $do_nothing++;
-         }
-      }
-      else
-      {
-         $this->logger->logit("Update method can only be called from a postconnect method, condition not met, aborting updating",LOG_WARNING);
-         return false;
-      }
-
-      if ($this->isPortInDB())
+      if ($this->check_calling_method() && $this->isPortInDB())
       {
          $query="UPDATE port SET last_activity=NOW(), last_vlan='{$this->last_vlan}' WHERE id='{$this->port_id}'";
          $this->logger->debug($query,3);
