@@ -1,4 +1,4 @@
-#!/usr/bin/php -f
+#!/usr/bin/php 
 <?php
 /**
  * /opt/nac/bin/cron_restart_port
