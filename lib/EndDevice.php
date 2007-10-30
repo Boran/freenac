@@ -415,7 +415,7 @@ EOF;
          if ( $this->db_row['email_on_connect'] )
          {
             $this->logger->mailit("{$this->mac}($this->hostname) is connecting to the network",$this->alert_message.$this->alert_subject,$this->db_row['email_on_connect']);
-            log2db('info',("{$this->mac}($this->hostname) is connecting to the network");
+            log2db('info',"{$this->mac}($this->hostname) is connecting to the network");
          }
 
          #Check if it's not expired
