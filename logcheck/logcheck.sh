@@ -290,7 +290,7 @@ analyse_log "/var/log/mail";
 $LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1 |egrep -v "^$" >> $temp1
 
 #echo "Vmps2 MySQL logs .."     >> $temp1
-$SSH vmps2  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" >> $temp1
+#$SSH vmps2  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" >> $temp1
 
 # FreeRadius
 analyse_log "/usr/local/var/log/radius/radius.log";
