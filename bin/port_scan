@@ -36,7 +36,7 @@
 
 require_once "funcs.inc";
 $output=TRUE;
-
+$debug_flag1=true;
 #Compatibility with old vars
 if (!$conf->scan_directory && $conf->nmap_scan_directory)
    $scan_directory=$conf->nmap_scan_directory;
