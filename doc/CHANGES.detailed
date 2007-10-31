@@ -2,7 +2,9 @@
                                         Changelog for project 'FreeNAC 2.2'
 =====================================================================================================================
 
-	 * vmps.exe (boran)
+	* Removed -- -f from all scripts
+ 
+	* vmps.exe (boran)
 		/WindowsGUI/vmps.exe
 
 	 * add mysql_affected_rows2() (boran)

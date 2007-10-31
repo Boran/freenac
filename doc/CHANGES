@@ -8,6 +8,13 @@ This reports, but does not commit any changes.
 History of this Branch 2.2
 ===========================
 
+---- Changes V2.2 RC4 (SVN tag 1020)
+ * Due to problems with some versions of PHP, we have modified the first line
+   of code of all scripts. So before we had something like 
+   	#!usr/bin/php -- -f
+   And now we have
+   	#!/usr/bin/php
+
 ---- Changes V2.2 RC3 (SVN tag 876)
 
  * Most documentation is now gone. You can browse our documentation
