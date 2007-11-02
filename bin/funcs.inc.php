@@ -363,6 +363,10 @@ function remove_type($element)
 */
 function ping_mac2($mac,$switch,$port,$vlan)
 {
+   global $logger;
+   if (!$vlan)
+      return false;
+   $logger->debug("Querying if $mac is on port $port in switch $switch using vlan $vlan",2);
    if (is_mac_on_port($mac,$switch,$port,$vlan))
       return true;
    else
@@ -375,16 +379,17 @@ function ping_mac2($mac,$switch,$port,$vlan)
 * So far it is only an adaptation from the old algorithm
 * It hasn't been tested yet
 */
-function detect_hub ($device, $port)
+function detect_hub ($REQUEST)
 {
+   global $logger, $conf;
    if ($conf->detect_hubs)
    {
       #Get vlan_groups
-      $query = "SELECT vlan_group FROM vlan WHERE id='{$device->getNewVlan_id()}';";
+      $query = "SELECT vlan_group FROM vlan WHERE id='{$REQUEST->host->getNewVLAN_id()}';";
       $logger->debug($query,3);
       $new_vlan_group = v_sql_1_select($query);
       
-      $query = "SELECT vlan_group FROM vlan WHERE id='{$device->getLastVlan_id()}';";
+      $query = "SELECT vlan_group FROM vlan WHERE id='{$REQUEST->host->getLastVLAN_id()}';";
       $logger->debug($query,3);
       $last_vlan_group = v_sql_1_select($query);
 
@@ -402,9 +407,9 @@ function detect_hub ($device, $port)
       $query=<<<EOF
 SELECT sid, AuthVlan, AuthLast FROM vmpsauth WHERE
    TIME_TO_SEC(TIMEDIFF(NOW(), AuthLast)) < 7500 AND
-   sid!='{$device->getSid()}' AND 
-   AuthVlan!='{$device->getNewVlan_id()}' AND
-   AuthPort='{$port->getPort_id()}' ORDER BY AuthLast DESC;";
+   sid!='{$REQUEST->host->getSid()}' AND 
+   AuthVlan!='{$REQUEST->host->getNewVlan_id()}' AND
+   AuthPort='{$REQUEST->switch_port->getPort_id()}' ORDER BY AuthLast DESC;
 EOF;
       $logger->debug($query,3);
       $res = mysql_query($query);
@@ -422,7 +427,7 @@ EOF;
             $logger->debug($query,3);
             $other_vlan = v_sql_1_select($query);
 
-            if (ping_mac2($other_mac, $port->getSwitch_Name(), $port->getPort_Name(),$other_vlan))
+            if (ping_mac2($other_mac, $REQUEST->switch_port->getSwitch_Name(), $REQUEST->switch_port->getPort_Name(),$other_vlan))
             {
                $query = "SELECT vlan_group FROM vlan WHERE id='$other_vlan';";
                $logger->debug($query,3);
@@ -434,7 +439,7 @@ EOF;
                }
                else
                {
-                  $result=-1;
+                  $result=false;
                }
             }
          }
@@ -634,7 +639,8 @@ function str_get_last($string,$token,$number)
 function is_mac_on_port($mac,$switch,$port,$vlan)     
 {
    global $snmp_ro,$logger;                                     //Read Only community
-
+   if (!$vlan)
+      return false;
    $macs_on_vlan=@snmprealwalk($switch,"$snmp_ro@$vlan",'1.3.6.1.2.1.17.4.3.1.1');      //Obtain MAC address table
    if (empty($macs_on_vlan))
    {
@@ -1047,6 +1053,21 @@ function set_port_as_static($switch, $port, $vlan,$snmp_port_index=false)
    {
       $logger->logit("Could not shut down port $port on switch $switch");
       return false;
+   }
+}
+
+function write_auth($port_id, $system_id, $vlan)
+{
+   global $logger;
+   if ($vlan>=0)
+   {
+      $query="REPLACE vmpsauth set AuthLast=NOW(), AuthVlan='$vlan', AuthPort='$port_id', sid='$system_id';";
+      $logger->debug($query,3);
+      return v_sql_1_update($query);
+   }
+   else
+   {
+       return false;
    }
 }
 ### EOF ###
