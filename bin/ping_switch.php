@@ -35,7 +35,7 @@ require_once "bin/funcs.inc.php";               # Load settings & common functio
 require_once "bin/snmp_defs.inc.php";
 
 $logger->setDebugLevel(0);       // 0=errors only, 1=medium, 3=queries
-$logger->setLogToStdOut(false);
+$logger->setLogToStdOut(true);
 
 //
 //------------------------------------------ Functions ------------------------------------------------
@@ -54,6 +54,8 @@ DESCRIPTION: Ping switch ports to know if they are up or down.
 
 OPTIONS:
         -h              Display this help screen
+	-s		Supress messages to standard output and redirect them to syslog
+	-d		Activate debugging
 
 EOF;
    $logger->logit( $usage);
@@ -61,11 +63,15 @@ EOF;
 }
 
 if ($argc!=1)
-   $options=getopt("h");
+   $options=getopt("hsd");
 if ($options)
 {
    if (array_key_exists('h',$options))
       print_usage(0);
+   if (array_key_exists('s',$options))
+      $logger->setLogToStdOut(false);
+   if (array_key_exists('d',$options))
+      $logger->setDebugLevel(3);
 }
 
 //
@@ -78,6 +84,8 @@ for ($i=0;$i<$argc;$i++)
    switch($argv[$i])
    {
       case '-h':
+      case '-s':
+      case '-d':
          break;
       default:
          $command_line[$j]=$argv[$i];
@@ -97,7 +105,7 @@ $starttime = $mtime;
 db_connect();
 
 #Look up the switches in the database
-if ($argc == 1) 
+if ($j == 1) 
    $query = "SELECT id, ip, name, hw, sw FROM switch WHERE scan='1'";
 else
 {
@@ -120,7 +128,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
 {
    $switch_ip = $row['ip'];
    $switch_id = $row['id'];
-   $logger->debug("Querying switch {$row['name']}, $switch_ip, {$row['hw']}, {$row['sw']} for port status");
+   $logger->logit("Querying switch {$row['name']}, $switch_ip, {$row['hw']}, {$row['sw']} for port status");
    
    #Query switch for list of ports and their status
    $status_of_ports = @snmprealwalk($switch_ip, $snmp_rw, $snmp_port['ad_status']);
