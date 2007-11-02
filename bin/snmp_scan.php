@@ -207,9 +207,9 @@ if (!$singlevl) {
                          {
                             $comment=mysql_real_escape_string($if['description']);
                             if (($port_type=='static')&&($vlan))
-                               $query="insert into port set switch='$switchid', name='".$if['name']."',comment='$comment',auth_profile='$type_id',last_vlan='$vlan',up='{$if['ad_status']}'";
+                               $query="insert into port set switch='$switchid', name='".$if['name']."',comment='$comment',last_auth_profile='$type_id',last_vlan='$vlan',up='{$if['ad_status']}'";
                             else
-                               $query="insert into port set switch='$switchid', name='".$if['name']."',comment='$comment',auth_profile='$type_id',up='{$if['ad_status']}'";
+                               $query="insert into port set switch='$switchid', name='".$if['name']."',comment='$comment',last_auth_profile='$type_id',up='{$if['ad_status']}'";
                             $res=mysql_query($query);
                             if (!res)
                             {
