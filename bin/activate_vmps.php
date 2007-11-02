@@ -1,4 +1,4 @@
-#!/usr/bin/php -- -f
+#!/usr/bin/php
 <?
 /**
  * bin/activate_vmps.php

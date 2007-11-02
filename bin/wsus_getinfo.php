@@ -1,4 +1,4 @@
-#!/usr/bin/php -- -f
+#!/usr/bin/php
 <?php
 /**
  * PHP version 5

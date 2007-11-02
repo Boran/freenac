@@ -1,4 +1,4 @@
-#!/opt/php5/bin/php -f
+#!/opt/php5/bin/php
 <?php
 /**
  * enterprise/epo_sync

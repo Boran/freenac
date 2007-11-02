@@ -1,4 +1,4 @@
-#!/usr/bin/php -- -f
+#!/usr/bin/php
 <?
 /**
  * enterprise/snmp_set_port
