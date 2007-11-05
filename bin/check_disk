@@ -9,6 +9,8 @@
 # Example cron usage:
 #    0 8-18 * * 1-5 /opt/nac/bin/check_disk  99 200
 #
+# 2007.11.03 SB: Strange, 'tail -n 1" needed on linux for $tail
+#            Wonder why its not like that for all platforms?
 # 2005.10.02 SB: Major Update. Fix & test for HP-UX, 
 #            Suse 9.1/9.3, Solaris 8/9, RHEL3.o
 # 2001.12.13 Sean Boran for Solaris.
@@ -33,7 +35,8 @@ if [ "$os" = "SunOS" ] ; then
   df='df -lk'
   load=`uptime | awk -F',' '{print 100*$5}' `  # load over 5 mins
   top="top -b"
-  tail="tail -n 2"
+  #tail="tail -n 2"
+  tail="tail + 2"
   mailit=/bin/mailx
   mount="mount -p";
   echo=echo;
@@ -52,7 +55,8 @@ elif [ "$os" = "Linux" ] ; then
   df='df -P'
   load=`uptime | awk -F',' '{print 100*$4}' `  # load over 5 mins
   top="top -b -n 1"
-  tail="tail -n 2"
+  #tail="tail -n 2"
+  tail="tail -n 1"
   # Gentoo: differentiate later: tail="tail -n 2"
   mailit=/bin/mail
   mount="mount";
@@ -67,6 +71,7 @@ elif [ "$os" = "OpenBSD" ] ; then
   mount="mount";
   echo="echo -e";
 fi
+[ $DEBUG ] && $echo "OS=$os"
 
 USAGE="USAGE: $0  DISK_SPACE_% LOAD_LIMITx100";
 arg1="$1";
