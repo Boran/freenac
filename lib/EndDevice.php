@@ -367,7 +367,8 @@ EOF;
          if ( (strcasecmp($backtrace[2]['class'],'Callwrapper')==0) && (strcasecmp($backtrace[2]['function'],'__call')==0))
          {
             #Check if the class is a child of Policy and if calling method is postconnect
-            if ( ($backtrace[4]['class'] instanceof Policy) && (strcasecmp($backtrace[4]['function'],'postconnect')!=0) )
+            #if ( ( $backtrace[4]['class'] instanceof Policy ) && (strcasecmp($backtrace[4]['function'],'postconnect')!=0) )
+            if (strcasecmp($backtrace[4]['function'],'postconnect')!=0)
             {
                $this->logger->logit("{$backtrace[0]['function']} method must only be called from a postconnect, since it changes the database. Pre-connnect can run secondary servers (which have read-only tables), and must not change the DB. This method was called from {$backtrace[4]['function']}. Aborting insert operation",LOG_WARNING);
                return false;
@@ -381,9 +382,10 @@ EOF;
          else if (strcasecmp($backtrace[0]['class'],'EndDevice')==0)
          {
             #Check if the class is a child of Policy and if calling method is postconnect
-            if (($backtrace[1]['class'] instanceof Policy) && (strcasecmp($backtrace[1]['function'],'postconnect')!=0))
+            #if ( (strcasecmp($backtrace[1]['class'],'Policy')==0 ) && (strcasecmp($backtrace[1]['function'],'postconnect')!=0))
+            if (strcasecmp($backtrace[1]['function'],'postconnect')!=0)
             {
-               $this->logger->logit("{$backtrace[0]['function']} method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting insert operation",LOG_WARNING);
+               $this->logger->logit("{$backtrace[0]['function']} method must only be called from a postconnect, since it changes the database. Pre-connnect can run secondary servers (which have read-only tables), and must not change the DB. This method was called from {$backtrace[4]['function']}. Aborting insert operation",LOG_WARNING);
                return false;
             }
             else

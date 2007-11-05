@@ -32,8 +32,12 @@
 chdir(dirname(__FILE__));
 set_include_path("./:../");
 
-/* include files */
+/**
+* Load exceptions
+*/
 require_once("../lib/exceptions.php");
+
+/* include files */
 require_once("./funcs.inc.php");
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
@@ -43,27 +47,14 @@ $logger->setLogToStdErr(false);
 /* Load the policy file */
 require_once "../etc/policy.inc.php";
 
-/*$class_string = file_get_contents("../etc/policy.inc.php");
-$class_string = preg_replace('/<\\?php/','',$class_string);
-$class_string = preg_replace('/\\?>/','',$class_string);
-$class_string = preg_replace('/\\$HOST/','$GLOBALS["HOST"]',$class_string);
-$class_string = preg_replace('/\\$PORT/','$GLOBALS["PORT"]',$class_string);
-//$class_string = preg_replace('/\\$REQUEST/','$GLOBALS["REQUEST"]',$class_string);
-$class_string = preg_replace('/\\$RESULT/','$GLOBALS["RESULT"]',$class_string);
-$class_string = preg_replace('/\\$CONF/','$GLOBALS["REQUEST"]',$class_string);
-#echo $class_string;
-eval($class_string);*/
-
 // create policy object
 $policy=new $conf->default_policy();
 
 $in=STDIN;
 $out=STDOUT;
 
-$logger->logit("Started\n");
+$logger->logit("Started");
 
-do 
-{
    while ( ! feof($in) ) 
    {
       $line=rtrim(fgets($in,1024));
@@ -92,26 +83,17 @@ do
             $result=new SyslogRequest($mac,$switch,$port,$success,$vlan);
             if ($conf->default_policy)
             {
-               try
-               {
-	          #Call our policy
-                  $policy->postconnect($result);
-               }
-	       catch (Exception $e)
-	       {
-                  echo "Exception caught inner catch\n";
-               }
+	       #Call our policy
+               $policy->postconnect($result);
             }
          }
          catch (Exception $e)
          {
-            echo "Exception caught outer catch\n";
+            $logger->logit("Postconnect exception",LOG_WARN);
          }
       }
    }
-}while (!$conf->lastseen_dryrun);
-   
-    
 
+$logger->logit("Stopped");
 
 ?>
