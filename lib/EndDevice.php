@@ -487,7 +487,7 @@ EOF;
 	    #$mesg="New unknown {$this->mac}({$this->getVendor()}), switch {$this->switch_info} Patch: {$this->patch_info}\n";
             $mesg="New unknown {$this->mac}({$this->getVendor()}), {$this->alert_message}";
 	    $this->logger->debug($subject,2);
-	    $this->logger->debug("Note: $mesg",1);
+	    log2db('info',$mesg);
             if ($this->notify)
                $this->logger->mailit($subject,$mesg,$this->notify);
             $this->logger->mailit($subject,$mesg);

@@ -73,10 +73,13 @@ $logger=Logger::getInstance();
 $logger->setDebugLevel(0);
 $logger->setLogToStdErr(false);
 
+$policy_file='../etc/policy.inc.php';
 /**
 * Load the policy file 
 */
-require_once "../etc/policy.inc.php";
+require_once "$policy_file";
+
+$file_read=readlink($policy_file);
 
 # Create policy object
 if ($conf->default_policy)
@@ -95,7 +98,8 @@ $trace=NULL;
 $message=NULL;
 
 #Display a message if everything is fine
-$logger->logit("Started\n");
+$logger->logit("Started. Policy loaded from file $file_read");
+log2db('info',"vmpsd started. Policy loaded from file $file_read");
 
 # Loop Forever (we are a daemon) 
 while ($in && $out) 

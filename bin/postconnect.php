@@ -44,8 +44,13 @@ $logger=Logger::getInstance();
 $logger->setDebugLevel(0);
 $logger->setLogToStdErr(false);
 
-/* Load the policy file */
-require_once "../etc/policy.inc.php";
+$policy_file='../etc/policy.inc.php';
+/**
+* Load the policy file
+*/
+require_once "$policy_file";
+
+$file_read=readlink($policy_file);
 
 // create policy object
 $policy=new $conf->default_policy();
@@ -53,46 +58,47 @@ $policy=new $conf->default_policy();
 $in=STDIN;
 $out=STDOUT;
 
-$logger->logit("Started");
+$logger->logit("Started. Policy loaded from file $file_read");
+log2db('info',"postconnect started. Policy loaded from file $file_read");
 
-   while ( ! feof($in) ) 
+while ( ! feof($in) ) 
+{
+   $line=rtrim(fgets($in,1024));
+   if (strlen($line)<=0) 
+      continue;
+   $regs=array();
+   if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs))
    {
-      $line=rtrim(fgets($in,1024));
-      if (strlen($line)<=0) 
-         continue;
-      $regs=array();
-      if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs))
-      {
-         $success=trim($regs[2]);
-         $mac=trim($regs[3]);
-         $vlan=trim($regs[4]);
-         $switch=trim($regs[5]);
-         $port=trim($regs[6]);
-         $details="$regs[1]";
-         
-         #Maybe there is no vlan because answer was a DENY, in such case, set to '--NONE--'
-         if (!$vlan)
-            $vlan='--NONE--';
+      $success=trim($regs[2]);
+      $mac=trim($regs[3]);
+      $vlan=trim($regs[4]);
+      $switch=trim($regs[5]);
+      $port=trim($regs[6]);
+      $details="$regs[1]";
+      
+      #Maybe there is no vlan because answer was a DENY, in such case, set to '--NONE--'
+      if (!$vlan)
+         $vlan='--NONE--';
 
-         #If there are empty parameters, go to next request
-         if (empty($switch) || empty($port) || empty($success) || empty($vlan) || empty($mac))
-            continue;
-         $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
-	 try 
+      #If there are empty parameters, go to next request
+      if (empty($switch) || empty($port) || empty($success) || empty($vlan) || empty($mac))
+         continue;
+      $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
+      try 
+      {
+         $result=new SyslogRequest($mac,$switch,$port,$success,$vlan);
+         if ($conf->default_policy)
          {
-            $result=new SyslogRequest($mac,$switch,$port,$success,$vlan);
-            if ($conf->default_policy)
-            {
-	       #Call our policy
-               $policy->postconnect($result);
-            }
-         }
-         catch (Exception $e)
-         {
-            $logger->logit("Postconnect exception",LOG_WARNING);
+            #Call our policy
+            $policy->postconnect($result);
          }
       }
+      catch (Exception $e)
+      {
+         $logger->logit("Postconnect exception",LOG_WARNING);
+      }
    }
+}
 
 $logger->logit("Stopped");
 
