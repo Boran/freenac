@@ -89,7 +89,7 @@ $logger->logit("Started");
          }
          catch (Exception $e)
          {
-            $logger->logit("Postconnect exception",LOG_WARN);
+            $logger->logit("Postconnect exception",LOG_WARNING);
          }
       }
    }
