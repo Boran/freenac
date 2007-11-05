@@ -1,4 +1,7 @@
 #!/bin/sh
-echo "Monitor /var/log/messages for key vmps messages..."
+# logv
+
+echo "Monitor /var/log/messages for key FreeNAC messages..."
 #tail -f /var/log/messages |egrep -v "Debug1:|Debug2|nothing else conflicting " | egrep "vmpsd_external|vmps_lastseen"
-tail -f /var/log/messages |egrep -v "nothing else conflicting" | egrep "vmpsd_external|vmps_lastseen"
+tail -f /var/log/messages |egrep -v "nothing else conflicting" | egrep "vmpsd_external|vmps_lastseen|postconnect"
+
