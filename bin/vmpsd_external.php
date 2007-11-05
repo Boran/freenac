@@ -243,5 +243,5 @@ function reportException(Exception $e)
    #And report it as debug level 1
    $logger->debug($msg ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
 }
-
+$logger->logit("Stopped");
 ?>
