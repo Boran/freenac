@@ -99,7 +99,7 @@ $message=NULL;
 
 #Display a message if everything is fine
 $logger->logit("Started. Policy loaded from file $file_read");
-log2db('info',"vmpsd started. Policy loaded from file $file_read");
+log2db('info',"vmpsd & vmpsd_external started. Policy loaded from file $file_read");
 
 # Loop Forever (we are a daemon) 
 while ($in && $out) 
