@@ -210,6 +210,10 @@ final class Logger
    {
       if (($criticality<0) || ($criticality > 7))	#Sanity check, defaults to LOG_INFO if user entered an invalid value
          $criticality=LOG_INFO;
+      if ($criticality == LOG_ERROR)
+         $message="ERROR: $message";
+      else if ($criticality == LOG_WARNING)
+         $message="WARNING: $message";
       if (is_string($message)&&(strlen($message)>0))
       {
          if ($this->stderr)				#Should we log to stderr?
