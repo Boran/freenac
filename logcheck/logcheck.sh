@@ -49,23 +49,27 @@
 #       <9>     15.sep.04 sb Tell syslog after pruning
 #       <10>    17.Apr.05 sb Tell syslog-ng after pruning
 #       <11>    31.Oct.06 sb Tidy up and integrate for FreeNAC
+#       <12>    25.Oct.07 sb FreeNAC 3.0
 #
 #########################################################
+
 
 ## CONFIGURATION SECTION
 
 ## Debug script with lots of additional error messages?
 DEBUG=0
 #DEBUG=1
-[ "$DEBUG" -eq 1 ] && SYSADMIN="debug@boran.com";
+[ "$DEBUG" -eq 1 ] && SYSADMIN="root@boran.com";
 #set -x
 
-
-## Alerts are reported via email.
-## set recipients and title of email:
+## Alerts are reported via email: set recipient/title
 #SYSADMIN=root
 SYSADMIN=nac
 tool="FreeNAC logcheck"
+SERVER2="vmps2secure"
+
+### end - config section ##
+#########################################################
 
 umask 077
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/ucb:/usr/local/bin
@@ -92,9 +96,6 @@ SUBJECT3="$group $tool: known patterns found";
 cd /opt/nac/logcheck
 TMPDIR=/opt/nac
 ROTATE="/opt/nac/logcheck/rotate_log -n 52 "
-#SSH=/usr/bin/ssh
-#SSH=/usr/local/bin/ssh
-#SSH=/opt/OBSDssh/bin/ssh
 SSH=ssh
 
 ###### Advanced config: changes rarely needed #############
@@ -102,6 +103,7 @@ temp1=$0.raw$$
 temp2=$0.ns.$$;
 temp3=$0.rep.$$;
 temp4=$0.out.$$;
+temp5=$0.rem.$$;
 
 ## Paths to programs:
 GREP=egrep
@@ -139,36 +141,37 @@ $GREP -v "$SPACE" $HACKING_FILE1 > $HACKING_FILE
 # some items, but these will be caught by the next check. Move suspicious
 # items into this file to have them reported regularly.
 
-VIOLATIONS_FILE1=/opt/nac/logcheck/logcheck.violations
-VIOLATIONS_FILE=/opt/nac/logcheck/.logcheck.violations
-$GREP -v "$SPACE"  $VIOLATIONS_FILE1 > $VIOLATIONS_FILE
 
-# File that contains more complete sentences that have keywords from
-# the violations file. These keywords are normal and are not cause for 
-# concern but could cause a false alarm. An example of this is the word 
-# "refused" which is often reported by sendmail if a message cannot be 
-# delivered or can be a more serious security violation of a system 
-# attaching to illegal ports. 
-
-VIOLATIONS_IGNORE_FILE1=/opt/nac/logcheck/logcheck.violations.ignore
-VIOLATIONS_IGNORE_FILE=/opt/nac/logcheck/.logcheck.violations.ignore
-$GREP -v "$SPACE"  $VIOLATIONS_IGNORE_FILE1 > $VIOLATIONS_IGNORE_FILE
+## sb/25.10.07: disabled vioations, simplify filter on too levels only
+#VIOLATIONS_FILE1=/opt/nac/logcheck/logcheck.violations
+#VIOLATIONS_FILE=/opt/nac/logcheck/.logcheck.violations
+#$GREP -v "$SPACE"  $VIOLATIONS_FILE1 > $VIOLATIONS_FILE
+#
+## File that contains more complete sentences that have keywords from
+## the violations file. These keywords are normal and are not cause for 
+## concern but could cause a false alarm. An example of this is the word 
+## "refused" which is often reported by sendmail if a message cannot be 
+## delivered or can be a more serious security violation of a system 
+## attaching to illegal ports. 
+#
+#VIOLATIONS_IGNORE_FILE1=/opt/nac/logcheck/logcheck.violations.ignore
+#VIOLATIONS_IGNORE_FILE=/opt/nac/logcheck/.logcheck.violations.ignore
+#$GREP -v "$SPACE"  $VIOLATIONS_IGNORE_FILE1 > $VIOLATIONS_IGNORE_FILE
 
 # This is the name of a file that contains patterns that we should
 # ignore if found in a log file. If you have repeated false alarms
 # or want specific errors ignored, you should put them in here.
 # Once again, be as specific as possible, and go easy on the wildcards
-
-IGNORE_FILE1=/opt/nac/logcheck/logcheck.ignore
 IGNORE_FILE=/opt/nac/logcheck/.logcheck.ignore
-$GREP -v "$SPACE"  $IGNORE_FILE1 > $IGNORE_FILE
-
 # <4>
 # When several sites are managed with logcheck, we group
 # together common ignore patterns for all sites in one general file:
 IGNORE_GEN1=/opt/nac/logcheck/logcheck.ignore.gen
-# And we append the general patterns to the site specific ones:
-$GREP -v "$SPACE"  $IGNORE_GEN1 >> $IGNORE_FILE
+$GREP -v "$SPACE"  $IGNORE_GEN1 > $IGNORE_FILE
+
+# And we append the site specific patterns:
+IGNORE_FILE1=/opt/nac/logcheck/logcheck.ignore
+$GREP -v "$SPACE"  $IGNORE_FILE1 >> $IGNORE_FILE
 
 
 # The files are reported in the order of hacking, security 
@@ -196,7 +199,7 @@ may be an attempt to spoof the log checker." \
 fi
 
 analyse_log () {
-  [ "$DEBUG" -eq 1 ] && echo "Does $1 exist? \c"
+  [ "$DEBUG" -eq 1 ] && echo -n "Does $1 exist? "
   if [ -s "$1" ] ; then
     [ "$DEBUG" -eq 1 ] && echo " Yes. let's read it .."
     #$LOGTAIL "$1"   >> $temp1  2>/dev/null
@@ -286,14 +289,29 @@ analyse_log "/var/log/mail";
 # #analyse_log "/var/log/rsyncd.log";
 
 #echo " "     >> $temp1
-#echo "Vmps1 MySQL logs .."     >> $temp1
-$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1 |egrep -v "^$" >> $temp1
+#echo "MySQL logs .."     >> $temp1
+#$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1 |egrep -v "^$" >> $temp1
+analyse_log "/mysqldata/mysqld.log";
 
 #echo "Vmps2 MySQL logs .."     >> $temp1
-$SSH vmps2  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" >> $temp1
+#$SSH $SERVER2  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" >> $temp1
+#$SSH vmps3secure  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" >> $temp1
+$SSH $SERVER2  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" > $temp5
+if [ -s $temp5 ] ; then
+  ## There entries, lets prefix where they came from
+  echo "$SERVER2 MySQL logs .."     >> $temp1
+  cat $temp5 >> $temp1
+fi
+
 
 # FreeRadius
 analyse_log "/usr/local/var/log/radius/radius.log";
+$SSH $SERVER2  "$LOGTAIL /usr/local/var/log/radius/radius.log /usr/local/var/log/radius/radius.log.offset.logcheck1" |egrep -v "^$" > $temp5
+if [ -s $temp5 ] ; then
+  ## There entries, lets prefix where they came from
+  echo "$SERVER2 FreeRadius logs .."     >> $temp1
+  cat $temp5 >> $temp1
+fi
 
 # main analysis ##########
 # Set the flag variables
@@ -354,6 +372,9 @@ if [ "$DEBUG" -eq 1 ] ; then
   else
     echo "No log changes found."
   fi
+  echo "Debug mode: $temp1 $temp2 $temp3 $temp4 $temp5 not deleted"
+  echo "Please delete them manually."
+
 else
   if [ "$ATTACK" -eq 1 ]; then
     siz=`ls -s $temp3|awk '{print $1}'`
@@ -386,10 +407,9 @@ else
   #  #$MAIL -s "$SUBJECT1" -r $FROM $SYSADMIN </dev/null
   #  $MAIL -s "$SUBJECT1" $SYSADMIN </dev/null
   fi
+
+  ### Clean Up
+  rm -f $temp1 $temp2 $temp3 $temp4 $temp5 >/dev/null
 fi
-
-
-### Clean Up
-rm -f $temp1 $temp2 $temp3 $temp4 >/dev/null
 
 #eof

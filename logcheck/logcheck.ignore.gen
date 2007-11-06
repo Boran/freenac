@@ -4,6 +4,7 @@
 ## General logcheck.ignore pattern for using across all sites
 ##
 ## History:
+## <8> 25.Oct'07 SB Add FreeNAC generic section
 ## <7> 23.Mar'06 SB
 ## <6> 04.Jan'05 SB
 ## <5> 23.Aug'04 SB Major overhaul
@@ -15,14 +16,15 @@
 ##
 ##############################
 
-## Original logcheck entries:
+## Original logcheck entries: ############
 authsrv.*AUTHENTICATE
 
-cron.*CMD
-cron.*RELOAD
-cron.*STARTUP
-crontab.* (LIST|REPLACE|ORPHAN|END EDIT)
+# cron
+cron.* CMD
+cron.* RELOAD
+cron.* STARTUP
 CROND.* CMD
+crontab.* (LIST|REPLACE|ORPHAN|END EDIT)
 
 ## next two corrected.
 ftp-gw.* exit host
@@ -78,7 +80,7 @@ xntpd.*time reset
 
 
 #######################################################
-####### Sean's standard entries for all sites #########
+####### Sean's standard entries for all UNIX sites #########
 
 ## Repeats
 last message repeated .* time
@@ -117,6 +119,8 @@ nscd.* gethostbyaddr
 # minor kernel messages
 kern.info
 kernel: (cdrom|dev fd0)
+kernel: Kernel logging (proc) stopped
+kernel: Kernel log daemon
 submountd:
 
 
@@ -224,7 +228,8 @@ postfix/smtpd.* verification failed: Bad file number
 postfix/smtpd.* timeout after 
 postfix.* enabling PIX <CRLF>.<CRLF> workaround
 postfix.* server refused mail service
-postfix.* (statistics: max connection rate|verification failed)
+postfix.*: (statistics)
+postfix.*: (daemon started|reload)
 
 
 # Incoming:
@@ -302,8 +307,14 @@ dnsmasq.* (DHCP|reply|/etc/hosts|<NXDOMAIN)
 # Apache 2
 httpd2-prefork.*Broken pipe: core_output_filter: writing data
 
+# syslog
+syslog-ng.*: (new configuration|Changing permissions on special file|SIGHUP received)
+syslog-ng.*: (STATS)
+Reload syslog service
+
+
+# other
 package LC_MESSAGES not listed in file index
-syslog-ng.* STATS: dropped 0
 (xinetd|sshd).*hosts.allow, line .*: host name mismatch
 powersaved.* server response code 200
 SQLAnywhere.* Cache size adjusted
@@ -315,17 +326,6 @@ plug-gw.* gethostbyaddr
 
 # FreeBSD
 sm-mta.* relay=localhost
-
-## Cisco
-SSH-5-ENABLED
-Cisco Internetwork Operating System Software
-EARLY DEPLOYMENT RELEASE SOFTWARE
-Copyright .* by cisco Systems
-Compiled .* by
-Support: .*www.cisco.com/techsupport
-
-## VMPS
-vmpsd: (ALLOCATE|FREE|-------)
 
 
 ## Windows:
@@ -339,10 +339,17 @@ ntop.* gethostbyaddr
 
 # mysql
 Got an error reading communication packets
-mysqld ended
 \[NOTE\] Slave SQL thread initialized
-InnoDB: Shutdown completed
+InnoDB: (Shut|Start)
+MySQL Community Edition
+mysqld: ready for connections
+mysqld: Shutdown complete
+mysqld: Normal shutdown
+mysqld ended
+mysqld started
 
+
+# postgrey
 postgrey.* delayed
 
 
@@ -356,5 +363,71 @@ rpcbind: check_netconfig:
 
 
 
-################# End Sean's standard entries #######################
+################# Free generic "normal" entries to ignore #######################
+## Cisco
+SSH-5-ENABLED
+Cisco Internetwork Operating System Software
+EARLY DEPLOYMENT RELEASE SOFTWARE
+Copyright .* by cisco Systems
+Compiled .* by
+Support: .*www.cisco.com/techsupport
+Manual Users synced from
+Filtering MAC address 00-00-00-00-00-00
+
+# FreeRadius
+## Freeradius
+#radius_xlat
+#Cleaning up request
+#Walking the entire request list
+#-Station-Id
+#Nothing to do.
+#Processing the authorize section of
+#(rlm_eap|TLS_|eaptls_|MS-MPPE|rlm_mschap)
+#Exec-Program: /opt/samba/bin/ntlm_auth
+Waking up in
+(Framed-MTU|Message-Authenticator|NAS-Port|NAS-IP-Address|NAS-Identifier)
+SSL Connection Established
+Debug.*
+Tunnel.*
+PEAP.*
+Call.*
+MS-.*
+Challenge.*
+rlm_eap_mschapv2.*
+User-Password.*
+# : Info: 
+
+
+########## VMPS / FreeNAC ####################
+# 'normal' messages we can ignore
+vmpsd_external.*: (get_port_status|decide|Debug|ping|Ping)
+
+flap_detect.*: (Debug1|restart_port for )
+
+restart_port.*: Port restart try
+cron_restart_port[\d+]: restart_port switch
+vmps_purge_unknowns[\d+]: completed
+dump_ports[\d+]: completed
+port_scan: Scanning host 
+port_scan: (Doing port_scan to sytem|port_scan finished)
+snmp_scan.php.*: Start scanning
+wsus_getinfo.php.*: Updated patch information
+ping_switch.php: Querying switch
+epo_sync.php.*: Update AV status
+router_mac_ip.php.*: Update
+
+
+vmpsd: (ALLOCATE|FREE|-------)
+vmpsd: (Unknown|No. Data Items|Sequence No.|Client IP address|Port name):
+vmpsd: (==============|VQP Request|ResponseDomain name|MAC address)
+vmpsd: ALLOW
+vmpsd: (Vlan name|Domain name|Response)
+
+# FreeRadius
+Info: rlm_eap_tls
+EAP-Message =
+Service-Type = Framed-User
+State =
+FreeRADIUS-Proxied-To
+
  
