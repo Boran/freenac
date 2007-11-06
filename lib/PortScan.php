@@ -52,27 +52,31 @@ EOF;
          {
             #If so, assign all properties retrieved to our internal array
             $row=mysql_fetch_assoc($res);
-            foreach ($row as $k => $v)
-               $this->db_row[$k]=$v;
-            
-            #Now, get the list of open ports for this device
-            $query=<<<EOF
-               SELECT s.port, p.name AS protocol, s.name AS service, o.banner, o.timestamp
-               FROM nac_openports o INNER JOIN services s ON o.service=s.id
-               INNER JOIN protocols p on p.protocol=s.protocol WHERE o.sid='{$this->getEndDeviceID()}';
-EOF;
-            $this->logger->debug($query,3);
-            $res=mysql_query($query);
-            if ($res)
+            if ($res && (mysql_num_rows($res)>0))
             {
-               $open_ports=mysql_num_rows($res);
-               #How many open ports?
-               $this->db_row['open_ports']=$open_ports;
-               if ($open_ports > 0)
+               foreach ($row as $k => $v)
+                  $this->db_row[$k]=$v;
+            
+               #Now, get the list of open ports for this device
+               $query=<<<EOF
+                  SELECT s.port, p.name AS protocol, s.name AS service, o.banner, o.timestamp
+                  FROM nac_openports o INNER JOIN services s ON o.service=s.id
+                  INNER JOIN protocols p on p.protocol=s.protocol WHERE o.sid='{$this->getEndDeviceID()}';
+EOF;
+               $this->logger->debug($query,3);
+               $res=mysql_query($query);
+               $num_rows=mysql_num_rows($res);
+               if ($res && ($num_rows>0))
                {
-                  #And store those open ports in our internal array
-                  while ($row=mysql_fetch_assoc($res))
-                     $this->db_row['ports'][]=$row;
+                  $open_ports=mysql_num_rows($res);
+                  #How many open ports?
+                  $this->db_row['open_ports']=$open_ports;
+                  if ($open_ports > 0)
+                  {
+                     #And store those open ports in our internal array
+                     while ($row=mysql_fetch_assoc($res))
+                        $this->db_row['ports'][]=$row;
+                  }
                }
             }
          }
