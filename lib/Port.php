@@ -403,9 +403,14 @@ EOF;
       $backtrace = debug_backtrace();
       array_shift($backtrace);  //Remove call to check_calling_method from the backtrace;
       $ok=0;
-      #$valid_methods=array('update','insertIfUnknown');
-      #Check if we are calling from a valid method
-      #if (in_array($backtrace[0]['function'],$valid_methods))
+      #Are we calling from a child of EndDevice which uses CallWrapper?
+      if (($backtrace[1]['class']) && ( (strcasecmp(get_parent_class($this),'Port')) == 0 ) && (strcasecmp($backtrace[3]['class'],'Callwrapper') ==0 ))
+      {
+         #If so, do the necessary corrections to our backtrace
+         $temp=array_shift($backtrace);
+         $backtrace[0]=$temp;
+      }
+
       {
          #Check if we are using callwrapper
          if ( (strcasecmp($backtrace[2]['class'],'Callwrapper')==0) && (strcasecmp($backtrace[2]['function'],'__call')==0))          
@@ -425,8 +430,14 @@ EOF;
          #Not using callwrapper
          else if (strcasecmp($backtrace[0]['class'],'Port')==0)
          {
+            #Are we calling from a child of EndDevice?
+            if ( (strcasecmp($backtrace[1]['function'],'postconnect')) != 0 )
+            {
+               #If so, do the necessary corrections to our backtrace
+               $temp=array_shift($backtrace);
+               $backtrace[0]=$temp;
+            }
             #Check if the class is a child of Policy and if calling method is postconnect
-            #if (($backtrace[1]['class'] instanceof Policy) && (strcasecmp($backtrace[1]['function'],'postconnect')!=0))
             if (strcasecmp($backtrace[1]['function'],'postconnect')!=0)
             {
                $this->logger->logit("{$backtrace[0]['function']} method can only be called from a postconnect method but called instead from {$backtrace[4]['function']}, condition not met, aborting insert operation",LOG_WARNING);
