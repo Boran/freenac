@@ -321,7 +321,7 @@ EOF;
                #Log it and increase our internal counter to indicate that an insert has been done
                $string="New switch entry {$this->switch_ip} ({$this->switch_name}), please update the description.";
                $this->logger->logit($string);
-               log2db('info',$string);
+               #log2db('info',$string);
                $counter++;
             }
             else
@@ -354,7 +354,7 @@ EOF;
                else
                   $string="New port {$this->port_name} in switch {$this->switch_ip} ({$this->switch_name})"; 
                $this->logger->logit($string);
-               log2db('info',$string);
+               #log2db('info',$string);
                $counter++;
             }
             else

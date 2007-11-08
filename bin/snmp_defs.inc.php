@@ -100,68 +100,77 @@ function callback($buffer)
  * Assume that if its not a trunk, iis physical, and the interface i
  * name starts with Fa,Gi or X/YY, then its a candidate.
  */
-function is_port_vmps($myiface) {
-        if ( ($myiface['phys'] == 1) && ($myiface['trunk'] != 1) && ($myiface['type'] == 2) &&
-          (( stristr($myiface['name'],'Fa') || stristr($myiface['name'],'Gi') ||
-             preg_match("/\d+\/\d+/", $myiface['name'])     )) )
-        {
-             debug2("$switchname int=" .$myiface['name']
-               .', vlan=' .$myiface['vlan'] .', trunk= ' .$myiface['trunk']
-               .', phys=' .$myiface['phys'] .', vmps=YES' );
-                return(TRUE);
-        } else {
-             debug2("$switchname int=" .$myiface['name']
-               .', vlan=' .$myiface['vlan'] .', trunk= ' .$myiface['trunk']
-               .', phys=' .$myiface['phys'] .', vmps=NO' );
-                return(FALSE);
-        };
-
-
+function is_port_vmps($myiface) 
+{
+   if ( ($myiface['phys'] == 1) && ($myiface['trunk'] != 1) && ($myiface['type'] == 2) &&
+      (( stristr($myiface['name'],'Fa') || stristr($myiface['name'],'Gi') ||
+      preg_match("/\d+\/\d+/", $myiface['name'])     )) )
+      {
+         debug2("$switchname int=" .$myiface['name']
+           .', vlan=' .$myiface['vlan'] .', trunk= ' .$myiface['trunk']
+           .', phys=' .$myiface['phys'] .', vmps=YES' );
+         return(TRUE);
+      } 
+      else 
+      {
+         debug2("$switchname int=" .$myiface['name']
+           .', vlan=' .$myiface['vlan'] .', trunk= ' .$myiface['trunk']
+           .', phys=' .$myiface['phys'] .', vmps=NO' );
+         return(FALSE);
+      };
 };
 
-function walk_ports($switch,$snmp_ro) {
-	snmp_set_oid_numeric_print(TRUE);
-	snmp_set_quick_print(TRUE);
-	snmp_set_enum_print(TRUE); 
-        global $snmp_ifaces; // query to get all interfaces
-        global $snmp_if; // sub-queries with interfaces characteristics
-	global $snmp_port;
+function walk_ports($switch,$snmp_ro)
+{
+   snmp_set_oid_numeric_print(TRUE);
+   snmp_set_quick_print(TRUE);
+   snmp_set_enum_print(TRUE); 
+   global $snmp_ifaces; // query to get all interfaces
+   global $snmp_if; // sub-queries with interfaces characteristics
+   global $snmp_port;
 #	ob_start("callback"); 
-	$iface = array();
-        debug2("snmprealwalk $switch $snmp_ro $snmp_ifaces");
-        $ifaces = @snmprealwalk($switch,$snmp_ro,$snmp_ifaces);
+   $iface = array();
+   debug2("snmprealwalk $switch $snmp_ro $snmp_ifaces");
+   $ifaces = @snmprealwalk($switch,$snmp_ro,$snmp_ifaces);
 
-	if ((count($ifaces) == 0) || !(is_array($ifaces))) { return($iface); };
+   if ((count($ifaces) == 0) || !(is_array($ifaces))) { return($iface); };
 
-        foreach ($ifaces as $oid => $name) {
+   foreach ($ifaces as $oid => $name) 
+   {
+      $oids = explode('.',$oid);
+      $idx = $oids[12];
+      if ($idx > 0 && ($oids[7] == '31')) 
+      {
+         $iface[$id]['id'] = $idx;
+         $index[] = $idx;
+      };
+   };
+   unset($idx);
+
+   if (count($index) > 0) 
+   {
+      foreach ($snmp_if as $field => $query) 
+      {
+         foreach($index as $idx) 
+         {
+            $iface[$idx][$field] = '';
+         };
+         debug2("snmprealwalk $switch $query");	
+         $walk = snmprealwalk($switch,$snmp_ro,$query);
+         foreach ($walk as $oid => $value) 
+         {
             $oids = explode('.',$oid);
-            $idx = $oids[12];
-			if ($idx > 0 && ($oids[7] == '31')) {
-            	$iface[$id]['id'] = $idx;
-	            $index[] = $idx;
-			};
-        };
-        unset($idx);
+            $idx = $oids[count($oids)-1];
+            $iface[$idx][$field] = $value;
+         };
+         unset($walk);
 
-		if (count($index) > 0) {
-            foreach ($snmp_if as $field => $query) {
-                    foreach($index as $idx) {
-                            $iface[$idx][$field] = '';
-                    };
-		    debug2("snmprealwalk $switch $query");	
-                    $walk = snmprealwalk($switch,$snmp_ro,$query);
-                    foreach ($walk as $oid => $value) {
-                            $oids = explode('.',$oid);
-                            $idx = $oids[count($oids)-1];
-                            $iface[$idx][$field] = $value;
-                    };
-                    unset($walk);
-
-            };
+      };
 	
-            foreach ($iface as $idx => $myiface) {
-                    $iface[$idx]['vmps'] = is_port_vmps($myiface);
-            };
+      foreach ($iface as $idx => $myiface) 
+      {
+         $iface[$idx]['vmps'] = is_port_vmps($myiface);
+      };
 
   
 // big debug
@@ -174,269 +183,315 @@ function walk_ports($switch,$snmp_ro) {
 	};
 */
 	
-		};
+   };
 
-		if (count($index) > 0) {
-            foreach ($snmp_port as $field => $query) {
-                    foreach($index as $idx) {
-                            $iface[$idx][$field] = '';
-                    };
-                    debug2("snmprealwalk $switch $query");
-                    $walk = snmprealwalk($switch,$snmp_ro,$query);
-                    foreach ($walk as $oid => $value) {
-                            $oids = explode('.',$oid);
-                            $idx = $oids[count($oids)-1];
-                            $iface[$idx][$field] = $value;
-                    };
-                    unset($walk);
+   if (count($index) > 0) 
+   {
+      foreach ($snmp_port as $field => $query) 
+      {
+         foreach($index as $idx) 
+         {
+            $iface[$idx][$field] = '';
+         };
+         debug2("snmprealwalk $switch $query");
+         $walk = snmprealwalk($switch,$snmp_ro,$query);
+         foreach ($walk as $oid => $value) 
+         {
+            $oids = explode('.',$oid);
+            $idx = $oids[count($oids)-1];
+            $iface[$idx][$field] = $value;
+         };
+         unset($walk);
+      };
 
+      foreach ($iface as $idx => $myiface) 
+      {
+         $iface[$idx]['vmps'] = is_port_vmps($myiface);
+      };
+
+   };
+
+   #ob_flush();
+   return($iface);
+};
+
+function mac_exist($mac) 
+{
+   global $connect;
+   $mac=strtolower($mac);
+   $query = "SELECT * FROM systems WHERE mac='$mac'";
+   $result = mysql_query($query) or die("Unable to query systems table");
+   if (mysql_num_rows($result) > 0) 
+   {
+      $row = mysql_fetch_array($result);
+      return($row['id']);
+   } 
+   else 
+   {
+      return(FALSE);
+   };
+};
+
+function iface_exist($switchid,$portname) 
+{
+   global $connect;
+   $query = "SELECT * FROM port WHERE switch=$switchid AND name='$portname'";
+   $result = mysql_query($query) or die("Unable to query port table");
+   if (mysql_num_rows($result) > 0) 
+   {
+      $row = mysql_fetch_array($result);
+      return($row['id']);
+   }
+   else 
+   {
+      return(FALSE);
+   };
+};
+
+
+function switch_exist($name,$value) 
+{
+   global $connect;
+   $query = "SELECT * FROM switch WHERE $name='$value'";
+   $result = mysql_query($query) or die("Unable to query switch table");
+   if (mysql_num_rows($result) > 0) 
+   {
+      $row = mysql_fetch_array($result);
+      return($row['id']);
+   }
+   else 
+   {
+      return(FALSE);
+   };
+};
+
+function get_vlanid($default_id) 
+{
+   global $connect;
+   $query = "SELECT id FROM vlan WHERE default_id='$default_id'";
+   $result = mysql_query($query) or die("Unable to query vlan table");
+   if (mysql_num_rows($result) > 0) 
+   {
+      $vlan = mysql_fetch_array($result);
+      return($vlan['id']);
+   }
+   else 
+   {
+      return(FALSE);
+   };
+};
+
+function get_cisco_info($switch,$snmp_ro) 
+{
+   global $snmp_sw;
+   // will return an array with name, hardware, software, catos
+   if (!empty($snmp_sw))
+   {
+      foreach ($snmp_sw as $field => $query) 
+      {
+         debug2("snmpget $switch $query");
+         $sw[$field] = snmpget($switch,$snmp_ro,$query);
+      };
+      // get short name
+      $names = explode('.',$sw['name']);
+      $sw['shortname'] = $names[0];
+
+      // parse description field
+      if (stristr($sw['descr'],'cisco')) 
+      {
+         $words = explode(' ',$sw['descr']);
+         foreach($words as $idx => $word) 
+         {
+            // first, version
+            if (stristr($word,'Version')) 
+            {
+               $sw['cisco_sw'] = rtrim($words[$idx+1],',');
+            }; 
+            if (stristr($word,'IOS')) 
+            {
+               $sw['catos'] = FALSE;
             };
-
-            foreach ($iface as $idx => $myiface) {
-                    $iface[$idx]['vmps'] = is_port_vmps($myiface);
+         };
+         // then hardware
+         debug2("snmprealwalk $switch ".$snmp_cisco['hw']);	
+         $hw_versions = snmprealwalk($switch,$snmp_ro,$snmp_cisco['hw']);
+         foreach ($hw_versions as $value) 
+         {
+            if (strstr($value,'WS')) 
+            {
+               $sw['cisco_hw'] = rtrim(ltrim($value,'"'),'"');
             };
+         };
+         unset($words);		
+      };
 
-		};
-
-#	ob_flush();
-        return($iface);
+      return(array($sw['shortname'],$sw['cisco_hw'],$sw['cisco_sw'],$sw['catos']));
+   }
+   else return;
 };
 
-function mac_exist($mac) {
-		global $connect;
-        $mac=strtolower($mac);
-		$query = "SELECT * FROM systems WHERE mac='$mac'";
-		$result = mysql_query($query) or die("Unable to query systems table");
-		if (mysql_num_rows($result) > 0) {
-                        $row = mysql_fetch_array($result);
-                        return($row['id']);
-		} else {
-			return(FALSE);
-		};
+function format_snmpmac($mac) 
+{
+   // input  = "00 02 44 45 9B FE "
+   // output = 0002.4445.9BFE
+   $mac = rtrim(ltrim($mac,'"'),'"');
+   $mb = explode(' ',$mac);
+   $newmac = $mb[0].$mb[1].'.'.$mb[2].$mb[3].'.'.$mb[4].$mb[5];
+   return(strtolower($newmac));
 };
 
-function iface_exist($switchid,$portname) {
-		global $connect;
-		$query = "SELECT * FROM port WHERE switch=$switchid AND name='$portname'";
-		$result = mysql_query($query) or die("Unable to query port table");
-		if (mysql_num_rows($result) > 0) {
-                        $row = mysql_fetch_array($result);
-                        return($row['id']);
-		} else {
-			return(FALSE);
-		};
-};
+function walk_macs($switch,$vlanid,$snmp_ro) 
+{
+   snmp_set_oid_numeric_print(TRUE);
+   snmp_set_quick_print(TRUE);
+   snmp_set_enum_print(TRUE); 
+   global $snmp_mac;
+   global $snmp_bridge;
+   global $snmp_ports;
+   global $switch_ifaces;
+   #ob_start("callback"); 
 
+   $snmp_ro_vlan = $snmp_ro.'@'.$vlanid;
 
-function switch_exist($name,$value) {
-		global $connect;
-		$query = "SELECT * FROM switch WHERE $name='$value'";
-		$result = mysql_query($query) or die("Unable to query switch table");
-		if (mysql_num_rows($result) > 0) {
-                        $row = mysql_fetch_array($result);
-                        return($row['id']);
-		} else {
-			return(FALSE);
-		};
-};
-
-function get_vlanid($default_id) {
-		global $connect;
-		$query = "SELECT id FROM vlan WHERE default_id='$default_id'";
-		$result = mysql_query($query) or die("Unable to query vlan table");
-		if (mysql_num_rows($result) > 0) {
-			$vlan = mysql_fetch_array($result);
-			return($vlan['id']);
-		} else {
-			return(FALSE);
-		};
-};
-
-function get_cisco_info($switch,$snmp_ro) {
-		global $snmp_sw;
-	// will return an array with name, hardware, software, catos
-                if (!empty($snmp_sw))
-                {
-		   foreach ($snmp_sw as $field => $query) {
-			debug2("snmpget $switch $query");
-			$sw[$field] = snmpget($switch,$snmp_ro,$query);
-	 	   };
-// get short name
-		   $names = explode('.',$sw['name']);
-		   $sw['shortname'] = $names[0];
-
-// parse description field
-		   if (stristr($sw['descr'],'cisco')) {
-			$words = explode(' ',$sw['descr']);
-			foreach($words as $idx => $word) {
-		// first, version
-				if (stristr($word,'Version')) {
-					$sw['cisco_sw'] = rtrim($words[$idx+1],',');
-				}; 
-				if (stristr($word,'IOS')) {
-					$sw['catos'] = FALSE;
-				};
-			};
-		// then hardware
-			debug2("snmprealwalk $switch ".$snmp_cisco['hw']);	
-			$hw_versions = snmprealwalk($switch,$snmp_ro,$snmp_cisco['hw']);
-			foreach ($hw_versions as $value) {
-				if (strstr($value,'WS')) {
-					$sw['cisco_hw'] = rtrim(ltrim($value,'"'),'"');
-				};
-			};
-			unset($words);		
-		   };
-
-		   return(array($sw['shortname'],$sw['cisco_hw'],$sw['cisco_sw'],$sw['catos']));
-                }
-                else return;
-};
-
-function format_snmpmac($mac) {
-// input  = "00 02 44 45 9B FE "
-// output = 0002.4445.9BFE
-	$mac = rtrim(ltrim($mac,'"'),'"');
-	$mb = explode(' ',$mac);
-	$newmac = $mb[0].$mb[1].'.'.$mb[2].$mb[3].'.'.$mb[4].$mb[5];
-	return(strtolower($newmac));
-};
-
-function walk_macs($switch,$vlanid,$snmp_ro) {
-	snmp_set_oid_numeric_print(TRUE);
-	snmp_set_quick_print(TRUE);
-	snmp_set_enum_print(TRUE); 
-	global $snmp_mac;
-	global $snmp_bridge;
-	global $snmp_ports;
-	global $switch_ifaces;
-#	ob_start("callback"); 
-
-	$snmp_ro_vlan = $snmp_ro.'@'.$vlanid;
-
-	$iface = array();
-        debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_mac");
-        $macs = @snmprealwalk($switch,$snmp_ro_vlan,$snmp_mac);
+   $iface = array();
+   debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_mac");
+   $macs = @snmprealwalk($switch,$snmp_ro_vlan,$snmp_mac);
         
 
-		$mac=array();
-		$mac2=array();
+   $mac=array();
+   $mac2=array();
 
-		if ((count($macs) == 0) || !(is_array($macs)))  { return($mac); };
+   if ((count($macs) == 0) || !(is_array($macs)))  { return($mac); };
 
-		foreach ($macs as $oid => $macaddress) {
-			$oids = explode('.',$oid);
-			$idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
-			$mac[$idx]['mac'] = format_snmpmac($macaddress);
-			$mac[$idx]['bridgeref'] = $idx;
-		};
-		unset($idx);
+   foreach ($macs as $oid => $macaddress) 
+   {
+      $oids = explode('.',$oid);
+      $idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
+      $mac[$idx]['mac'] = format_snmpmac($macaddress);
+      $mac[$idx]['bridgeref'] = $idx;
+   };
+   unset($idx);
 
 
-       debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_bridge");
-       $bridges = snmprealwalk($switch,$snmp_ro_vlan,$snmp_bridge);
+    debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_bridge");
+    $bridges = snmprealwalk($switch,$snmp_ro_vlan,$snmp_bridge);
 
-		if (count($bridges) == 0) { return($mac); };
+   if (count($bridges) == 0) { return($mac); };
 
-		foreach($bridges as $oid => $bridgeid) {
-			$oids = explode('.',$oid);
-			$idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
-			if ($mac[$idx]) {
-				$mac2[$bridgeid] = $mac[$idx];
-			};
-#			echo "$bridgeid - $idx - ".$mac[$idx]['mac']."\n";
-		};
+   foreach($bridges as $oid => $bridgeid) 
+   {
+      $oids = explode('.',$oid);
+      $idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
+      if ($mac[$idx]) 
+      {
+         $mac2[$bridgeid] = $mac[$idx];
+      };
+      #echo "$bridgeid - $idx - ".$mac[$idx]['mac']."\n";
+   };
 
-       debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_ports");
-       $ports = snmprealwalk($switch,$snmp_ro_vlan,$snmp_ports);
+   debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_ports");
+   $ports = snmprealwalk($switch,$snmp_ro_vlan,$snmp_ports);
 
-		if (count($bridges) == 0) { return($mac); };
+   if (count($bridges) == 0) { return($mac); };
 
-		foreach($ports as $oid => $portid) {
-			$oids = explode('.',$oid);
-			$idx = $oids[12];
-			if ($mac2[$idx]) {
-				$mac2[$idx]['portid'] = $portid;
-				$mac2[$idx]['port'] = $switch_ifaces[$portid]['name'];
-				$mac2[$idx]['trunk'] = $switch_ifaces[$portid]['trunk'];
-			};
-		};
+   foreach($ports as $oid => $portid) 
+   {
+      $oids = explode('.',$oid);
+      $idx = $oids[12];
+      if ($mac2[$idx]) 
+      {
+         $mac2[$idx]['portid'] = $portid;
+         $mac2[$idx]['port'] = $switch_ifaces[$portid]['name'];
+         $mac2[$idx]['trunk'] = $switch_ifaces[$portid]['trunk'];
+      };
+   };
 /*
-		foreach ($mac2 as $key => $value) {			
-			echo "$vlanid - $key : \t";
-			foreach ($value as $k2 => $v2) {
-				echo $k2.' = '.$v2."\t";
-			};
-			echo "\n";
-		};
+   foreach ($mac2 as $key => $value) 
+   {			
+      echo "$vlanid - $key : \t";
+      foreach ($value as $k2 => $v2) 
+      {
+         echo $k2.' = '.$v2."\t";
+      };
+      echo "\n";
+   };
 */
 
-#		ob_flush();
-		return($mac2);
+   #ob_flush();
+   return($mac2);
 };
 
 
-function walk_vlans($switch,$snmp_ro) {
-	snmp_set_oid_numeric_print(TRUE);
-	snmp_set_quick_print(TRUE);
-	snmp_set_enum_print(TRUE); 
-	global $snmp_vlan;
-	ob_start("callback"); 
+function walk_vlans($switch,$snmp_ro) 
+{
+   snmp_set_oid_numeric_print(TRUE);
+   snmp_set_quick_print(TRUE);
+   snmp_set_enum_print(TRUE); 
+   global $snmp_vlan;
+   #ob_start("callback"); 
+   $vlans = array();
 
+   foreach ($snmp_vlan as $key => $query) 
+   {
+      debug2("snmprealwalk $switch $query");
+      $listvlans = snmprealwalk($switch,$snmp_ro,$query);
 
-	$vlans = array();
-
-	foreach ($snmp_vlan as $key => $query) {
-		debug2("snmprealwalk $switch $query");
-		$listvlans = snmprealwalk($switch,$snmp_ro,$query);
-
-		if (count($listvlans) == 0) { return($vlans); };
-		if (is_array($listvlans)) {	
-			foreach ($listvlans as $oid => $value) {
-				$oids = explode('.',$oid);
-				$idx = $oids[count($oids)-1];
-				if ($key == 'name') { $value = rtrim(ltrim($value,'"'),'"'); };
-				$vlans[$idx][$key] = $value;
-				unset($value);
-			};
-		};
-	};
-	ob_flush();
-	return($vlans);
-};
-function walk_switchhw($switch,$snmp_ro) {
-	global $snmp_sw;
-	$hw_versions = @snmprealwalk($switch,$snmp_ro,$snmp_sw['ciscohw']);
-        if ((!empty($hw_versions))&&(count($hw_versions)>0))
-        {
-           foreach ($hw_versions as $value) {
-	        if (strstr($value,'WS')) {
-                     $cisco_hw = rtrim(ltrim($value,'"'),'"');
-        	    };
-           };
-	   return($cisco_hw);
-        }
-        else return;
+      if (count($listvlans) == 0) { return($vlans); };
+      if (is_array($listvlans)) 
+      {	
+         foreach ($listvlans as $oid => $value) 
+         {
+            $oids = explode('.',$oid);
+            $idx = $oids[count($oids)-1];
+            if ($key == 'name') { $value = rtrim(ltrim($value,'"'),'"'); };
+            $vlans[$idx][$key] = $value;
+            unset($value);
+         };
+      };
+   };
+   ob_flush();
+   return($vlans);
 };
 
+function walk_switchhw($switch,$snmp_ro) 
+{
+   global $snmp_sw;
+   $hw_versions = @snmprealwalk($switch,$snmp_ro,$snmp_sw['ciscohw']);
+   if ((!empty($hw_versions))&&(count($hw_versions)>0))
+   {
+      foreach ($hw_versions as $value) 
+      {
+         if (strstr($value,'WS')) 
+         {
+            $cisco_hw = rtrim(ltrim($value,'"'),'"');
+          };
+      };
+      return($cisco_hw);
+   }
+   else return;
+};
 
-function walk_switchsw($switch,$snmp_ro) {
-	global $snmp_sw;
 
-	$descr = snmpwalk($switch,$snmp_ro,$snmp_sw['descr']);
-	#$cisco_sw = snmpget($switch,$snmp_ro,$snmp_sw['soft_version']);
-	$words = explode(' ',$descr[0]);
-	foreach($words as $idx => $word) {
-                                if (stristr($word,'Version')) {
-                                        $cisco_sw = rtrim($words[$idx+1],',');
-					if (stristr($cisco_sw,"\n")) {
-						$parts = explode("\n",$cisco_sw);
-						$cisco_sw = $parts[0];
-					};
-                                }; 
-        };
-	return($cisco_sw);
+function walk_switchsw($switch,$snmp_ro) 
+{
+   global $snmp_sw;
 
+   $descr = snmpwalk($switch,$snmp_ro,$snmp_sw['descr']);
+   #$cisco_sw = snmpget($switch,$snmp_ro,$snmp_sw['soft_version']);
+   $words = explode(' ',$descr[0]);
+   foreach($words as $idx => $word) 
+   {
+      if (stristr($word,'Version')) 
+      {
+         $cisco_sw = rtrim($words[$idx+1],',');
+         if (stristr($cisco_sw,"\n")) 
+         {
+            $parts = explode("\n",$cisco_sw);
+            $cisco_sw = $parts[0];
+         };
+      }; 
+   };
+   return($cisco_sw);
 };
 
 

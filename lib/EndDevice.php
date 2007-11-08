@@ -431,7 +431,7 @@ EOF;
          if ( $this->db_row['email_on_connect'] )
          {
             $this->logger->mailit("{$this->mac}($this->hostname) is connecting to the network",$this->alert_message.$this->alert_subject,$this->db_row['email_on_connect']);
-            log2db('info',"{$this->mac}($this->hostname) is connecting to the network");
+            #log2db('info',"{$this->mac}($this->hostname) is connecting to the network");
          }
 
          #Check if it's not expired
@@ -441,7 +441,7 @@ EOF;
             $query="UPDATE systems SET LastSeen=NOW(), email_on_connect='', status=7, LastPort={$this->port_id}, health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
             $string="Note: Expired device {$this->hostname}({$this->mac}) has been refused network access and its status has been set to killed. Expiration date: {$this->expiry}";
             $this->logger->logit($string);
-            log2db('info',$string);
+            #log2db('info',$string);
          }
          else
          {
@@ -500,7 +500,7 @@ EOF;
 	    #$mesg="New unknown {$this->mac}({$this->getVendor()}), switch {$this->switch_info} Patch: {$this->patch_info}\n";
             $mesg="New unknown {$this->mac}({$this->getVendor()}), {$this->alert_message}";
 	    $this->logger->debug($subject,2);
-	    log2db('info',$mesg);
+	    #log2db('info',$mesg);
             if ($this->notify)
                $this->logger->mailit($subject,$mesg,$this->notify);
             $this->logger->mailit($subject,$mesg);
