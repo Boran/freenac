@@ -1,0 +1,44 @@
+CHANGE HISTORY V3.0:  
+---------------------
+
+Switches: 
+- Add last_monitored, up fields.
+- fix: cannot delete switch
+Ports: 
+- add last_monitored, up, shutdown fields.
+* allow changing of staticvlan, auth_profile, shutdown
+
+Overview: add lastseen L3
+
+Edit
+- User: epo user, last uid, last Wsus
+- System name: add last DNS name (last_hostname, a new field)
+- Copy DNS: warn if DNS not yet queried, and strip domain name
+
+- increase form height
+--------------------------------------------
+
+New fields documented, although not yet used on the server side
+- New DNS/Naming tab
+- heath status
+- email on connect field
+-------------------------------------------
+
+Oct23:
+Use date format 'yyyy-mm-dd hh:mm' consistency on all grids.
+Ports: 
+  allow changing of staticvlan, auth_profile, shutdown
+  (and set restart_now, if these change)
+  Display 'up/down' properly. Rearrange columns order.
+Systems:
+  unclicking 'unknowns' was not reseting the filter
+  
+Oct25:  
+Overiew2: new tab, beta
+Switches: improve up/down column
+Oct31:
+Switches: fix colouring
+Nov 8:
+nested switch-ports. 
+Right click pop to select systems from the ports menu.
+New Overview tab
