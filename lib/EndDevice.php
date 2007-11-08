@@ -299,7 +299,7 @@ EOF;
 	    }
 	 }
       }
-      $this->logger->logit("Field $methodName doesn't exist");
+      $this->logger->debug("Field $methodName doesn't exist",2);
    }
 	
    /**
