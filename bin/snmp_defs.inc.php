@@ -477,6 +477,8 @@ function walk_switchsw($switch,$snmp_ro)
    global $snmp_sw;
 
    $descr = snmpwalk($switch,$snmp_ro,$snmp_sw['descr']);
+   if (!$descr)
+      return false;
    #$cisco_sw = snmpget($switch,$snmp_ro,$snmp_sw['soft_version']);
    $words = explode(' ',$descr[0]);
    foreach($words as $idx => $word) 

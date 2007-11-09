@@ -193,6 +193,8 @@ if (is_array($switches))
 
       $logger->logit("Start scanning  ($switchid) $switchip ");
       $switch_ifaces = walk_ports($switchip,$snmp_ro);
+      if (!$switch_ifaces)
+         continue;
       // first, switch details
       foreach ($switch_ifaces as $if)
       {
