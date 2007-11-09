@@ -80,17 +80,6 @@ class Settings
    }
 
    /**
-   * Set the value of one property if it exists
-   * @param mixed $key          Property to lookup
-   * @param mixed $value        Value to set the desired property to
-   * @return boolean            True if successful, false otherwise
-   */
-   public function __set($key,$val)						# Set a var in our array
-   {
-      $this->props[$key]=$val;
-   }
-
-   /**
    * Get the value of one property if it exists
    * @param mixed $key          Property to lookup
    * @return mixed              The value of the wanted property, or false if such a property doesn't exist
