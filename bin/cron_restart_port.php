@@ -27,6 +27,25 @@ require_once 'funcs.inc.php';
 $logger->setDebugLevel(0);
 $logger->setLogToStdOut(false);
 
+function restart_daemons()
+{
+   global $conf, $logger;
+   if ($conf->restart_daemons)
+   {
+      $query="UPDATE config SET value='false',who='', LastChange=NOW() WHERE name='restart_daemons';";
+      $logger->debug($query,3);
+      $result = mysql_query($query);
+      if ( ! $result)
+      {
+         $logger->logit(mysql_error(), LOG_ERROR);
+      }
+      popen('/etc/init.d/vmps restart 2>&1','r');
+      popen('/etc/init.d/postconnect restart 2>&1','r');
+      log2db('info','Daemons have been restarted');
+      $conf=Settings::getInstance();   
+   }
+}
+
 $file_name='cron_restart_port.pid';
 #Check for PID file
 if (file_exists($file_name))
@@ -37,6 +56,10 @@ if (file_exists($file_name))
 #Create PID file
 $file=fopen($file_name,'w') or die("Can't write PID file");
 fclose($file);
+
+#Should we restart the daemons?
+if ($conf->restart_daemons)
+   restart_daemons();
 
 $query=<<<EOF
 SELECT p.id, 
@@ -64,7 +87,6 @@ if (!$res)
    unlink($file_name);
    exit(1);
 }
-
 
 while ($row = mysql_fetch_array($res, MYSQL_ASSOC))
 {
@@ -177,7 +199,6 @@ if ( mysql_num_rows($res) )
       $logger->logit(mysql_error(),LOG_ERROR);
    }
 }
-
 #Delete PID file
 unlink($file_name);
 ?>

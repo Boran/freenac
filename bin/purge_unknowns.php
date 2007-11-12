@@ -29,7 +29,7 @@
 require_once "funcs.inc.php";               # settings & functions
 
 $logger->setDebugLevel(0);
-$logger->setLogToStdOut();
+$logger->setLogToStdOut(false);
 
 # We don't have PHP5, so need some compat stuff
 #require_once 'PHP/Compat.php';
@@ -68,12 +68,9 @@ $query="select mac,vlan,description,lastport,lastseen from systems where name li
     
     $logger->logit($line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
     log2db('info', 'purge_unknowns: '.$line[0] .' '. $line[1] .' '. $line[2] .' '. $line[3] .' '. $line[4] );
+    # Wipe it!
+    cascade_delete($line[0]);
   }
-
-## b) Now actually wipe it!
-$query="DELETE from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50"; 
-  $res = mysql_query($query, $connect);
-  if (!$res) { die('Invalid query: ' . mysql_error()); }
 
 log2db('info', 'purge_unknowns: completed');
 $logger->logit('completed');
