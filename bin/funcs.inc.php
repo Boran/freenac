@@ -1110,7 +1110,6 @@ function cascade_delete($mac)
    $system_id = v_sql_1_select($query);
    if (!$system_id)
       return false;
-   $logger->logit("SID: $system_id");
    # Tables which have an sid field.
    $tables_to_delete_from=array('EpoComputerProperties','nac_hostscanned','nac_openports');
    foreach ($tables_to_delete_from as $table)
