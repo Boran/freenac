@@ -1070,5 +1070,67 @@ function write_auth($port_id, $system_id, $vlan)
        return false;
    }
 }
+
+/**
+* Delete a record of the specified table
+* @param mixed $table		Table to delete from
+* @param mixed $field		Field to use in the comparation
+* @param mixed $identifier	What identifies this device?
+* @return boolean		True if successful
+*/
+function do_delete($table, $field, $identifier)
+{
+   global $logger;
+   $query="DELETE FROM $table WHERE $field='$identifier';";
+   $logger->debug($query,3);
+   $res = mysql_query($query);
+   if (!$res)
+   {
+      $logger->logit(mysql_error());
+      return false;
+   }
+   else
+   {
+      return true;
+   }
+}
+
+/**
+* Delete all references to a MAC address from the FreeNAC tables
+* @param mixed $mac		MAC address of the device to delete
+*/
+function cascade_delete($mac)
+{
+   global $logger;
+   if (!$mac)
+      return false;
+   # Get system id of this device
+   $query="SELECT id FROM systems where mac='$mac';";
+   $logger->debug($query,3);
+   $system_id = v_sql_1_select($query);
+   if (!$system_id)
+      return false;
+   $logger->logit("SID: $system_id");
+   # Tables which have an sid field.
+   $tables_to_delete_from=array('EpoComputerProperties','nac_hostscanned','nac_openports');
+   foreach ($tables_to_delete_from as $table)
+   {
+      do_delete($table,'sid',$system_id);
+   }
+
+   # WSUS tables are a bit special, since only the sid is used in one of them. For the others we use TargetID
+   # Get TargetID for system to delete
+   $query="SELECT TargetID FROM nac_wsuscomputertarget WHERE sid='$system_id';";
+   $wsus_target_id=v_sql_1_select($query);
+   # Delete it from WSUS
+   if ($wsus_target_id)
+   {
+      do_delete('nac_wsuscomputertarget','TargetID',$wsus_target_id);
+      do_delete('nac_wsusupdatestatuspercomputer','TargetID',$wsus_target_id);
+   }
+
+   # And now delete it from the systems table
+   do_delete('systems','id',$system_id);
+}
 ### EOF ###
 ?>
