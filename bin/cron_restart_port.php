@@ -50,7 +50,7 @@ $file_name='cron_restart_port.pid';
 #Check for PID file
 if (file_exists($file_name))
 {
-   $logger->logit("A previous instance of cron_restart_port.php is still running.");
+   $logger->logit("A previous instance of cron_restart_port.php is still running.", LOG_ERROR);
    exit(1);
 }
 #Create PID file

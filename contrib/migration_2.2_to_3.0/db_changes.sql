@@ -1,3 +1,12 @@
+-- New stats table
+CREATE TABLE `stats` (
+  `id` int(11) NOT NULL auto_increment,
+  `code` varchar(100) default NULL,
+  `value` int(11) NOT NULL,
+  `datetime` datetime default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 -- New health table
 CREATE TABLE `health` (
 	`id` int(10) unsigned not null,
