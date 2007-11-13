@@ -27,11 +27,15 @@ require_once 'funcs.inc.php';
 $logger->setDebugLevel(0);
 $logger->setLogToStdOut(false);
 
+/**
+* Restart daemons on master server
+*/
 function restart_daemons()
 {
    global $conf, $logger;
    if ($conf->restart_daemons)
    {
+      # Reset flag
       $query="UPDATE config SET value='false',who='', LastChange=NOW() WHERE name='restart_daemons';";
       $logger->debug($query,3);
       $result = mysql_query($query);
@@ -39,18 +43,28 @@ function restart_daemons()
       {
          $logger->logit(mysql_error(), LOG_ERROR);
       }
+      # Restart them
       popen('/etc/init.d/vmps restart 2>&1','r');
       popen('/etc/init.d/postconnect restart 2>&1','r');
+      # Write to the db log
       log2db('info','Daemons have been restarted');
+      # Reload settings?
       $conf=Settings::getInstance();   
    }
 }
 
+/**
+* Delete the pid file
+* This function is also called the following signals have been caught:
+* SIGTERM, SIGHUP, SIGINT
+*/
 function delete_pid_file()
 {
    global $file_name;
    unlink($file_name);
 }
+
+## ------------------------------------------- Main stuff ---------------------------------------
 
 $file_name='cron_restart_port.pid';
 #Check for PID file
