@@ -68,4 +68,29 @@ alter table port   change last_vlan    `last_vlan` int(11) default NULL;
 alter table port   change auth_profile  `auth_profile` int(11) unsigned default NULL;
 alter table vlanswitch   change  vlan_id `vlan_id` int(11) default NULL;
 
+Nov 13:
+alter table guirights change column ad_group ad_group varchar(255) default null;
+alter table health change column `comment` `comment` varchar(100) default null;
+alter table patchcable change column rack_location rack_location varchar(30) default null;
+alter table patchcable change column outlet outlet varchar(30) default null;
+alter table patchcable change column other other varchar(30) default null;
+alter table patchcable change column comment comment varchar(30) default null;
+alter table services change column description description varchar(255) default null;
+alter table subnets change column scan scan tinyint(4) default '0';
+alter table subnets change column scan scan tinyint(4) default '0';
+alter table switch add column group_id int default null; 
+  switch Ip readonly, not blue
+  vlan: wider
+  switch ip: wider
+	Static vlan too narrow 
+	Default vlan: same popup 
+	Only allow switch programming for Sysadmins
+	Overview:
+     RO: swgroup,foreneame
+     Add lookup: vlan
+  Administration: add Server Control, "Restart NAC"
+  taCable, set fetchall=false
+  Patches: fix colours per cable type: green/blue/grey
+
+
 
