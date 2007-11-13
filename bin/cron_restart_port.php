@@ -46,6 +46,12 @@ function restart_daemons()
    }
 }
 
+function delete_pid_file()
+{
+   global $file_name;
+   unlink($file_name);
+}
+
 $file_name='cron_restart_port.pid';
 #Check for PID file
 if (file_exists($file_name))
@@ -56,6 +62,11 @@ if (file_exists($file_name))
 #Create PID file
 $file=fopen($file_name,'w') or die("Can't write PID file");
 fclose($file);
+
+#Handle signals
+pcntl_signal(SIGTERM, "delete_pid_file");
+pcntl_signal(SIGHUP, "delete_pid_file");
+pcntl_signal(SIGINT, "delete_pid_file");
 
 #Should we restart the daemons?
 if ($conf->restart_daemons)
@@ -84,7 +95,7 @@ if (!$res)
 {
    $logger->logit(mysql_error());
    #Delete PID file
-   unlink($file_name);
+   delete_pid_file();
    exit(1);
 }
 
@@ -98,7 +109,7 @@ while ($row = mysql_fetch_array($res, MYSQL_ASSOC))
 if ( ! $switch_ports)
 {
    #Delete PID file
-   unlink($file_name);
+   delete_pid_file();
    exit();
 }
 
@@ -200,5 +211,5 @@ if ( mysql_num_rows($res) )
    }
 }
 #Delete PID file
-unlink($file_name);
+delete_pid_file($file_name);
 ?>
