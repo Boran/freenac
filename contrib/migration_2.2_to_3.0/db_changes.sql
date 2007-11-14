@@ -46,18 +46,21 @@ ALTER TABLE systems ADD COLUMN last_uid int COMMENT "Last user logged on to PC";
 ALTER TABLE systems ADD COLUMN email_on_connect varchar(100) COMMENT "Email address to alert";
 
 -- New configuration entries in the config table
-INSERT INTO config SET type='string', name='default_policy', value='BasicPolicy';
+INSERT INTO config SET type='string', name='default_policy', value='BasicPolicy', COMMENT='Policy to load';
 INSERT INTO config SET type='boolean', name='router_mac_ip_discoverall', value='false', comment='Discover/document all MAC/IPs found or only those already in the DB?';
 INSERT INTO config SET type='boolean', name='scan_unmanaged', value='false', comment='Should port_scan scan unmanaged systems?';
 INSERT INTO config SET type='integer', name='scan_hours_for_ip', value='3', comment='Number of hours for an IP address to be considered as up-to-date';
 INSERT INTO config SET type='boolean', name='vm_lan_like_host', value='false', comment='If VM, assign the same VLAN as its host?';
-INSERT INTO config SET type='boolean', name='wsus_enabled', value='false';
-INSERT INTO config SET type='string', name='wsus_dbalias';
-INSERT INTO config SET type='string', name='wsus_db';
-INSERT INTO config SET type='boolean', name='epo_enabled', value='false';
-INSERT INTO config SET type='string', name='epo_dbalias';
-INSERT INTO config SET type='string', name='epo_db';
-INSERT INTO config SET type='boolean', name='restart_daemons', value='false';
+INSERT INTO config SET type='boolean', name='wsus_enabled', value='false', COMMENT='Enable the WSUS module';
+INSERT INTO config SET type='string', name='wsus_dbalias', COMMENT='DNS name';
+INSERT INTO config SET type='string', name='wsus_db', COMMENT='DB instance';
+INSERT INTO config SET type='boolean', name='epo_enabled', value='false', COMMENT='Enable antivirus checking';
+INSERT INTO config SET type='string', name='epo_dbalias', COMMENT='DNS name';
+INSERT INTO config SET type='string', name='epo_db', COMMENT='DB instance';
+INSERT INTO config SET type='boolean', name='restart_daemons', value='false', COMMENT='Restart master daemons?';
+UPDATE config SET comment='Global default vlan index for unknowns. Set to 0 for default deny' WHERE name='default_vlan';
+UPDATE config SET comment='Vlan index for unknowns when auto added to the DB, normally=default_vlan' WHERE name='set_vlan_for_unknowns';
+UPDATE config SET comment='Enable the use of a default vlan index per port - 0/1' WHERE name='use_port_default_vlan';
 
 -- DB fixes
 alter table systems change column description description varchar(100) default null comment "v3: not used";
