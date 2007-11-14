@@ -232,7 +232,7 @@ final class Logger
          }
          else
          {
-            syslog($criticality,$message); 		#Log it through syslog
+            syslog((int)$criticality,$message); 		#Log it through syslog
             ob_flush();
          }
          if ($this->httpd_log)
