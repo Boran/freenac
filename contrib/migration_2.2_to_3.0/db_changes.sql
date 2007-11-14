@@ -13,7 +13,7 @@ CREATE TABLE `health` (
 	`value` varchar(30) not null,
 	`color` varchar(6) default null,
 	`comment` varchar(100) default null,
-	PRIMARY KEY (`id`);
+	PRIMARY KEY (`id`)
 );
 INSERT INTO health(id, value, comment) VALUES (0,'Unknown','No health information available');
 INSERT INTO health(id, value, comment) VALUES (1, 'OK', '');
