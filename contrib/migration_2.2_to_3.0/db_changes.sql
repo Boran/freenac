@@ -1,3 +1,81 @@
+-- New epo_systems table
+CREATE TABLE epo_systems (
+  sid int not null,
+  nodename varchar(30),
+  domainname varchar(100),
+  ip varchar(20),
+  mac varchar(30) not null,
+  agentversion varchar(50),
+  lastepocontact datetime,
+  virusver varchar(50),
+  virusenginever varchar(100),
+  virusdatver varchar(50),
+  virushotfix varchar(100),
+  ostype varchar(100),
+  osversion varchar(100),
+  osservicepackver varchar(100),
+  osbuildnum int,
+  freediskspace int,
+  username varchar(128),
+  lastsync datetime not null,
+  PRIMARY KEY (sid),
+  unique key (sid),
+  UNIQUE KEY (mac)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='list of systems with the epo client installed, synced from epo database';
+
+-- New epo_versions table
+CREATE TABLE epo_versions (
+  id int not null auto_increment,
+  product varchar(255) not null,
+  version varchar(255) not null,
+  hotfix varchar(32),
+  lastsync datetime not null,
+  primary key (id),
+  unique key (id)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='current version of epo products, synced from epo database'
+
+-- New wsus_systems table
+create table if not exists wsus_systems (
+        sid int not null,
+        hostname varchar(255) not null,
+        ip varchar(20),
+        lastwsuscontact datetime,
+        os varchar(256),
+        computermake varchar(64),
+        computermodel varchar(64),
+        notinstalled int,
+        downloaded int,
+        installedpendingreboot int,
+        failed int,
+        lastsync datetime not null,
+        primary key (sid),
+        unique (sid),
+        unique (hostname)
+) engine=myisam default charset=utf8 row_format=dynamic comment='list of systems with the wsus client, synced from wsus database';
+
+-- New wsus_neededUpdates table
+create table if not exists wsus_neededUpdates (
+        localupdateid int not null,
+        title varchar(200),
+        description varchar(1500),
+        msrcseverity varchar(20),
+        creationdate datetime,
+        receiveddate datetime,
+        lastsync datetime not null,
+        primary key (localupdateid),
+        unique (localupdateid)
+) engine=myisam default charset=utf8 row_format=dynamic comment='global list of needed updates, synced from wsus database';
+
+-- New wsus_systemToUpdates table
+create table if not exists wsus_systemToUpdates (
+        id int not null auto_increment,
+        sid int not null,
+        localupdateid int not null,
+        lastsync datetime not null,
+        primary key (id),
+        unique (id)
+) engine=myisam default charset=utf8 row_format=dynamic comment='mapping of systems to updates';
+
 -- New stats table
 CREATE TABLE `stats` (
   `id` int(11) NOT NULL auto_increment,
@@ -92,3 +170,19 @@ alter table services change column description description varchar(255) default 
 alter table subnets change column scan scan tinyint(4) default '0';
 alter table switch add column vlan_id int default null;
 alter table systems add column group_id int default null;
+
+-- Permisions on new tables
+grant select, update, insert, delete on opennac.epo_versions to inventwrite@'localhost';
+grant select, update, insert, delete on opennac.epo_systems to inventwrite@'localhost';
+grant select, update, insert, delete on opennac.wsus_systems to inventwrite@'localhost';
+grant select, update, insert, delete on opennac.wsus_systemToUpdates to inventwrite@'localhost';
+grant select, update, insert, delete on opennac.wsus_neededUpdates to inventwrite@'localhost';
+
+grant select on opennac.epo_versions to inventwrite@'%';
+grant select on opennac.epo_systems to inventwrite@'%';
+grant select on opennac.wsus_systems to inventwrite@'%';
+grant select on opennac.wsus_systemToUpdates to inventwrite@'%';
+grant select on opennac.wsus_neededUpdates to inventwrite@'%';
+
+grant select on opennac.health to inventwrite@'localhost';
+grant select on opennac.health to inventwrite@'%';
