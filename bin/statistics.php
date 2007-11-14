@@ -206,6 +206,7 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
       $body.=$v;
    foreach($messages['switches'] as $k => $v)
       $body.=$v;
+   $body.="\n\nPlease consider forwarding this statistics to freenac@vptt.ch";
    #Now we finally have the statistics. Mail them
    $logger->mailit($subject,$body);
    #Display results on screen

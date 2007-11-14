@@ -69,7 +69,7 @@ $vmps_servers.=',';
 $vmps_servers =~ s/,+/,/g;
 $vmps_servers =~ s/\s*//g;
 @servers=split(/,/,$vmps_servers);
-$servers_to_query = @servers;
+$servers_to_query = $#servers;
 
 $suplicant_mac='';
 $switch_ip='';
