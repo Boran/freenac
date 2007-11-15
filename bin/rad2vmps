@@ -44,10 +44,9 @@ use constant RLM_MODULE_NUMCODES=>9;
 #$script= dirname($0);
 $script=abs_path($0);                    # e.g. /opt/nac/bin/rad2vmps
 @file=split(/\//,$script);     # divide path up into seperate directories
-for ($i=0; $i<($#file)-1; $i++) {  # keep all elements except the last two, i.e. '/bin/rad2vmps'
+for ($i=1; $i<($#file)-1; $i++) {  # keep all elements except the last two, i.e. '/bin/rad2vmps'
    $path .= "/$file[$i]";
 }
-
 #Fix weird issue when calling radiusd -X from /root directory
 chdir ('/tmp');
 
@@ -71,7 +70,7 @@ $vmps_servers =~ s/\s*//g;
 @servers=split(/,/,$vmps_servers);
 $servers_to_query = $#servers;
 
-$suplicant_mac='';
+$supplicant_mac='';
 $switch_ip='';
 $nas_port='';
 
@@ -229,7 +228,7 @@ sub authorize()
    {
       $calling_station_id=uc($RAD_REQUEST{'Calling-Station-Id'});
       $calling_station_id =~ s/[-:]//g;
-      $suplicant_mac=$calling_station_id;
+      $supplicant_mac=$calling_station_id;
    }
 
    #Vendor defined attribute. NOT STANDARD
@@ -289,10 +288,10 @@ sub authenticate() #MAC-Auth-Bypass
       my $beginning=substr($string,0,2);
       $ending =~ s/[a-zA-Z]//g;
       $nas_port=$beginning.$ending;
-      $suplicant_mac=$RAD_REQUEST{'Calling-Station-Id'};
-      $suplicant_mac=~ s/[-:]//g;
+      $supplicant_mac=$RAD_REQUEST{'Calling-Station-Id'};
+      $supplicant_mac=~ s/[-:]//g;
       $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
-      $request{macaddr}= $suplicant_mac;
+      $request{macaddr}= $supplicant_mac;
       $request{client_ip}=$switch_ip;
       $request{port_name}=$nas_port;                # TBD: add later
       $request{vlan}='';
@@ -305,12 +304,12 @@ sub authenticate() #MAC-Auth-Bypass
 
       if ( ! $response{vlan} ) #Here we have obtained the answer
       {
-         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $suplicant_mac NOT allowed";
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac NOT allowed";
          return RLM_MODULE_REJECT;
       }
       else
       {
-         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $suplicant_mac allowed";
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac allowed";
          $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
          $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
          $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan}; #VLAN where the connecting device will be put in
@@ -329,7 +328,7 @@ sub post_auth()
    else
    {
       #This was not a MAC-Auth-Bypass. We know who the user is, let's assign her now a vlan based on her MAC address
-      $request{macaddr}=$suplicant_mac;
+      $request{macaddr}=$supplicant_mac;
       $request{client_ip}=$switch_ip;
       $request{port_name}=$nas_port;		       # TBD: add later
       $request{vlan}='';		
@@ -342,12 +341,12 @@ sub post_auth()
    
       if ( ! $response{vlan} )
       {
-         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $suplicant_mac NOT allowed";
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac NOT allowed";
          return RLM_MODULE_REJECT;
       }
       else 
       {	
-         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $suplicant_mac allowed";
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac allowed";
          $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
          $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
          $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
