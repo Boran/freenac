@@ -186,3 +186,5 @@ grant select on opennac.wsus_neededUpdates to inventwrite@'%';
 
 grant select on opennac.health to inventwrite@'localhost';
 grant select on opennac.health to inventwrite@'%';
+
+grant select, insert on opennac.stats to inventwrite@'localhost';
