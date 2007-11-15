@@ -119,6 +119,7 @@ if ($today_records == 0)
 
 #Get statistics for the whole month
 $today = date('Y-m-d');
+$today = '2007-11-30';
 $query = "SELECT LAST_DAY(NOW());";
 $logger->debug($query,3);
 $mysql_last_day = v_sql_1_select($query);
@@ -206,7 +207,7 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
       $body.=$v;
    foreach($messages['switches'] as $k => $v)
       $body.=$v;
-   $body.="\n\nPlease consider forwarding this statistics to freenac@vptt.ch";
+   $body.="\n\nPlease consider forwarding these statistics to freenac@vptt.ch";
    #Now we finally have the statistics. Mail them
    $logger->mailit($subject,$body);
    #Display results on screen
