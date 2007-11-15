@@ -41,10 +41,10 @@ set_include_path("../:./");
 require_once "./funcs.inc.php";     
 
 global $logger;
-$logger->setLogToStdOut();
+$logger->setLogToStdOut(false);
 $output=true;
 set_time_limit(0);
-$logger->setDebugLevel(7);
+$logger->setDebugLevel(0);
 
 #  epo version checking
 if( $EPO_VERSION == 3 )

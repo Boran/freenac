@@ -38,10 +38,10 @@ set_include_path("../:./");
 require_once "./funcs.inc.php";     
 
 global $logger;
-$logger->setLogToStdOut();
+$logger->setLogToStdOut(false);
 $output=true;
 set_time_limit(0);
-$logger->setDebugLevel(7);
+$logger->setDebugLevel(0);
 
 
 // this timestamp is used as the sync date for data synced from the wsus db to the freenac db

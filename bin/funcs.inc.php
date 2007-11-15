@@ -33,7 +33,10 @@ set_include_path("./:../");
 */
 function __autoload($classname)
 {
-   require_once "../lib/$classname.php";
+   if (file_exists("../lib/$classname.php"))
+      require_once "../lib/$classname.php";
+   else if (file_exists("../enterprise/$classname.php"))
+      require_once "../enterprise/$classname.php";
 }
 
 /**
