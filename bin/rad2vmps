@@ -42,7 +42,7 @@ use constant RLM_MODULE_NUMCODES=>9;
 #$script=abs_path($ARGV[0]);   # why is orgv[0] empty?
 #$script=abs_path($0);         # does not work, script is empty, why?
 #$script= dirname($0);
-$script=$0;                    # e.g. /opt/nac/bin/rad2vmps
+$script=abs_path($0);                    # e.g. /opt/nac/bin/rad2vmps
 @file=split(/\//,$script);     # divide path up into seperate directories
 for ($i=0; $i<($#file)-1; $i++) {  # keep all elements except the last two, i.e. '/bin/rad2vmps'
    $path .= "/$file[$i]";
@@ -305,12 +305,12 @@ sub authenticate() #MAC-Auth-Bypass
 
       if ( ! $response{vlan} ) #Here we have obtained the answer
       {
-         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $suplicant_mac NOT allowed";
          return RLM_MODULE_REJECT;
       }
       else
       {
-         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $suplicant_mac allowed";
          $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
          $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
          $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan}; #VLAN where the connecting device will be put in
@@ -342,12 +342,12 @@ sub post_auth()
    
       if ( ! $response{vlan} )
       {
-         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address NOT allowed";
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $suplicant_mac NOT allowed";
          return RLM_MODULE_REJECT;
       }
       else 
       {	
-         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address allowed";
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $suplicant_mac allowed";
          $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
          $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
          $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
