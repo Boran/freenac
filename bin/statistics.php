@@ -119,7 +119,6 @@ if ($today_records == 0)
 
 #Get statistics for the whole month
 $today = date('Y-m-d');
-$today = '2007-11-30';
 $query = "SELECT LAST_DAY(NOW());";
 $logger->debug($query,3);
 $mysql_last_day = v_sql_1_select($query);
