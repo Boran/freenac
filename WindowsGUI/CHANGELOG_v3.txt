@@ -1,96 +1,49 @@
-CHANGE HISTORY V3.0:  
+CHANGE HISTORY V3.0 (from v2.2):  
 ---------------------
-
-Switches: 
+Overview: 
+  add lastseen L3
+  New Overview tab, reorganise overview page, less OS
+  Disable& hide old Overview 
+  
+Switches:  
 - Add last_monitored, up fields.
 - fix: cannot delete switch
+  New nested switch-ports page
+  improve up/down column
+  fix colouring
+  switch Ip readonly, not blue
+  
 Ports: 
 - add last_monitored, up, shutdown fields.
-* allow changing of staticvlan, auth_profile, shutdown
-
-Overview: add lastseen L3
+  allow changing of staticvlan, auth_profile, shutdown
+  (and set restart_now, if these change)
+  Display 'up/down' properly. Rearrange columns order.
+  Right click pop to select systems
 
 Edit
 - User: epo user, last uid, last Wsus
 - System name: add last DNS name (last_hostname, a new field)
 - Copy DNS: warn if DNS not yet queried, and strip domain name
-
 - increase form height
---------------------------------------------
 
-New fields documented, although not yet used on the server side
+New fields 
 - New DNS/Naming tab
 - heath status
 - email on connect field
--------------------------------------------
 
-Oct23:
 Use date format 'yyyy-mm-dd hh:mm' consistency on all grids.
-Ports: 
-  allow changing of staticvlan, auth_profile, shutdown
-  (and set restart_now, if these change)
-  Display 'up/down' properly. Rearrange columns order.
-Systems:
-  unclicking 'unknowns' was not reseting the filter
-  
-Oct25:  
-Overview2: new tab, beta
-Switches: improve up/down column
-Oct31:
-Switches: fix colouring
-
-Nov 8:
-nested switch-ports page
-Right click pop to select systems from the ports menu.
-New Overview tab, reorganise overview page, less OS
-Disable& hide old Overview 
-PatchCable: update LastChange date
 Hide unneeded id fields in many grids
-Delete old overview page
-DB fixes: Allow Nulls in the following fields
-alter table systems change column description  description varchar(100) default NULL COMMENT "v3: not used";
-alter table systems change column  `uid` `uid` int(11) default NULL;
-alter table systems change column  ChangeDate `ChangeDate` varchar(100) default NULL;
-alter table systems change column  ChangeUser `ChangeUser` int(11) default NULL;
-alter table systems change column  LastPort   `LastPort` int(11) default NULL;
-alter table systems change column  LastVlan   `LastVlan` int(11) default NULL;
-alter table systems change column  os     `os` int(11) unsigned default NULL;
-alter table systems change column  os1    `os1` int(10) unsigned default NULL;
-alter table systems change column  os2    `os2` int(10) unsigned default NULL;
-alter table systems change column  os3    `os3` int(10) unsigned default NULL;
-alter table systems change column  class  `class` int(11) unsigned default NULL;
-alter table systems change column  class2 `class2` int(11) unsigned default NULL;
-alter table switch change ip  `ip` varchar(20) default 'NULL';
-alter table switch change location `location` int(11) default '1';
-alter table switch change comment  `comment` varchar(50) default 'NULL';
-alter table port   change default_vlan  `default_vlan` int(11) default NULL;
-alter table port   change last_vlan    `last_vlan` int(11) default NULL;
-alter table port   change auth_profile  `auth_profile` int(11) unsigned default NULL;
-alter table vlanswitch   change  vlan_id `vlan_id` int(11) default NULL;
+dministration: add Server Control, "Restart NAC"
 
-Nov 13:
-alter table guirights change column ad_group ad_group varchar(255) default null;
-alter table health change column `comment` `comment` varchar(100) default null;
-alter table patchcable change column rack_location rack_location varchar(30) default null;
-alter table patchcable change column outlet outlet varchar(30) default null;
-alter table patchcable change column other other varchar(30) default null;
-alter table patchcable change column comment comment varchar(30) default null;
-alter table services change column description description varchar(255) default null;
-alter table subnets change column scan scan tinyint(4) default '0';
-alter table subnets change column scan scan tinyint(4) default '0';
-alter table switch add column group_id int default null; 
-  switch Ip readonly, not blue
-  vlan: wider
-  switch ip: wider
-	Static vlan too narrow 
-	Default vlan: same popup 
-	Only allow switch programming for Sysadmins
-	Overview:
-     RO: swgroup,foreneame
-     Add lookup: vlan
-  Administration: add Server Control, "Restart NAC"
-  taCable, set fetchall=false
-  Patches: fix colours per cable type: green/blue/grey
+PatchCable: 
+	update LastChange date
+	taCable, set fetchall=false
+	Patches: fix colours per cable type: green/blue/grey
+
+----------------------  
+Nov 15:
+  New Wuse/Epo tables integrated
+  Add 'unknown' buttons to Overview
 
 
 
