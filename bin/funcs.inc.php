@@ -1114,21 +1114,10 @@ function cascade_delete($mac)
    if (!$system_id)
       return false;
    # Tables which have an sid field.
-   $tables_to_delete_from=array('EpoComputerProperties','nac_hostscanned','nac_openports');
+   $tables_to_delete_from=array('EpoComputerProperties','nac_hostscanned','nac_openports','wsus_systems','wsus_systemToUpdates','epo_systems');
    foreach ($tables_to_delete_from as $table)
    {
       do_delete($table,'sid',$system_id);
-   }
-
-   # WSUS tables are a bit special, since only the sid is used in one of them. For the others we use TargetID
-   # Get TargetID for system to delete
-   $query="SELECT TargetID FROM nac_wsuscomputertarget WHERE sid='$system_id';";
-   $wsus_target_id=v_sql_1_select($query);
-   # Delete it from WSUS
-   if ($wsus_target_id)
-   {
-      do_delete('nac_wsuscomputertarget','TargetID',$wsus_target_id);
-      do_delete('nac_wsusupdatestatuspercomputer','TargetID',$wsus_target_id);
    }
 
    # And now delete it from the systems table
