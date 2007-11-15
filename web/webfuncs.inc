@@ -22,7 +22,7 @@
 
 chdir(dirname(__FILE__));
 set_include_path("./");
-require_once "./config.inc";
+require_once "../etc/config.inc";
 
 function db_connect($username,$password)
 {

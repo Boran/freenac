@@ -18,7 +18,7 @@ chdir(dirname(__FILE__));
 set_include_path("./:../");
 
 // include configuration
-require_once('./config.inc');
+require_once('../etc/config.inc');
 // include functions
 require_once('./webfuncs.inc');
 
