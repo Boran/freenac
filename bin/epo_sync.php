@@ -183,7 +183,7 @@ function get_hostname($fqdn)
 	
 	$logger->debug("Converting $fqdn to $hostname", 2);
 	
-	return $hostname;
+	return strtolower($hostname);
 }
 
 /**
