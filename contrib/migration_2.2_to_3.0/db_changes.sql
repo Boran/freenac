@@ -32,7 +32,7 @@ CREATE TABLE epo_versions (
   lastsync datetime not null,
   primary key (id),
   unique key (id)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='current version of epo products, synced from epo database'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='current version of epo products, synced from epo database';
 
 -- New wsus_systems table
 create table if not exists wsus_systems (
