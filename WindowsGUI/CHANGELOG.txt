@@ -87,3 +87,6 @@ v2.2.0.137/06.09.07/SB:
   Add Computer name/IP, user name to Edit->AntiVirus tab
   Rename config options: NmapEnabled=>nmap_enabled, StaticInvEnabled=>static_inv,
     PatchCableEnabled =>patchcable_lookups
+    
+v3.0.0.145/06.11.07/SB:     
+  Version 3 release. See CHANGELOG_v3.txt.
