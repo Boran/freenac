@@ -6,15 +6,12 @@ Description:
   Copyright (C) 2007 Swisscom, FreeNAC Core Team, Sean Boran, http://www.FreeNAC.net
 
 License  
-  We cannot provide source code (yet), but you can use it for free.
-  You may not charge other for this tool, and must always preserve this file and the CHANGELOG if
+  We cannot provide source code (yet), but you can use it for free. It will probably be released under GPL in 2008.
+  You may not charge others for this tool, and must always preserve this file and the CHANGELOG if
   copying.
-  
-  The OpenSource issue will probably be solved by replacing it with a WebGUI, depending on the Team 
-  resources (contributions are welcome).
 
 
-Please read the online Installation Guide (http://FreeNAC.net/en/installguide), its probably more complete that these brief notes.
+*Please* read the online Installation Guide (http://FreeNAC.net/en/installguide), its more complete that these brief notes.
   
   
 Using this GUI on the Demo Online FreeNAC database

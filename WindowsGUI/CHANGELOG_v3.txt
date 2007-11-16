@@ -34,6 +34,7 @@ New fields
 Use date format 'yyyy-mm-dd hh:mm' consistency on all grids.
 Hide unneeded id fields in many grids
 dministration: add Server Control, "Restart NAC"
+New Wuse/Epo tables int
 
 PatchCable: 
 	update LastChange date
@@ -41,9 +42,3 @@ PatchCable:
 	Patches: fix colours per cable type: green/blue/grey
 
 ----------------------  
-Nov 15:
-  New Wuse/Epo tables integrated
-  Add 'unknown' buttons to Overview
-
-
-
