@@ -1,6 +1,6 @@
 _______________________ FreeNAC README _____________________________
 
-This is Version 2.2 RC2 of FreeNAC, Release  2007.06.22
+This is Version 3.0 of FreeNAC, Release 1090 2007.11.16
 
 The main Project Website is online at FreeNAC.net .
 Product and support information is in English/french/Spanish and German.
@@ -28,9 +28,5 @@ Please do sign up to the website and discussion groups:
 - in the Forums, share your knowledge and benefit from that of others
 	http://freenac.net/phpBB
 
-
-Note for users of V2.2 RC2 or prior, upgrading to V2.2 RC3 or later: 
-   Please see doc/README.config2db.important to know how 
-   to import your config file into the database in case you haven't done so.
  
                                                       The FreeNAC Team
