@@ -1,4 +1,4 @@
-======== Queries used in the Delphi Gui ==========================
+======== Summary of Queries used in the Delphi Gui ==========================
 
 --quConfig
 SELECT
@@ -356,11 +356,54 @@ select ct.ipaddress, ct.fulldomainname, om.OSLongName, ct.OsLocale as language, 
 # End-devices not check by Wsus for more than 7 days, buut that were on the network in the last month.
 select ct.fulldomainname, ct.LastSyncTime, s.LastSeen as LastSeenLayer2, ct.ipaddress, om.OSLongName, ct.ComputerMake, ct.ComputerModel  from nac_wsuscomputertarget ct inner join nac_wsusosmap om on om.OSid=ct.OSid inner join systems s on ct.sid=s.id WHERE (TO_DAYS(LastSyncTime) < TO_DAYS(NOW())-7) AND (TO_DAYS(LastSeen) > TO_DAYS(NOW())-30) ORDER BY LastSyncTime
   
-  
+    SQL.Add('select ct.ipaddress, ct.fulldomainname, ct.LastSyncTime, ct.datetime, om.OSLongName, om.OSBuildNumber, ct.OsLocale as language, ct.ComputerMake, ct.ComputerModel, ct.BiosName ');
+New:
+     SQL.Add('select ct.ipaddress, ct.fulldomainname, ct.LastSyncTime, ct.datetime, om.OSLongName, om.OSBuildNumber, ct.OsLocale as language, ct.ComputerMake, ct.ComputerModel, ct.BiosName ');
+        
+    SQL.Add(' from nac_wsuscomputertarget ct inner join nac_wsusosmap om on om.OSid=ct.OSid inner join systems s on ct.sid=s.id and s.id='''
+      +dm0.quSystems.FieldByName('id').AsString
+      +'''');
+ 
+ 
+     SQL.Add('select ct.fulldomainname, ct.LastSyncTime as LastWsusCheck, s.LastSeen as LastSeenLayer2, ct.ipaddress, om.OSLongName, ct.ComputerMake, ct.ComputerModel  '
+      +' from nac_wsuscomputertarget ct inner join nac_wsusosmap om on om.OSid=ct.OSid inner join systems s on ct.sid=s.id '
+      +' WHERE (TO_DAYS(LastSyncTime) < TO_DAYS(NOW())-7) AND (TO_DAYS(LastSeen) > TO_DAYS(NOW())-30) ORDER BY LastSyncTime');
+
+    
+           
      
-___________________________________________________________  
+___  EPO ________________________  
+    SQL.Add('SELECT * from epo_systems WHERE sid='''
+      +dm0.quSystems.FieldByName('id').AsString   +''''); 
+      
+      lav3.Caption:='Last epo contact: '+FieldByName('lastepocontact').AsString;
+      lav1.Caption:='Engine Version: ' +FieldByName('virusenginever').AsString +' (newest=' +str1 +')';
+      lav2.Caption:='DAT Version:    '   +FieldByName('virusdatver').AsString +' (newest=' +str2 +')';
+      lav0.Caption:='Last FreeNAC/Epo sync: ' +FieldByName('lastsync').AsString;
+      lav4.Caption:='Computer Name: ' +FieldByName('nodename').AsString;
+      lav5.Caption:='DNS/IP Name:   ' +FieldByName('domainname').AsString;
+      lav6.Caption:='IP Address:    ' +FieldByName('ip').AsString;
+      lav7.Caption:='Last User:     ' +FieldByName('username').AsString;
+      lav10.Caption:='MB free disk: ' +FieldByName('freediskspace').AsString;
 
+      lav8.Caption:='from ePO: '      +FieldByName('username').AsString;
+      lav9.Caption:=FieldByName('nodename').AsString +', ' +FieldByName('ip').AsString;
+      
 
+New:      
+    SQL.Add('SELECT CONCAT_WS('',  '', ostype, osservicepackver, osbuildnum, LastUpdate) as '
+      +'os_version from epo_systems WHERE sid='''
+      +dm0.quSystems.FieldByName('id').AsString  +'''');
+            
+Report      
+     SQL.Add('SELECT nodename as ''Hostname'', domainname as ''Domain'', ip as ''IP Address'', ');
+     SQL.Add('lastepocontact as ''Last EPO contact'', agentversion as ''Agent Version'', virusver as ''Virus Scanner Version'', ');
+     SQL.Add('virushotfix as ''Virus Scanner Hotfix'', virusenginever as ''Engine Version'', virusdatver as ''DAT Version'', ');
+     SQL.Add('concat_ws('','', ostype, osversion, osservicepackver, osbuildnum) as ''Operating System'',  ');
+     SQL.Add('freediskspace as ''Mbyte left on root device'',  username as ''Last User'',  ');
+     SQL.Add('(SELECT LastSeen from systems where systems.id=sid) AS ''LastSeen'' from epo_systems ');
+     SQL.Add('WHERE (TO_DAYS(lastepocontact) < TO_DAYS(NOW())-7) order by LastSeen DESC');
+    
 
 _____________________________ NOTES _________
 
