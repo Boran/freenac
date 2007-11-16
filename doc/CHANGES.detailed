@@ -1,446 +1,684 @@
 =====================================================================================================================
-                               Detailed Changelog for project FreeNAC 2.2 RC2 and later
-                               (extracted from the Subversion commit log)
+                                        Changelog for project 'FreeNAC 2.2 v3.0'
 =====================================================================================================================
 
+	 * Missing field for switch table (contrib/migration/db_changes.sql) (h_ortiz)
+		_to_3.0/db_changes.sql
 
+	 * SB: DelphiQueryMigration.txt (boran)
+		_to_3.0/DelphiQueryMigration.txt
 
+	 * New Wuse/Epo tables integrated
+  Add 'unknown' buttons to Overview (boran)
+		
 
+	 * More DB fixes (contrib/opennac_db.tar.gz, contrib/migration/db_changes.sql) (h_ortiz)
+		_to_3.0/db_changes.sql
 
+	 * Another word mispelled (bin/statistics.php) (h_ortiz)
+		
 
-===== V2.2 RC2 ======================================================================================================
+	 * Another word mispelled (bin/statistics.php) (h_ortiz)
+		
 
-	 * Instructions on how to import config files into the db (For 2.2 RC2) (h_ortiz)
-		/doc/README.config2db.important
-		/BRANCH_2.2.txt
+	 * Change hostname to lowercase (bin/wsus_sync.php, bin/epo_sync.php) (h_ortiz)
+		
 
-	 * Fix syntax (h_ortiz)
-		/bin/logr
+	 * Fixed cascade_delete function to include new epo and wsus schemas (bin/funcs.inc) (h_ortiz)
+		
 
-	 * Add logr: monitor radius logs (h_ortiz)
-		/bin/logr
+	 * Missing ; (contrib/migration/db_changes.sql) (h_ortiz)
+		_to_3.0/db_changes.sql
 
-	 * Hub detection (h_ortiz)
-		/bin/funcs.inc
-		/bin/vmpsd_external
+	 * Changes suggested by Dani Bordeleau and mispelled word fixed (bin/rad2vmps) (h_ortiz)
+		
 
-	 * Modified version of restart_port (h_ortiz)
-		/bin/restart_port.old
-		/bin/funcs.inc
-		/bin/restart_port
+	 * Changes suggested by Dany Bordeleau (bin/rad2vmps) (h_ortiz)
+		
 
-	 * v2.2.0.129/17.06.07/SB:   
-  New 'Administration' tab: move Config, Users, locations, Vlans, OS to this
-    new tab. Makes the interface cleaner for non-admin GUI users.
-    Also add Administration->NmapSubnets to allow configuration of the subnets table.
-  (source SVN 30). (boran)
-		/WindowsGUI/CHANGELOG.txt
-		/WindowsGUI/vmps.exe
+	 * Configuration variables moved to etc/config.inc.template. Pages modified accordingly (web/)
 
-	 * Scripts modified to use the Settings object (h_ortiz)
-		/bin/funcs.inc
+	 * Now contains web gui variables (etc/config.inc.template) (h_ortiz)
+		
 
-	 * Scripts modified to use the Settings object
+	 * Added enterprise to the autoload function (bin/funcs.inc.php, bin/wsus_sync.php, bin/epo_sync.php) (h_ortiz)
+		
 
-	 * Small correction to is_mac_on_port function (boran)
-		/bin/funcs.inc
+	 * New WSUS and EPO tables (contrib/opennac_db.tar.gz, contrib/migration/db_changes.sql) (h_ortiz)
+		_to_3.0/db_changes.sql
 
-	 * Exclude list updated (h_ortiz)
-		/contrib/config2db
+	 * - new wsus and epo sync scripts (tgdstwo1)
+		
 
-	 * Function remove_type (h_ortiz)
-		/bin/funcs.inc
+	 * More db fixes (contrib/opennac_db.tar.gz, contrib/migration_2.2_to_3.0/db_changes.sql) (h_ortiz)
+		_to_3.0/db_changes.sql
 
-	 * vmps_components.vsd (boran)
-		/doc/vmps_components.vsd
+	 * Message considering to fw the email to freenac@vptt.ch (bin/statistics, bin/rad2vmps) (h_ortiz)
+		
 
-	 * Function ping_mac2 (h_ortiz)
-		/bin/funcs.inc
+	 * Settings handle now properly number one and Logger casts before calling syslog (lib/Settings, lib/Logger) (h_ortiz)
+		
 
-	 * VLAN by switch location, query modified (boran)
-		/bin/vmpsd_external
+	 * Fixes 'ERROR 1064 (42000) at line 299: ' (contrib/opennac_db.tar.gz (h_ortiz)
+		
 
-	 * Fixed boolean type (h_ortiz)
-		/bin/Settings.php
+	 * Fixes 'ERROR 1064 (42000) at line 11:' (contrib/migration_2.2_to_3.0/db_changes.sql) (h_ortiz)
+		_to_3.0/db_changes.sql
 
-	 * v2.2.0.127/5.06.07/SB:  
-  Vlan and most other tabs: add export to excel.
-  Ports: make GUI faster through optional patch lookup, add VlanAuth column
-         and some color coding of columns.
-  Edit-LastSeen: add Switch comment 
-  Edit-LastSeen: add desired & last vlan. Add layer 3 last seen date
-  Config: Add a config table for changing some server-side settings
-  Users: add GuiVlanRights field: this is a CSV list of vlan indices.
-    If it is set for the user starting the GUI, then only this list of vlans is visible in the edit
-    tab. This is to simplifyy for 1st level support, and to limit the access to more sensitive vlans.
-  Code: 
-   o move all DB queries, datasources, connections to a new Datamodule, 
-     for better maintenance.
-   o Migrate to MyDAC5 and SDAC4 libraries (from corelabs).
-  Speed: Only load the ports, giu, naclog, patch, tables when the tab in clicked on, to
-         make initial loading faster. (boran)
-		/WindowsGUI/vmps.exe
+	 * switch Ip readonly, not blue
+  vlan: wider
+  switch ip: wider
+	Static vlan too narrow 
+	Default vlan: same popup 
+	Only allow switch programming for Sysadmins
+	Overview:
+     RO: swgroup,foreneame
+     Add lookup: vlan
+  Administration: add Server Control, "Restart NAC"
+  taCable, set fetchall=false
+  Patches: fix colours per cable type: green/blue/grey (boran)
+		
 
-	 * Now read vars from the db (h_ortiz)
-		/bin/Settings.php
+	 * Handling of signals (bin/cron_restart_port) (h_ortiz)
+		
 
-	 * Import config files to db (h_ortiz)
-		/contrib/config2db
+	 * Handling of signals (bin/cron_restart_port) (h_ortiz)
+		
 
-	 * GWP detection (boran)
-		/bin/vmps_lastseen
+	 * Statistics per month, changes to the DB (contrib/opennac_db.tar.gz, migration2.2to30/db_changes.sql, bin/statistics, bin/cron_restart_port)
 
-	 * GWP detection (boran)
-		/bin/vmps_lastseen
-		/bin/funcs.inc
+	 * SB: Add DelphiQueryMigration.txt (boran)
+		_to_3.0/DelphiQueryMigration.txt
 
-	 * Add migration_2.1_to_2.2 to contrib
+	 * More changes to DB. group_id to systems, vlan_id to switches (contrib/opennac_db.tar.gz, contrib/migration_2.2_to_3.0/db_changes.sql) (h_ortiz)
+		_to_3.0/db_changes.sql
 
-	 * Settings class (h_ortiz)
-		/bin/Settings.php
+	 * Restart daemons and cascade delete a system (bin/cron_restart_port, bin/purge_unknowns) (h_ortiz)
+		
 
-	 * Settings class (h_ortiz)
-		/bin/Settings.php
+	 * Functions to perform a cascade delete (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Add ad_base (h_ortiz)
-		/web/config.inc.template
+	 * Functions to perform a cascade delete (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Sample for authentication in multiple domains (h_ortiz)
-		/doc/webADauth.txt
+	 * Don't proceed with further SNMP scans if first one fails (bin/snmp_defs.inc, bin/snmp_scan.php) (h_ortiz)
+		
 
-	 * Support for multiple domains
+	 * Settings should be read only from the rest of the objects (lib/Settings.php) (h_ortiz)
+		
 
-	 * Increment time out value (boran)
-		/bin/rad2vmps
+	 * Nov 8:
+nested switch-ports page
+Right click pop to select systems from the ports menu.
+New Overview tab, reorganise overview page, less OS
+Disable& hide old Overview 
+PatchCable: update LastChange date
+Hide unneeded id fields in many grids
+DB fixes: Allow Nulls in the following fields
+See changelog (boran)
+		
 
-	 * Update port regardless of check_for_expired (boran)
-		/bin/vmps_lastseen
+	 * Fixed bug with tables files (contrib/opennac_db.tar.gz) (h_ortiz)
+		
 
-	 * v2.2.0.222/17.04.07/SB: 
-  Reporting: Add 'DNS naming report' (for INO/DEMO only since its still a beta report)
-  Serverlog: fix sort order. About Box: clean up, add link to website. (boran)
-		/WindowsGUI/CHANGELOG.txt
-		/WindowsGUI/vmps.exe
+	 * Removed or commented out references to log2db because they cause replication to stop on servers (lib/Port, lib/EndDevice, bin/vmpsd_external
 
-	 * Don't try to set port if we were unable to set it down (h_ortiz)
-		/bin/restart_port
+	 * SB: add CHANGELOG_v3.txt to track changes in the new V3 development (boran)
+		
 
-	 * Say whether the port was successfully restarted or not (h_ortiz)
-		/bin/restart_port
+	 * Log to debug level 2 when a property doesn't exist (lib/EndDevice, lib/Port) (h_ortiz)
+		
 
-	 * Do not perform Stockwerk check (boran)
-		/bin/dump_ports
+	 * Handle calls to insertIfUnknown or Update from child clases (lib/EndDevice, lib/Port) (h_ortiz)
+		
 
-	 * Dump ports (boran)
-		/bin/dump_ports
+	 * SB: logcheck - V3 update review of all messages, exclusions etc. Delete violations files, we don't need it.
 
-	 * MAC-Authentication bypass doc (h_ortiz)
-		/doc/MAC-Auth-bypass.txt
+	 * Sample policy files (lib/policy[1-7].php)
 
-	 * MAC-Authentication bypass documentation (h_ortiz)
-		/doc/vmps_components.vsd
-		/doc/MAC-Auth-bypass.txt
+	 * Check the number of rows for a previous query (lib/PortScan.php) (h_ortiz)
+		
 
-	 * Add Vmps_algorithms.vsd (boran)
-		/doc/Vmps_algorithms.vsd
+	 * SB: add explanatory text when an alert is generated (monitor2.sh) (boran)
+		
 
-	 * DB name (h_ortiz)
-		/WindowsGUI/demo1/vmps.xml
+	 * SB: 'tail' options for Linux wrong, why did it work do far? (check_disk) (boran)
+		
 
-	 * Fixed bug in mysqlhotcopy
+	 * Modified init message (bin/vmpsd_external) (h_ortiz)
+		
 
-	 * Reverted funcs.inc (h_ortiz)
-		/bin/funcs.inc
+	 * Added stopped message to vmpsd_external (h_ortiz)
+		
 
-	 * Add switchname when a new switch is detected (h_ortiz)
-		/bin/vmps_lastseen
-		/bin/funcs.inc
+	 * Log to the database when daemons have started. Log also policy file read (bin/vmpsd_external, bin/postconnect, lib/EndDevice (h_ortiz)
+		
 
-	 * Removed echo (h_ortiz)
-		/bin/port_scan
+	 * Changed LOG_WARN to LOG_WARNING (bin/postconnect) (h_ortiz)
+		
 
-	 * Create different xml files for every scan (h_ortiz)
-		/bin/port_scan
+	 * SB: add postconnect to logv (boran)
+		
 
-	 * Revision number (h_ortiz)
-		/doc/webintro/index.html
+	 * Prefixes with ERROR or WARN whenever we have an error or warn (lib/Logger.php) (h_ortiz)
+		
 
-	 * Don't delete file (h_ortiz)
-		/bin/port_scan
+	 * Check_calling_function removed checking instance of Policy class (lib/Port.php, lib/EndDevice.php, bin/postconnect) (h_ortiz)
+		
 
-	 * Add a few example vmps.xmsl. GUI changes: see change log for build 200.
+	 * Changed text in check_calling_function method (h_ortiz)
+		
 
-	 * Add FreeNAC_training.pdf (boran)
-		/doc/FreeNAC_training.pdf
+	 * When inserting new ports, set last_auth_profile instead of auth_profile bin/snmp_scan.php) (h_ortiz)
+		
 
-	 * Added the demo DB nacdemo_db.tgz (boran)
-		/contrib/nacdemo_db.tgz
+	 * MySQL queries needed to perform and upgrade from 2.2 to 3.0 (contrib/migration_2.2_to_3.0/db_changes.sql) (h_ortiz)
+		_to_3.0/db_changes.sql
 
-	 * Rename FreeNAC_VM_howto.txt to FreeNAC_VM_8021x_howto.txt (boran)
-		/doc/FreeNAC_VM_8021x_howto.txt
-		/doc/FreeNAC_VM_howto.txt
+	 * Added debug and silent switches (bin/ping_switch.php) (h_ortiz)
+		
 
-	 * No debug (h_ortiz)
-		/bin/vmps_lastseen
+	 * Removed -- -f from the first line
 
-	 * Replaced vmpsd (h_ortiz)
-		/bin/vmps_lastseen
-		/bin/vmpsd
+	 * Some minor modifications to hub detection. It is not yet working, still in testing phase (lib/EndDevice.php, bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Link to the main menu (h_ortiz)
-		/web/index.php
-		/web/bw.css
-		/web/funcs.inc
+	 * Stats script first draft (bin/statistics.php) (h_ortiz)
+		
 
-	 * README: notes on using the demo database in the VM (boran)
-		/WindowsGUI/README.WinGUI.txt
+	 * SB, Windows GUI. Oct25:  
+Overiew2: new tab, beta
+Switches: improve up/down column
+Oct31:
+Switches: fix colouring (boran)
+		
 
-	 * Web page for the VM
+	 * Basic catching of DB inserts. (lib/Port.php, lib/EndDevice.php) (h_ortiz)
+		
 
-	 * VM stuff (h_ortiz)
-		/bin/vmpsd_external
+	 * Basic catching of DB inserts. (lib/Port.php, lib/EndDevice.php) (h_ortiz)
+		
 
-	 * Debug off (h_ortiz)
-		/bin/vmpsd_external
+	 * There is no need to fork a process in snmp_restart_port function (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Modifications to handle vms (h_ortiz)
-		/bin/funcs.inc
-		/bin/vmpsd_external
+	 * Check if update method is called by postconnect. (lib/Port.php, 
+lib/EndDevice.php) (h_ortiz)
+		
 
-	 * vmps.exe 119 (boran)
-		/WindowsGUI/vmps.exe
+	 * Allow pinging switches from the command line (bin/ping_switch.php (h_ortiz)
+		
 
-	 * vmps.xml: default DB is not opennac, not inventory (boran)
-		/WindowsGUI/vmps.xml
+	 * Turn off port twice when restarting (CatOS issues?) (bin/cron_restart_port.php) (h_ortiz)
+		
 
-	 * Added hostname when warning about expired (boran)
-		/bin/vmps_lastseen
-		/bin/port_scan
+	 * Avoid programming as dynamic a dynamic port. (CatOS issues?) (bin/cron_restart_port.php, bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Check for unknown status (h_ortiz)
-		/bin/vmpsd_external
+	 * SB: move proctst startup file to /opt/nac/contrib/startup_init.d/ (boran)
+		
 
-	 * is_field_active function (h_ortiz)
-		/bin/funcs.inc
+	 * Added comments to SNMP key functions (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Remove vars that control the disabling of expired systems (h_ortiz)
-		/bin/vmpsd_external
+	 * Moved update messages from debug to logit. Added method scan to PortScan (lib/PortScan.php, lib/Port.php, lib/EndDevice.php) (h_ortiz)
+		
 
-	 * virtual machines
+	 * Added debugging information for SNMP related queries (deactivate_vmps.php, cron_restart_port.php, funcs.inc.php (h_ortiz)
+		
 
-	 * SB: remove config_static, mv mytop to usr/local/bin (boran)
-		/contrib/usr/local/bin/mytop
-		/contrib/README.config_static
-		/contrib/mytop
+	 * Added logic to check/create a PID file (bin/cron_restart_port.php) (h_ortiz)
+		
 
-	 * SB: add rdiff.readme (boran)
-		/contrib/rdiff.readme
+	 * Debug level set to 0 (bin/cron_restart_port.php) (h_ortiz)
+		
 
-	 * Regex to check port (h_ortiz)
-		/bin/vmps_lastseen
+	 * Debug level set to 0 (bin/cron_restart_port.php) (h_ortiz)
+		
 
-	 * condition modified (h_ortiz)
-		/bin/vmps_lastseen
+	 * Renamed cron_program_port to cron_restart_port (bin/cron_restart_port.php) (h_ortiz)
+		
 
-	 * Check for var lastseen_patch_lookup (h_ortiz)
-		/bin/vmps_lastseen
+	 * Reset restart_now flag (bin/cron_program_port.php (h_ortiz)
+		
 
-	 * Image changed (h_ortiz)
-		/web/images/logo_small.png
+	 * Optimized. Perform fewer SNMP queries (bin/funcs.inc.php, bin/cron_program_port) (h_ortiz)
+		
 
-	 * Add port and sswitch comments if no patchcable info is found (h_ortiz)
-		/bin/vmps_lastseen
+	 * Corrected wrong field in tables.sql (contrib/opennac_db.tar.gz) (h_ortiz)
+		
 
-	 * Now it adds locations (h_ortiz)
-		/bin/ad_user_sync
+	 * Query fixed. Changed an Inner join for a left join (bin/cron_program_port.php) (h_ortiz)
+		
 
-	 * SB: add filewatcher to contrib
+	 * Modified code of key SNMP functions (bin/restart_port.php, bin/cron_program_port.php, bin/snmp_set_port.php bin/cron_shutdown_port.php, bin/snmp_scan.php bin/funcs.inc.php
 
-	 * sb: fix rdiff paths (boran)
-		/contrib/rdiff.run
-		/contrib/rdiff.exclude
+	 * Fixed wrong field name (bin/snmp_scan.php) (boran)
+		
 
-	 * Minor fixes to CHANGE, add FreeInstallation word doc from Dany Bordeleau (boran)
-		/doc/CHANGES
-		/doc/freeNac Installation.doc
+	 * CHANGE HISTORY V3.0:  
+---------------------
 
-	 * DB tarball (h_ortiz)
-		/contrib/opennac_db.tar.gz
+Switches: 
+- Add last_monitored, up fields.
+- fix: cannot delete switch
+Ports: 
+- add last_monitored, up, shutdown fields.
+* allow changing of staticvlan, auth_profile, shutdown
 
-	 * db tarball (h_ortiz)
-		/contrib/opennac_db.tar.gz
+Overview: add lastseen L3
 
-	 * SB: absolute patch for tmp dir, add more debugs (boran)
-		/web/read/vmpsdot.php
-		/web/read/vmps.php
+Edit
+- User: epo user, last uid, last Wsus
+- System name: add last DNS name (last_hostname, a new field)
+- Copy DNS: warn if DNS not yet queried, and strip domain name
 
-	 * Added company name (h_ortiz)
-		/web/funcs.inc
+- increase form height
+--------------------------------------------
 
-	 * Semicolon (h_ortiz)
-		/web/config.inc.template
+New fields documented, although not yet used on the server side
+- New DNS/Naming tab
+- heath status
+- email on connect field
+-------------------------------------------
 
-	 * Menu (h_ortiz)
-		/web/index.php
+Oct23:
+Use date format 'yyyy-mm-dd hh:mm' consistency on all grids.
 
-	 * Read web GUI is now working
+Ports: 
+  allow changing of staticvlan, auth_profile, shutdown
+  (and set restart_now, if these change)
+  Display 'up/down' properly. Rearrange columns order.
+Systems:
+  unclicking 'unknowns' was not reseting the filter (boran)
+		
 
-	 * Better decision making regarding the vlan field (h_ortiz)
-		/contrib/import_systems_csv1
+	 * Fixed stats and some other messages (bin/deactivate_vmps.php, bin/activate_vmps.php) (h_ortiz)
+		
 
-	 * Sample CSV file (h_ortiz)
-		/contrib/sample_csv1.txt
+	 * Fixed stats and some other messages (bin/deactivate_vmps.php, bin/activate_vmps.php) (h_ortiz)
+		
 
-	 * Import script (h_ortiz)
-		/contrib/import_systems_csv1
+	 * Remove " from the values retrieved by SNMP (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * sb: fix rdiff paths. logcheck now emails to 'nac', ignore debug messages (boran)
-		/logcheck/logcheck.ignore
-		/logcheck/logcheck.sh
+	 * Missing global logger declaration (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * AD auth made optional (h_ortiz)
-		/web/index.php
-		/web/config.inc.template
-		/web/write/index.php
+	 * More moving of SNMP related stuff to funcs.inc.php (bin/deactivate_vmps.php, bin/snmp_set_port.php, bin/activate_vmps.php bin/funcs.inc.php
 
-	 * Stats script (h_ortiz)
-		/bin/stats
+	 * Moved common functions to funcs.inc.php (bin/deactivate_vmps.php, bin/cron_program_port.php, bin/snmp_set_port.php, bin/activate_vmps.php, bin/funcs.inc.php)
 
-	 * Function time_diff added (h_ortiz)
-		/bin/funcs.inc
-		/bin/port_scan
-		/bin/vmpsd_external
+	 * Modified print_usage function (bin/snmp_set_port.php) (h_ortiz)
+		
 
-	 * Ignoring null dates (h_ortiz)
-		/bin/vmpsd_external
+	 * Missing global declaration in print_usage was added (bin/snmp_set_port.php) (h_ortiz)
+		
 
-	 * Ignoring null dates (h_ortiz)
-		/bin/vmpsd_external
+	 * Email_on_connect (lib/EndDevice.php) (h_ortiz)
+		
 
-	 * Ignoring null dates (h_ortiz)
-		/bin/vmpsd_external
+	 * Comments about ping_mac2 and detect_hub functions (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Hostname when killing a system (h_ortiz)
-		/bin/vmpsd_external
+	 * Added debug function. Feedback from skendric (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Set an expired device to killed (h_ortiz)
-		/bin/vmpsd_external
+	 * Fixed wrong field names (bin/cron_program_port.php, bin/cron_shutdown_port.php, bin/snmp_scan.php (h_ortiz)
+		
 
-	 * Temp: stop domain checks (boran)
-		/WindowsGUI/vmps.exe
+	 * Fixed wrong field names (contrib/opennac_db.tar.gz) (h_ortiz)
+		
 
-	 * Slight modifications to ad_user_sync (h_ortiz)
-		/bin/ad_user_sync
+	 * Fix last_monitored (bin/ping_switch.php) sb/ho (boran)
+		
 
-	 * Slight modifications to ad_user_sync (h_ortiz)
-		/etc/config.inc.template
-		/bin/ad_user_sync
+	 * Corrected wrong field name, added timing measurements (bin/ping_switch.php) (h_ortiz)
+		
 
-	 * Filter refined (h_ortiz)
-		/web/funcs.inc
+	 * add contrib: migration_2.2_to_3.0 (boran)
+		_to_3.0
 
-	 * Added port definition (h_ortiz)
-		/web/funcs.inc
+	 * Renamed ping_port.php to ping_switch.php (bin/ping_switch.php) (h_ortiz)
+		
 
-	 * Added port definition (h_ortiz)
-		/web/config.inc.template
+	 * SB: router_mac_ip.php: save the last DNS name corresponding to the current ip (r_ip) in last_hostname. Add comments. (boran)
+		
 
-	 * Access denied (h_ortiz)
-		/web/index.php
+	 * Fixed bug that caused postconnect to crash when inserting a new device (lib/EndDevice.php, bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Added base dn for search and querying full CN from database (h_ortiz)
-		/web/funcs.inc
-		/web/config.inc.template
+	 * Hub detection, preliminary version. Not yet test. It is only an adaptation of the old algorithm (lib/EndDevice.php, bin/funcs.inc.php (h_ortiz)
+		
 
-	 * Add vmpsd_external_flow1.png (boran)
-		/doc/vmpsd_external_flow1.png
+	 * Simple checking for an invalid MAC address (bin/router_mac_ip.php) (h_ortiz)
+		
 
-	 * Redundant (h_ortiz)
-		/bin/vmpsd_external
+	 * Specify a time threshold for ip validity and scanning of unmanged systems (contrib/opennac_db.tar.gz, bin/port_scan.php) (h_ortiz)
+		
 
-	 * Redundant (h_ortiz)
-		/bin/vmpsd_external
+	 * Moved to work with PHP's SNMP. Old one is preserved. Added field router_mac_ip_discoverall in db tarball. Fixed bug in function remove_type (contrib/opennac_db.tar.gz, bin/router_mac_ip.php.old, bin/router_mac_ip.php, bin/funcs.inc.php)
 
-	 * sb: remove config_ for now (boran)
-		/contrib/config_auth.php
-		/contrib/config_static.php
-		/contrib/config_switch.inc.template
+	 * Report port status and write last monitored time (bin/snmp_defs.inc.php, bin/snmp_scan.php) (h_ortiz)
+		
 
-	 * Changes to default vlan for port (h_ortiz)
-		/bin/vmpsd_external
+	 * Report port status and write last monitored time (bin/snmp_defs.inc.php, bin/snmp_scan.php) (h_ortiz)
+		
 
-	 * Summary of 2.2 RC1 (boran)
-		/doc/CHANGES
+	 * Removed unnecesary text (web/webfuncs.inc) (h_ortiz)
+		
 
-	 * Updated docs, build 119. 2.2 RC1 now ready. (boran)
-		/WindowsGUI/README.WinGUI.txt
-		/WindowsGUI/vmps.exe
+	 * AD information corrected (etc/config.inc.template) (h_ortiz)
+		
 
-	 * Improvements after generating training slides. Add indices to log tables. (boran)
-		/WindowsGUI/vmps.exe
+	 * (removed debug) (dagonnier)
+		
 
-	 * Fixed
+	 * Modified web interface to show & update dhcp-related fields (no insert) (dagonnier)
+		
 
-	 * Faulty one (h_ortiz)
-		/web
+	 * Generate DHCPd configuration file from FreeNAC database (dagonnier)
+		
 
-	 * Needed query to allow updates (h_ortiz)
-		/doc/master_server_install.txt
+	 * Cleaning funcs (part 1)
 
-	 * Tarball deleted (h_ortiz)
-		/contrib/opennac_db.tar.gz
+	 * Deleted funcs.inc.php from lib directory (lib/funcs.inc.php (h_ortiz)
+		
 
-	 * telnet only versions (dagonnier)
-		/contrib/config_auth.php
-		/contrib/config_static.php
-		/contrib/config_switch.inc.template
+	 * Added cron_shutdown_port.php (bin/cron_shutdown_port.php) (h_ortiz)
+		
 
-	 * system: delete, ports: insert/delete, mysql error handling improved (boran)
-		/WindowsGUI/vmps.exe
+	 * Functions get_mysql_info and mysql_affected_rows2 (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * added text (h_ortiz)
-		/web/index.php
+	 * Fixes and new fields and table (contrib/opennac_db.tar.gz) (h_ortiz)
+		
 
-	 * add mytop to contrib (boran)
-		/contrib/mytop
+	 * Added global logger at the beggining of react function (bin/flap_detect.php) (h_ortiz)
+		
 
-	 * Web interface
+	 * Active directory information was missing (etc/config.inc.template) (h_ortiz)
+		
 
-	 * Wrong port (h_ortiz)
-		/bin/cron_restart_port
+	 * Fixed references to erroneous fields (bin/cron_program_port.php) (h_ortiz)
+		
 
-	 * Insensitive case when checking nmap version (h_ortiz)
-		/bin/port_scan
+	 * Script to program switch ports and its cron script (h_ortiz)
+		
 
-	 * Without commas (h_ortiz)
-		/doc/master_server_install.txt
+	 * Script to program switch ports and its cron script (h_ortiz)
+		
 
-	 * Typo (h_ortiz)
-		/doc/master_server_install.txt
+	 * Added ping_port, function get_snmp_port_index, restart_port modified (bin/ping_port.php, bin/restart_port.php bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Fixed vmps_log (h_ortiz)
-		/bin/vmps_log
+	 * Removed check for last_sms_restart field (bin/funcs.inc.php) (h_ortiz)
+		
 
-	 * Test for empty ports (h_ortiz)
-		/bin/vmps_lastseen
+	 * Check the timestamp (lib/PortScan.php) (h_ortiz)
+		
 
-	 * Configuration files (h_ortiz)
-		/etc/config.inc.template
-		/web2/web2.conf.inc.template
+	 * Remove unnecessary parts for this policy (etc/test_policy.inc.php) (h_ortiz)
+		
 
-	 * More documentation (h_ortiz)
-		/contrib/2.1_rc2_to_rc3.txt
-		/doc/db_install.txt
+	 * Shortened function name (lib/Port.php, lib/EndDevice.php) (h_ortiz)
+		
 
-	 * File branch 2.2.txt (h_ortiz)
-		/BRANCH_2.2.txt
+	 * First draft of health checking (lib/PortScan.php, lib/Port.php, lib/EndDevice.php, etc/test_policy.inc.php
 
-	 * Upload stable V2.2 Windows GUI & Readme (boran)
-		/WindowsGUI/README.WinGUI.txt
-		/WindowsGUI/vmps.exe
+	 * Use system id and not ip address to store results (bin/port_scan.php) (boran)
+		
 
-	 * Creating branch 2.2
+	 * Added note for active systems (etc/general_policy.inc.php) (h_ortiz)
+		
 
+	 * Fixed exception reporting, commenting of some functions for use with phpDocumentor, throw an exception in catch_ALLOW, removed unnecessary exceptions (lib/exceptions.php, bin/vmps_log.php, bin/vmpsd_external.php, bin/wsus_getinfo.php, bin/funcs.inc.php, etc/general_policy.inc.php)
 
-Changelog generated on 21-06-2007. It includes changes from revision 548 up to revision 718 of the FreeNAC SVN
+	 * Removed IP addresses (startup_init.d/vmps) (h_ortiz)
+		
+
+	 * Fixed absolute path (bin/rad2vmps) (boran)
+		
+
+	 * Don't deny when a host has a vlan=0 (lib/EndDevice.php) (h_ortiz)
+		
+
+	 * Now only use one password to connect to DB instead of 3 we had previously
+
+	 * Got rid of globals, modified reportDecision function, passing of parameters between Port and EndDevice now done in EndDevice's constructor, VMPSRequest renamed to SyslogRequest (lib/SyslogRequest, lib/VMPSRequest, lib/Port, lib/EndDevice, bin/portconnect, bin/vmpsd_external
+
+	 * Updated database files. Feedback from sk (contrib/opennac_db.tar.gz) (h_ortiz)
+		
+
+	 * Sample policy file. Provides vmps_lastseen functionality (etc/general_policy.inc.php) (h_ortiz)
+		
+
+	 * config2db: add '<?php', change auto line (feedback from sk) (boran)
+		
+
+	 * router_mac_ip.php: add mysql_affected_rows2() for reliable detetion of UPDATEs in SQL (boran)
+		
+
+	 * Added port and end device when logging an update (lib/Port.php, lib/EndDevice.php) (h_ortiz)
+		
+
+	 * Generate array with MYSQL_ASSOC, added WSUS class (bin/funcs.inc.php, lib/WSUSEndDevice.php) (h_ortiz)
+		
+
+	 * Update messages (h_ortiz)
+		
+
+	 * Proper use of the logging class by the rest of the scripts. Some fixes to the Logger class. New scripts in bin
+
+	 * VM logic now working (h_ortiz)
+		
+
+	 * New proctst config file (boran)
+		
+
+	 * port_scan now fixed (boran)
+		
+
+	 * port_scan now fixed (boran)
+		
+
+	 * Sample policy 1 (boran)
+		
+
+	 * Replace with link (boran)
+		
+
+	 * Startup files
+
+	 * Report also denied? (h_ortiz)
+		
+
+	 * Report also denied? (h_ortiz)
+		
+
+	 * Scripts modified to use the logger class, reportDecision in policy file, fixed bug in Logger and Universal Accessor methods
+
+	 * Log to DB (h_ortiz)
+		
+
+	 * Passing of information between port and host moved (h_ortiz)
+		
+
+	 * Comments to be used in phpDocumentor (h_ortiz)
+		
+
+	 * PortScan class (h_ortiz)
+		
+
+	 * Better alerting when a new end device is detected?
+
+	 * Mail alerts
+
+	 * compress new_db_values_2.2.sql (boran)
+		/new_db_values_2.2.sql.gz
+
+	 * Small corrections
+
+	 * No reference to SMS_HOST (h_ortiz)
+		
+
+	 * No reference to SMS_HOST (h_ortiz)
+		
+
+	 * Added php postfix
+
+	 * Ignore empty parameters (h_ortiz)
+		
+
+	 * Logging to weblog and e-mail (h_ortiz)
+		
+
+	 * Deny if no object passed or if unknown instance (h_ortiz)
+		
+
+	 * Perform normal insert if device is not an SMS device (h_ortiz)
+		
+
+	 * Test with a more specialized class (h_ortiz)
+		
+
+	 * Test with a more specialized class (h_ortiz)
+		
+
+	 * Test with a more specialized class (h_ortiz)
+		
+
+	 * Test with a more specialized class
+
+	 * Logging of unmanaged devices using logger (h_ortiz)
+		
+
+	 * Assignation of default_vlan for unmanaged systems if it exists. Otherwise, deny (h_ortiz)
+		
+
+	 * Deny messages (h_ortiz)
+		
+
+	 * Queries now logged through debug level 3 (h_ortiz)
+		
+
+	 * Throw DENY when an incomplete request has been received (h_ortiz)
+		
+
+	 * Dollar sign was missing (h_ortiz)
+		
+
+	 * Some corrections and queries easier to read
+
+	 * Authors and some queries
+
+	 * Source code documented for use with phpDocumentor
+
+	 * Syntax for phpDocumentor. Test (h_ortiz)
+		
+
+	 * Functions required by SMS PCs (h_ortiz)
+		
+
+	 * Now it's NOT crashing (h_ortiz)
+		
+
+	 * Check for instanceof VMPSRequest (h_ortiz)
+		
+
+	 * Check for no vlan (h_ortiz)
+		
+
+	 * Fix some bugs (h_ortiz)
+		
+
+	 * Fix some bugs (h_ortiz)
+		
+
+	 * left join instead inner join (h_ortiz)
+		
+
+	 * Class required for vmps_lastseen. Rename later (h_ortiz)
+		
+
+	 * Class required for vmps_lastseen. Rename later (h_ortiz)
+		
+
+	 * Some basic logging of unknown devices (h_ortiz)
+		
+
+	 * vmps_lastseen basic functionality
+
+	 * Patchcable lookup, host inserts, not working yet
+
+	 * Add doc/phpdoc.ini: config file for phpDocumentor (boran)
+		
+
+	 * Minor changes and comments (h_ortiz)
+		
+
+	 * Error corrected (h_ortiz)
+		
+
+	 * Parameters to the debug function are now the other way around (h_ortiz)
+		
+
+	 * Hack removed (h_ortiz)
+		
+
+	 * Add switch, port and update port information (h_ortiz)
+		
+
+	 * Add switch, port and update port information
+
+	 * Some comments added (h_ortiz)
+		
+
+	 * Check if there is a policy field in the DB (h_ortiz)
+		
+
+	 * Hack has been removed
+
+	 * Testing vmps_lastseen with unknown systems, switches and ports (h_ortiz)
+		
+
+	 * Handling Wireless devices (h_ortiz)
+		
+
+	 * First tests with vmps_lastseen.php
+
+	 * trace almost defunct (h_ortiz)
+		
+
+	 * Some weird experiments, but it is working
+
+	 * SysLogger class (h_ortiz)
+		
+
+	 * SysLogger class
+
+	 * Added sample port object and used in the policy (h_ortiz)
+		
+	 * Checks for other status (h_ortiz)
+		
+	 * Unknown, killed, default vlan
+
+	 * Added Port object
+
+	 * First policy now is working
+
+	 * Sean: getPortDefaultVlan & examples in test (boran)
+		
+
+	 * Some minor modifications, still not working
+
+	 * First draft
+
+	 * Test code for OO policy
+
+	 * Sample OO framework
+
+
+Changelog generated on 16-11-2007.
 
