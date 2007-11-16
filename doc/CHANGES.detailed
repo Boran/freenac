@@ -1,6 +1,7 @@
 =====================================================================================================================
-                                        Changelog for project 'FreeNAC 2.2 v3.0'
+                                        Changelog for project 'FreeNAC v3.0'
 =====================================================================================================================
+This file is generated automatically from the Subversion repository commit message, so you may not find it that easy to read. For a summary of changes please visit http://freenac.net/en/techguide/appendix/changelog.
 
 	 * Missing field for switch table (contrib/migration/db_changes.sql) (h_ortiz)
 		_to_3.0/db_changes.sql
