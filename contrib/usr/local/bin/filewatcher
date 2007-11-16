@@ -1,0 +1,2179 @@
+#! /usr/bin/perl
+
+require 5.6.0;
+
+#------------------------------------------------------------------------------
+# Copyright (C) 2002-2004 by Willing Minds LLC
+#
+# 4095 E. La Palma Avenue, Suite J
+# Anaheim, CA 92807
+#
+# 949-623-9854
+#
+# http://www.willingminds.com/
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#------------------------------------------------------------------------------
+
+=head1 NAME
+
+filewatcher - archive system files and generate change alerts
+
+=head1 SYNOPSIS
+
+B<filewatcher> B<-config> file [B<-debug> level]
+
+B<filewatcher> B<-version>
+
+=head1 DESCRIPTION
+
+B<filewatcher> maintains an archive of critical system files and generates
+reports that describe what changes have taken place, including file
+additions, deletions, or changes.  Detailed change reports for modified
+files are produced via L<rcsdiff>.
+
+B<filewatcher> is designed so that multiple people can watch different
+(possibly overlapping) sets of files with a minimum of maintenance hassle.
+This is made possible by the configuration file I<include> function,
+which will be described in L<"CONFIGURATION">.
+
+=head1 REQUIRED SOFTWARE
+
+The following modules that are not included with Perl by default must be
+installed for proper operation of this program:
+
+=over 4
+
+=item RCS
+
+=back
+
+B<filewatcher> uses RCS to manage its archive.  If it is in a
+non-standard location, you can adjust your path with the 'option path
+--prepend /path/to/rcs' directive in your configuration file.  It is
+recommended that you also install the latest diffutils package since
+some vendor-supplied diff programs aren't very current.
+
+=head1 CONFIGURATION
+
+B<filewatcher> begins by loading a configuration file that may contain a
+series of directives and option definitions.
+
+=head2 CONFIGURATION DIRECTIVES
+
+=over 4
+
+=item I<watch>
+
+The I<watch> directive defines one or more files, directories, or glob 
+patterns to be included in the archive operation.  All arguments to I<watch>
+are first examined for embedded variable references (e.g., $HOME),
+all of which are expanded.  Next, unless glob suppression is enabled, each
+argument is replaced with multiple names determined by using standard shell
+glob expansion (e.g. *.c might become the list foo.c, bar.c, and bot.c).  If
+a specific file is referenced multiple times, the last reference in the
+overall configuration (including all associated option settings) will be used.
+
+A special argument to I<watch> allows detection of files that have been
+deleted from the archive.  If the argument I<ARCHIVE> is given to I<watch>,
+it will be expanded into the list of all filenames currently in the archive
+that do not exist in the filesystem.  In order to detect that they are in
+fact missing, the I<warn-if-missing> option should be set.
+
+=item I<except>
+
+The I<except> directive defines a file, directory, or glob pattern to
+be excluded in the archive operation.  Note that I<except> will only
+affect files that have already been added to the I<watch> list, thus
+the order of I<watch> and I<except> directives is significant.
+
+=item I<option>
+
+The I<option> directive is used to set the value of a configuration
+option.  Immediately following the option name, one or more flags 
+may be specified:
+
+=over 4
+
+=item I<--default>
+
+If the I<--default> flag is supplied after an option name, the value
+specified for the option is set and the new value is retained as the 
+option's new default value.  This means that if the I<clear> directive is
+used, the option value will revert to the new default rather than the 
+original default value.
+
+=item I<--append>
+
+If the I<--append> flag is supplied after an option name, the value
+specified for the option will be appended to the current option value.
+How the value is appended depends on the option type.  For 'path' options, 
+the original and new values will be joined with a colon.  For 'string'
+options, the original and new values will be joined with a space.  It is
+not legal specify this flag with any other option type.
+
+=item I<--prepend>
+
+If the I<--prepend> flag is supplied after an option name, the value
+specified for the option will be prepended to the current option value.
+How the value is prepended depends on the option type.  For 'path' options, 
+the original and new values will be joined with a colon.  For 'string'
+options, the original and new values will be joined with a space.  It is
+not legal specify this flag with any other option type.
+
+=back
+
+B<NOTE>: If the option value itself is a string that begins with a
+hyphen, the option value must be preceded by an empty flag, that is, --
+by itself, so that the value is not mistaken for an option flag such as
+those described above.  For example, if you are replacing the I<diff>
+program options passed to I<rcsdiff>, you must do so as follows:
+
+=over
+
+option diff-flags -- "-c -b"
+
+=back
+
+Specific options are described in L<"CONFIGURATION OPTIONS">.
+
+=item I<push>
+
+The I<push> directive saves all current option values.  Typically, this
+will be used at the beginning of an included file to ensure that the
+included file does not affect the values of options in the parent file.
+
+=item I<pop>
+
+The I<pop> directive restores all configuration options to the values
+they had just prior to the most recent I<push> directive.  Typically, this
+will be used at the end of an included file to ensure that the included
+file does not affect the values of options in the parent file.
+
+=item I<clear>
+
+The I<clear> directive restores all option values to their default values.
+Note that the I<option-default> directive can affect option defaults!
+
+=item I<include>
+
+This directive takes as a single argument either a filename or directory.
+If the argument is a filename, then it specifies another configuration
+file to include.  If the argument is a directory, then each file within
+that directory (subdirectories will not be considered) will be included
+as though each had been specified individually.
+
+By default, each included file must exist or an error will be generated.
+That behavior can be modified by using the I<include-must-exist>
+configuration option (described below).
+
+By default, the values of all options are saved prior to evaluating
+directives within an included file and they are restored afterward.
+That behavior can be modified by using the I<include-autopush>
+configuration option (described below).
+
+=item I<transform> I<name>
+
+This directive defines a transformation sequence that will be applied to
+one or more files via the I<archive-transform> or I<report-transorm> 
+options (described below).
+
+A transform is a sequence of one or more commands from the following list:
+
+=over 4
+
+=item I<delete-if> I<regex>
+
+Each line in the change report is examined and if the line matches the 
+given I<regex>, the line is omitted from the final report.
+
+=item I<replace> I<regex> I<string>
+
+Each line in the change report is examined and if the line matches the
+given I<regex>, the matched portion is replaced with the specified I<string>.
+Note that I<regex> is a Perl regular expression and that backreferences may
+be used in I<string> via standard $1, $2, etc. variables.  Matching is not
+anchored unless so specified in the I<regex>.
+
+=back
+
+=back
+
+=head2 CONFIGURATION OPTIONS
+
+Each of the options described in this section have various types
+associated with them.  These are:
+
+=over 4
+
+=item B<boolean>
+
+Simple boolean value, that is, true or false.
+
+=item B<string>
+
+Simple string value.
+
+=item B<path>
+
+Same as a I<string>, but embedded environment variables (of the form 
+$VAR or ${VAR}) will first be expanded.
+
+=item B<integer>
+
+Simple numerical value.
+
+=item B<duration>
+
+Time duration, defined as a combination of NI<s>, NI<m>, NI<h>,
+and NI<d>, where N is some positive integer and I<s>, I<m>, I<h>, and I<d>, 
+represent I<seconds>, I<minutes>, I<hours>, and I<days>, respectively.
+If a number is given without I<s>, I<m>, I<h>, or I<d>, then that number
+will be considered to be I<seconds>.
+
+=back
+
+The remainder of this section describes each of the available options
+that may be specified with the L<option> directive.
+
+=over 4
+
+=item I<archive-root> (global; path: no default)
+
+The I<archive-root> is the path to the directory under which all 
+archived files will be stored.  For example, if an archived
+file is named /etc/rc, then the archived version will be saved in
+I<archive-root>/etc/rc,v.
+
+B<NOTE>:  This option may only be defined once.
+
+=item I<ci-uses-euid> (per-file; boolean: default=true)
+
+If this variable is true, the `ci' command will set the user to the
+effective user, so that a manual checkin while su'ed or equivalent will
+cause the effective UID to be entered into the RCS metadata rather
+than the default real UID.
+
+=item I<ci-uses-mtime> (per-file; boolean: default=true)
+
+If this variable is true, the `ci' command will set the checkin date
+to the mtime of the file rather than the default current time.  This is
+useful since the file may be checked in much later than its last change
+time if it is scanned infrequently.
+
+=item I<diff-flags> (per-file; string: default="-u -B")
+
+This defines the flags that will be passed to the rcsdiff command in 
+order to display changes from one version to the next.  The default, which
+outputs unified diff and ignores whitespace only changes, may
+not work in all versions of diff.
+
+=item I<descend> (global; boolean: default=false)
+
+If this variable is true, any directories specified in a I<watch> or 
+an I<except> directive will be recursively considered.  Otherwise, only 
+the directory's immediate contents will be considered.
+
+=item I<filter> (global; string: default="RCS SCCS *~ #*")
+
+Defines a list of glob patterns each of which is applied to each 
+filename (after glob and environment variable expansion).  If a 
+filename matches any element in the filter list, that filename will
+be ignored, that is, not considered for I<watch> or I<except>
+directives.
+
+=item I<include-autopush> (global; boolean: default=true)
+
+If this option is set, then included configuration files will implicitly
+be surrounded by a 'push' and 'pop' in order to automatically save and
+restore option values.
+
+=item I<include-must-exist> (global; boolean: default=true)
+
+If this option is set, then an error will be raised when files referenced 
+for inclusion do not exist.  This would be typically set to false when
+including optional files that may or may not exist.
+
+=item I<transform-archive> (per-file; string: no default)
+
+If this option is set, the named transform will be applied to the
+file contents prior to archiving the file.
+
+=item I<transform-report> (per-file; string: no default)
+
+If this option is set, the named transform will be applied to the change
+report for a file prior to those changes being reported. NOTE: It is
+important to remember that the change report may contain extra characters
+at the start of the line based on the I<rcsdiff> output options used.
+
+=item I<notify> (per-file; string: default=mailto:I<user>)
+
+This option is used to define who receives reports.  The value is
+formatted as a URL.  The protocols current supported include:
+
+=over
+
+=item mailto
+
+The 'mailto' protocol submits a report via normal SMTP e-mail
+(requires the Mail::Internet module).  The default notification
+target is mailto:I<user> where I<user> is the name of the user running
+B<filewatcher>. Note: The Mail::Internet Perl module is required to be
+installed in order to use this protocol.
+
+=item stdout
+
+The 'stdout' protocol submits a report via standard output. 
+
+=item null
+
+The 'null' protocol sends the report to the bit-bucket; this is useful
+when archiving files that contain sensitive data not fit for e-mail
+notification.
+
+=back
+
+In the future, 'http' and 'https' will be supported, in which
+case the designated URI will need be bound to a report handler program.
+Another planned driver is 'pgp', which will work like 'mailto', but
+use PGP or GPG to encrypt reports.
+
+A separate copy of the report will be submitted to each notify target.
+Each will receive information only for those files to for which it is
+defined, so the set of reports delivered may be different for each
+notification target.  See the I<title> option for further report
+separation posibilities.
+
+=item I<path> (global; path: default="$ENV{PATH}")
+
+This option is used to setup the PATH environment variable.  Use to append
+directories to the program search path.
+
+=item I<retention> (per-file; integer: default=0)
+
+This option determines how many revisions of a file to retain in the
+archive.  A value of 0 indicates that all revisions should be retained
+indefinitely.
+
+=item I<scan-frequency> (per-file; duration: default=10m)
+
+This option dictates the minimum delay between successive change reports
+for specific files.  Once a change is detected in a file, that file will
+not be checked for changes until the I<scan-frequency> period has expired.
+Typically this will be set longer for files that might change frequently
+but do not need immediate notification, but just a periodic summary
+of changes.  Other files might need to be scanned very frequently for
+security reasons.  Note the minimum value for I<scan-frequency> is based 
+upon the process scheduler used (typically cron).
+
+=item I<send-changes> (per-file; global; boolean: default=true)
+
+If this option is true, then file changes will be sent with the report, 
+otherwise only the fact that the file changed will be reported.
+
+=item I<skip-binary> (global; boolean: default=true)
+
+If this option is true, then files will be checked as to whether they appear
+to contain binary data, and if so, will not be considered for archiving.
+The method used to determine if a file contains binary data is the Perl '-B'
+builtin heuristic test.
+
+=item I<state-file> (global; path: no default)
+
+Defines location of the I<filewatcher> state file, which contains data that
+must be stored between invocations in order to make certain decisions.
+
+B<NOTE>:  This option may only be defined once.
+
+=item I<suppress-glob> (global; boolean: default=false)
+
+If this option is true, then names referenced in the I<watch>
+and I<except> directives will not be expanded via glob pattern expansion.
+
+=item I<title> (per-file; string: default="[%h] filewatcher %f report")
+
+This option is used to define the form of the subject string used in
+reports sent by the mailto notification method.  Note that since this is
+a per-file attribute, multiple reports may be sent based on this string
+being different across the change set. This is similar to what happens
+for the I<notify> option.
+
+The string may contain special "percent-variables" that expand to 
+system dependent values:
+
+=over 4
+
+=item %I<n>H
+
+fully qualified hostname -- if I<n> is specified, then the hostname is
+modified as follows: if I<n> is positive, then all but the first I<n>
+hostname components are stripped; if I<n> is negative, then the last 
+I<n> hostname components are stripped.
+
+=item %h
+
+bare hostname - no domain (same as %1H)
+
+=item %f
+
+base name of current configuration file -- this can be used to create a 
+single subject specifier that changes based on which include file is
+currently being processed.
+
+=back
+
+To insert a single percent sign, use the form "%%" within the format
+string.
+
+=item I<warn-if-locked> (global; duration: default=15m)
+
+If another instance of I<filewatcher> has locked the archive for too long,
+then this will cause a warning to be generated.  Otherwise, the new process
+will silently exit.
+
+=item I<warn-if-missing> (per-file; boolean: default=true)
+
+If this option is true, then a warning will be issued if a 
+I<watch> or I<except> directive references a file or directory name
+that does not exist.  A warning will similarly be issued if a glob
+pattern is referenced and that pattern fails to expand to any existing
+file or directory names.
+
+=back
+
+=head2 SAMPLE CONFIGURATION
+
+    option archive-root /var/filewatcher/archive
+    option state-file /var/filewatcher/state
+    option warn-if-missing true
+    option include-autopush true
+    option skip-binary true
+
+    # default notify via email to sysadm address
+    option notify mailto:root
+
+    # scan for archived files deleted from the filesystem
+    option scan-frequency 4h
+    watch ARCHIVE
+
+    # system security files
+    option scan-frequency 5m
+    watch /etc/passwd
+    watch /etc/group
+    watch /etc/sudoers
+
+    # filewatcher and its configuration files
+    option scan-frequency 30m
+    watch /var/filewatcher/conf/*.cf
+    watch /usr/local/bin/filewatcher
+
+    # sendmail
+    option scan-frequency 30m
+    watch /etc/sendmail.cf
+    watch /etc/aliases
+    watch /etc/mail
+    except /etc/mail/*.db
+
+=head1 AUTHOR
+
+Mark D. Nagel <mnagel@willingminds.com>
+
+=cut
+
+#------------------------------------------------------------------------------
+
+use Getopt::Long;
+use IO::File;
+use IO::Dir;
+use Text::ParseWords;
+use File::Find;
+use File::Spec;
+#use Mail::Internet;
+use Data::Dumper;
+use Sys::Hostname;
+
+use strict;
+
+$::VERSION = "2.4.1b1";
+
+#------------------------------------------------------------------------------
+
+### GLOBAL VARIABLES
+
+%::FILEINFO = ();	# master file information table
+%::INCLUDED = ();	# check for include loops
+%::CONFNAME = "";	# current configuration file name
+$::OPTION = {};		# current option context
+@::OPTIONSTACK = ();	# pushed option contexts
+$::DEBUGLEVEL = 0;
+$::STATE = undef;
+$::ARCHIVELOCK = undef;
+%::TRANSFORM = ();	# file transformation list
+
+# Define defaults, types, etc. for all options.
+%::OPTION_INFO = (
+    # location of archive root
+	'archive-root'	=>	
+	    {
+	      default	=> undef,
+	      type	=> "path",
+	      redefine	=> "false",
+	      per_file	=> "false",
+	      ondefine	=> "archive_root",
+	    },
+
+    # option to checkin with effective UID instead of real UID
+	'ci-uses-euid' =>
+	    {
+	      default	=> 1,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # option to checkin with file mtime instead of time of checkin
+	'ci-uses-mtime' =>
+	    {
+	      default	=> 1,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # diff flags for rcsdiff command
+	'diff-flags'	=>
+	    {
+	      default	=> '-u -B',
+	      type	=> "string",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # descend into named directories?
+	'descend'	=>
+	    {
+	      default	=> 0,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "false",
+	    },
+
+    # file/directory filter
+        'filter'	=>
+	    {
+	      default	=> 'RCS SCCS *~ #*',
+	      type	=> "string",
+	      redefine	=> "true",
+	      per_file	=> "false",
+	    },
+
+    # automatically save/restore options for included files?
+    	'include-autopush' =>
+	    {
+	      default	=> 1,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "false",
+	    },
+
+    # included file must exist?
+    	'include-must-exist' =>
+	    {
+	      default	=> 1,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "false",
+	    },
+
+    # notify URL
+        'notify' =>
+	    {
+	      default	=> "mailto:@{[scalar getpwuid($<)]}",
+	      type	=> "string",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # program search path
+	'path' =>
+	    {
+	      default	=> $ENV{PATH},
+	      type	=> "path",
+	      redefine	=> "true",
+	      per_file	=> "false",
+	      ondefine	=> "path",
+	    },
+
+    # archive retention count
+	'retention' =>
+	    {
+	      default	=> 0,
+	      type	=> "integer",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # file scan frequency in seconds (skip scan if less time has passed)
+	'scan-frequency' =>
+	    {
+	      default	=> 600,
+	      type	=> "duration",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # send file changes when new version checked in?
+        'send-changes' =>
+	    {
+	      default	=> 1,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # check for and skip binary files
+	'skip-binary' =>
+	    {
+	      default	=> 1,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "false",
+	    },
+
+    # location of state file
+	'state-file'	=>
+	    {
+	      default	=> "/var/filewatcher/state",
+	      type	=> "path",
+	      redefine	=> "false",
+	      per_file	=> "false",
+	      ondefine	=> "state_file",
+	    },
+
+    # set to prevent glob expansion of filenames
+	'suppress-glob'	=>
+	    {
+	      default	=> 0,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "false",
+	    },
+
+    # report title (used as mailto subject, for example)
+        'title' =>
+	    {
+	      default	=> "[%h] filewatcher %f report",
+	      type	=> "string",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	      subst	=> "title",
+	    },
+
+    # apply named transform to specified file prior to archive operation
+	'transform-archive' =>	
+	    {
+	      default	=> undef,
+	      type	=> "string",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # apply named transform to specified file report
+	'transform-report' =>	
+	    {
+	      default	=> undef,
+	      type	=> "string",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+
+    # error if archive locked for too long
+	'warn-if-locked' =>
+	    {
+	      default	=> 900,
+	      type	=> "duration",
+	      redefine	=> "false",
+	      per_file	=> "false",
+	    },
+
+    # error if watched file is not in filesystem
+	'warn-if-missing' =>
+	    {
+	      default	=> 1,
+	      type	=> "boolean",
+	      redefine	=> "true",
+	      per_file	=> "true",
+	    },
+);
+
+
+#------------------------------------------------------------------------------
+
+# handle program options
+GetOptions(\%::opts,
+	   "version!",
+	   "config=s",
+	   "debug=i",
+) or &usage;
+$::DEBUGLEVEL = $::opts{debug} if $::opts{debug} >= 0;
+
+# print version info and exit if version option is specified
+if ($::opts{version}) {
+    print "filewatcher $::VERSION\n";
+    exit;
+}
+
+# preflight: must have given an existing and readable configuration filename
+&usage unless $::opts{config};
+unless (my $fh = IO::File->new($::opts{config})) {
+    warn "$::opts{config}: $!\n";
+    exit 1;
+}
+
+# run main program
+&main;
+
+#------------------------------------------------------------------------------
+
+sub main {
+    my $status = 0;
+
+    # configure signal handlers to ensure clean termination
+    $SIG{INT} = sub { $::TERMINATE = 1 };
+    $SIG{TERM} = sub { $::TERMINATE = 1 };
+
+    # wrap main code in eval to catch meta-errors; per-file errors are
+    # caught separately and associated with each file object for reporting
+    # purposes
+    eval {
+	&load_config($::opts{config});
+	&preflight;
+	if (keys %::FILEINFO) {
+	    &scan_filesystem;
+	    &send_reports;
+	    &purge_archive;
+	    &save_state;
+	}
+    };
+
+    if ($@) {
+	$@ =~ s/^/ERROR: /g;
+        warn $@;
+	$status = 1;
+    }
+
+    exit $status;
+}
+
+sub ondefine_archive_root {
+    my $root = option('archive-root');
+    my $maxage = option('warn-if-locked');
+    die "%FATAL% archive-root ($root) does not exist\n"
+	unless -d $root;
+    debug(5, "locking archive\n");
+    #my $lock = new DotLock $root;
+    my $file = option('state-file');
+    my $lock = new DotLock $file;
+    if (ref($lock)) {
+	$::ARCHIVELOCK = $lock;
+	debug(5, "archive is now locked\n");
+    } else {
+        my $age = time - $lock;
+	if ($age >= option('warn-if-locked')) {
+	    die "%FATAL% archive locked for ${lock}s\n";
+	} else {
+	    debug(5, "archive locked for brief time - exiting\n");
+	    exit;
+	}
+    }
+}
+
+sub ondefine_state_file {
+    &load_state;
+}
+
+sub ondefine_path {
+    debug(5, "copying path setting to \$ENV{PATH}\n");
+    $ENV{PATH} = option('path');
+}
+
+sub subst_title {
+    my $fmt = shift;
+
+    debug(7, ">> subst_title: $fmt\n");
+    $fmt =~ s/%(-?\d+)?([a-zA-Z])/_subst_title($1,$2)/eg;
+    $fmt =~ s/%%/%/g;
+    debug(7, "<< subst_title: $fmt\n");
+
+    return $fmt;
+}
+
+sub _subst_title {
+    my $arg = shift;
+    my $var = shift;
+    my $val = "%$arg$var";
+
+    if ($var eq 'h') {
+	($val = hostname) =~ s/\..*//;
+    } elsif ($var eq 'H') {
+        my @h = split(/\./, hostname);
+	if ($arg > 0) {
+	    $val = join(".", @h[0..$arg-1]);
+	} else {
+	    $arg = -$arg;
+	    $arg = @h - 1 if $arg >= @h;	# prevent empty result!
+	    $val = join(".", @h[0..@h-$arg-1]);
+	}
+    } elsif ($var eq 'f') {
+    	$val = (File::Spec->splitpath($::CONFNAME))[2];
+    }
+
+    debug(5, "substitute \%$var with $val\n");
+
+    return $val;
+}
+
+#------------------------------------------------------------------------------
+
+#
+# Final setup and assumption confirmation.
+#
+sub preflight {
+    # make sure all RCS programs are installed
+    my @missing;
+    for my $prog (qw(rcs ci rlog rcsdiff diff)) {
+        push(@missing, $prog) unless findprog($prog);
+    }
+    die "required programs not found: ", join(", ", @missing), "\n"
+	if @missing;
+
+    # make sure required variables are defined
+    my $archive_root = option('archive-root');
+    die "archive-root is undefined\n" unless $archive_root;
+    die "archive-root does not exist\n" unless -d $archive_root;
+    my $state_file = option('state-file');
+    die "state-file is undefined\n" unless $state_file;
+}
+
+#------------------------------------------------------------------------------
+
+#
+# Load filewatcher configuration, which defines options, filesets, etc.
+#
+# All exceptions generated by the loading process are intercepted here
+# and merged into a single error reported as a new combined exception.
+# This allows us to detect all problems in the configuration file before
+# giving up.
+#
+sub load_config {
+    my $cf = shift;
+    my $fh;
+    my $line = "";
+    my @errors;
+
+    debug(8, "loading configuration from '$cf'\n");
+
+    $fh = new IO::File $cf or die "$cf: open failed: $!\n";
+    $::INCLUDED{$cf} = 1;
+    $::CONFNAME = $cf;	# stash current configuration file for examination
+    while (<$fh>) {
+	s/^\s*//;
+	s/\s*$//;
+	next if (/^#/ || /^$/);
+	chomp;
+	$line .= $_;
+	if ($line =~ /\\$/) {
+	    chop($line);
+	    next;
+	}
+	eval {
+	    &procline($fh->input_line_number, $line) if $line;
+	};
+	if ($@) {
+	    if ($@ =~ s/^(line \d+:) %FATAL%/$1/) {
+		die $@;
+	    } else {
+		push(@errors, "$cf: $@") if $@;
+	    }
+	}
+	$line = "";
+    }
+    eval {
+	&procline($fh->input_line_number, $line) if $line;
+    };
+    if ($@) {
+	if ($@ =~ /^line \d+: FATAL:/) {
+	    die $@;
+	} else {
+	    push(@errors, "$cf: $@") if $@;
+	}
+    }
+
+    debug(8, "finished loading configuration from '$cf'\n");
+
+    # report all errors to caller via exception
+    die join("\n", @errors, "") if @errors;
+}
+
+#
+# Process a single configuration line (may be represented by multiple 
+# continued lines).  The current line number is passed in so that 
+# reasonable error messages may be constructed.
+#
+sub procline {
+    my $lineno = shift;
+    my $line = shift;
+    my @list = &shellwords($line);
+
+    eval {
+        my $directive = shift(@list);
+	debug(9, "checking directive '$directive'\n");
+	if ($directive eq "option") {
+	    &define_option(\@list);
+	} elsif ($directive eq "transform") {
+	    &define_transform(\@list);
+	} elsif ($directive eq "watch") {
+	    # add file/directory to watchlist
+	    &define_watch([map { &subst_env($_) } @list]);
+	} elsif ($directive eq "except") {
+	    # remove file/directory from watchlist
+	    &define_except([map { &subst_env($_) } @list]);
+	} elsif ($directive eq "push") {
+	    # save current option settings on stack and create new hash
+	    # with copy of those previous settings
+	    &do_push(\@list);
+	} elsif ($directive eq "pop") {
+	    # restore last options settings from stack
+	    &do_pop(\@list);
+	} elsif ($directive eq "clear") {
+	    # clear current options (revert to defaults)
+	    &do_clear(\@list);
+	} elsif ($directive eq "include") {
+	    # include specified file
+	    die "usage: include filename\n" if @list != 1;
+	    &do_include($list[0]);
+	} else {
+	    substr($line, 20) = "..." if length($line) > 20;
+	    die "unrecognized directive: $line\n";
+	}
+    };
+
+    die "line $lineno: $@" if $@;
+}
+
+sub findprog {
+    my $prog = shift;
+    my $path = shift;
+    $path ||= $ENV{PATH};
+    for my $dir (split(/:/, $path)) {
+	my $fullpath = File::Spec->catfile($dir, $prog);
+        return $fullpath if -x $fullpath;
+    }
+}
+
+#------------------------------------------------------------------------------
+
+sub do_push {
+    my $list = shift;
+
+    die "usage: push\n" if @$list > 0;
+    debug(6, "saving options\n");
+    push(@::OPTIONSTACK, \%{$::OPTION});
+    $::OPTION = { %$::OPTION };
+}
+
+sub do_pop {
+    my $list = shift;
+
+    die "usage: pop\n" if @$list > 0;
+    die "pop with empty option stack\n"
+	unless @::OPTIONSTACK;
+    debug(6, "restoring options\n");
+    $::OPTION = pop(@::OPTIONSTACK);
+}
+
+sub do_clear {
+    my $list = shift;
+
+    die "usage: clear\n" if @$list > 0;
+    debug(6, "resetting options to defaults\n");
+    $::OPTION = {};
+}
+
+#
+# Used to configure options when the 'option' directive is given in 
+# the configuration file.  One or more flags may be set following the
+# option name that indicate special handling for the specified value.
+# Current flags include:
+#
+#	--default	set option value in default table
+#	--append	append value to current option value
+#	--prepend	prepend value to current option value
+#
+sub define_option {
+    local(@ARGV) = @{$_[0]};
+    my $option = lc($ARGV[0]);
+
+    # special cases -- should define alias mechanism if this starts to be
+    # a habit...
+    $option = "title" if $option eq "mailto-subject";
+    $option = "transform-archive" if $option eq "apply-transform";
+
+    if ($option =~ /^[a-z_][a-z_0-9-]*$/) {
+	if (exists $::OPTION_INFO{$option}) {
+	    my %flags;
+	    {
+		local $SIG{__WARN__} = sub { die $_[0] };
+		GetOptions(\%flags, "default", "append", "prepend");
+		die "invalid combination of prepend and append flags\n"
+		    if ($flags{append} && $flags{prepend});
+	    }
+	    my $optval = join(" ", @ARGV[1..$#ARGV]);
+	    $optval = &convert_in($option, $optval);
+	    &set_option($option, $optval, \%flags);
+	    return;
+	}
+    }
+
+    die "invalid option: $option\n";
+}
+
+#
+# Simple encapsulation to read an option value or its default, depending
+# on whether a definition has been seen.
+#
+sub option {
+    my $option = shift;
+
+    return $::OPTION->{$option}
+	if exists($::OPTION->{$option});
+    return $::OPTION_INFO{$option}->{default}
+	if exists($::OPTION_INFO{$option});
+    undef;
+}
+
+sub option_type {
+    my $option = shift;
+
+    $::OPTION_INFO{$option}->{type} || 'string';
+}
+
+sub set_option {
+    my $opt = shift;
+    my $optval = shift;
+    my $flags = shift;
+    my $newval;
+
+    # disallow redefinition of options that cannot be associated with
+    # specific filesets
+    if ($::OPTION_INFO{$opt}->{_modified} &&
+	$::OPTION_INFO{$opt}->{redefine} ne "true") {
+	die "option '$opt' may not be redefined\n";
+    }
+    $::OPTION_INFO{$opt}->{_modified} = 1;
+
+    # determine new option value (append or prepend if necessary)
+    if ($flags->{append}) {
+        my $type = option_type($opt);
+	$newval = option($opt);
+	if ($type eq "string") {
+	    $newval = join(" ", $newval, $optval);
+	} elsif ($type eq "path") {
+	    $newval = join(":", $newval, $optval);
+	} else {
+	    die "append invalid for option '$opt' (type $type)\n";
+	}
+    } elsif ($flags->{prepend}) {
+        my $type = option_type($opt);
+	$newval = option($opt);
+	if ($type eq "string") {
+	    $newval = join(" ", $optval, $newval);
+	} elsif ($type eq "path") {
+	    $newval = join(":", $optval, $newval);
+	} else {
+	    die "prepend invalid for option '$opt' (type $type)\n";
+	}
+    } else {
+	$newval = $optval;
+    }
+
+    # run substitution trigger if this is a global option
+    unless ($::OPTION_INFO{$opt}->{per_file} eq "true") {
+	if (my $subst = $::OPTION_INFO{$opt}->{subst}) {
+	    no strict 'refs';
+	    $subst = "subst_$subst";
+	    debug(5, "expanding $opt with $subst...\n");
+	    eval { $newval = &$subst($newval) };
+	    if ($@ =~ /Undefined subroutine/) {
+		die "$subst: invalid 'subst' field for '$opt'\n";
+	    } else {
+		die $@ if $@;
+	    }
+	}
+    }
+
+    # set option value (copy to default if --default specified)
+    debug(5, "setting $opt to $newval\n");
+    $::OPTION->{$opt} = $newval;
+    if ($flags->{default}) {
+	debug(5, "setting $opt default to $newval\n");
+	$::OPTION_INFO{$opt}->{default} = $newval;
+    }
+
+    # run option definition trigger, if any
+    if (my $ondefine = $::OPTION_INFO{$opt}->{ondefine}) {
+	no strict 'refs';
+	$ondefine = "ondefine_$ondefine";
+	debug(5, "$opt defined - triggering $ondefine...\n");
+	eval { &$ondefine };
+	if ($@) {
+	    if ($@ =~ /Undefined subroutine/) {
+		die "$ondefine: invalid 'ondefine' field for '$opt'\n";
+	    } else {
+		die $@ if $@;
+	    }
+	}
+    }
+}
+
+sub convert_in {
+    my $opt = shift;
+    my $optval = shift;
+    my $type = option_type($opt);
+
+    if ($type eq 'boolean') {
+        return 0 if $optval =~ /^(false|off|no)$/i;
+        return 1 if $optval =~ /^(true|on|yes)$/i;
+	die "$opt invalid input value '$optval'\n";
+    } elsif ($type eq 'duration') {
+	my $time = 0;
+	my %secper = ( "s" => 1, "m" => 60, "h" => 3600, "d" => 86400 );
+        while ($optval =~ s/^(\d+)([smhd])//) {
+	    $time += $1 * $secper{$2};
+	}
+	if ($optval ne "") {
+	    die "$opt invalid duration specified\n";
+	}
+	return $time;
+    } elsif ($type eq 'string') {
+        return $optval;
+    } elsif ($type eq 'path') {
+	return File::Spec->canonpath(&subst_env($optval));
+    } elsif ($type eq 'integer') {
+	if ($optval !~ /^\d+$/) {
+	    die "$opt invalid integer value\n";
+	}
+	return $optval;
+    } else {
+        die "$opt: unknown internal type reference\n";
+    }
+}
+
+sub subst_env {
+    my $str = shift;
+    my $old = $str;
+
+    $str =~ s/(?!\\)\$(\w+)|(?!\\)\$\{([^}]+)\}/$ENV{"$1$2"}/g;
+    debug(9, "subst_env: '$old' -> '$str'\n") if $old ne $str;
+    return $str;
+}
+
+#
+# Debugging routine used to display all options and their values.
+#
+sub dump_options {
+    if ($::DEBUGLEVEL > 4) {
+	print "Option Settings:\n";
+	for my $option (sort keys %::OPTION_INFO) {
+	    printf "  %-20s : %s\n", $option, option($option);
+	}
+    }
+}
+
+#
+# Used to define a file transformation sequence.  Most common use of file
+# transformation is to suppress "meaningless" changes in files.
+# 
+#
+sub define_transform {
+    my $list = shift;
+    my $name = shift(@$list);
+    my $code = "";
+
+    debug(9, "processing transform named '$name'\n");
+
+    while (@$list) {
+        my $tf = lc(shift(@$list));
+	if ($tf eq "delete-if") {
+	    my $regex = shift(@$list);
+	    $code .= "next if m\001$regex\001;\n";
+	} elsif ($tf eq "replace") {
+	    my $regex = shift(@$list);
+	    my $string = shift(@$list);
+	    $code .= "s\001$regex\001$string\001;\n";
+	} else {
+	    die "unknown transform directive: '$tf'\n";
+	}
+    }
+    $::TRANSFORM{$name} = $code;
+}
+
+#
+# Used to configure file/directory watches when the 'watch' directive is
+# given in the configuration file.
+#
+sub define_watch {
+    my $list = shift;
+
+    for my $glob (@$list) {
+        if ($glob eq "ARCHIVE") {
+	    # special case -- scan archived files and add all names to the
+	    # watch list that are present in the archive and are not in the 
+	    # filesystem.  The 'warn-if-missing' option should be set to
+	    # make this useful :).
+	    for my $name (&get_archived_file_list) {
+		# don't need to check if directory since function returns
+		# only files; indicate to add_file that this filename is
+		# from the archive so correct error messages can be displayed
+		# later if necessary
+		&add_file($name, "archive") unless -e $name;
+	    }
+	} else {
+	    my @list;
+	    if (option('suppress-glob')) {
+		@list = ($glob);
+	    } else {
+	        debug(8, "expanding glob pattern '$glob'\n");
+	        @list = glob($glob) or @list = ($glob);
+	    }
+	    for my $name (@list) {
+		if (-d $name) {
+		    &add_directory($name);
+		} else {
+		    # add name to list; will check if missing later
+		    &add_file($name);
+		}
+	    }
+	}
+    }
+}
+
+#
+# Just like define_watch, but removes any matches from the current file
+# list.  The 'warn-if-missing' option is not used here, however -- if an
+# excepted file is not present, no warning is generated.
+#
+sub define_except {
+    my $list = shift;
+
+    for my $glob (@$list) {
+	debug(9, "processing except for glob '$glob'\n");
+	for my $file (keys %::FILEINFO) {
+	    if (globmatch($file, $glob)) {
+		debug(9, "deleting '$file' from scan list\n");
+	        delete $::FILEINFO{$file};
+	    }
+	}
+    }
+}
+
+#
+# Scan file archive determining which files have been deleted from filesystem
+# and purging excess revisions.
+#
+sub get_archived_file_list {
+    my $root = option('archive-root');
+    my @archived = ();
+
+    debug(8, "scanning archive...\n");
+
+    # generate list of all files in the archive (skip find if root
+    # directory doesn't exist yet)
+    if (-d $root) {
+	find(sub {
+		 my $file = $File::Find::name;
+		 if (-f $file && $file =~ s/^$root(.*),v$/$1/) {
+		     push(@archived, $file);
+		 }
+	     }, $root);
+    }
+
+    return @archived;
+}
+
+#
+# Filter a filename with the patterns in the filter option.
+#
+sub filter {
+    my $name = shift;
+    my $base = $name;
+
+    debug(8, "attempting to filter '$name'\n");
+
+    # first apply the filter patterns
+    $base =~ s:.*/::;	# strip directory portion
+    for my $glob (&shellwords(option('filter'))) {
+        if (&globmatch($base, $glob)) {
+	    debug(8, "filtered '$name' using '$glob'\n");
+	    return 1;
+	}
+    }
+
+    return 0;
+}
+
+# simple glob -> RE pattern matcher
+sub globmatch {
+    my $str = shift;
+    my $pat = quotemeta(shift);
+    
+    # look for \* and \? (due to the quotemeta, above)
+    $pat =~ s/\\\*/.*/g;
+    $pat =~ s/\\\?/./g;
+    
+    for my $sub (split(/\\\|/, $pat)) {
+        return 1 if $str =~ /^$sub$/;
+    }
+    return 0;
+}
+
+#
+# Add a new file to the global file list via a FileInfo object that 
+# encapsulates information about that file.
+#
+sub add_file {
+    my $file = shift;
+    my $origin = shift;
+
+    $origin ||= "filesystem";
+
+    # skip filter/binary test if file was already archived
+    unless ($origin eq "archive") {
+	# check if the current name filter excludes this filename
+	return if &filter($file);
+
+	# apply the binary file filter if specified (expensive)
+	if (option('skip-binary')) {
+	    if (-B $file) {
+		debug(8, "skipped binary file '$file'\n");
+		return;
+	    }
+	}
+    }
+
+    my $pinfo = $::STATE->{FILEINFO_PREV}->{$file};
+    my $lastscan = $pinfo ? $pinfo->get_lastscan : undef;
+
+    debug(8, "adding file '$file' to watch list\n");
+
+    $::FILEINFO{$file} = FileInfo->new($file, \&option, $lastscan);
+    $::FILEINFO{$file}->set_origin($origin);
+}
+
+#
+# Add contents of directory.  Descend into subdirectories _only_ if the
+# 'descend' option is currently set and the directory name is not a
+# symbolic link.
+#
+sub add_directory {
+    my $dir = shift;
+    my $descend = option('descend');
+
+    return if &filter($dir);
+
+    debug(8, "adding directory '$dir' to list (descend = $descend)\n");
+
+    if (my $dh = new IO::Dir $dir) {
+        for my $name ($dh->read) {
+            next if ($name eq File::Spec->curdir ||
+                     $name eq File::Spec->updir);
+            my $full = File::Spec->catfile($dir, $name);
+            if (lstat($full)) {
+                if (-f _) {
+                    &add_file($full);
+                } elsif (-d _ && ! -l _ && $descend) {
+                    &add_directory($full);
+                }
+            }
+        }
+    } else {
+        die "add directory $dir: $!\n" if option('warn-if-missing');
+    }
+}
+
+#
+# Used to include one configuration file within other configuration 
+# files. Checks for recursive includes and fails if loops are detected.  
+# The recursion checks can be fooled by symbolic links (for now).
+#
+sub include_file {
+    my $cf = subst_env($_[0]);
+
+    die "include loop detected\n" if $::INCLUDED{$cf};
+
+    if (-f $cf) {
+	my $autopush = option('include-autopush');
+	debug(8, "including file '$cf'\n");
+	do_push([]) if $autopush;
+	load_config($cf);
+	do_pop([]) if $autopush;
+    } elsif (option('include-must-exist')) {
+        die "$cf: $!\n" unless -f $cf;
+    }
+}
+
+sub do_include {
+    my $path = subst_env($_[0]);
+
+    if (-f $path) {
+        include_file($path);
+    } elsif (-d $path) {
+        debug(8, "including directory '$path'\n");
+	my $dh = new IO::Dir $path or die "$path: $!\n";
+	for my $name ($dh->read) {
+	    next if ($name eq File::Spec->curdir ||
+		     $name eq File::Spec->updir ||
+		     $name =~ /^\./);
+	    my $full = File::Spec->catfile($path, $name);
+	    if (lstat($full) && -f _) {
+	        include_file($full);
+	    }
+	}
+    } else {
+        die "unable to include $path: no such file or directory\n";
+    }
+}
+
+#------------------------------------------------------------------------------
+
+#
+# Load information about files scanned in the past, including whether
+# they were present in the last scan, when the last scan was done (for
+# frequency handling), etc.
+#
+sub load_state {
+    my $file = option('state-file');
+
+    # only load state once!
+    return if defined $::STATE;
+
+    debug(5, "loading state...\n");
+
+    if (-e $file) {
+	if (-f $file) {
+	    if (my $fd = new IO::File $file) {
+		my $VAR1;
+		local($/);
+		my $code = <$fd>;
+		### should use Opcode module to restrict operations in this eval
+		eval $code;
+		die $@ if $@;
+		$::STATE = $VAR1 or die "empty or corrupt state file\n";
+		# verify state is from correct file
+		if ($::STATE->{CONFIG_FILE} &&
+		    $::STATE->{CONFIG_FILE} ne $::opts{config}) {
+		    die "state may not be shared across configurations\n";
+		}
+		$::STATE->{CONFIG_FILE} = $::opts{config};
+		%::FILEINFO_PREV = %{$::STATE->{FILEINFO_PREV}};
+	    } else {
+		die "$file: $!\n";
+	    }
+	} else {
+	    die "$file: not a regular file\n";
+	}
+    } else {
+	debug(5, "no state file found\n");
+    }
+}
+
+sub save_state {
+    my $file = option('state-file');
+
+    debug(5, "saving state...\n");
+
+    # stash current information in state table
+    $::STATE->{FILEINFO_PREV} = \%::FILEINFO;
+
+    # save to file via Data::Dumper
+    if (my $fd = new IO::File ">$file.new") {
+	print $fd Dumper($::STATE) or die "write failed: $!\n";
+	undef $fd;
+	rename $file, "$file.bak";
+	rename "$file.new", $file;
+    } else {
+	die "$file: $!\n";
+    }
+}
+
+#------------------------------------------------------------------------------
+
+sub terminate_if_requested {
+    die "process terminated\n" if $::TERMINATE;
+}
+
+#
+# Scan filesystem determining which files have changed, etc.
+#
+sub scan_filesystem {
+    debug(8, "scanning filesystem...\n");
+    for my $file (keys %::FILEINFO) {
+	&terminate_if_requested;
+	my $cinfo = $::FILEINFO{$file};
+	my $pinfo = $::FILEINFO_PREV{$file};
+	my $scanfreq = $cinfo->get_option('scan-frequency');
+	my $lastscan = $pinfo ? $pinfo->get_lastscan : undef;
+	# synchronize time to start of current scan-frequency interval
+	my $time = int (time / $scanfreq) * $scanfreq;
+
+	if (defined($lastscan) && $time - $lastscan <= $scanfreq) {
+	    my $left = $scanfreq + $lastscan - $time;
+	    debug(8, "  $file: ${left}s until next scan\n");
+	    $cinfo->set_status('SAME');
+	} else {
+	    if ($cinfo->archive) {
+		if ($cinfo->get_status eq 'NEW') {
+		    debug(8, "  $file: new file archived\n");
+		} elsif ($cinfo->get_status eq 'CHANGED') {
+		    debug(8, "  $file: new version archived\n");
+		} elsif ($cinfo->get_status eq 'SAME') {
+		    debug(8, "  $file: unchanged\n");
+		}
+		$cinfo->set_lastscan($time);
+	    } else {
+	        $cinfo->set_status('ERROR');
+		$cinfo->set_lastscan($time);
+	    }
+	}
+    }
+}
+
+sub purge_archive {
+    debug(8, "purging old revisions from archive...\n");
+
+    for my $file (keys %::FILEINFO) {
+	&terminate_if_requested;
+	my $cinfo = $::FILEINFO{$file};
+	$cinfo->purge unless $cinfo->get_status eq 'SAME';
+    }
+}
+
+#
+# Generate reports.
+#
+sub send_reports {
+    my %rpt;
+    my $date = localtime(time);
+
+    debug(8, "generating reports...\n");
+
+    # split files into new, changed, and error groups for each notify target
+    for my $file (sort keys %::FILEINFO) {
+	&terminate_if_requested;
+        my $info = $::FILEINFO{$file};
+	my $status = $info->get_status;
+	next if $status eq 'SAME';
+	my $title = $info->get_option('title');
+	my $notify = $info->get_option('notify');
+	for my $recip (split(" ", $notify)) {
+	    push(@{$rpt{$recip,$title}->{$status}}, $file);
+	}
+    }
+
+    # generate a distinct report for each set of recipients/title
+    for my $key (keys %rpt) {
+        my ($recip,$title) = split($;, $key, 2);
+        debug(8, "generating reports for $recip ($title)...\n");
+
+	if ($recip =~ m|^mailto:(.*)|i) {
+	    my $addr = $1;
+	    if (my $body = generic_report_body($rpt{$key}, $date)) {
+		debug(8, "report via 'mailto' driver to $addr...\n");
+		eval "use Mail::Internet";
+		if ($@) {
+		    die "mailto: Mail::Internet module is not installed";
+		}
+		my $mail = new Mail::Internet;
+		$mail->body([map { "$_\n" } split("\n", $body)]);
+		$mail->head->replace('to', $addr);
+		$mail->head->replace('subject', $title);
+		$mail->send;
+	    }
+	} elsif ($recip =~ m|^stdout:$|i) {
+	    # print report to standard output
+	    debug(8, "report via 'stdout' driver...\n");
+	    print generic_report_body($rpt{$key}, $date);
+	} elsif ($recip =~ m|^pgp:(.*)|i) {
+	    my $addr = $1;
+	    die "$recip: pgp notification not yet supported\n";
+	} elsif ($recip =~ m|^http://(.*)|i) {
+	    my $uri = $1;
+	    die "$recip: http notification not yet supported\n";
+	} elsif ($recip =~ m|^https://(.*)|i) {
+	    my $uri = $1;
+	    die "$recip: https notification not yet supported\n";
+	} elsif ($recip =~ m|^null:$|i) {
+	    # do nothing
+	    debug(8, "report via 'null' driver\n");
+	} else {
+	    die "$recip: invalid report URL\n";
+	}
+    }
+}
+
+sub generic_report_body {
+    my $rpt = shift;
+    my $date = shift;
+    my $body = "";
+
+    # skip this report if recipient has no reportable files
+    return undef unless ($rpt->{NEW} || $rpt->{CHANGED} || $rpt->{ERROR});
+
+    $body .= "Filewatcher Report: $date\n\n";
+
+    if ($rpt->{ERROR}) {
+	$body .= ("*" x 78) . "\n";
+	$body .= "Files with errors seen during archive process:\n";
+	$body .= ("*" x 78) . "\n\n";
+	$body .= "    " . join("\n    ", @{$rpt->{ERROR}}) . "\n\n";
+
+	$body .= "Detailed Error Report:\n\n";
+	for my $file (@{$rpt->{ERROR}}) {
+	    my $info = $::FILEINFO{$file};
+	    $body .= "### $file\n";
+	    $body .= $info->get_error . "\n";
+	}
+    }
+
+    if ($rpt->{NEW}) {
+	$body .= ("*" x 78) . "\n";
+	$body .= "Files that have been added to the archive:\n";
+	$body .= ("*" x 78) . "\n\n";
+	$body .= "    " . join("\n    ", @{$rpt->{NEW}}) . "\n\n";
+    }
+
+    if ($rpt->{CHANGED}) {
+	$body .= ("*" x 78) . "\n";
+	$body .= "Files that have been modified since last archived:\n";
+	$body .= ("*" x 78) . "\n\n";
+	$body .= "    " . join("\n    ", @{$rpt->{CHANGED}}) . "\n\n";
+
+	$body .= "Detailed Change Report:\n\n";
+	for my $file (@{$rpt->{CHANGED}}) {
+	    my $info = $::FILEINFO{$file};
+	    if ($info->get_option('send-changes')) {
+	        $body .= "$file\n";
+	        $body .= $info->get_changes . "\n";
+	    }
+	}
+    }
+
+    return $body;
+}
+
+#------------------------------------------------------------------------------
+
+sub debug {
+    my $level = shift;
+    print @_ if $level <= $::DEBUGLEVEL;
+}
+
+sub usage {
+    warn "usage: filewatcher --config file [--debug level]\n";
+    warn "       filewatcher --version\n";
+    exit 1;
+}
+
+#------------------------------------------------------------------------------
+
+package FileInfo;
+
+sub debug { &main::debug };
+
+sub new {
+    my $proto = shift;
+    my $class = ref($proto) || $proto;
+    my $name = shift;
+    my $option = shift;		# subroutine to access option values
+    my $lastscan = shift;
+    my $self = {};
+
+    bless $self, $class;
+
+    $self->{_name} = $name;		# name of file to watch
+    $self->set_lastscan($lastscan);	# last time file was scanned
+    $self->{_optsub} = $option;		# stash option accessor
+
+    # associate per-file option settings
+    debug(8, "binding per-file options to $name...\n");
+    for my $opt (keys %::OPTION_INFO) {
+	if ($::OPTION_INFO{$opt}->{per_file} eq "true") {
+	    
+	    my $optval = $option->($opt);
+
+	    # run option substitution trigger, if any
+	    if (my $subst = $::OPTION_INFO{$opt}->{subst}) {
+		no strict 'refs';
+		$subst = "main::subst_$subst";
+		debug(5, "expanding $opt with $subst...\n");
+		eval { $optval = &$subst($optval) };
+		if ($@ =~ /Undefined subroutine/) {
+		    die "$subst: invalid 'subst' field for '$opt'\n";
+		} else {
+		    die $@ if $@;
+		}
+	    }
+
+	    debug(9, "binding option $opt to $name...\n");
+	    $self->set_option($opt, $optval);
+	}
+    }
+
+    return $self;
+}
+
+sub get_name {
+    return $_[0]->{_name};
+}
+
+sub get_lastscan {
+    return $_[0]->{_lastscan};
+}
+
+sub set_lastscan {
+    $_[0]->{_lastscan} = $_[1];
+}
+
+sub set_option {
+    debug(9, "setting option $_[1] to $_[2]\n");
+    $_[0]->{_option}->{$_[1]} = $_[2];
+}
+
+sub get_option {
+    my $self = shift;
+    my $opt = shift;
+    my $val;
+
+    $val = exists($self->{_option}->{$opt})
+         ? $self->{_option}->{$opt}
+	 : $self->{_optsub}->($opt);
+    debug(9, $self->{_name} . ": get_option($opt) -> $val\n");
+    return $val;
+}
+
+sub set_origin {
+    $_[0]->{_origin} = $_[1];
+}
+
+sub get_origin {
+    return $_[0]->{_origin};
+}
+
+#
+# This routine copies the given file to the target directory such
+# that any path elements given in the original file are replicated
+# under the destination.  For example:
+#
+#   _copyfile("/tmp/foo/bar", "/archive", $transform)
+#
+# will result in a copy of the original file in "/archive/tmp/foo/bar"
+# with all ownership, modes, and timestamps preserved.
+#
+sub _copyfile {
+    my $file = shift;
+    my $archive = shift;
+    my $transform = shift;
+    my @path;
+
+    # first, confirm name uses absolute path
+    die "_copyfile: $file: must use absolute path\n" unless $file =~ m:^/:;
+
+    # next, confirm that 'file' is in fact a file
+    die "_copyfile: $file: not a file\n" unless -f $file;
+
+    # create the archive directory if necessary
+    unless (-d $archive) {
+        mkdir($archive, 0700) or die "_copyfile: mkdir($archive): $!\n";
+    }
+
+    # extract base directory name from original file
+    if ($file =~ m:(.*)/:) {
+        @path = split(m:/:, $1);
+        shift @path;	# ok since $file is absolute pathname
+    }
+
+    # create/modify each path element as necessary
+    my $target = $archive;
+    my $orig = "";
+    for my $dir (@path) {
+        $target .= "/$dir";
+        $orig .= "/$dir";
+
+        # create directory if not present
+        unless (-d $target) {
+            mkdir($target, 0700) or die "_copyfile: mkdir($target): $!\n";
+        }
+
+	# copy attributes
+	_copyattr($orig, $target);
+    }
+
+    # directory now exists, so copy the file
+    _copydata($file, "$archive/$file", $transform)
+        or die "_copyfile: copy: $!\n";
+
+    # set copied file attributes
+    _copyattr($file, "$archive/$file", );
+}
+
+#
+# Copy file data, applying given transform if specified.
+#
+sub _copydata {
+    my $orig = shift;
+    my $copy = shift;
+    my $transform = shift;
+
+    debug(9, "_copydata($orig,$copy,",
+          $transform ? "transform: $transform" : "no transform", ")\n");
+
+    my $ofh = new IO::File $orig;
+    my $cfh = new IO::File ">$copy";
+    if (my $code = $::TRANSFORM{$transform}) {
+	debug(8, "applying transform '$transform' to archive\n");
+	while (<$ofh>) {
+	    eval $code;
+	    die "$@\n" if $@;
+	    print $cfh $_ or die "_copydata: print failed during copy\n";
+	}
+    } else {
+	while (<$ofh>) {
+	    print $cfh $_ or die "_copydata: print failed during copy\n";
+	}
+    }
+
+    1;
+}
+
+#
+# Copy attributes (owner, mode, times) from one file or directory to another.
+#
+sub _copyattr {
+    my $orig = shift;
+    my $copy = shift;
+    my ($mode, $uid, $gid, $atime, $mtime) = (stat($orig))[2,4,5,8,9];
+
+    # copy ownership if running as superuser
+    if ($< == 0) {
+	chown($uid, $gid, $copy) or die "_copyattr: chown: $!\n";
+    }
+
+    # copy permissions
+    chmod($mode & 07777, $copy) or die "_copyattr: chmod: $!\n";
+
+    # copy last access/modify times
+    utime($atime, $mtime, $copy) or die "_copyattr: utime: $!\n";
+}
+
+sub lock {
+    my $self = shift;
+    my $root = $self->get_option('archive-root');
+    my $name = $self->get_name;
+
+    my $err = `rcs -l \"$root/$name\" 2>&1`;
+    if ((my $status = $? >> 8) != 0) {
+	$err ||= "rcs lock: unknown error (exit $status)";
+	die "$err\n";
+    }
+}
+
+sub unlock {
+    my $self = shift;
+    my $root = $self->get_option('archive-root');
+    my $name = $self->get_name;
+
+    my $err = `rcs -u \"$root/$name\" 2>&1`;
+    if ((my $status = $? >> 8) != 0) {
+	$err ||= "rcs unlock: unknown error (exit $status)";
+	die "$err\n";
+    }
+}
+
+sub checkin {
+    my $self = shift;
+    my $root = $self->get_option('archive-root');
+    my $name = $self->get_name;
+    my $ci_opts = "-q";
+
+    if ($self->get_option('ci-uses-euid')) {
+	my $user = getpwuid($>);	# grab effective UID
+	$ci_opts .= " -w$user";
+    }
+
+    if ($self->get_option('ci-uses-mtime')) {
+	$ci_opts .= " -d";
+    }
+
+    my $err = `ci $ci_opts \"$root/$name\" 2>&1 </dev/null`;
+    if ((my $status = $? >>8) != 0) {
+	# checkin failed -- clean up and get out of here
+	unlink("$root/$name");
+	$err ||= "ci: unknown error (exit $status)";
+	die "$err\n";
+    }
+}
+
+sub delete {
+    my $self = shift;
+    my $revs = join(':', shift, shift);
+    my $root = $self->get_option('archive-root');
+    my $name = $self->get_name;
+
+    my $err = `rcs -o$revs \"$root/$name\" 2>&1`;
+    if ((my $status = $? >> 8) != 0) {
+	$err ||= "rcs delete: unknown error (exit $status)";
+	die "$err\n";
+    }
+}
+
+#
+# Attempt to add file to the archive. Note whether file has changed in object
+# status attribute.
+#
+sub archive {
+    my $self = shift;
+    my $root = $self->get_option('archive-root');
+    my $name = $self->get_name;
+
+    debug(8, "  archiving $name\n    to $root\n");
+
+    eval {
+	if (-f $name) {
+	    # extract complete revision list and most recent revision id
+	    my $old_rev = $self->get_revision;
+
+	    die "unable to get old revision number\n" unless defined $old_rev;
+
+	    # copy file to archive -- copies all intermediate path elements, too
+	    _copyfile($name, $root, $self->get_option('transform-archive'));
+
+	    # attempt to check in new revision of file (may not have changed)
+	    $self->checkin;
+
+	    # lock the revision for next update
+	    $self->lock;
+
+	    # extract new revision number
+	    my $new_rev = $self->get_revision;
+	    die "unable to get new revision number\n" unless defined $new_rev;
+
+	    # determine what happened to the file
+	    if ($old_rev == 'NEW') {
+		$self->set_status('NEW');
+	    } elsif ($old_rev != $new_rev) {
+		# still may not have changed - sometimes revision increases
+		# if an RCS keyword like 'Log' is updated on a checkin.
+		if ($self->get_changes) {
+		    debug(8, "$name: valid change detected\n");
+		    $self->set_status('CHANGED');
+		} else {
+		    # purge newest revision (just checked in)
+		    debug(8, "$name: empty change detected - deleting\n");
+		    $self->unlock;
+		    $self->delete($new_rev);
+		    $self->lock;
+		    $self->set_status('SAME');
+		}
+	    } else {
+		$self->set_status('SAME');
+	    }
+
+	} else {
+	    debug(8, "file not found\n");
+	    if ($self->get_option('warn-if-missing')) {
+		debug(8, "warn-if-missing is active\n");
+		if ($self->get_origin eq "archive") {
+		    die "file archived but missing from filesystem\n";
+		} else {
+		    die "cannot archive: file not found\n";
+		}
+	    } else {
+		debug(8, "warn-if-missing is not active\n");
+	    }
+	}
+    };
+
+    if ($@) {
+	$self->set_error($@);
+	return 0;
+    }
+
+    return 1;
+}
+
+sub purge {
+    my $self = shift;
+    my @all_rev = $self->get_revision;
+    my $retention = $self->get_option('retention');
+
+    # purge old revisions if non-zero retention is specified
+    if ($retention > 0 && @all_rev > $retention) {
+	my $r1 = $all_rev[$#all_rev];
+	my $r2 = $all_rev[$retention];
+	my $name = $self->get_name;
+	debug(5, "  purging $name revisions $r1:$r2\n");
+	$self->delete($r1,$r2);
+    }
+}
+
+sub set_error {
+    chomp($_[0]->{_error} = $_[1]);
+    $_[0]->{_error} .= "\n";
+}
+
+sub get_error {
+    my $error = ($_[0]->{_error} || "unknown error");
+}
+
+sub set_status {
+    $_[0]->{_status} = $_[1];
+}
+
+sub get_status {
+    return $_[0]->{_status};
+}
+
+sub get_rcs_path {
+    my $self = shift;
+    my $name = $self->get_name;
+    my $root = $self->get_option('archive-root');
+
+    return "$root/$name,v";
+}
+
+sub get_revision {
+    my $self = shift;
+    my $file = $self->get_rcs_path;
+
+    # first, make sure there is an RCS file to examine
+    return 'NEW' unless -e $file;
+    
+    # extract rlog output for this file
+    my $rlog = `rlog \"$file\" 2>&1`;
+    if ((my $status = $? >> 8) == 0) {
+	my (@revs) = ($rlog =~ /^revision\s+(\S+)/mg);
+
+	# note - revision will be undefined if we couldn't find the
+	# string in the rlog output
+	return wantarray ? @revs : $revs[0];
+    }
+}
+
+sub get_changes {
+    my $self = shift;
+    my @revs = $self->get_revision;	# get entire revision list
+    my $file = $self->get_rcs_path;
+    my $dopt = $self->get_option('diff-flags');
+    my $transform = $self->get_option('transform-report');
+
+    debug(8, "determining changes between last two revisions\n");
+    if (defined($revs[0]) && defined($revs[1])) {
+	my $changes = `rcsdiff -q -ko -r$revs[1] -r$revs[0] $dopt \"$file\" 2>&1`;
+	if ((my $status = $? >> 8) == 0) {
+	    return "";	# no changes
+	} elsif ($status == 1) {
+	    if (my $code = $::TRANSFORM{$transform}) {
+	        debug(8, "applying transform '$transform' to changes\n");
+	    	local($_);
+		my $tchanges;
+		for (split(/\n/, $changes)) {
+		    eval $code;
+		    die "$@\n" if $@;
+		    $tchanges .= "$_\n";
+		}
+		$changes = $tchanges;
+	    }
+	    return $changes;
+	} else {
+	    return "ERROR: unable to compare revisions" .
+	           $changes ? ":\n$changes" : "\n";
+	}
+    }
+    return "ERROR: too few revisions to compare\n";
+}
+
+#------------------------------------------------------------------------------
+
+package DotLock;
+
+use IO::File;
+
+sub debug { &main::debug };
+
+sub new {
+    my $class = shift;
+    my $basename = shift;
+    my $templock = "$basename.$$";
+    my $lockfile = "$basename.LOCK";
+    #my $templock = "/var/filewatcher/file.LOCK.temp";
+    #my $lockfile = "/var/filewatcher/file.LOCK";
+    #my $file = option('state-file');
+    #my $templock = "$file.LOCK.$$";
+    #my $lockfile = "$file.LOCK";
+    #print "$file\n";
+
+    # remove temporary lock in case it already exists
+    unlink $templock;
+
+    # attempt lock creation twice
+    for (1..2) {
+        my $fh;
+
+        # attempt to create temporary lock
+	if ($fh = new IO::File) {
+	    if ($fh->open($templock, O_CREAT|O_WRONLY|O_EXCL, 0644)) {
+		$fh->autoflush(1);
+		print $fh "$$\n";
+	    }
+	    if (link($templock, $lockfile)) {
+		# lock created; remove temporary lock
+		unlink $templock;
+		return bless { lockfile => $lockfile };
+	    } else {
+		# check for stale lock
+		if ($fh = new IO::File $lockfile) {
+		    my $pid = int(<$fh>);
+		    unless (kill(0, $pid)) {
+			# lock is stale; remove lock file
+			unlink $lockfile;
+		    }
+		}
+		# finished with temporary lock in any case
+		unlink $templock;
+	    }
+	}
+    }
+
+    # failure result is how long other lock has been in effect
+    return (stat($lockfile))[9];
+}
+
+sub DESTROY {
+    my $self = shift;
+
+    debug(8, "unlinking lock: ", $self->{'lockfile'}, "\n");
+    unlink $self->{'lockfile'};
+}

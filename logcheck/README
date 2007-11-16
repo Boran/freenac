@@ -1,0 +1,111 @@
+Title: logcheck
+Author: Craig H. Rowland <crowland@psionic.com>
+License: See LICENSE file.
+Warranty: Money back guarantee. Not responsible for any consequences from use!!
+
+
+Abstract
+
+Logcheck is software package that is designed to automatically run and check 
+system log files for security violations and unusual activity. Logcheck 
+utilizes a program called logtail that remembers the last position it read 
+from in a log file and uses this position on subsequent runs to process new 
+information. All source code is available for review and the implementation 
+was kept simple to avoid problems. This package is a clone of the 
+frequentcheck.sh script from the Trusted Information Systems Gauntlet(tm) 
+firewall package. TIS has granted permission for me to clone this package.
+
+
+Purpose
+
+It bothers me to read stories of system administrators who have had a 
+break-in realize it too late and report "Well I checked the logs from two 
+weeks ago and found such and such had happened..." or "We've never had 
+problems on that system before so we never bothered to check the logs.."
+
+Auditing and logging system events is important! What is more important is 
+that system administrators be aware of these events so they can prevent 
+problems that will inevitably occur if you have a system connected to the 
+Internet.
+
+What is great about Unix is that virtually all modern implementations support 
+the syslog(8) facility to report, and quite extensively if configured 
+and supported correctly, virtually all happenings good or bad on the host 
+system. This allows the creation of an audit trail that can be used very 
+effectively to subvert potential attacks and alert system administrators 
+that action should be taken.
+
+Unfortunately for most Unices (and Windows NT <ahem>) it doesn't matter how 
+much you log activity if nobody ever checks the logs which is often the case.
+This is where logcheck will help. Logcheck automates the auditing process 
+and weeds out "normal" log information to give you a condensed look at 
+problems and potential troublemakers mailed to wherever you please.
+
+So you ask: There are other programs out there that do the same thing,
+why do I need this one?
+
+Well I say try the other ones and see which one fits your needs. There are 
+many out there that are very good (i.e. swatch), and they all come at a 
+great price (free). 
+
+This package has some features though that may be easier for you to use 
+because it doesn't require a constantly running program and can mail all 
+findings from many systems back to a single location. Additionally, it 
+reports any unusual system messages that you may not have seen before, a 
+distinct advantage as it is often impossible to know every possible syslog 
+message that may come into the logs from the daemons. 
+
+Design
+
+Logcheck is based upon a log checking program called frequentcheck.sh featured 
+in the Gauntlet(tm) firewall package by Trusted Information Systems Inc. 
+(http://www.tis.com). The logcheck shell script and logtail.c program have been
+completely re-written from scratch and is implemented in a slightly 
+different manner to accommodate for two methods of log file auditing:
+
+1) By reporting everything you tell it to specifically look for via keywords.
+
+2) By reporting everything you didn't tell it to ignore via keywords.
+
+This ensures that important messages are specifically brought to your 
+attention (via the keywords you look for) and that important messages that 
+you may have overlooked are also reported (by only ignoring items you tell 
+it to). The original frequentcheck.sh script was implemented in a somewhat 
+similar manner.
+
+The script is a simple shell programming model and the logtail.c program 
+uses basic ANSI C compatible functions with comments and easy to follow 
+source. Unusual tricks and "golly-gee" features have been left out to 
+prevent problems.
+
+The logcheck script should be run at least hourly on your hosts from the 
+cron daemon. This script will check files for unusual activity through the 
+use of simple grep(1) commands and will mail all findings (if any) to the 
+administrator. If nothing is found you'll receive no mail. 
+
+System Information
+
+This program comes with default keyword filter files tuned for the firewall 
+toolkit by TIS and systems running Wietse Venema's TCP Wrapper package 
+(Which ALL systems should be running IMHO). This program is also very 
+BSDish so you may have to tune it a little if you are running something 
+other than a BSD variant (as if there are any other types of unix ;) ). 
+I've tested the program extensively on BSDI 2.x, Linux, HPUX 10.x and
+FreeBSD 2.x without any hassles or major explosions of any type (although 
+on HPUX you may need to get a real compiler and not that braindead piece
+of garbage that ships with it).
+
+I am _always_ looking for comments and suggestions. Additionally if you 
+have a keyword file you find is nicely tuned for your version 
+of Unix (IRIX, AIX, HP, Solaris,  etc. ) please send it to me for 
+inclusion in any subsequent updates. Basic keyword files that work well 
+for BSDI 2.x, FreeBSD, HPUX, Solaris, SunOS and Linux are included.
+
+PLEASE read the INSTALL file for proper installation procedures and other 
+tips. If you have any questions, comments, flames, then please e-mail me at 
+crowland@psionic.com
+
+Thanks,
+
+Craig Rowland
+crowland@psionic.com

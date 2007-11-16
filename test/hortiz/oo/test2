@@ -1,0 +1,34 @@
+#!/usr/bin/php -f
+<?
+
+
+require_once "Port.php";
+require_once "/opt/nac/bin/funcs.inc";
+require_once "policy.inc.php";
+
+
+define_syslog_variables();
+openlog("test",LOG_PID,LOG_LOCAL5);
+
+#$request=VMPSRequest::getInstance();
+#$request->setValues('MAC','SWITCH','PORT','VTP','LASTVLAN');
+
+$port1=new Port("192.168.245.71", "1/1");
+
+print_r($port1->getAll());
+echo "SwitchName=" . $port1->SwitchName ."\n";
+echo "SwitchName=" . $port1->get1('SwitchName') ."\n";
+echo "getPortDefaultVlan=" . $port1->getPortDefaultVlan() ."\n";
+
+#$syslog=SysLogger::getInstance();
+#$syslog->setLevel(2);
+#$syslog->debug(1,"Testing debug level 1");
+#$syslog->debug(2,"Testing debug level 2");
+#$syslog->debug(3,"Testing debug level 3");
+
+#$db_log=new DBLogger();
+#$db_log->log("Testing 'DBLOGGER'");
+
+#handle_request();	//Defined in policy.inc.php
+
+?>

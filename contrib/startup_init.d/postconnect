@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Solaris:
+#   ln -s /etc/init.d/postconnect /etc/rc3.d/S99postconnect
+# Suse Linux:
+#   ln -s /etc/init.d/postconnect /sbin/rcpostconnect
+#   chkconfig postconnect on
+#
+### BEGIN INIT INFO
+# Provides:       postconnect.php
+# Required-Start: $network $remote_fs mysql
+# Required-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start the postconnect daemon
+### END INIT INFO
+
+
+
+mode=$1    # start or stop
+#CMD='tail -f /var/log/messages |/opt/vmps/bin/vmps_lastseen'
+#CMD='tail -f /var/log/messages |/opt/nac/bin/vmps_lastseen'
+CMD='tail -f /var/log/messages |/opt/nac/bin/postconnect.php'
+
+
+case "$mode" in
+  'start')
+    # Start daemon
+    #nohup tail -f /var/log/messages | /opt/nac/bin/vmps_lastseen &
+    nohup tail -f /var/log/messages | /opt/nac/bin/postconnect.php &
+    #echo $CMD
+    #$CMD
+    ;;
+
+  'stop')
+    #pkill ".*vmps_lastseen.**"
+    #pkill -f "$CMD"
+    #pkill -f "tail -f /var/log/messages | /opt/nac/bin/vmps_lastseen"
+    pkill -f "tail -f /var/log/messages | /opt/nac/bin/postconnect.php"
+    ;;
+
+  'restart')
+    # Stop the service and regardless of whether it was
+    # running or not, start it again.
+    $0 stop;
+    sleep 1;
+    $0 start;
+    ;;
+
+  *)
+    # usage
+    echo "Usage: $0 start|stop|restart"
+    exit 1
+    ;;
+esac

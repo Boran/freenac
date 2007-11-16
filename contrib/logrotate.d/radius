@@ -1,0 +1,15 @@
+/usr/local/var/log/radius/radius.log {
+    daily
+    compress
+    dateext
+    maxage 365
+    rotate 99
+    missingok
+    notifempty
+    create 640 root root
+    sharedscripts
+
+    postrotate
+        /etc/init.d/radius restart
+    endscript
+}

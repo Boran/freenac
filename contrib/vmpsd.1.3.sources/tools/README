@@ -1,0 +1,19 @@
+Examples to test vlan.db.example config from doc directory.
+
+run vmpsd like this:
+
+cd <vmpsd dir>
+./vmpsd -l 0x0807 -d -f doc/vlan.db.example
+
+test it like following:
+
+#
+# test vlan policy / restricted VLAN
+tools/vqpcli.pl -s localhost -v mydomain -w 10.0.0.1 -i 2/4 -m 0010.a49f.30e3
+
+output should read:
+
+Vlan: TEST
+MAC Address: 0010a49f30e3
+Status: ALLOW
+

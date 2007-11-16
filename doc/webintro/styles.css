@@ -1,0 +1,31 @@
+   body { 
+      color: rgb(0, 0, 0);
+      background-color: rgb(255, 255, 255);
+   }
+
+   a { 
+      color: rgb(0, 0, 0);
+   }
+
+   a:visited { 
+      color: rgb(0, 0, 0);
+   }
+
+   #text {
+      position:relative;
+      font-family: Verdana, Arial, Helvetica, sans-serif;
+      font-size:small;
+      padding:10px;
+   }
+
+
+   #tiny { 
+      font-family: Verdana,Arial,Helvetica,sans-serif;
+      font-size: xx-small;
+   }
+
+   #text { padding: 10px;
+      position: relative;
+      font-family: Verdana,Arial,Helvetica,sans-serif;
+      font-size: small;
+   }

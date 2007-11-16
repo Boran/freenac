@@ -1,0 +1,19 @@
+
+- /data/backup
+- /data/sles100.001
+
+
+- /sys
+- /proc
+- /media
+- /tmp/**
+- /tmp/ssh**
+- /secure/tmp/**
+
+- /disk2
+- /diskstation
+
+- /var/spool/postfix/proc
+- **mysql.sock
+- **ntp/dev/log
+

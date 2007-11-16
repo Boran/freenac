@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# /etc/init.d/proctst
+#
+### BEGIN INIT INFO
+# Provides:       proctst
+# Required-Start: $network $remote_fs mysql vmps vmps_lastseen cron postfix
+# Required-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start the proctst server
+### END INIT INFO
+#
+#
+# INSTALLATION:
+#   Adapt the "Required-Start" line below, and /etc/proctst.conf
+#   cp /opt/nac/contrib/etc/proctst.conf /etc
+#   vi /etc/proctst.conf
+#
+#   ln -s /opt/nac/bin/proctst /etc/init.d/proctst
+#   ln -s /etc/init.d/proctst /sbin/rcproctst
+#   chkconfig proctst on
+#   rcproctst start
+#
+#   Note: you may have to rune the Required-Start line above to get proctst to
+#       be the last daemon to start.
+#
+#                               3.6.06/SB
+
+case "$1" in
+start)
+	nohup /opt/nac/bin/proctst.pl &
+	;;
+
+reload)
+        pkill -HUP proctst;
+        ;;
+
+restart)
+        $0 stop;
+        $0 start;
+	;;
+
+stop)
+        pkill proctst
+	;;
+
+*)
+	echo "Usage: $0 { start | stop }"
+	exit 1
+	;;
+esac
+exit 0

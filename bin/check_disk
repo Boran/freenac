@@ -1,0 +1,161 @@
+#!/bin/sh 
+#
+# check_disk
+#
+# Function:
+#    If a filesystem is full or system heavily loaded alert
+#    $admin ONCE. Set a flag and alert again when problem is fixed.
+#
+# Example cron usage:
+#    0 8-18 * * 1-5 /opt/nac/bin/check_disk  99 200
+#
+# 2007.11.03 SB: Strange, 'tail -n 1" needed on linux for $tail
+#            Wonder why its not like that for all platforms?
+# 2005.10.02 SB: Major Update. Fix & test for HP-UX, 
+#            Suse 9.1/9.3, Solaris 8/9, RHEL3.o
+# 2001.12.13 Sean Boran for Solaris.
+#########################################################
+
+#DEBUG=1
+
+# Email addressess to notify
+admin=root
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
+ignore="nfs|shm|smb|hsfs|cdfs|subfs|devpts|usbdevfs|sysfs|iso9660|/dev/fd|mnttab|/proc|/mnt"     # Ignore these Filesystems
+subject="Disk/performance problems"
+subject2="Disk/performance FIXED - OK"
+tempfile=/tmp/check_disk.$$
+flagfile=/tmp/check_disk.flag
+
+##---------- functions -------
+os=`uname -s`
+hw=`uname -m`
+if [ "$os" = "SunOS" ] ; then
+  df='df -lk'
+  load=`uptime | awk -F',' '{print 100*$5}' `  # load over 5 mins
+  top="top -b"
+  #tail="tail -n 2"
+  tail="tail + 2"
+  mailit=/bin/mailx
+  mount="mount -p";
+  echo=echo;
+
+elif [ "$os" = "HP-UX" ] ; then
+  df='bdf'
+  load=`uptime | awk -F',' '{print 100*$5}' `  # load over 5 mins
+  top=""
+  tail="tail -n 2"
+  mailit=/bin/mailx
+  mount="mount";
+  echo=echo;
+
+elif [ "$os" = "Linux" ] ; then
+  #df='df -hlk'
+  df='df -P'
+  load=`uptime | awk -F',' '{print 100*$4}' `  # load over 5 mins
+  top="top -b -n 1"
+  #tail="tail -n 2"
+  tail="tail -n 1"
+  # Gentoo: differentiate later: tail="tail -n 2"
+  mailit=/bin/mail
+  mount="mount";
+  echo="echo -e";
+
+elif [ "$os" = "OpenBSD" ] ; then
+  df='df -hlk'
+  load=`uptime | awk -F',' '{print 100*$4}' `  # load over 5 mins
+  top=""
+  tail="tail -n 2"
+  mailit=/bin/mailx
+  mount="mount";
+  echo="echo -e";
+fi
+[ $DEBUG ] && $echo "OS=$os"
+
+USAGE="USAGE: $0  DISK_SPACE_% LOAD_LIMITx100";
+arg1="$1";
+arg2="$2";
+fs_limit=80;
+load_limit=190;    # "uptime" max. allowed value * 100
+if [ "$arg2" != "" ] ; then
+  load_limit="$arg2";
+  fs_limit="$arg1";
+else
+  echo $USAGE
+  exit 1;
+fi
+
+## Check filesystems for percentage full > $fs_limit
+
+#[ $DEBUG ] && ($mount | egrep -v "$ignore"  | awk '{print $3}')
+
+#for filesys in `$df  |$tail |egrep -v "$ignore"  | awk '{print $6}'`; do
+for filesys in `$mount |egrep -v "$ignore"  | awk '{print $3}'`; do
+  [ $DEBUG ] && $echo "Checking $filesys, \c"
+
+  #[ $DEBUG ] && $df  $filesys|$tail 
+
+  fs_space=`$df  $filesys|$tail |awk '{print $5}'| sed 's/\%//' `
+  [ $DEBUG ] && $echo "space=$fs_space"
+  if [ $fs_space -gt $fs_limit ]; then
+    $echo "Filesystem $filesys is $fs_space % full" > $tempfile
+    [ $DEBUG ] && $echo "Filesystem $filesys is $fs_space % full (limit=$fs_limit)"
+  fi
+
+done
+
+## check system load over last 5 minutes
+##
+if [ $load -gt $load_limit ]; then
+  $echo "System under heavy load (greater than $load_limit)..." >> $tempfile
+  [ $DEBUG ] && $echo "System under heavy load (greater than
+$load_limit)..."
+else
+  [ $DEBUG ] && $echo "Current load over 15 mins=$load"
+fi
+
+## Were any problems found above? If yes, email results
+if [ -f $tempfile ] ; then
+
+  [ $DEBUG ] && $echo "problem found..\c"
+
+  ## have we reported a problem already?
+  ## if not, report it and set flag
+  if [ ! -f $flagfile ]; then
+    [ $DEBUG ] && $echo " send alert email."
+    [ $DEBUG ] && cat $tempfile
+
+    # add in some more info to help the admin
+    $echo "  "                         >> $tempfile
+    $df                               >> $tempfile
+    $echo "  "                         >> $tempfile
+    $echo "Load:"                      >> $tempfile
+    uptime                            >> $tempfile
+    $echo "  "                         >> $tempfile
+    $top                              >> $tempfile
+    $echo "  "                         >> $tempfile
+    ps -ef                            >> $tempfile
+    $echo "  "                         >> $tempfile
+    $echo "\n\nThis email was created by: `uname -n ` $0"  >> $tempfile
+    $mailit -s "`uname -n` $subject" $admin < $tempfile
+    rm $tempfile
+    touch $flagfile
+
+  else
+    [ $DEBUG ] && $echo " but no action (alert previously sent)."
+  fi
+
+else                              # no problem
+
+  if [ -f $flagfile ]; then       # there was a problem on the last run.
+    [ $DEBUG ] && $echo "Previous problem fixed- send email."
+    $echo "previous problem fixed" | \
+      $mailit -s "`uname -n` $subject2" $admin
+    rm $flagfile                  # clear flag
+  else
+    [ $DEBUG ] && $echo "no problem."
+  fi
+
+fi
+

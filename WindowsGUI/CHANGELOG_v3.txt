@@ -1,0 +1,49 @@
+CHANGE HISTORY V3.0 (from v2.2):  
+---------------------
+Overview: 
+  add lastseen L3
+  New Overview tab, reorganise overview page, less OS
+  Disable& hide old Overview 
+  
+Switches:  
+- Add last_monitored, up fields.
+- fix: cannot delete switch
+  New nested switch-ports page
+  improve up/down column
+  fix colouring
+  switch Ip readonly, not blue
+  
+Ports: 
+- add last_monitored, up, shutdown fields.
+  allow changing of staticvlan, auth_profile, shutdown
+  (and set restart_now, if these change)
+  Display 'up/down' properly. Rearrange columns order.
+  Right click pop to select systems
+
+Edit
+- User: epo user, last uid, last Wsus
+- System name: add last DNS name (last_hostname, a new field)
+- Copy DNS: warn if DNS not yet queried, and strip domain name
+- increase form height
+
+New fields 
+- New DNS/Naming tab
+- heath status
+- email on connect field
+
+Use date format 'yyyy-mm-dd hh:mm' consistency on all grids.
+Hide unneeded id fields in many grids
+dministration: add Server Control, "Restart NAC"
+
+PatchCable: 
+	update LastChange date
+	taCable, set fetchall=false
+	Patches: fix colours per cable type: green/blue/grey
+
+----------------------  
+Nov 15:
+  New Wuse/Epo tables integrated
+  Add 'unknown' buttons to Overview
+
+
+

@@ -1,0 +1,42 @@
+body {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: x-small;
+	color: #0000FF;
+}
+.right {
+	text-align: right;
+}
+form {
+	margin: 0px;
+	padding: 0px;
+}
+.center {
+	text-align: center;
+}
+hr {
+	color: #0000FF;
+	background-color: #0000FF;
+	height: 1px;
+}
+.light {
+	background-color: #E0E0F8;
+}
+.dark {
+	background-color: #A6A6FF;
+}
+a {
+	color: #071594;
+}
+table {
+	border: 1px solid #0000FF;
+}
+.bw {
+	background-attachment: scroll;
+	background-repeat: no-repeat;
+	background-position: 0px 0px;
+	vertical-align: middle;
+}
+textarea,input,select {
+	border: 1px solid #0000FF;
+	font-size: x-small;
+}

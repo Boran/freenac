@@ -1,0 +1,36 @@
+_______________________ FreeNAC README _____________________________
+
+This is Version 2.2 RC2 of FreeNAC, Release  2007.06.22
+
+The main Project Website is online at FreeNAC.net .
+Product and support information is in English/french/Spanish and German.
+    http://freenac.net/en
+    http://freenac.net/fr
+    http://freenac.net/de
+    http://freenac.net/es
+
+
+Technical documentation is in english only:
+
+	* Installation guide	http://freenac.net/en/installguide
+	* Users guide		http://freenac.net/en/usersguide
+	* Technical guide	http://freenac.net/en/techguide
+
+Refer to the Install Guide to get FreeNAC up and running.
+
+For a list of changes, please see doc/CHANGES and doc/CHANGES.detailed
+
+
+
+Please do sign up to the website and discussion groups:
+- on the Website you can post comments/tips on each page of the documents
+	http://freenac.net
+- in the Forums, share your knowledge and benefit from that of others
+	http://freenac.net/phpBB
+
+
+Note for users of V2.2 RC2 or prior, upgrading to V2.2 RC3 or later: 
+   Please see doc/README.config2db.important to know how 
+   to import your config file into the database in case you haven't done so.
+ 
+                                                      The FreeNAC Team

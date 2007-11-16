@@ -1,0 +1,52 @@
+##
+## logcheck for freenac
+## logcheck.ignore
+##
+## Put your site specifc ignores in here.
+
+# SSH site specific: adapt for your security policy
+sshd.* Accepted publickey for root from ::ffff:192.168.245.40
+sshd.* Accepted publickey for root from ::ffff:193.5.(227.15|238.15)
+sshd.* Accepted keyboard-interactive
+sudo: (tgdorhe1)
+
+# Cisco switch alerts that you may wish to ignore:
+VQPCLIENT-7-RECONF
+SYS-4-P2_WARN: .* waiting for dynamic assignment
+(LINEPROTO-5-UPDOWN|LINK-3-UPDOWN)
+#LINK-5-CHANGED Interface .* changed state to administratively down
+DTP-5-TRUNKPORTON
+DTP-5-NONTRUNKPORTON
+
+## Notify on DENY?
+VQPCLIENT-2-DENY Host
+vmpsd: DENY:
+
+# Enable these if debuggin on in vmpsd
+#vmpsd: External prog says
+#vmpsd: >>>>
+
+# Ignore the summary messages
+vmpsd_external.php.*: Note
+
+postconnect.php.*: Updated User details
+postconnect.php.* has been updated
+
+# Debug messages to allow when needed
+vmpsd_external.php.*: Debug(1|2)
+postconnect.php.*: Debug1
+ping_switch.php.*: Debug1
+
+# FreeRadius
+# See all 802.1x requests/Answers?
+rad_recv: Access-Request
+Sending Access-Accept
+User-Name = 
+Reply-Message = "(vmps) returns: MAC address allowed"
+ : Debug:
+#Debug:  main:
+#Debug: +(peap|eap|tls):
+#Debug: +(rlm_eap|TLS_|eaptls_|mschap2|radius_xlat|rlm_mschap)
+#Info: rlm_eap_mschapv2
+
+

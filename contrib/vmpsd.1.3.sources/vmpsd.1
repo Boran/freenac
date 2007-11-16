@@ -1,0 +1,86 @@
+.TH OPENVMPSD 1 "Version 1.1: 19 Jan 2004"
+.SH NAME
+vmpsd \- Open Source Cisco VMPS Server
+.SH SYNOPSIS
+.B "vpmsd [-d] [-a \fIaddress\fP] [-f \fIfile\fP] [-l \fIlevel\fP] [-p \fIport\fP]"
+
+.SH DESCRIPTION
+.I vmpsd
+is a GPL implementation of Cisco's VMPS server. It allows for
+dynamic VLAN creation based upon MAC address, and is particularly 
+helpful in smaller environments where a Cisco VMPS server is not 
+available or feasible.
+.PP
+Since Cisco has not released documentation for this protocol, 
+.I vmpsd
+was based entirely on watching traffic between Cisco VMPS servers 
+and clients. As such, it is not warranted to be complete or bug-free.
+Despite this issue, 
+.I vmpsd
+is suitable for use in production environments, as it has proven to be
+stable on large networks for long periods of time.
+
+.SH OPTIONS
+.TP 
+.B -a " bind address" 
+IP address to bind 
+.I vmpsd
+to. Requests from clients must come in on this address.
+.TP
+.B -d
+Causes
+.I vmpsd
+to stay in the foreground instead of detaching as a daemon. Also logs
+to stderr.
+.TP
+.B -f " config file"
+Specify the configuration file that
+.I vmpsd 
+will use. The program will fail without this option, as currently there is no 
+default set.
+.TP
+.B -l " log level"
+Set the log level
+.I vmpsd
+will use. Options are:
+.RS
+.IP \(bu 4
+.B 0x0100 
+-- fatal errors only
+.IP \(bu 4
+.B 0x0200 
+-- informational messages
+.IP \(bu 4
+.B 0x0400 
+-- print warnings
+.IP \(bu 4
+.B 0x0800 
+-- print debug messages; very verbose
+.IP \(bu 4
+.B 0x0001 
+-- system
+.IP \(bu 4
+.B 0x0002
+-- parser
+.IP \(bu 4
+.B 0x0004
+-- vqp
+.RE
+.TP
+.B -p " listener port"
+Port
+.I vmpsd
+will listen on. Defaults to 1589.
+
+.SH "FILES"
+vmps.db
+
+.SH "SEE ALSO"
+.B vmpsd.db(1)
+
+.SH AUTHORS
+.PP
+Program: Dori Seliskar <dori_seliskar@select-tech.si>
+         David Parsley <parsley@linuxjedi.org>
+.br
+Manpage: Alex Kirk <alex@schnarff.com>

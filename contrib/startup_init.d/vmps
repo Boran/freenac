@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# /etc/init.d/vmps
+#
+### BEGIN INIT INFO
+# Provides:       vmps
+# Required-Start: $network $remote_fs mysql
+# Required-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start the Vmps server
+### END INIT INFO
+
+# 
+
+case "$1" in
+start)
+        #-l  log level
+        #  o   0x0100 -- fatal errors only
+        #  o   0x0200 -- informational messages  [IMPORTANT]
+        #  o   0x0400 -- print warnings
+        #  o   0x0800 -- print debug messages; very verbose
+        #  o   0x0001 -- system           [IMPORTANT]
+        #  o   0x0002 -- parser
+        #  o   0x0004 -- vqp
+        #  Good: 0x0804 and bit less: 0x0F04
+        #  Minimal, without enough for vmps_lastseen: 0x0204
+
+        # Make sure mysql started
+        sleep 5
+
+
+        ## Add the '-a A.B.C.D' parameter if the machine has more than
+        ## one interface to specific on which interface to bind vmpsd
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0804 
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0801
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0201
+	#/opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external  -l 0x0204
+        /opt/nac/bin/vmpsd -e /opt/nac/bin/vmpsd_external.php  -l 0x0204
+
+	;;
+
+reload)
+        pkill -HUP vmpsd;
+        ;;
+
+restart)
+        $0 stop;
+        $0 start;
+	;;
+
+stop)
+        pkill vmpsd
+	;;
+
+*)
+	echo "Usage: $0 { start | stop }"
+	exit 1
+	;;
+esac
+exit 0
+

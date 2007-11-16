@@ -1,0 +1,433 @@
+#############################
+## logcheck.ignore.gen
+##
+## General logcheck.ignore pattern for using across all sites
+##
+## History:
+## <8> 25.Oct'07 SB Add FreeNAC generic section
+## <7> 23.Mar'06 SB
+## <6> 04.Jan'05 SB
+## <5> 23.Aug'04 SB Major overhaul
+## <4> 23.Jul'02 SB samba
+## <3> 19.Jun'02 SB bind
+## <2> 21.jan'02 SB Sync with bwsyslog,mclog1/2
+## <1> 31.Dec'01 SB First General Pattern file created.
+##     Sync with bw.
+##
+##############################
+
+## Original logcheck entries: ############
+authsrv.*AUTHENTICATE
+
+# cron
+cron.* CMD
+cron.* RELOAD
+cron.* STARTUP
+CROND.* CMD
+crontab.* (LIST|REPLACE|ORPHAN|END EDIT)
+
+## next two corrected.
+ftp-gw.* exit host
+ftp-gw.* permit host
+ftpd.* session closed
+ftpd.* exiting on signal 14
+#ftpd.*ANONYMOUS FTP LOGIN
+ftpd.*FTP LOGIN FROM
+ftpd.*retrieved
+ftpd.*stored
+ftpd.*: Data port : 20
+
+
+http-gw.*: exit host
+http-gw.*: permit host
+in.comsat.*:*localhost
+mail.local
+
+netacl.*: exit host
+netacl.*: permit host
+popper.*Unable
+popper: -ERR POP server at
+popper: -ERR Unknown command: "uidl".
+qmail.*new msg
+qmail.*info msg
+qmail.*starting delivery
+qmail.*delivery
+qmail.*end msg
+rlogin-gw.*: exit host
+rlogin-gw.*: permit host
+sendmail.*User Unknown
+sendmail.*alias database.*rebuilt
+sendmail.*aliases.*longest
+sendmail.*from=
+sendmail.*lost input channel
+sendmail.*message-id=
+sendmail.*putoutmsg
+sendmail.*return to sender
+sendmail.*stat=
+sendmail.*timeout waiting
+smap.* (host=|gethostbyaddr)
+smapd.*daemon running
+smapd.*delivered
+telnetd.*ttloop:  peer died
+tn-gw.*: exit host
+tn-gw.*: permit host
+x-gw.*: exit host
+x-gw.*: permit host
+xntpd.*Previous time adjustment didn't complete
+xntpd.*time reset
+## End of standard logcheck Entries.
+
+
+
+#######################################################
+####### Sean's standard entries for all UNIX sites #########
+
+## Repeats
+last message repeated .* time
+above message repeats .* times
+-- MARK --
+
+## Sun Boot messages
+unix: .*(done|syncing file systems|Copyright [()c]* [0-9]+-[0-9]+)
+unix: .*(PCI-device|dado|su0|su1|mouse|stdin|avail mem|pci0|m64|se0)
+unix: .*(pm0|dma0|sbus0|target [0-9] lun|zs0|zs1|keyboard is|stdout is)
+unix: .*(SUNW,|devinfo)
+supports power management
+Symbios .* found
+unix: audio: no mmcodec device found
+unix: WARNING: audio: Unable to communicate with speakerbox
+unix: NFS (lookup|getattr) failed for server
+
+## General
+radius.* unknown request type 0 ignored
+radius.* no user name
+qmail: .* status: local .* remote
+httpd.* child process .* did not exit
+Socks5.* TCP Connection (Request|Terminated)
+Socks5.* (Inactivity timeout|timed out)
+smtpd: .* tcpserver: (status|pid|ok|end)
+
+nfs/lockd.* Number of servers not specified. Using default of 20.
+nfsd.*: Setting STREAMS-HEAD high water value
+nfsd.*: Return from t_optmgmt
+
+ACESERVER.* AALM failed to get maintenance schedule 
+ttsession.* exited due to signal
+telnetd.*ttloop:  read: Connection reset by peer
+nscd.* gethostbyaddr
+
+# minor kernel messages
+kern.info
+kernel: (cdrom|dev fd0)
+kernel: Kernel logging (proc) stopped
+kernel: Kernel log daemon
+submountd:
+
+
+## sendmail
+sendmail.* (Unbalanced '<')
+sendmail.* (Authentication-Warning|User unknown)
+sendmail.* alias database /etc/aliases.db out of date
+sendmail.* did not issue MAIL/EXPN/VRFY/ETRN during connection to MTA
+sendmail.* gethostbyaddr
+sendmail.* unable to qualify my own domain name
+
+## TIS fwtk
+smap.* (internal|external|peer dropped connection|discarding)
+smap.* host (name|address) lookup failed
+smap.* securityalert: .* (tried relaying|feigns to)
+tn-gw.* (Network timeout|connected host)
+ftp-gw.* (USER|user|RETR|STOR|DELE)
+Socks5.* PING Proxy (Request|Terminated)
+
+## OpenSSH only
+sshd.* (Cannot delete credentials|Received disconnect)
+sshd.* Did not receive (ident|identification) string
+sshd.* session closed for user
+sshd.* subsystem request for sftp
+sshd.* Found matching DSA key
+
+## SSH1
+sshd.* Generating .* bit RSA key.
+sshd.* RSA key generation complete.
+sshd.* (Closing connection to|Command terminated on signal|Timeout before authentication)
+sshd.* Connection (reset by peer|timed out|from|closed by remote host)
+sshd.* Password authentication for root accepted.
+sshd.* Could not reverse map address
+sshd.* Transport endpoint is not connected
+sshd.* Connection closed by 
+sshd.* RhostsRsa authentication not available
+sshd.* Server listening on (0.0.0.0|::) port 22
+sshd.* connect from
+
+## SSL stuff to ignore:
+stunnel.*: SSLv3 opened for /usr/local/cyrus/bin/imapd
+stunnel.*: SSL_write: error
+stunnel.*: Connection closed:
+
+inetd.*: simap.* from
+
+
+# PAM, Redhat & Suse
+PAM_unix.* session (closed|opened) for user
+amd.* reload of map /etc/amd.net is not needed
+modprobe: .*locate module binfmt-0000
+inetd.* exit status 1
+PAM_pwdb.* session closed
+/USR/SBIN/CRON.* CMD
+
+## DNS
+named.* (Request IXFR|No IXFR log|approved IXFR\/AXFR) from
+named.* (end of transfer)
+named.* tcp_send\: bind\(query_source\)\: Permission denied
+named.* ((L|l)ame server|slave zone|zone transfer|master zone)
+named.* dangling CNAME pointer
+named.* (USAGE|NSTATS|XSTATS|approved AXFR|Sent NOTIFY|rcvd NOTIFY)
+named.* (Cleaned cache|wrong ans. name|hint zone .* loaded)
+named.*Lame delegation
+named.*Response from
+named.*answer queries
+named.*points to a CNAME
+named.*reloading
+# We want to see named starting:
+#named.*starting
+# <3> Win2k false positives
+named.* update .* denied
+named.* (sending notifies)
+named.* (loaded|transfered) serial
+named.* AXFR-style IXFR started
+named.* (channel 127.0.0.1#953|rndc.key): file not found
+named.* open: /etc/rndc.key: file not found
+named.* received notify for zone
+named.* couldn't add command channel
+named.* All possible A RR's lame
+named.* Malformed response
+named-xfer.* exited with signal 15
+
+
+## Postfix
+postfix/smtpd.* (connect|disconnect|lost connection after CONNECT)
+postfix/smtpd.* (timeout after (DATA|RCPT|RSET|CONNECT))
+postfix/smtpd.* (Host not found|address not listed|gethostbyaddr)
+postfix/smtpd.* (client=|reject: RCPT from)
+postfix/smtpd.* (Host name has no address)
+postfix/smtpd.* (timeout after (DATA|RCPT|RSET|CONNECT))
+postfix/smtpd.* lookup table has changed -- exiting
+postfix/smtpd.* too many errors after RCPT from unknown
+postfix-script.* refreshing the Postfix mail system
+postfix/(cleanup|qmgr|pickup)
+postfix/sendmail.* open maildrop
+postfix/smtp.* Connection (timed out|refused)
+postfix/smtp.* status=sent
+postfix/smtp.* (warning: no MX host for)
+postfix/smtp.* status=(deferred|bounced)
+postfix/smtp.* server dropped connection
+postfix/smtp.* (read timeout|warning: numeric domain name)
+postfix/smtpd.* get interface configuration
+postfix/smtpd.* verification failed: Bad file number
+postfix/smtpd.* timeout after 
+postfix.* enabling PIX <CRLF>.<CRLF> workaround
+postfix.* server refused mail service
+postfix.*: (statistics)
+postfix.*: (daemon started|reload)
+
+
+# Incoming:
+postfix/local.* relay=local, .* status=sent
+postfix/pip.* status=sent
+
+## NTP
+NTP time synchronized with server
+ntpdate.* (adjust|step) time server
+ntpdate.* no server suitable for synchronization found
+xntpd.* (synchronisation lost|synchronized to|tickadj =)
+
+## Proxies
+squid.* (storeDirWriteCleanLogs|Finished.|Took 0 seconds|Connection reset by peer)
+squid.* (clientKeepaliveNextRequest|clientSendMoreData|clientReadRequest)
+squid.* (parseHttpRequest: Unsupported method|storeLogRotate|accessLogRotate)
+squid.* (Adding nameserver|FD |logging is |DNS Socket created|Accepting |Loaded Icons)
+
+
+## DBs
+pm.* Scheduled xntpd
+db_evaluate: --- RDBMS appears to be ok ---
+db_evaluate: --- (Connected to|disconnected from) database ---
+isiping.* Application 'isiping' started
+
+## Antivirus
+amavis.* (starting|ending execution with 0)
+
+## Disksuite                                                                    
+unix: .* WARNING: forceload of misc/md              
+
+inetd.* /usr/opt/SUNWmd/sbin/rpc.(metad|metamhd): Hangup
+
+snort.* (TCP Data Offset|Automagic MTU)
+snort.* (Writing PID|Initializing daemon mode|PID stat checked|PID set to)
+
+lom: .* GMT LOM time reference
+
+
+# samba <4>
+smbd.*rejected invalid user nobody
+smbd.*(password|service|reply).c:
+smbd.*closed connection to service
+smbd.* (process_logon_packet|connection to service|make_connection_snum)
+smbd.* connect to service
+smbd.* Rejecting user 'administrator'
+# Ignore ALL naming errors which seem to be very frequent
+nmbd.* 
+
+## <3> New common entries not yet in other sites:
+popper.* (connect from|Stats)
+## Apache: attempted hacks that waste our time
+File does not exist: .*(\.nsf|\.bat|\.exe|\.idq|\.phtml)
+
+package LC_MESSAGES not listed in file index
+ftp-gw.* Network timeout signal
+# ssh: v2 seem to try a null auth first.
+sshd.* Failed none for
+sshd.* Enabling compatibility mode for protocol 2.0
+prngd .* (started|64 filedescriptors)
+
+## <6>
+
+# Linux Kernel
+klogd: Default deny: .* DPT=113
+
+dhcpd: (DHCPREQUEST|DHCPOFFER|DHCPDISCOVER|Sending on|Listening on|DHCPINFORM)
+dhcpd: .* leases to leases file
+dhcpd: (DHCPACK to|Wrote|delete IN)
+
+dnsmasq.* (query|forwarded|cached|DHCPDISCOVER|DHCPOFFER|DHCPREQUEST|DHCPINFORM)
+dnsmasq.* (DHCP|reply|/etc/hosts|<NXDOMAIN)
+
+
+# Apache 2
+httpd2-prefork.*Broken pipe: core_output_filter: writing data
+
+# syslog
+syslog-ng.*: (new configuration|Changing permissions on special file|SIGHUP received)
+syslog-ng.*: (STATS)
+Reload syslog service
+
+
+# other
+package LC_MESSAGES not listed in file index
+(xinetd|sshd).*hosts.allow, line .*: host name mismatch
+powersaved.* server response code 200
+SQLAnywhere.* Cache size adjusted
+SQLAnywhere.* (user|local0).notice
+dmgt.*(local0.info|TYPE=INFO)
+netmon.* user.notice
+smartd.*Temperature_Celsius changed
+plug-gw.* gethostbyaddr
+
+# FreeBSD
+sm-mta.* relay=localhost
+
+
+## Windows:
+Backup of data protection master key
+Automatic certificate enrollment for local system
+
+## ntop
+ntop.* (Get the freshest ntop|Initializing ntop|Resetting traffic statistics|Initializing gdbmi)
+ntop.* (VENDOR|will be started as user|THREADMGMT|OSFP|LASTSEEN|NETFLOW|NFS|SFLOW|INITWEB|XML)
+ntop.* gethostbyaddr
+
+# mysql
+Got an error reading communication packets
+\[NOTE\] Slave SQL thread initialized
+InnoDB: (Shut|Start)
+MySQL Community Edition
+mysqld: ready for connections
+mysqld: Shutdown complete
+mysqld: Normal shutdown
+mysqld ended
+mysqld started
+
+
+# postgrey
+postgrey.* delayed
+
+
+## Cluster
+cmcld: Request from node
+
+LVM.*: Volume Group configuration for .* has been saved
+
+rpcbind: init_transport: check binding for
+rpcbind: check_netconfig:
+
+
+
+################# Free generic "normal" entries to ignore #######################
+## Cisco
+SSH-5-ENABLED
+Cisco Internetwork Operating System Software
+EARLY DEPLOYMENT RELEASE SOFTWARE
+Copyright .* by cisco Systems
+Compiled .* by
+Support: .*www.cisco.com/techsupport
+Manual Users synced from
+Filtering MAC address 00-00-00-00-00-00
+
+# FreeRadius
+## Freeradius
+#radius_xlat
+#Cleaning up request
+#Walking the entire request list
+#-Station-Id
+#Nothing to do.
+#Processing the authorize section of
+#(rlm_eap|TLS_|eaptls_|MS-MPPE|rlm_mschap)
+#Exec-Program: /opt/samba/bin/ntlm_auth
+Waking up in
+(Framed-MTU|Message-Authenticator|NAS-Port|NAS-IP-Address|NAS-Identifier)
+SSL Connection Established
+Debug.*
+Tunnel.*
+PEAP.*
+Call.*
+MS-.*
+Challenge.*
+rlm_eap_mschapv2.*
+User-Password.*
+# : Info: 
+
+
+########## VMPS / FreeNAC ####################
+# 'normal' messages we can ignore
+vmpsd_external.*: (get_port_status|decide|Debug|ping|Ping)
+
+flap_detect.*: (Debug1|restart_port for )
+
+restart_port.*: Port restart try
+cron_restart_port[\d+]: restart_port switch
+vmps_purge_unknowns[\d+]: completed
+dump_ports[\d+]: completed
+port_scan: Scanning host 
+port_scan: (Doing port_scan to sytem|port_scan finished)
+snmp_scan.php.*: Start scanning
+wsus_getinfo.php.*: Updated patch information
+ping_switch.php: Querying switch
+epo_sync.php.*: Update AV status
+router_mac_ip.php.*: Update
+
+
+vmpsd: (ALLOCATE|FREE|-------)
+vmpsd: (Unknown|No. Data Items|Sequence No.|Client IP address|Port name):
+vmpsd: (==============|VQP Request|ResponseDomain name|MAC address)
+vmpsd: ALLOW
+vmpsd: (Vlan name|Domain name|Response)
+
+# FreeRadius
+Info: rlm_eap_tls
+EAP-Message =
+Service-Type = Framed-User
+State =
+FreeRADIUS-Proxied-To
+
+ 

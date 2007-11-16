@@ -1,0 +1,211 @@
+#!/usr/bin/php
+<?php
+/**
+ * /opt/nac/bin/config2db
+ *
+ * Long description for file:
+ *	Reads the variables defined in a FreeNAC config file and stores them in the opennac database
+ *
+ * NOTE: This script only imports data, it does not do updates of the config file once you have imported it and then
+ *       modified it. This script is supposed to import data contained in etc/config.inc and the .inc file in the enterprise version.
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package                     FreeNAC
+ * @author                      FreeNAC Core Team
+ * @copyright                   2006 FreeNAC
+ * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version                     SVN: $Id$
+ * @link                                http://www.freenac.net
+ *
+ */
+
+chdir(dirname(__FILE__));
+set_include_path("../:./");
+
+function escape_string($string)
+{
+   rtrim($string,' ');
+   if (get_magic_quotes_gpc()) {
+      $value=stripslashes($string);
+   }
+   if (!is_numeric($string)) {
+      $string=mysql_real_escape_string($string);
+   }
+   return $string;
+}
+
+function get_comment($var)
+{
+   global $file_loaded;
+   if (preg_match("/( ){0,}$var( ){0,}=(.*)/",$file_loaded,$regs))
+   {
+      if ($fields=explode('#',$regs[0]))
+      {
+         return trim($fields[1]);
+      }
+      else if ($fields=explode("//",$regs[0]))
+      {
+         return trim($fields[1]);
+      }
+      else
+         return;
+   }
+   else 
+      return;
+}
+
+function exclude(array $var_list,array $exclude_list=array('GLOBALS','^_','^HTTP','dbhost','dbname','dbuser','dbpass','argc','argv','snmp_ro','snmp_rw','.*user$','.*password$','.*pass$','snmpwalk','snmpset','router_snmpwalk','server[12]','logit_to_stdout','os_hostname','.*_sms_mac_.*','vmps_monitor_restart','mail_domain','vmps_servers','maildomain'))
+{
+   //Returns an array containing all defined variables without the $exclude_list vars
+   //$exclude_list supports REGEX
+   //$var_list is the list of vars returned by get_defined_vars
+   if ((empty($var_list))&&(empty($exclude_list)))
+      return;
+   else if ((!empty($exclude_list))&&(empty($var_list)))
+      return;
+   else if ((empty($exclude_list))&&(!empty($var_list)))
+   {
+      return $var_list;
+   }
+   else
+   {
+      $elements_to_exclude=count($exclude_list);                             //How many items we have in our exclude_list?
+      foreach($var_list as $key => $value)                                   //Go over each key from the var_list
+      {
+         for ($i=0;$i<$elements_to_exclude;$i++)                             //And compare it with each element of our exclude_list
+         {
+            if (ereg($exclude_list[$i],$key))                                //If the REGEX matches
+               array_push($exclude_list,$key);                               //Add that key to our exclude_list
+         }
+      }
+
+      $temp1=array_values(array_diff(array_keys($var_list),$exclude_list));  //Get the difference from our exclude_list and var_list
+                                                                                //And store it in $temp1
+      $temp2=array();
+
+      while (list($key,$value) = each($temp1))                                //Get the keys, values
+      {
+         global $$value;
+         $temp2[$value]=$$value;                                              //And store them in $temp2
+      }
+      return $temp2;
+   }
+}
+
+function print_usage($code)
+{
+   $usage=<<<EOF
+USAGE: config2db filename [OPTIONS]
+
+        Web:      http://www.freenac.net/
+        Email:    opennac-devel@lists.sourceforge.net
+
+DESCRIPTION: Read the variables defined in a config file and store them in the opennac database.
+
+OPTIONS:
+        -h              Display this help screen
+
+EOF;
+   echo $usage;
+   exit($code);
+
+}
+
+if ($argc>1)
+   $options=getopt("h");
+else
+   print_usage(1);
+
+if ($options)
+{
+   if (isset($options['h']))
+      print_usage(0);
+}
+unset($options);
+
+if (!ereg(".*\.inc$",trim($argv[1])))
+{
+   echo "File ".$argv[1]." doesn't seem to be a configuration file\n";
+   exit(1);
+}
+
+if (!file_exists($argv[1]))
+{
+   echo "File ".$argv[1]." doesn't exist\n";
+   exit(1);
+}
+
+require_once($argv[1]);					//Ok, the file exists, include it
+$global_vars=get_defined_vars();			//Get defined global variables
+
+$file_loaded=file_get_contents(trim($argv[1]));		//Load the file into a var
+if (!$file_loaded)
+   echo("Couldn't load contents of file ".$argv[1]."\n");
+
+$vars=exclude($global_vars);				//Filter variables
+
+include_once('bin/funcs.inc');
+
+db_connect();
+foreach ($vars as $key => $value)			//Start moving vars into the database
+{
+   if (ereg($key."( ){0,}=",$file_loaded))		//If this key is in the file, move it into the db
+   {
+      $query="select id from config where name='$key';";
+      $var_id=v_sql_1_select($query); 			//Make sure this key doesn't exist already
+      if (!$var_id)					//This variable didn't exist previously, add it to the db
+      {
+         $type=gettype($value);				//Get the type of the var
+							//Not interested in these types right now
+         if ((strcasecmp($type,'object')==0)||(strcasecmp($type,'resource')==0)||(strcasecmp($type,'NULL')==0)||(strcasecmp($type,'user function')==0)||(strcasecmp($type,'unknown type')==0)) 
+            continue;
+         $comment=escape_string(get_comment($key));     //Get the comment of this variable
+         if (is_array($value))				//The value we want to import is an array?
+         {
+            $key=escape_string($key);
+            foreach ($value as $element)		//Yes, we need to perform one query per element
+            {
+               $query="select id from config where name='$key' and value='$element';";
+               $res=mysql_query($query);
+               if (mysql_num_rows($res)==0)
+               {
+                  $element=escape_string($element);
+                  $query="insert into config set type='array',name='$key',value='$element',comment='$comment',lastchange=NOW()";
+	          $res=mysql_query($query);
+                  if (!$res)
+                  { 
+                     echo "Cannot execute query $query because ".mysql_error()."\n"; 
+                  }
+                  #echo $query."\n";
+               }
+            }
+         }
+         else						//No, then create query
+         {
+            $key=escape_string($key);
+            $element=escape_string($value);
+            if (strcasecmp($type,'boolean')==0)
+            {
+               if ($value)
+                  $query="insert into config set type='$type',name='$key',value='true',comment='$comment',lastchange=NOW()"; 
+               else
+                  $query="insert into config set type='$type',name='$key',value='false',comment='$comment',lastchange=NOW()";
+            }
+            else 
+               $query="insert into config set type='$type',name='$key',value='$value',comment='$comment',lastchange=NOW()";
+            $res=mysql_query($query);
+            if (!$res)
+            {
+               echo "Cannot execute query $query because ".mysql_error()."\n";
+            }
+            #echo $query."\n";
+         }
+      }
+   }
+}
+?>

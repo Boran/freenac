@@ -1,0 +1,72 @@
+I've been asked by some people where I get the "keyword" files for
+inclusion in the logcheck package. First, this package was made to be
+simple and run on many OS's with little modifications, so the keyword
+files are simple and may or may not cause false alarms with the standard
+installation. With that said, the included keyword files are based on a
+number of sources:
+
+1) Review of daemon, wrapper, and Firewall Toolkit (FWTK) source code.
+2) Submissions by testers and users.
+3) Guessing. 
+
+The first one of course is obvious, I review source code to find key
+components that indicate security problems and I record what they show via
+syslog (I also put in a tag of "securityalert:" to make these more clear,
+this is a FWTK convention that I think is really nice to have).
+
+The second one is a great help for systems I don't have access to. Many of
+the system specific files were contributed to by end users and testers. 
+
+The third of course is pretty un-scientific, but is based on a few rules:
+
+1) The security event indicates a "negative" or "failed" that will
+*probably* be displayed by a system daemon if it is written in English.
+
+2) The security event is typically generated when an automated probe is
+made of the host system. I use a variety of freely available tools and
+scripts to generate these (strobe, netcat, etc), as well as some custom
+tools I've developed for personal use. Don't let the media image 
+fool you, most hackers you'll run across are not very crafty and make a
+lot of noise rattling your system's door knob...then again they can be
+as noisy as they want really because there is a %99.99 chance the
+sysadmins won't know anyway.
+
+3) Finally, I use events that were seen from past hacking attempts at a
+variety of sites by myself (legitimately :) ), or on actual cases where
+I've cleaned out intruders from systems. Since I do system penetration
+audits for a living, you'll just have to take my word that what I'm
+looking for is legitimate. 
+
+Of course this is all speculation. I recommend that any system on the
+Internet have all code reviewed for any system daemons listening on an
+Internet available socket. The logging of errors should have a common word
+associated with the failure (ala FWTK's "securityalert:" messages) so that
+it can be grep'ed for quickly and reliably. If you are an author of a
+network daemon, please consider dropping in a similar notation for
+security-relevant events. 
+
+
+A final note...(really and then I'll shutup)..
+
+
+As it stands now, the majority of the keywords focus on daemon alerts
+and bizarre errors that are generated from an *external* system attack.
+This is an important distinction! It is vital to catch an intruder
+*before* system access is gained. Once a system has been penetrated the
+game is pretty much over. You should always assume an intruder has
+root access if they gain entry to a host. I don't bother checking for
+common exploit syslog messages because they simply don't exist, or
+there are too many to find reliably. Therefore, the key to system
+security is to not let intruders onto your host to begin with (as if
+you needed me to tell you that).
+
+In the case of an actual system intrusion, perhaps logcheck will 
+have given you enough of a warning to contain the problem quickly.
+Since I always assume that any Internet connected host will
+eventually be compromised, this is (to me) almost as good as not 
+letting the hacker on in the first place. 
+
+Have fun,
+
+-- Craig
+ 

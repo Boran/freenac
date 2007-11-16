@@ -1,0 +1,283 @@
+#!/bin/sh
+# Copyright (c) 1995-2002 SuSE Linux AG Nuernberg, Germany.
+#
+# Author: Lenz Grimmer <feedback@suse.de>
+#
+# /etc/init.d/mysql
+#
+#   and its symbolic link
+#
+# /usr/sbin/rcmysql
+#
+### BEGIN INIT INFO
+# Provides:       mysql
+# Required-Start: $network $remote_fs
+# Required-Stop:
+# Default-Start:  2 3 5
+# Default-Stop:
+# Description:    Start the MySQL database server
+### END INIT INFO
+
+# Shell functions sourced from /etc/rc.status:
+#      rc_check         check and set local and overall rc status
+#      rc_status        check and set local and overall rc status
+#      rc_status -v     ditto but be verbose in local rc status
+#      rc_status -v -r  ditto and clear the local rc status
+#      rc_failed        set local and overall rc status to failed
+#      rc_failed <num>  set local and overall rc status to <num>
+#      rc_reset         clear local rc status (overall remains)
+#      rc_exit          exit appropriate to overall rc status
+. /etc/rc.status
+
+# First reset status of this service
+rc_reset
+
+# Return values acc. to LSB for all commands but status:
+# 0 - success
+# 1 - generic or unspecified error
+# 2 - invalid or excess argument(s)
+# 3 - unimplemented feature (e.g. "reload")
+# 4 - insufficient privilege
+# 5 - program is not installed
+# 6 - program is not configured
+# 7 - program is not running
+# 
+# Note that starting an already running service, stopping
+# or restarting a not-running service as well as the restart
+# with force-reload (in case signalling is not supported) are
+# considered a success.
+
+# Test, if mysqld or mysql-max actually exist
+#unset MYSQLD
+#if test -x /usr/sbin/mysqld-max
+#then
+#        MYSQLD=/usr/sbin/mysqld-max
+#elif test -x /usr/sbin/mysqld
+#then
+#        MYSQLD=/usr/sbin/mysqld
+#fi
+#test "$MYSQLD" || { echo "Nor /usr/sbin/mysqld nor /usr/sbin/mysqld-max exists"; rc_failed 5; rc_status -v; rc_exit; }
+
+## Forget all that, set it directly to the /uar/local
+if test -x /usr/local/mysql/libexec/mysqld
+then
+MYSQLD=/usr/local/mysql/libexec/mysqld
+else
+MYSQLD=/usr/local/mysql/bin/mysqld
+fi
+SAFE_MYSQLD=/usr/local/mysql/bin/mysqld_safe
+#SAFE_MYSQLD=/usr/bin/mysqld_safe
+
+# The following section has been taken from
+# the original MySQL init script
+basedir=/usr
+datadir=/var/lib/mysql
+mysql_daemon_user=mysql
+mysql_daemon_group=mysql
+pid_file=/var/lib/mysql/mysqld.pid
+socket=/var/lib/mysql/mysql.sock
+MYADMIN=/usr/bin/mysqladmin
+
+if test -z "$basedir"
+then
+  basedir=/usr
+  bindir=/usr/bin
+else
+  bindir="$basedir/bin"
+fi
+
+if test -z "$pid_file"
+then
+  pid_file=$datadir/`/bin/hostname`.pid
+else
+  case "$pid_file" in
+    /* ) ;;
+    * )  pid_file="$datadir/$pid_file" ;;
+  esac
+fi
+
+mode=$1 # start or stop
+
+parse_arguments() {
+  for arg do
+    case "$arg" in
+      --basedir=*)  basedir=`echo "$arg" | sed -e 's/^[^=]*=//'` ;;
+      --datadir=*)  datadir=`echo "$arg" | sed -e 's/^[^=]*=//'` ;;
+      --pid-file=*) pid_file=`echo "$arg" | sed -e 's/^[^=]*=//'` ;;
+	  --socket=*)   socket=`echo "$arg" | sed -e 's/^[^=]*=//'` ;;
+    esac
+  done
+}
+
+# Get arguments from the my.cnf file, groups [mysqld] and [mysql_server]
+if test -x ./bin/my_print_defaults
+then
+  print_defaults="./bin/my_print_defaults"
+elif test -x $bindir/my_print_defaults
+then
+  print_defaults="$bindir/my_print_defaults"
+elif test -x $bindir/mysql_print_defaults
+then
+  print_defaults="$bindir/mysql_print_defaults"
+else
+  # Try to find basedir in /etc/my.cnf
+  conf=/etc/my.cnf
+  print_defaults=
+  if test -r $conf
+  then
+    subpat='^[^=]*basedir[^=]*=\(.*\)$'
+    dirs=`sed -e "/$subpat/!d" -e 's//\1/' $conf`
+    for d in $dirs
+    do
+      d=`echo $d | sed -e 's/[ 	]//g'`
+      if test -x "$d/bin/my_print_defaults"
+      then
+        print_defaults="$d/bin/my_print_defaults"
+        break
+      fi
+      if test -x "$d/bin/mysql_print_defaults"
+      then
+        print_defaults="$d/bin/mysql_print_defaults"
+        break
+      fi
+    done
+  fi
+
+  # Hope it's in the PATH ... but I doubt it
+  test -z "$print_defaults" && print_defaults="my_print_defaults"
+fi
+
+parse_arguments `$print_defaults $defaults mysqld mysql_server`
+
+# Safeguard (relative paths, core dumps..)
+cd $basedir
+
+case "$1" in
+    start)
+	# exit gracefully, if we are already running
+	checkproc $MYSQLD && echo -n "Starting service MySQL" && \
+	rc_status -v && rc_exit
+
+	# Test, if safe_mysqld actually exists
+	test -x $SAFE_MYSQLD || { echo "$SAFE_MYSQLD does not exist"; rc_failed 5; rc_status -v; rc_exit; }
+
+    # check for ISAM tables
+    tables=`find $datadir -name '*.ISM' | sed "s@$datadir/*@@; s@.ISM@@; s@/@.@;"`
+    if test "$tables" ; then
+        echo
+        echo "Some tables still use ISAM format, please convert them to something"
+        echo "better (eg. MyISAM). ISAM support will be dropped in future releases."
+        echo "You can use mysql_convert_table_format script to do this conversion."
+        echo
+        echo "Tables using ISAM are:"
+        echo "  $tables"
+        echo
+    fi
+
+    # this file was used in past, but it's batter to place it youtside database directory
+    if test -f $datadir/mysql/stamp-4.1 ; then
+        rm $datadir/mysql/stamp-4.1
+    fi
+
+	# We assume a fresh install if the directory $datadir/mysql
+	# does not exist and create the privilege database
+	if test ! -f $datadir/update-stamp-4.1 ; then
+		echo "Creating/Updating MySQL privilege database..."
+		mysql_install_db --user=$mysql_daemon_user || rc_failed
+
+	echo "Fixing privilege tables..."
+        (echo 'USE mysql;'; cat /usr/share/mysql/mysql_fix_privilege_tables.sql) \
+		| sed '/^---\? /D; s/#.*//; s/;$/#/' | tr '\n' ' ' | tr '#' '\n' \
+		| /usr/sbin/mysqld \
+            --bootstrap \
+            --skip-innodb \
+            --skip-bdb \
+            --skip-grant-tables \
+            --user=$mysql_daemon_user \
+            --pid-file=$pid_file \
+            --socket=$socket \
+            --datadir=$datadir 2>/dev/null
+
+        touch $datadir/update-stamp-4.1
+		
+		# Fix ownerships and permissions for $datadir
+		chmod 755 $datadir
+		chown -R $mysql_daemon_user.$mysql_daemon_group $datadir
+	fi
+
+	echo -n "Starting service MySQL"
+
+	$SAFE_MYSQLD \
+	    --user=$mysql_daemon_user \
+	    --pid-file=$pid_file \
+	    --socket=$socket \
+	    --datadir=$datadir &>/dev/null &
+
+	for((i=0; i<50; i++)); do
+	   sleep 0.2
+           test -S $socket && i='' && break
+        done
+
+	test -z "$i" || rc_failed
+
+	# Rmember status and be verbose
+	rc_status -v
+	;;
+
+    stop)
+	echo -n "Shutting down service mysql"
+	killproc -p $pid_file -TERM $MYSQLD
+
+	# Remember status and be verbose
+	rc_status -v
+	;;
+
+    try-restart)
+	## Stop the service and if this succeeds (i.e. the 
+	## service was running before), start it again.
+	## Note: try-restart is not (yet) part of LSB (as of 0.7.5)
+	$0 status >/dev/null &&  $0 restart
+
+	# Remember status and be quiet
+	rc_status
+	;;
+
+    restart|force-reload)
+	echo "Restarting service MySQL"
+	$0 stop
+	$0 start
+
+	rc_status
+	;;
+
+	reload)
+	echo -n "Reloading service MySQL"
+	killproc -p $pid_file -HUP $MYSQLD
+	touch $pid_file
+	rc_status -v
+	;;
+	
+    check|status)
+	echo -n "Checking for service MySQL: "
+	## Check status with checkproc(8), if process is running
+	## checkproc will return with exit status 0.
+
+	# Status has a slightly different for the status command:
+	# 0 - service running
+	# 1 - service dead, but /var/run/  pid  file exists
+	# 2 - service dead, but /var/lock/ lock file exists
+	# 3 - service not running
+
+	# NOTE: checkproc returns LSB compliant status values.
+	checkproc $MYSQLD
+	rc_status -v
+	;;
+
+    *)
+	echo "Usage: $0 {start|stop|status|reload|restart|try-restart|force-reload}"
+	exit 1
+	;;
+esac
+rc_exit
+
+# vim: ft=sh
