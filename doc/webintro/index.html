@@ -1,7 +1,7 @@
 <html>
 <head>
    <link href="styles.css" rel="stylesheet" type="text/css" />
-   <title>FreeNAC virtual machine RC1</title>
+   <title>FreeNAC virtual machine RC4</title>
 <body>
 <table width="60%" align="center">
    <tr>
@@ -47,8 +47,8 @@
             $ad_auth=true;
             </code><br /><br /> in <i>/opt/nac/web/config.inc</i>.<br /><br />
             Download the
-            <a href="https://opennac.svn.sourceforge.net/svnroot/opennac/branches/2.2/WindowsGUI/vmps.exe">Windows GUI</a>, its
-            <a href="https://opennac.svn.sourceforge.net/svnroot/opennac/branches/2.2/WindowsGUI/vmps.xml">configuration file</a> and see
+            <a href="https://opennac.svn.sourceforge.net/svnroot/opennac/branches/3.0/WindowsGUI/vmps.exe">Windows GUI</a>, its
+            <a href="https://opennac.svn.sourceforge.net/svnroot/opennac/branches/3.0/WindowsGUI/vmps.xml">configuration file</a> and see
             <a href="http://freenac.net/en/node/110">how to use it</a>.
          </ul>
       </td>
@@ -57,9 +57,9 @@
       <td id="text">
          <h4>802.1X</h4>
             This VM comes also with support for 802.1X authentication using the Windows Domain Controller. To set it up, please read this
-            <a href="http://opennac.svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/FreeNAC_VM_8021x_howto.txt?view=markup">HOW-TO</a>.<br /><br />
+            <a href="http://freenac.net/en/installguide/linux/8021x">HOW-TO</a>.<br /><br />
             Help about how to configure your switches to work with 802.1X can be found in
-            <a href="http://opennac.svn.sourceforge.net/viewvc/opennac/branches/2.2/doc/sw_802.1x_tests.txt?view=markup">sw_802.1x_tests.txt</a>.
+            <a href="http://freenac.net/en/techguide/802.1x">http://freenac.net/en/techguide/802.1x</a>.
       </td>
    </tr>
    <tr>
@@ -67,20 +67,20 @@
    </tr>
    <tr>
       <td align="justify" id="text">
-         You are using FreeNAC 2.2 RC1, which contains revision 651 from <a href="http://opennac.svn.sourceforge.net/viewvc/opennac">our subversion repository.</a>
+         You are using FreeNAC 3.0, which contains revision 1090 from <a href="http://opennac.svn.sourceforge.net/viewvc/opennac">our subversion repository.</a>
          <br /><br />
-         The operating system is Suse Linux 10 and includes:
+         The operating system is Ubuntu 7.10 (Gutsy Gibbon) and includes:
          <ul>
-            <li>FreeNAC 2.2 RC1</li>
-            <li>Apache 2.2.2</li>
-            <li>MySQL 5.0.22</li>
-            <li>PHP 5.2.0</li>
+            <li>FreeNAC 3.0</li>
+            <li>Apache 2.2.4</li>
+            <li>MySQL 5.0.45</li>
+            <li>PHP 5.2.3</li>
             <li>LibXML 2.6.22</li>
-            <li>Samba 3.0.23c</li>
-            <li>FreeRadius 1.1.4</li>
+            <li>Samba 3.0.26</li>
+            <li>FreeRadius 1.1.6</li>
          </ul>
          The installation was done according to the <a href="http://www.freenac.net/en/installguide">installation guide</a>.<br /><br />
-         To get the latest revision (bug fixes) from the release 2.2 RC1, in the directory <i>/opt/nac</i> just type:
+         To get the latest revision (bug fixes) from the release 3.0, in the directory <i>/opt/nac</i> just type:
          <pre>svn update</pre>
          If you have problems, please let us know through our 
          <a href="http://www.freenac.net/phpBB2/viewforum.php?f=4">Support Forum</a>.<br /><br />
