@@ -107,6 +107,7 @@ DELETE FROM vstatus WHERE id='6';
 -- New fields needed for switch monitoring
 ALTER TABLE switch ADD COLUMN last_monitored datetime COMMENT "Last time the switch was polled";
 ALTER TABLE switch ADD COLUMN up int COMMENT "Monitor: switch is reachable(1) or down?";
+ALTER TABLE switch ADD COLUMN vlan_id int default null;
 
 -- New fields needed for status and programming of port settings
 ALTER TABLE port ADD COLUMN last_monitored datetime COMMENT "Last time the port was monitored";
