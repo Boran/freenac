@@ -1,6 +1,6 @@
-#!/bin/sh
+#!/bin/bash
  #
- #  check_mysql 
+ #  check_mysql
  # Long description for file:
  # MySQL loses its UNIX socket sometimes, so restart it the hard way.
  # Typically run from cron:
@@ -10,27 +10,41 @@
  # modify it under the terms of the GNU General Public License as published
  # by the Free Software Foundation.
  #
- # @package			FreeNAC
- # @author			Sean Boran (FreeNAC Core Team)
- # @copyright		2006 FreeNAC
- # @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
- # @version			SVN: $Id$
- # @link				http://www.freenac.net
+ # @package                     FreeNAC
+ # @author                      Sean Boran, Hector Ortiz (FreeNAC Core Team)
+ # @copyright           	2006 FreeNAC
+ # @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ # @version                     SVN: $Id$
+ # @link                        http://www.freenac.net
  #
  ####################
 
-if [ ! -S /tmp/mysql.sock ] ; then
+#Get the line where the process mysqld is running
+line=`ps -ef | grep "mysqld " | grep socket`;
+#Number of characters of that line
+line_length=`echo ${#line}`;
+if [ $line_length -gt 0 ]
+then
+   #Get the position where the socket declaration starts
+   start=`expr match "$line" '.*socket='`;
+   #Get the position where the socket declaration ends
+   end=`expr match "$line" '.*\.sock'`;
+   if [ $start -gt 0 ] && [ $end -gt 0 ]
+   then
+      #Substract that string
+      socket=${line:$start:$end};
+   fi
+fi
+
+if [ ! -S $socket ]  
+then
   echo "Mysql socket has disappeared, so lets restart it"
-  rcmysqld stop
+  /etc/init.d/mysql stop
   killall  mysqld
   killall  safe_mysqld
-  rcmysqld start
-
-  ps -ef | grep mysql
-  echo " "
-  echo "$0 : finished "
-  
-#else 
-  #echo "Mysql socket exists, no action taken"
+  /etc/init.d/mysql start  
+  message="MySQL socket disappeared, it has been restarted";
+  logger $message -t check_mysql;
+  echo $message | mail -s "MySQL socket" root;
 fi
 
