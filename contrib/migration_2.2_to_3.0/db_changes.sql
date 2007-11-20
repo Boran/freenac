@@ -107,7 +107,6 @@ DELETE FROM vstatus WHERE id='6';
 -- New fields needed for switch monitoring
 ALTER TABLE switch ADD COLUMN last_monitored datetime COMMENT "Last time the switch was polled";
 ALTER TABLE switch ADD COLUMN up int COMMENT "Monitor: switch is reachable(1) or down?";
-ALTER TABLE switch ADD COLUMN vlan_id int default null;
 
 -- New fields needed for status and programming of port settings
 ALTER TABLE port ADD COLUMN last_monitored datetime COMMENT "Last time the port was monitored";
@@ -148,10 +147,10 @@ alter table systems change column ChangeDate ChangeDate varchar(100) default nul
 alter table systems change column ChangeUser ChangeUser int(11) default null;
 alter table systems change column LastPort LastPort int(11) default null;
 alter table systems change column LastVlan LastVlan int(11) default null;
-alter table systems change column os os int(11) default null;
-alter table systems change column os1 os1 int(10) default null;
-alter table systems change column os2 os2 int(10) default null;
-alter table systems change column os3 os3 int(10) default null;
+alter table systems change column os os int(11) unsigned default null;
+alter table systems change column os1 os1 int(10) unsigned default null;
+alter table systems change column os2 os2 int(10) unsigned default null;
+alter table systems change column os3 os3 int(10) unsigned default null;
 alter table systems change column os4 os4 varchar(64) default null;
 alter table systems change column class class int(11) unsigned default null;
 alter table systems change column class2 class2 int(11) unsigned default null;
