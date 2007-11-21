@@ -268,41 +268,44 @@ if (is_array($switches))
       };
 
       // then get hosts
-      foreach ($vlans as $vlan) 
+      if ($vlans)
       {
-         $vlanid = $vlan['default_id'];
-         $macs = walk_macs($switchip,$vlanid,$snmp_ro);
-         if (count($macs) > 0) 
+         foreach ($vlans as $vlan) 
          {
-            foreach ($macs as $idx => $mac) 
+            $vlanid = $vlan['default_id'];
+            $macs = walk_macs($switchip,$vlanid,$snmp_ro);
+            if (count($macs) > 0) 
             {
-               if (($mac['trunk'] != 1) && !(preg_match($conf->router_mac_ip_ignore_mac, $mac['mac'])) && ($mac['port'] != '')) 
+               foreach ($macs as $idx => $mac) 
                {
-                  $portid = iface_exist($switchid,$mac['port']);
-                  if ($portid) 
+                  if (($mac['trunk'] != 1) && !(preg_match($conf->router_mac_ip_ignore_mac, $mac['mac'])) && ($mac['port'] != '')) 
                   {
-                     $sid = mac_exist($mac['mac']);
-                     if ($sid) 
+                     $portid = iface_exist($switchid,$mac['port']);
+                     if ($portid) 
                      {
-                        $query = "UPDATE systems SET LastPort='$portid', LastSeen=NOW() WHERE id=$sid;";
-                        $logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - update host ");
-                     } 
-                     else
-                     {
-                        $query = 'INSERT INTO systems (name, mac, LastPort, vlan, status,LastSeen,description) VALUES ';
-                        $query .= "('unknown','".$mac['mac']."',$portid,".get_vlanid($vlanid).",3,NOW(),'$default_user_unknown');";
-                        $logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
-                     };
-                     if($domysql) 
-                     { 
-                        mysql_query($query) or die("unable to query $query\n"); 
-                     };
-                     unset($query);
-                  }; // if ($sid)
-               }; // if ($portid)
-            }; // foreach ($macs as $idx => $mac)
-         }; // if (count($macs) > 0)
-      }; //foreach ($vlans as $vlan)
+                        $sid = mac_exist($mac['mac']);
+                        if ($sid) 
+                        {
+                           $query = "UPDATE systems SET LastPort='$portid', LastSeen=NOW() WHERE id=$sid;";
+                           $logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - update host ");
+                        } 
+                        else
+                        {
+                           $query = 'INSERT INTO systems (name, mac, LastPort, vlan, status,LastSeen,description) VALUES ';
+                           $query .= "('unknown','".$mac['mac']."',$portid,".get_vlanid($vlanid).",3,NOW(),'$default_user_unknown');";
+                           $logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
+                        };
+                        if($domysql) 
+                        { 
+                           mysql_query($query) or die("unable to query $query\n"); 
+                        };
+                        unset($query);
+                     }; // if ($sid)
+                  }; // if ($portid)
+               }; // foreach ($macs as $idx => $mac)
+            }; // if (count($macs) > 0)
+         }; //foreach ($vlans as $vlan)
+      }; //if ($vlans) 
    }; // foreach ($switches as $switchrow)
 } // if (is_array($switches))
 else 
