@@ -7,11 +7,10 @@ Description:
 
 License  
   We cannot provide source code (yet), but you can use it for free. It will probably be released under GPL in 2008.
-  You may not charge others for this tool, and must always preserve this file and the CHANGELOG if
-  copying.
+  You may not charge others for this tool, and must always preserve this file and the CHANGELOG if copying.
 
 
-*Please* read the online Installation Guide (http://FreeNAC.net/en/installguide), its more complete that these brief notes.
+*Please* read the online Installation Guide (http://FreeNAC.net/en/installguide), its more complete that these brief notes. Pending issues are documented too: http://freenac.net/en/techguide/pendingwindows 
   
   
 Using this GUI on the Demo Online FreeNAC database

@@ -1,5 +1,7 @@
 CHANGE HISTORY:  
 --------------
+Note: for pending issues, see http://www.devexpress.com/Support/Center/p/Q90514.aspx
+
 v1.2.0.100: fix 'scannow' button, remove error message when writing patchtable.
 v1.2.0.101/30.10.06/SB: Deleted systems were not correctly logged, Delection of changes to vlans in Edit Tab improved. For DEMO company allow Admin access for all users.
 v1.2.0.101/30.10.06/SB: Handling of locates with '/' and not '.' for date seperators.
@@ -87,6 +89,24 @@ v2.2.0.137/06.09.07/SB:
   Add Computer name/IP, user name to Edit->AntiVirus tab
   Rename config options: NmapEnabled=>nmap_enabled, StaticInvEnabled=>static_inv,
     PatchCableEnabled =>patchcable_lookups
-    
+--------------    
 v3.0.0.145/06.11.07/SB:     
   Version 3 release. See CHANGELOG_v3.txt.
+  
+v3.0.0.147/26.11.07/SB:     
+  Add vlan_id to switch table & tab 
+  Overview filter: 
+  DataController.Filter.Options.fcoCaseInsensitive=true
+                       .Options.AutoDataSetFilter=true
+  OptionsCustomize.ColumnHiding=true
+  OptionsCustomize.ColumnsQuickCustomization:=true  
+  (and add many more fields, but make them hidden by default to avoid confusion)  
+  
+  Cannot use “*” in overview->MAC
+  http://www.devexpress.com/Support/Center/p/Q90514.aspx   
+  
+  Express Quantum Grid: upgrade to v6.3    
+  Check vlan_by_switch_location in config table & only enable the vlan exception table if this server variable enabled.               
+  
+  Server log: scroll to top
+  gridServerLog2DBTableView1.Controller.Options.dcoFocsuTopRowAfterSorting:=true
