@@ -1,6 +1,6 @@
 CHANGE HISTORY:  
 --------------
-Note: for pending issues, see http://www.devexpress.com/Support/Center/p/Q90514.aspx
+Note: for pending issues, see http://freenac.net/en/techguide/pendingwindows
 
 v1.2.0.100: fix 'scannow' button, remove error message when writing patchtable.
 v1.2.0.101/30.10.06/SB: Deleted systems were not correctly logged, Delection of changes to vlans in Edit Tab improved. For DEMO company allow Admin access for all users.
