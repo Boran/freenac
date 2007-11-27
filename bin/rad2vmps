@@ -47,6 +47,7 @@ $script=abs_path($0);                    # e.g. /opt/nac/bin/rad2vmps
 for ($i=1; $i<($#file)-1; $i++) {  # keep all elements except the last two, i.e. '/bin/rad2vmps'
    $path .= "/$file[$i]";
 }
+
 #Fix weird issue when calling radiusd -X from /root directory
 chdir ('/tmp');
 
@@ -68,7 +69,7 @@ $vmps_servers.=',';
 $vmps_servers =~ s/,+/,/g;
 $vmps_servers =~ s/\s*//g;
 @servers=split(/,/,$vmps_servers);
-$servers_to_query = $#servers;
+$servers_to_query = @servers;
 
 $supplicant_mac='';
 $switch_ip='';
@@ -294,7 +295,7 @@ sub authenticate() #MAC-Auth-Bypass
       $request{macaddr}= $supplicant_mac;
       $request{client_ip}=$switch_ip;
       $request{port_name}=$nas_port;                # TBD: add later
-      $request{vlan}='';
+      $request{vlan}='--NONE--';
       $request{vtp_domain}='802.1x';                    # TBD: add later
 
       $buf = makeVQPrequest(%request);
@@ -331,7 +332,7 @@ sub post_auth()
       $request{macaddr}=$supplicant_mac;
       $request{client_ip}=$switch_ip;
       $request{port_name}=$nas_port;		       # TBD: add later
-      $request{vlan}='';		
+      $request{vlan}='--NONE--';		
       $request{vtp_domain}='802.1x';                    # TBD: add later
 
       $buf = makeVQPrequest(%request);
@@ -339,19 +340,18 @@ sub post_auth()
       %response = parseVQPresp($buf);
       $last_count=$counter;
    
-      #if ( ! $response{vlan} )
-      #{
-      #   $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac NOT allowed";
-      #   return RLM_MODULE_REJECT;
-      #}
-      #else 
-      #{	
+      if ( ! $response{vlan} )
+      {
+         $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac NOT allowed";
+         return RLM_MODULE_REJECT;
+      }
+      else 
+      {	
          $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac allowed";
-         $RAD_REPLY{'Tunnel-Type'} = ':1:VLAN';
-         $RAD_REPLY{'Tunnel-Medium-Type'} = ':1:6';
-         #$RAD_REPLY{'Tunnel-Private-Group-ID'} = ":1:$response{vlan}";
-         $RAD_REPLY{'Tunnel-Private-Group-ID'} = ":1:WorkZone_202";
+         $RAD_REPLY{'Tunnel-Type'} = 'VLAN';
+         $RAD_REPLY{'Tunnel-Medium-Type'} = '6';
+         $RAD_REPLY{'Tunnel-Private-Group-ID'} = $response{vlan};
          return RLM_MODULE_OK;
-      #}
+      }
    }
 }
