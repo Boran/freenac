@@ -501,7 +501,7 @@ EOF;
             $mesg="New unknown {$this->mac}({$this->getVendor()}), {$this->alert_message}";
 	    $this->logger->debug($subject,2);
 	    #log2db('info',$mesg);
-            if ($this->notify)
+            if (($this->notify) && (strcasecmp($this->notify,'null')!=0))
                $this->logger->mailit($subject,$mesg,$this->notify);
             $this->logger->mailit($subject,$mesg);
 	    return true;
