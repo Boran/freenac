@@ -27,7 +27,7 @@
 		MAIN
 **************************************/
 
-$EPO_VERSION = 4;	// either 3 or 4
+$EPO_VERSION = 3;	// either 3 or 4
 
 
 // Php weirdness: change to script dir, then look for includes
@@ -204,7 +204,8 @@ function get_vmps_id($mac)
 	$num_rows = mysql_num_rows($result);	//TODO: exception handling
 	if( $num_rows == 0 )
 	{
-		$logger->logit("No vmps id for mac $mac found", LOG_WARNING);
+		#$logger->logit("No vmps id for mac $mac found", LOG_WARNING);
+		$logger->logit("No vmps id for mac $mac found"); // don't flag as warning until 100% right, its flooding logcheck
 		return false;
 	}
 	elseif( $num_rows == 1 )

@@ -184,7 +184,8 @@ function get_vmps_id($hostname)
 	$num_rows = mysql_num_rows($result);	//TODO: exception handling
 	if( $num_rows == 0 )
 	{
-		$logger->logit("No vmps id for system $hostname found", LOG_WARNING);
+		//$logger->logit("No vmps id for system $hostname found", LOG_WARNING);
+		$logger->logit("No vmps id for system $hostname found");// don't flag as warning until 100% right, its flooding logcheck
 		return false;
 	}
 	elseif( $num_rows == 1 )
@@ -195,7 +196,8 @@ function get_vmps_id($hostname)
 	}
 	else
 	{
-		$logger->logit("$hostname is not unique in vmps", LOG_WARNING);
+		//$logger->logit("$hostname is not unique in vmps", LOG_WARNING);
+		$logger->logit("$hostname is not unique in vmps");// don't flag as warning until 100% right, its flooding logcheck
 		return false;
 	}
 }
