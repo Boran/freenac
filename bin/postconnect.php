@@ -95,7 +95,7 @@ while ( ! feof($in) )
       }
       catch (Exception $e)
       {
-         $logger->logit("Postconnect exception",LOG_WARNING);
+         $logger->logit("Postconnect exception: ".$e->getMessage(),LOG_WARNING);
       }
    }
 }
