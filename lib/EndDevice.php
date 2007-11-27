@@ -19,7 +19,7 @@
 
 /**
 * Health status(es) (Note: The Oxford English Dict defines the plural of status as statuses, but the Latin plural is status
-* Pick the one you like the best :) )
+* Pick the one you like the most :) )
 */
 define('UNKNOWN',0);
 define('OK',1);
@@ -324,7 +324,7 @@ EOF;
       if (array_key_exists($key,$this->db_row))
          $this->db_row[$key]=$value;
       else
-         DENY('Attempting to set an unknown property');
+         $this->logger->debug('Attempting to set an unknown property',2);
    }
 
 
