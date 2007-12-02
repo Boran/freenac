@@ -26,7 +26,7 @@ if [ -s $tempfile2 ] ; then
 
   echo " " >> $tempfile2
   echo " " >> $tempfile2
-  echo "This means that a switch was not able to contact a VMPS server for a while (it probably had to query an alternative server), the 00000 message happens when contact is reestablished. It does not affect end-users, but might be an indication of communications problems between the Switches and VMPS serversi (or that the vmpsd_external daemon was daed), especially if it happens hourly/daily. " >> $tempfile2
+  echo "This means that a switch was not able to contact a VMPS server for a while (it probably had to query an alternative server), the 00000 message happens when contact is reestablished. It does not affect end-users, but might be an indication of communications problems between the Switches and VMPS servers (or that the vmpsd_external daemon was dead), especially if it happens hourly. " >> $tempfile2
   echo " " >> $tempfile2
   echo " " >> $tempfile2
   echo "This email was generated from the root cron on `uname -n` by $0" >> $tempfile2
