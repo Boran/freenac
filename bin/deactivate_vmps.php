@@ -1,5 +1,5 @@
 #!/usr/bin/php 
-<?
+<?php
 /**
  * bin/deactivate_vmps.php
  *

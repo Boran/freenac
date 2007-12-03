@@ -1,5 +1,5 @@
 #!/usr/bin/php
-<?
+<?php
 /**
  * bin/activate_vmps.php
  *

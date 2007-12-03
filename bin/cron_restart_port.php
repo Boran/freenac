@@ -1,5 +1,5 @@
 #!/usr/bin/php 
-<?
+<?php
 /**
  * /opt/nac/bin/cron_program_port.php
  *

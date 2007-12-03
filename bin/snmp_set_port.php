@@ -1,5 +1,5 @@
 #!/usr/bin/php
-<?
+<?php
 /**
  * enterprise/snmp_set_port
  *

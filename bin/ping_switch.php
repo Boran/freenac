@@ -1,5 +1,5 @@
 #!/usr/bin/php  
-<?
+<?php
 /**
  * bin/ping_switch.php
  *
