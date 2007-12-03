@@ -1,5 +1,5 @@
 #!/usr/bin/php
-<?
+<?php
 /**
  * /opt/nac/bin/postconnect.php
  *
