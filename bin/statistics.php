@@ -25,7 +25,7 @@ $logger->setLogToStdOut(false);
 db_connect();
 
 # Check how many records we have already inserted today
-$query = "SELECT count(*) FROM stats WHERE datetime >= DATE_SUB(NOW(), INTERVAL 1 DAY);";
+$query = "SELECT count(*) FROM stats WHERE datetime >= DATE_SUB(NOW(), INTERVAL 23 HOUR);";
 $logger->debug($query,3);
 $today_records = v_sql_1_select($query);
 # Do we have records from today?
@@ -193,8 +193,8 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
          $messages['health'][] = "Number of systems with health $description: $v\n";
       }
    }
-   $average_ports = round($month_stats['ports'] / $mysql_last_day);
-   $average_switches = round($month_stats['switches'] / $mysql_last_day);
+   $average_ports = round( $month_stats['ports'] / $days);
+   $average_switches = round ( $month_stats['switches'] / $days);
    $messages['ports'][] = "Average of ports used by day during this month: $average_ports\n";
    $messages['switches'][] = "Average of switches used by day during this month: $average_switches\n";
    $logger->debug(print_r($messages,true),3);   
