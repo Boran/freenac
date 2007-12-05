@@ -30,19 +30,27 @@ include_once('/opt/nac/etc/config.inc');
 
 db_connect($dbuser,$dbpass);
 
-$soa_serial = date("ymdHi");
 
 /*** Origin & SOA *****************************************************/
-$dns_soa = "\$ORIGIN $dns_domain.
-\$TTL 6h 
+function make_soa($subnet) {
+global $dns_primary;
+global $dns_mail;
+global $arpaname;
+$soa_serial = date("ymdHi");
 
-@       IN      SOA    $dns_primary $dns_mail (
+$dns_soa = "\$ORIGIN .
+\$TTL 6h
+
+$arpaname       IN      SOA    $dns_primary $dns_mail (
 		$soa_serial		;serial
 		1h                      ; refresh
                 30m                     ; retry
                 7d                      ; expiration
                 1h )                    ; minimum
 \n"; 
+
+return($dns_soa);
+};
 
 $dns_preamble = "
 ;
@@ -55,19 +63,8 @@ $dns_preamble = "
 $nameservers = explode(',',$dns_ns);
 $dns_inns = "; Name servers (NS) \n";
 foreach ($nameservers as $i => $nameserver) {
-	$dns_inns .= "\t\t\tIN\tNS\t".$nameserver.'.'.$dns_domain.".\n";
+        $dns_inns .= "\t\t\tIN\tNS\t".$nameserver.'.'.$dns_domain.".\n";
 };
-
-$mxservers = explode(',',$dns_mx);
-$dns_inmx = "; Mail servers (MX) \n";
-foreach ($mxservers as $prio => $mxserver) {
-	$dns_inmx .= "\t\t\tIN\tMX\t1$prio\t".$mxserver.'.'.$dns_domain.".\n";
-};
-
-
-$dns_head = $dns_soa . $dns_preamble . $dns_inns."\n\n".$dns_inmx."\n\n";
-
-/*** A Records & aliases (CNAME)  ************************************************/
 
 
 function sanitize_name($name) {
@@ -79,39 +76,45 @@ function sanitize_name($name) {
         return($name);
 };
 
-	$query = "SELECT * FROM systems WHERE name != 'unknown' AND r_ip <> '' ORDER by r_ip ASC";
-        $res = mysql_query($query) or die("Unable to query MySQL : $query; \n");
+function get_arpaname($subnet) {
+	$parts = explode('.',$subnet);
+	$name = 'in-addr.arpa';
+	foreach ($parts as $i => $part) {
+		$name = $part.'.'.$name;
+	};
+	return($name) ;
+};
+
+/*** Make IN PTR Records **********************************************/
+function make_ptr($subnet) {
+  global $dns_domain;
+        $query = "SELECT * FROM systems WHERE r_ip regexp('$subnet') ORDER by r_ip ASC";
+	$res = mysql_query($query) or die("Unable to query MySQL : $query; \n");
 
         if (mysql_num_rows($res) > 0) {
                 while ($host = mysql_fetch_array($res)) {
-                        $dns_ina .= sanitize_name($host['name'])."\t\tIN\tA\t".$host['r_ip']."\n";
-                        
-                        // eventual aliases
-                        if ($host['dns_alias'] != '') {
-                                $aliases = explode(',',$host['dns_alias']);
-                                foreach ($aliases as $my_alias) {
-                                        $my_alias = sanitize_name($my_alias); // ltrim(rtrim($my_alias,' '),' ');
-                                        if ($my_alias != '') {
-                                                $dns_incname .= $my_alias."\t\tIN\tCNAME\t".$host['name'].".stns.ch.\n";
-                                        };
-                                };
-                        };
+                        $ip = explode('.',$host[r_ip]);
+                        $num = $ip[3];
+                        $dns_inptr .= $num."\t\tIN\tPTR\t".sanitize_name($host['name']).".$dns_domain.\n";
                 };
-        };	
+        };
+        return($dns_inptr);
+};
 
+$subnets = explode(',',$dns_subnets);
 
-/* still missing :
-	HINFO
-	LOC
-	SVR
-*/
+foreach ($subnets as $id => $subnet) {
+	$arpaname = get_arpaname($subnet);
+	$origin = '$ORIGIN '.$arpaname.".\n";
+echo "*** $arpaname \n";
+	$dns_soa = make_soa($subnet);
+	$dns_inptr = make_ptr($subnet);
+	
+	$dns_zone = $dns_soa.$dns_preamble.$dns_inns."\n\n".$origin."\n".$dns_inptr;
 
-
-$dns_zone = $dns_head.$dns_ina."\n\n\n".$dns_incname;
-
-		$outfile = $dns_outdir.'/'.$dns_forwardzone;
+		$outfile = $dns_outdir.'/'.$arpaname;
 		$fp = fopen($outfile,'w');
 		fwrite($fp,$dns_zone);
 		fclose($fp);
-
+};
 ?>
