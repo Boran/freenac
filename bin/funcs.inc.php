@@ -83,6 +83,8 @@ function vlanId2Name($vlanID) {
 */
 function get_last_index($oid)                                                  
 {
+   if ( ! $oid )
+      return false;
    $temp=explode('.',$oid);
    return $temp[count($temp)-1];
 }
@@ -353,7 +355,10 @@ function syscall($command){
 */
 function remove_type($element)                          
 {
-   return trim(trim(substr($element,strpos($element,':')+1,strlen($element))),'"');
+   if ( ! $element )
+      return false;
+   else
+      return trim(trim(substr($element,strpos($element,':')+1,strlen($element))),'"');
 }
 
 /**
@@ -549,6 +554,8 @@ function snmp_restart_port_id($port_id)
 */
 function array_isearch($str,$array)                    
 {
+   if ( ! is_array($array))
+      return false;
    foreach($array as $k => $v)
    {
       if (strcasecmp($v,$str)==0)
@@ -567,6 +574,8 @@ function array_isearch($str,$array)
 */
 function array_multi_isearch($str,$array)
 {
+   if ( ! is_array($array))
+      return false;
    foreach($array as $k)
    {
       if (array_isearch($str,$k))
@@ -585,6 +594,8 @@ function array_multi_isearch($str,$array)
 */
 function array_find_key($str,$array,$token,$number)   
 {
+   if ( ! is_array($array))
+      return false;
    foreach($array as $k => $v)
    {
       if (strcasecmp(str_get_last($k,$token,$number),str_get_last($str,$token,$number))==0)
@@ -605,6 +616,8 @@ function array_find_key($str,$array,$token,$number)
 */
 function array_find_value($str,$array,$token,$number)   
 {
+   if ( ! is_array($array))
+      return false;
    foreach($array as $k => $v)
    {
       if (strcasecmp(str_get_last($v,$token,$number),str_get_last($str,$token,$number))==0)
@@ -624,6 +637,8 @@ function array_find_value($str,$array,$token,$number)
 */
 function str_get_last($string,$token,$number)          
 {
+   if (! $string || ! $token || ! $number)
+      return false;
    $temp=explode($token,$string);
    $tokens=count($temp);
    for ($i=$tokens-$number;$i<$tokens;$i++)
@@ -942,6 +957,10 @@ function vlans_on_switch($switch)
 
 function get_snmp_index($what, $where)
 {
+   if ( ! $what || ! $where )
+      return false;
+   if ( ! is_array($where))
+      return false;
    $what_oid=array_search($what,$where);                                //Is what we look for present in this array?
    if (empty($what_oid))
    {
