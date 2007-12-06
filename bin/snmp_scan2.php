@@ -328,8 +328,10 @@ if ($ips && is_array($ips))
             $port_id=v_sql_1_select($query);
             if ( ! $port_id )
                continue;
-            if (($switches->getPortType($port,false,$community)!=3)&&(!(preg_match($conf->router_mac_ip_ignore_mac, $mac))))
+            if ($switches->getPortType($port,false,$community)!=3)
             {
+               if (preg_match($conf->router_mac_ip_ignore_mac, $mac))
+                  continue;
                if ($sid)
                {
                   $query = "UPDATE systems SET LastPort='$port_id', LastSeen=NOW() WHERE id=$sid;";
@@ -352,7 +354,7 @@ if ($ips && is_array($ips))
                         $logger->logit(mysql_error(),LOG_ERROR);
                   }
                } //if ($sid)
-            } // if (($switches->getPortType($port,false,$community)!=3)&&(!(preg_match($conf->router_mac_ip_ignore_mac, $mac))))
+            } // if ($switches->getPortType($port,false,$community)!=3)
          } // for ($i=0; $i < $counter; $i++)
       } // if ($connected_devices)
       unset($switches);
