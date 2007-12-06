@@ -72,7 +72,7 @@ class Switch_SNMP extends Common
          else
          {
             ## Apparently the host is up, but there is not information available, then this OID is not present on the queried device
-            $this->logger->debug("OID $oid is not present on switch {$this->switch_ip}");
+            $this->logger->debug("OID $oid is not present on switch {$this->switch_ip}",3);
             return false;
          }
       }
@@ -129,7 +129,7 @@ class Switch_SNMP extends Common
          else
          {
             ## Apparently the host is up, but there is not information available, then this OID is not present on the queried device
-            $this->logger->debug("OID $oid is not present on switch {$this->switch_ip}");
+            $this->logger->debug("OID $oid is not present on switch {$this->switch_ip}",3);
             return false;
          }
       }
