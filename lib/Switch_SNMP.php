@@ -38,13 +38,19 @@ class Switch_SNMP extends Common
          ## This test is to avoid performing SNMP queries on hosts which are not responsive
          if (( ! $this->description ) && (strcmp($oid,'1.3.6.1.2.1.1.1')==0))
          {
-            ## Try to get the description. This OID should be available on all switches
-            $temp=@snmprealwalk($this->switch_ip,$community,$oid,0,3);
+            ## Try to get the description. This OID should be available on all switches.
+            ## Try 3 times before declaring switch dead
+            for ($i = 0; $i < 3; $i++)
+            {
+               $temp=@snmprealwalk($this->switch_ip,$community,$oid);
+               if ($temp)
+                  $i=4;
+            }
             if ( ! $temp )
             {
                ## We have tried 3 times and we didn't receive a response
                $this->logger->logit("No response from {$this->switch_ip}. Host seems to be down. If it is up, check your SNMP community.");
-               ## Then mark host as down
+               ## so mark host as down
                $this->props['host_down'] = true;
                return false;
             }
