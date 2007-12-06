@@ -326,32 +326,34 @@ if ($ips && is_array($ips))
             $query="select id from port where name='$port' and switch='$switchid'";
             $logger->debug($query,3);
             $port_id=v_sql_1_select($query);
-            if (($switches->getPortType($port,false,$community)!=3)&&(!(preg_match($conf->router_mac_ip_ignore_mac, $mac))))
             if ( ! $port_id )
-               continue; 
-            if ($sid)
+               continue;
+            if (($switches->getPortType($port,false,$community)!=3)&&(!(preg_match($conf->router_mac_ip_ignore_mac, $mac))))
             {
-               $query = "UPDATE systems SET LastPort='$port_id', LastSeen=NOW() WHERE id=$sid;";
-               $logger->debug($query,3);
-               $logger->debug("Switch $ip - $port - $mac - update host");
-            }
-            else
-            {
-               $vlan=mysql_real_escape_string($macs['vlan'][$i]);
-               $query="select id from vlan  where default_id='$vlan'";
-               $logger->debug($query,3);
-               $vlan_id=v_sql_1_select($query);
-               $query = 'INSERT INTO systems (name, mac, LastPort, vlan, status,LastSeen) VALUES ';
-               $query .= "('unknown',$mac',$port_id,$vlan_id, 3, NOW());";
-               $logger->debug($query,3);
-               if ($do_mysql)
+               if ($sid)
                {
-                  $res=mysql_query($query);
-                  if (!$res)
-                     $logger->logit(mysql_error(),LOG_ERROR);
+                  $query = "UPDATE systems SET LastPort='$port_id', LastSeen=NOW() WHERE id=$sid;";
+                  $logger->debug($query,3);
+                  $logger->debug("Switch $ip - $port - $mac - update host");
                }
-            }
-         }
+               else
+               {
+                  $vlan=mysql_real_escape_string($macs['vlan'][$i]);
+                  $query="select id from vlan  where default_id='$vlan'";
+                  $logger->debug($query,3);
+                  $vlan_id=v_sql_1_select($query);
+                  $query = 'INSERT INTO systems (name, mac, LastPort, vlan, status,LastSeen) VALUES ';
+                  $query .= "('unknown',$mac',$port_id,$vlan_id, 3, NOW());";
+                  $logger->debug($query,3);
+                  if ($do_mysql)
+                  {
+                     $res=mysql_query($query);
+                     if (!$res)
+                        $logger->logit(mysql_error(),LOG_ERROR);
+                  }
+               } //if ($sid)
+            } // if (($switches->getPortType($port,false,$community)!=3)&&(!(preg_match($conf->router_mac_ip_ignore_mac, $mac))))
+         } // for ($i=0; $i < $counter; $i++)
       } // if ($connected_devices)
       unset($switches);
    }
