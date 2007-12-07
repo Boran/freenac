@@ -27,9 +27,11 @@ final class SyslogRequest extends Result		# Disallow inheriting from this class
    public $host=NULL;
 
    public function __construct($tmac, $tswitch,$tport,$tvtp,$tlastvlan='--NONE--')
-   {	
+   {
+      parent::__construct();
       #Sanity checks
-      if ((strlen($tmac)>0)&&(strlen($tswitch)>0)&&(strlen($tport)>0)&&(strlen($tvtp)>0)&&(strlen($tlastvlan)>0))
+      if (is_string($tmac) && is_string($tswitch) && is_string($tport) && is_string($tvtp) && is_string($tlastvlan) &&
+         (strlen($tmac)>0) && (strlen($tswitch)>0) && (strlen($tport)>0) && (strlen($tvtp)>0) && (strlen($tlastvlan)>0))
       {
          #Copy what we've received to our internal array
          $this->props['mac']=$tmac;
@@ -39,8 +41,14 @@ final class SyslogRequest extends Result		# Disallow inheriting from this class
          $this->props['lastvlan']=$tlastvlan;
          
          #Initialize a port and a system objects
+         $this->props['created']=true;
 	 $this->switch_port=new CallWrapper(new Port($this));
          $this->host=new CallWrapper(new EndDevice($this));
+      }
+      else
+      {
+         $this->logger->logit("A SyslogRequest object wasn't initialized. Only non empty strings are allowed to be passed to its constructor");
+         $this->props['created']=false;
       }
    }
   
@@ -51,10 +59,17 @@ final class SyslogRequest extends Result		# Disallow inheriting from this class
    */
    public function __get($key)		
    {
-      if (array_key_exists($key,$this->props))	#First look if it exists in our internal array
-         return $this->props[$key];		#If so, return it
+      if ($this->props['created'])
+      {
+         if (array_key_exists($key,$this->props))       #First look if it exists in our internal array
+            return $this->props[$key];          #If so, return it
+         else
+            return false;                               #Nothing found, return false
+      }
       else
-         return false;				#Nothing found, return false
+      {
+         $this->logger->logit("SyslogRequest object contains no properties because it hasn't been properly initialized");
+      }
    }
 
    /**
@@ -69,7 +84,14 @@ final class SyslogRequest extends Result		# Disallow inheriting from this class
    */
    final public function __clone()		
    {
-      throw new Exception("Cannot clone the VMPSRequest object");
+      if ($this->created)
+      {
+         throw new Exception("Cannot clone the SyslogRequest object");
+      }
+      else
+      {
+         $this->logger->logit("A SyslogRequest object wasn't initialized");
+      }
    }
 
    /**
@@ -78,7 +100,14 @@ final class SyslogRequest extends Result		# Disallow inheriting from this class
    */
    public function getEndDevice()
    {
-      return $this->host;
+      if ($this->created)
+      {
+         return $this->system;
+      }
+      else
+      {
+         $this->logger->logit("EndDevice object hasn't been created");
+      }
    }
 
    /**
@@ -87,6 +116,13 @@ final class SyslogRequest extends Result		# Disallow inheriting from this class
    */
    public function getPort()
    {
-      return $this->switch_port;
+      if ($this->created)
+      {
+         return $this->port;
+      }
+      else
+      {
+         $this->logger->logit("Port object hasn't been created");
+      }
    }
 }

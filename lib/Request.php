@@ -19,7 +19,7 @@
  * Define the Request request class. This class doesn't implement anything,
  * it is here only for completeness' sake
 */
-abstract class Request {
+abstract class Request extends Common {
 }
 
 ?>
