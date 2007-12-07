@@ -110,3 +110,6 @@ v3.0.0.147/26.11.07/SB:
   
   Server log: scroll to top
   gridServerLog2DBTableView1.Controller.Options.dcoFocsuTopRowAfterSorting:=true
+  
+v3.0.0.148/7.12.07/SB:    
+  Add a Print icon to the overview and patches tabs.
