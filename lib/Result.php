@@ -19,7 +19,7 @@
  * Define the Result template class. This class doesn't define anything,
  * it is here only for completeness' sake
 */
-abstract class Result {
+abstract class Result extends Common {
 }
 
 ?>
