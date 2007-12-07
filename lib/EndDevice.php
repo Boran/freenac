@@ -311,17 +311,18 @@ EOF;
    {
       if (array_key_exists($key,$this->db_row))
       {
-         if (is_numeric($this->props[$key]))
+         if (is_numeric($this->db_row[$key]))
          {
-            if (stristr($this->props[$key],'.'))
-               return $this->props[$key];
-            else if ( $this->props[$key] > 0 )
-               return (int)$this->props[$key];
-            else return false;
+            if (stristr($this->db_row[$key],'.'))
+               return $this->db_row[$key];
+            else if ( $this->db_row[$key] > 0 )
+               return (int)$this->db_row[$key];
+            else 
+               return false;
          }
          else
          {
-            return $this->props[$key];
+            return $this->db_row[$key];
          }
       }
    }
