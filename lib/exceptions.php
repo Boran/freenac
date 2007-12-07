@@ -78,7 +78,10 @@ class AllowException extends Exception
    # Constructor to set this VLAN  	
    function __construct($vlan) {
       $this->decidedVlan = $vlan;
-      parent::__construct("ALLOW ".vlanId2Name($vlan)); 
+      if (is_integer($vlan))
+         parent::__construct("ALLOW ".vlanId2Name($vlan)); 
+      else
+         parent::__construct("ALLOW $vlan");
    }
 
    public function getDecidedVlan() {
