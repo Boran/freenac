@@ -68,14 +68,6 @@ EOF;
             #Information found in DB.
             $this->props=$temp;
 
-            #Lookup a vlan_id to assign depending on the switch location
-            $query=<<<EOF
-            SELECT vs.vlan_id FROM vlanswitch vs INNER JOIN vlan v ON vs.vid=v.id
-               INNER JOIN switch s ON s.id=vs.swid WHERE s.ip='$switchip';
-EOF;
-            $this->logger->debug($query,3);
-            $this->props['exception_vlan']=v_sql_1_select($query);
-            
             #Initialize control flags
 	    if ($this->switch_ip)
                $this->props['switch_in_db']=true;
@@ -239,14 +231,36 @@ EOF;
    * Get a vlan based on switch location. This vlan should be used as an exception to the regular process
    * @return mixed	Vlan to assign, false otherwise
    */
-   public function vlanBySwitchLocation()
+   public function vlanBySwitchLocation($vlan_id=0)
    {
       if ($this->conf->vlan_by_switch_location)
       {
-         if ($this->exception_vlan)
-            return $this->exception_vlan;
+         if ( $vlan_id > 0 )
+         {
+            #Lookup a vlan_id to assign depending on the switch location
+            $query=<<<EOF
+SELECT vs.vlan_name 
+   FROM vlanswitch vs 
+   INNER JOIN vlan v 
+   ON vs.vid=v.id
+   INNER JOIN switch s 
+   ON s.id=vs.swid 
+WHERE vs.swid='{$this->switch_id}'
+AND vs.vid='$vlan_id'; 
+EOF;
+            $this->logger->debug($query,3);
+            $result = v_sql_1_select($query);
+            if ($result)
+               $this->props['exception_vlan']=$result;
+            else
+               $this->props['exception_vlan']=false;
+            return $this->props['exception_vlan'];
+         }
          else
-            return false;
+         {
+            $this->props['exception_vlan']=false;
+            return $this->props['exception_vlan'];
+         }
       }
       else
       {
