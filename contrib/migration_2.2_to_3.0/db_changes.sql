@@ -136,6 +136,7 @@ INSERT INTO config SET type='boolean', name='epo_enabled', value='false', COMMEN
 INSERT INTO config SET type='string', name='epo_dbalias', COMMENT='DNS name';
 INSERT INTO config SET type='string', name='epo_db', COMMENT='DB instance';
 INSERT INTO config SET type='boolean', name='restart_daemons', value='false', COMMENT='Restart master daemons?';
+INSERT INTO config SET type='integer', name='delete_not_seen', value='0', comment='Delete systems not seen for XX months';
 UPDATE config SET comment='Global default vlan index for unknowns. Set to 0 for default deny' WHERE name='default_vlan';
 UPDATE config SET comment='Vlan index for unknowns when auto added to the DB, normally=default_vlan' WHERE name='set_vlan_for_unknowns';
 UPDATE config SET comment='Enable the use of a default vlan index per port - 0/1' WHERE name='use_port_default_vlan';
