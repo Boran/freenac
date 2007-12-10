@@ -58,9 +58,9 @@ class EndDevice extends Common
       
          # Sanity check - Is this a valid MAC address ??? 
          if (!preg_match("/^[0-9a-f]{12}$/",$mac)) 
-            DENY('Invalid MAC address');
+            DENY('Invalid MAC address $mac');
          if ($mac === '000000000000') 
-            DENY('Invalid MAC address');
+            DENY('Invalid MAC address $mac');
       
          # Rewrite mac address according to Cisco convention, XXXX.XXXX.XXXX  
          $this->mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";	  	
