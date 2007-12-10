@@ -147,7 +147,18 @@ EOF;
          $dbfieldname = substr($methodName,3);
          foreach(array_keys($this->props) as $key) {
             if (strtolower($key) == strtolower($dbfieldname)) {
-               return $this->props[$key];
+               if (is_numeric($this->props[$key]))
+               {
+                  if (stristr($this->props[$key],'.'))
+                     return $this->props[$key];
+                  else if ( $this->props[$key] > 0 )
+                     return (int)$this->props[$key];
+                  else return false;
+               }
+               else
+               {
+                  return $this->props[$key];
+               }
             }
          }
       }

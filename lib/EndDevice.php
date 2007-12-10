@@ -295,7 +295,19 @@ EOF;
          $dbfieldname = substr($methodName,3);
 	 foreach(array_keys($this->db_row) as $key) {
 	    if (strtolower($key) == strtolower($dbfieldname)) {
-	       return $this->db_row[$key];
+               if (is_numeric($this->db_row[$key]))
+               {
+                  if (stristr($this->db_row[$key],'.'))
+                     return $this->db_row[$key];
+                  else if ( $this->db_row[$key] > 0 )
+                     return (int)$this->db_row[$key];
+                  else
+                     return false;
+               }
+               else
+               {
+                  return $this->db_row[$key];
+               }
 	    }
 	 }
       }
