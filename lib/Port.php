@@ -235,16 +235,13 @@ EOF;
    {
       if ($this->conf->vlan_by_switch_location)
       {
+         $vlan_id = mysql_real_escape_string($vlan_id);
          if ( $vlan_id > 0 )
          {
             #Lookup a vlan_id to assign depending on the switch location
             $query=<<<EOF
 SELECT vs.vlan_name 
    FROM vlanswitch vs 
-   INNER JOIN vlan v 
-   ON vs.vid=v.id
-   INNER JOIN switch s 
-   ON s.id=vs.swid 
 WHERE vs.swid='{$this->switch_id}'
 AND vs.vid='$vlan_id'; 
 EOF;
