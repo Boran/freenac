@@ -252,7 +252,7 @@ function react($cnt, $switch, $port)
         $email_alert=TRUE;
 
       } else {
-        logit("No email alert user configured");
+        logit("No email alert user configured on switch $switch");
       }
   }
 }    // function()
