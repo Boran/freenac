@@ -67,9 +67,15 @@ class EndDevice extends Common
       
          # Query systems table 
          $sql_query=<<<EOF
-            SELECT s.id AS sid, s.health, s.office, s.mac AS mac, s.name as hostname, s.description, s.status, u.id AS uid,
-               u.username, s.r_ip AS ip, s.expiry, s.email_on_connect, v.id AS vid, v.default_name AS vlan_name FROM systems s
-               LEFT JOIN users u ON s.uid=u.id LEFT JOIN vlan v ON s.vlan=v.id WHERE s.mac='{$this->mac}' LIMIT 1;
+SELECT s.id AS sid, s.health, s.office, s.mac AS mac, 
+       s.name AS hostname, s.description, s.status, 
+       s.r_ip AS ip, s.expiry, s.email_on_connect,
+       u.id AS uid, u.username,
+       v.id AS vid, v.default_name AS vlan_name
+FROM systems s
+   LEFT JOIN users u ON s.uid=u.id 
+   LEFT JOIN vlan v ON s.vlan=v.id 
+WHERE s.mac='{$this->mac}' LIMIT 1;
 EOF;
       
          $this->logger->debug($sql_query,3);
