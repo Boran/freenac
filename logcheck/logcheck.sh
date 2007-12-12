@@ -66,7 +66,7 @@ DEBUG=0
 #SYSADMIN=root
 SYSADMIN=nac
 tool="FreeNAC logcheck"
-SERVER2="vmps2secure"
+#SERVER2="vmps2secure"
 
 ### end - config section ##
 #########################################################
@@ -294,19 +294,16 @@ analyse_log "/var/log/mail";
 analyse_log "/mysqldata/mysqld.log";
 
 #echo "Vmps2 MySQL logs .."     >> $temp1
-#$SSH $SERVER2  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" >> $temp1
-#$SSH vmps3secure  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" >> $temp1
-$SSH $SERVER2  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" > $temp5
-if [ -s $temp5 ] ; then
-  ## There entries, lets prefix where they came from
-  echo "$SERVER2 MySQL logs .."     >> $temp1
-  cat $temp5 >> $temp1
-fi
+#$SSH $SERVER2  "$LOGTAIL /mysqldata/mysqld.log /mysqldata/mysqld.log.offset.logcheck1" |egrep -v "^$" > $temp5
+#if [ -s $temp5 ] ; then
+#  echo "$SERVER2 MySQL logs .."     >> $temp1
+#  cat $temp5 >> $temp1
+#fi
 
 
 # FreeRadius
 analyse_log "/usr/local/var/log/radius/radius.log";
-$SSH $SERVER2  "$LOGTAIL /usr/local/var/log/radius/radius.log /usr/local/var/log/radius/radius.log.offset.logcheck1" |egrep -v "^$" > $temp5
+#$SSH $SERVER2  "$LOGTAIL /usr/local/var/log/radius/radius.log /usr/local/var/log/radius/radius.log.offset.logcheck1" |egrep -v "^$" > $temp5
 if [ -s $temp5 ] ; then
   ## There entries, lets prefix where they came from
   echo "$SERVER2 FreeRadius logs .."     >> $temp1
