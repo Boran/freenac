@@ -113,3 +113,6 @@ v3.0.0.147/26.11.07/SB:
   
 v3.0.0.148/7.12.07/SB:    
   Add a Print icon to the overview and patches tabs.
+v3.0.0.149/13.12.07/SB:    
+  vlan was empty on the overview tab.
+  
