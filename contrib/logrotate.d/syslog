@@ -1,11 +1,11 @@
 #
 # /etc/logrotate.d/syslog
 #
-# Syslog logrotate config file.
+# Syslog logrotate config file sample for FreeNAC
+# modelled on Suse 9.3
 # to test:
 # /usr/sbin/logrotate -d /etc/logrotate.conf
 #
-#                                     Sean Boran, 22.1.06
 
 # handle 'messages' specially for vmps and log analysis
 /var/log/messages  {
@@ -32,8 +32,8 @@
         /etc/init.d/syslog reload
         /etc/init.d/mysql  restart
         /etc/init.d/vmps   restart
-        /etc/init.d/vmps_lastseen stop
-        /etc/init.d/vmps_lastseen start
+        /etc/init.d/postconnect stop
+        /etc/init.d/postconnect start
     endscript
 }
 
