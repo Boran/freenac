@@ -1,0 +1,156 @@
+#
+# /etc/logrotate.d/syslog-ng
+#
+# Sample Syslog-ng logrotate config file for FreeNAC
+# This example was originally taken from Ubuntu 7.10
+# to test:
+# /usr/sbin/logrotate -d /etc/logrotate.conf
+#
+
+/var/log/auth.log {
+   rotate 4
+   missingok
+   notifempty
+   weekly
+   compress
+}
+
+/var/log/cron.log {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/daemon.log {
+   rotate 7
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/debug {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/kern.log {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/lpr.log {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/mail.err {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/mail.info {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/mail.log {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/mail.warn {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+# Standrad Ubuntu 7.10 syslog-ng:
+#/var/log/messages {
+#   rotate 4
+#   weekly
+#   missingok
+#   notifempty
+#   compress
+#}
+
+
+# handle 'messages' specially for FreeNAC
+# Note: disable the pre-rotate scripts on secondary servers, you may not need them
+# if you main servers gets a copy of all syslog messages and analyses them.
+/var/log/messages  {
+    weekly
+    compress
+    dateext
+    maxage 365
+    rotate 99
+    missingok
+    notifempty
+    size +30M
+    create 640 root root
+    sharedscripts
+
+    ## Once a week we rotate logs, do some analysis, and restart all VMPS components:
+    prerotate
+        /opt/nac/logcheck/logcheck.sh
+        /opt/nac/bin/monitor_allows_count.sh
+        # Count messages per switch
+        #egrep -v `uname -n` /var/log/messages |awk '{print $4}'| sort| uniq -c |sort |mailx -s 'vmps switch/syslog logging check ' root
+        egrep -v `uname -n` /var/log/messages |awk '{print $4}'| sort| uniq -c |sort | logger -t vmps_syslog_check
+    endscript
+    postrotate
+        /etc/init.d/syslog reload
+        /etc/init.d/mysql  restart
+        /etc/init.d/vmps   restart
+        /etc/init.d/postconnect stop
+        /etc/init.d/postconnect start
+    endscript
+}
+
+
+/var/log/user.log {
+   rotate 4
+   weekly
+   missingok
+   notifempty
+   compress
+}
+
+/var/log/uucp.log {
+   rotate 4
+   missingok
+   notifempty
+   weekly
+   compress
+}
+
+/var/log/syslog {
+   rotate 7
+   daily
+   compress
+   postrotate
+      /etc/init.d/syslog-ng reload >/dev/null
+   endscript
+}
