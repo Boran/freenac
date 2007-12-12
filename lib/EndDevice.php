@@ -55,7 +55,7 @@ class EndDevice extends Common
          # and collons, and by converting to lower case.
          $mac=$object->mac;
          $mac = strtolower(preg_replace('/-|\.|\s|\:/', '', $mac));
-      
+         
          # Sanity check - Is this a valid MAC address ??? 
          if (!preg_match("/^[0-9a-f]{12}$/",$mac)) 
             DENY("Invalid MAC address $mac");
@@ -115,6 +115,9 @@ EOF;
          $this->db_row['port_id']=0;
          $this->db_row['office_id']=1;
 	 $this->db_row['lastvlan_id']=1;
+
+         # Store a reference to the Request object
+         $this->db_row['request'] = &$object;
 
          #Passing of information between objects
          $this->setPortID($object->switch_port->getPortID());
@@ -477,6 +480,10 @@ EOF;
          }
          else
          {
+            if ( ! $this->port_id )
+            {  
+               $this->port_id = $this->request->switch_port->getport_id();
+            }
             #Normal case, update lastseen, lastport and lastvlan
             $query="UPDATE systems SET LastSeen=NOW(), LastPort='{$this->port_id}', email_on_connect='', health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
          }
