@@ -70,11 +70,23 @@ $file_name='cron_restart_port.pid';
 #Check for PID file
 if (file_exists($file_name))
 {
-   $logger->logit("A previous instance of cron_restart_port.php is still running.", LOG_ERROR);
-   exit(1);
+   $pid = file_get_contents($file_name);
+   $processes = syscall("ps uax | grep $pid | awk '{print $2}'");
+   $processes = explode("\n",$processes);
+   if (array_search($pid, $processes) === false )
+   {
+      delete_pid_file();
+   }
+   else
+   {
+      $logger->logit("A previous instance of cron_restart_port.php is still running.", LOG_ERROR);
+      exit(1);
+   }
 }
 #Create PID file
 $file=fopen($file_name,'w') or die("Can't write PID file");
+$pid = posix_getpid();
+fprintf($file,'%d',$pid);
 fclose($file);
 
 #Handle signals
