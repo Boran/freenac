@@ -115,4 +115,9 @@ v3.0.0.148/7.12.07/SB:
   Add a Print icon to the overview and patches tabs.
 v3.0.0.149/13.12.07/SB:    
   vlan was empty on the overview tab.
+v3.0.0.150/14.12.07/SB:    
+  Overview: disable vlan editing (that was a mistake: restrict vlan editing to the
+    Edit tab.
+  Edit: If Unmanaged, change the hint on the Vlan to explain why the vlan cannot be changed.
+  Reports: Add 'DNS naming' (note that some fields are not visible by default)
   
