@@ -19,7 +19,8 @@ while ($row = mysql_fetch_array($result)) {
 	$items .= "\t\t<item>\n";
 	$items .= "\t\t\t<title>".$row['hostname'].' on '.$row['switch'].' - '.$row['port'].' ('.$row['vlan'].")</title>\n";
 //	$items .= "\t\t\t<link>find.php?action=edit&id=".$row['id']."</link>\n";
-	$items .= "\t\t\t<description>".$row['switch'].' - '.$row['port'].' - '.$row['vlan']."\n";
+	$items .= "\t\t\t<description>";
+//	$items .= $row['switch'].' - '.$row['port'].' - '.$row['vlan']."\n";
 	$items .= $row['mac'].' - '.$row['ip']."\n";
 	$items .= "</description>\n";
 	$items .= "\t\t</item>\n";
