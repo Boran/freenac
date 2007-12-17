@@ -83,7 +83,8 @@ if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
   $logger->debug("router_mac_ip_update_from_dns: $i unknowns noted\n");
 }
 
-
+if (!empty($router_ro))
+   $snmp_ro=$router_ro;
 // Connect to each router and download its ARP table
 foreach (split(' ', $conf->core_routers) as $router) {
   $count_updates=0;
