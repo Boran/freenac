@@ -38,6 +38,7 @@
 ## SNMP communities
   $snmp_ro="PASSWORD2";            # maybe public	
   $snmp_rw="PASSWORD3";            # very private
+  $router_ro="PASSWORD4";	   # for router_mac_ip script. If empty, use the snmp_ro defined above
 
 ## router_mac_ip
   $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";    # SNMP Read
