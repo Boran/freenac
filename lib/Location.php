@@ -22,6 +22,7 @@ class Location extends Common
 
    public function __construct($id)
    {
+      $id = mysql_real_escape_string($id);
       if (is_numeric($id))
       {
          parent::__construct();
@@ -59,7 +60,7 @@ EOF;
       if (substr($methodName,0,3) == "get") 
       {
          $dbfieldname = substr($methodName,3);
-         foreach(array_keys($this->db_row) as $key) 
+         foreach(array_keys($this->props) as $key) 
          {
             if (strtolower($key) == strtolower($dbfieldname)) 
             {

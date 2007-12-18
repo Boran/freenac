@@ -64,19 +64,16 @@ class Port extends Common
 #EOF;
          $query=<<<EOF
 SELECT sw.id AS switch_id, sw.ip as switch_ip, sw.name AS switch_name,
-       sw.comment AS switch_comment, sw.notify AS notify,
+       sw.comment AS switch_comment, sw.notify AS notify, sw.location,
        sw.ap AS sw_ap, sw.scan AS sw_scan, sw.hw AS sw_hw,
        sw.last_monitored AS sw_last_monitored, sw.up AS sw_up,
        sw.vlan_id AS sw_vlan_id,
        p.id AS port_id, p.name AS port_name, p.comment AS port_comment,
        p.restart_now AS port_restart_now, p.default_vlan,
        p.last_vlan, p.last_activity AS port_last_activity, p.auth_profile AS port_auth_profile,
-       p.staticvlan AS port_staticvlan,
-       l.id AS office_id, l.name AS office, b.name AS building
+       p.staticvlan AS port_staticvlan
        FROM switch sw
        LEFT JOIN port p ON sw.id=p.switch AND p.name='$portname'
-       LEFT JOIN location l ON sw.location=l.id
-       LEFT JOIN building b ON l.building_id=b.id
        WHERE sw.ip='$switchip' LIMIT 1;
 EOF;
 
@@ -85,6 +82,10 @@ EOF;
          {
             #Information found in DB.
             $this->props=$temp;
+            $location = new Location($this->location);
+            $this->props['office_id'] = $location->getid();
+            $this->props['office'] = $location->getname();
+            $this->props['building'] = $location->getbuilding_name();
 
             #Initialize control flags
 	    if ($this->switch_ip)
@@ -320,7 +321,7 @@ EOF;
       }
       else
       {
-         $this->logit("Option vm_lan_like_host is not enabled",LOG_WARNING);
+         $this->logger->logit("Option vm_lan_like_host is not enabled",LOG_WARNING);
          return false;
       }
    }
