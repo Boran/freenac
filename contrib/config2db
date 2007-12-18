@@ -149,7 +149,7 @@ if (!$file_loaded)
 
 $vars=exclude($global_vars);				//Filter variables
 
-include_once('bin/funcs.inc');
+include_once('bin/funcs.inc.php');
 
 db_connect();
 foreach ($vars as $key => $value)			//Start moving vars into the database
