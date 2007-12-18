@@ -1,12 +1,13 @@
+#!/usr/bin/php
 <?php
-require_once('/opt/nac/web1/config.inc');
-require_once('/opt/nac/web1/functions.inc');
+require_once('/opt/nac/etc/config.inc');
+require_once('/opt/nac/bin/funcs.inc.php');
 
 db_connect();
 
 $new_db = 'opennac';
 $unknown_value = 1;
-$ino = TRUE;
+$ino = FALSE;
 
 function insert_location($name,$building_id) {
     global $db;
@@ -149,9 +150,9 @@ function get_locationid($building,$office) {
 	if ($building == 'omu93') { $building = 'Ber-Omu93'; };
 	if (($ino == TRUE) && ($building == '')) { $building = 'Ber-Omu93'; };
 	if ($building == '') { 
-		$query = "SELECT location.id FROM $new_db.location location LEFT JOIN $new_db.building building ON building.id = location.building_id WHERE location.name='$office' AND building.id=1";
+		$query = "SELECT location.id FROM $new_db.location location LEFT JOIN $new_db.building building ON building.id = location.building_id WHERE location.name='$office' AND building.id=1 limit 1;";
 	} else {
-		$query = "SELECT location.id FROM $new_db.location location LEFT JOIN $new_db.building building ON building.id = location.building_id WHERE location.name='$office' AND building.name='$building'";
+		$query = "SELECT location.id FROM $new_db.location location LEFT JOIN $new_db.building building ON building.id = location.building_id WHERE location.name='$office' AND building.name='$building' limit 1;";
 	};
 #echo $query."\n";
 	$res = mysql_query($query) or die("Unable to query mysql : $query\n");
@@ -174,8 +175,8 @@ function update_locations() {
 
 	foreach ($singletargets as $key => $target) {
 		foreach ($target as $varname => $value) { $$varname = $value; };
-		$query = "SELECT olddb.$id as oldid, newdb.$newid as newid_value, olddb.$office as oldoffice FROM $db olddb LEFT JOIN $new_db.$db newdb ON newdb.$id = olddb.$id;";
-	if ($db == 'patchcable') { $query = "SELECT olddb.von_dose as oldid, newdb.id as newid_value, olddb.von_office as oldoffice FROM patchcable olddb LEFT JOIN $new_db.patchcable newdb ON newdb.outlet = olddb.von_dose;"; };
+		$query = "SELECT olddb.$id as oldid, newdb.$newid as newid_value, olddb.$office as oldoffice FROM $db olddb LEFT JOIN $new_db.$db newdb ON newdb.$id = olddb.$id limit 1;";
+	if ($db == 'patchcable') { $query = "SELECT olddb.von_dose as oldid, newdb.id as newid_value, olddb.von_office as oldoffice FROM patchcable olddb LEFT JOIN $new_db.patchcable newdb ON newdb.outlet = olddb.von_dose limit 1;"; };
 
 #echo $query."\n";
 		$res = mysql_query($query);
@@ -211,7 +212,7 @@ function update_locations() {
 #				if ($oldbuilding) {
 					$locationid = get_locationid($oldbuilding,$oldoffice);
 					if ($db='users') { $office = 'location'; };
-					$upd = "UPDATE $new_db.$db SET $office=$locationid WHERE $newid=$newid_value;";
+					$upd = "UPDATE $new_db.$db SET $office='$locationid' WHERE $newid='$newid_value';";
 					mysql_query($upd) or die("Unable to update mysql : $query\n $upd\n");
 #				};
 			};
@@ -430,7 +431,7 @@ function update_systems_fk($id,$mac) {
 echo "- Populate location/building\n";
 create_locations();
 
-$sametable = array('switch', 'auth_profile','dhcp_options','dhcp_subnets',
+$sametable = array('switch', 'auth_profile', 'dhcp_options','dhcp_subnets',
 		'nac_wsuscomputertarget', 'nac_wsusosmap',
 		'oper','stat_ports','stat_systems');
 foreach ($sametable as $table) {
@@ -438,12 +439,12 @@ foreach ($sametable as $table) {
 };
 
 
-#copy_fields('class2','value');
-copy_fields('users','AssocNtAccount as username, LastSeenDirex as LastSeenDirectory, Surname, GivenName, Department, rfc822mailbox, PhysicalDeliveryOfficeName, TelephoneNumber, Mobile, manual_direx_sync, comment, GuiVlanRights, vmps_rights as nac_rights');
+copy_fields('class2','value');
+copy_fields('users','AssocNtAccount as username, LastSeenDirex as LastSeenDirectory, Surname, GivenName, Department, rfc822mailbox, PhysicalDeliveryOfficeName, TelephoneNumber, Mobile, manual_direx_sync, comment, vmps_rights as nac_rights');
 
-copy_fields('vlan','id as default_id, value as default_name, vlan_description, vlan_group, color');
+copy_fields('vlan','id as default_id, value as default_name, vlan_description, vlan_group');
 
-copy_merge("$new_db.port","SELECT newsw.id as switch, p.name as name, p.comment as comment, restart_now, snmp_idx, last_activity, auth_profile, vl.id as default_vlan, lvl.id as last_vlan FROM port as p JOIN $new_db.switch as newsw ON p.switch = newsw.ip LEFT JOIN $new_db.vlan as vl ON p.default_vlan = vl.default_id LEFT JOIN $new_db.vlan as lvl ON p.last_vlan = lvl.default_id;");
+copy_merge("$new_db.port","SELECT newsw.id as switch, p.name as name, p.comment as comment, restart_now, vl.id as default_vlan, vl.id as last_vlan FROM port as p JOIN $new_db.switch as newsw ON p.switch = newsw.ip LEFT JOIN $new_db.vlan as vl ON p.default_vlan = vl.default_id;");
 
 copy_merge("$new_db.naclog","SELECT u.id as who, v.host as host, v.datetime as datetime, v.priority as priority, v.what as what FROM vmpslog as v JOIN $new_db.users as u ON v.who = u.username;");
 
@@ -452,7 +453,7 @@ copy_merge("$new_db.guilog","SELECT u.id as who, h.host as host, h.datetime as d
 copy_merge("$new_db.patchcable","SELECT p.von_geb_sch as rack, p.von_he_dosen as rack_location, von_dose as outlet, nach_other as other, nach_network as NOTtype, p.comment as comment, p.lastchange as lastchange, u.id as modifiedby, p.bis_wann as expiry, p.nach_switch as NOTswip, p.nach_port as NOTportname FROM patchcable as p LEFT JOIN $new_db.users as u ON p.visum = u.username;");
 # LEFT JOIN $new_db.location as loc ON p.von_office = loc.name
 
-copy_merge("$new_db.systems","SELECT u.id as uid, mac, status, name, s.comment, ChangeDate, LastSeen, history, r_ip, r_timestamp, r_ping_timestamp, inventar as inventory, scannow, expiry, os, os1 as os4, class, class2, switch as NOTswip, port as NOTportname FROM systems s LEFT JOIN $new_db.users u ON s.description = u.username;");
+copy_merge("$new_db.systems","SELECT u.id as uid, mac, status, name, s.comment, ChangeDate, LastSeen, history, r_ip, r_timestamp, r_ping_timestamp, inventar as inventory, scannow, os, os1 as os4, class, class2, switch as NOTswip, port as NOTportname FROM systems s LEFT JOIN $new_db.users u ON s.description = u.username;");
 
 copy_merge("$new_db.nac_hostscanned","SELECT s.id as sid, h.id as id, h.ip as ip, h.hostname as hostname, h.os as os, h.timestamp as timestamp FROM nac_hostscanned as h LEFT JOIN $new_db.systems as s ON h.mac = s.mac;");
 
