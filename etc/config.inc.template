@@ -40,9 +40,6 @@
   $snmp_rw="PASSWORD3";            # very private
   $router_ro="PASSWORD4";	   # for router_mac_ip script. If empty, use the snmp_ro defined above
 
-## router_mac_ip
-  $router_snmpwalk="/usr/bin/snmpwalk -v 1 -c $snmp_ro ";    # SNMP Read
-
 ## Microsoft WSUS patch status  queries
   $wsus_dbuser ="USER1";              # read-only user for queries
   $wsus_dbpass ="PASS1";              # keep this secret!
