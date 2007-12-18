@@ -1,4 +1,4 @@
-#!/bin/perl
+#!/usr/bin/perl
 #
 # /secure/logcheck/tidy_syslog.pl
 #
