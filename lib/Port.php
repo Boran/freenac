@@ -206,11 +206,6 @@ EOF;
             return $this->props[$key];
          }
       }
-      else
-      {
-         $this->logger->logit("Property $key not found",LOG_WARNING);
-         return false;
-      }      
    }
 
    /**
@@ -228,7 +223,7 @@ EOF;
       }
       else
       {
-         $this->logger->logit("Property $key not found",LOG_WARNING);
+         $this->logger->debug("Property $key not found",2);
          return false;
       }
    }
