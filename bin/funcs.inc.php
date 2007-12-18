@@ -49,8 +49,8 @@ require_once 'bin/snmp_defs.inc.php';
 * @global object $conf		Contains configuration parameters from the config table
 * @global object $logger	Provides for logging facilities
 */
-$conf=Settings::getInstance();
 $logger=Logger::getInstance();
+$conf=Settings::getInstance();
 
 /**
 * Converts a vlan id to a vlan name
@@ -315,12 +315,18 @@ function log2db3($msg)
 */
 function db_connect()
 {
-  global $connect, $dbhost, $dbuser, $dbpass, $dbname;
+   global $connect, $dbhost, $dbuser, $dbpass, $dbname, $logger;
 
-  $connect=mysql_connect($dbhost, $dbuser, $dbpass)
-     or die("Could not connect to mysql: " . mysql_error());
-  mysql_select_db($dbname, $connect) or die("Could not select database")
-     or die("Could not select DB: " . mysql_error());;
+   if ( ! $connect=@mysql_connect($dbhost, $dbuser, $dbpass))
+   {
+      $logger->logit("Could not connect to mysql: " . mysql_error(), LOG_ERROR);
+      exit(1);
+   }
+   if ( ! @mysql_select_db($dbname, $connect))
+   {
+      $logger->logit("Could not select database: ".mysql_error(), LOG_ERROR);
+      exit(1);
+   }
 }
 
 /**
