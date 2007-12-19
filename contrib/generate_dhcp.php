@@ -19,11 +19,6 @@
  *
  */
 
-/*include_once('/opt/nac-2.2/nac-2.2/web1/config.inc');
-include_once('/opt/nac-2.2/nac-2.2/web1/functions.inc');
-include_once('/opt/nac-seclab/web3/objects.inc');
-include_once('/opt/nac-seclab/web3/defs.inc');
-*/
 //include_once('/opt/nac/bin/funcs.inc.php');
 include_once('/opt/nac/web/webfuncs.inc');
 include_once('/opt/nac/etc/config.inc');

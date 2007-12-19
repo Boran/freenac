@@ -25,6 +25,7 @@ function main_menu()
 	 <h2>Monitoring</h2>
 	<ul>
 		<li><a href="phpsysinfo/">System information</a>
+		<li><a href="logtail.php">Log file</a>
 	</ul>
 EOF;
    return $text;

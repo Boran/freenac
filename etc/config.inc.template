@@ -101,12 +101,21 @@
 
 
 #  ## vmpsdot.php
+ 
     $dotcmd = 'neato';                                  # graphviz executable (cf `man dot` for choices)
 
+
+# Web interface
 ## Show DHCP parts ?
    $showdhcp = FALSE;
+## show DNS related
 
-## DNS related (generate_dns*, gui)
+# logtail
+   $logtail_file = '/var/log/messages';
+   $logtail_length = '100';
+
+
+## DNS Generation (generate_dns*)
    $showdns = TRUE;						# Show DNS-related fields in GUI
    $dns_forwardzone = '/var/named/pri/dot_com.zone';		# where will the DNS zone file be written
    $dns_domain = 'dot.com';					# FQDN
