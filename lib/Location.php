@@ -22,10 +22,10 @@ class Location extends Common
 
    public function __construct($id)
    {
+      parent::__construct();
       $id = mysql_real_escape_string($id);
       if (is_numeric($id))
       {
-         parent::__construct();
          $query=<<<EOF
 SELECT 	l.id, 
 	l.name, 
