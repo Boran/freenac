@@ -235,6 +235,16 @@ function page()
                    echo '<tr><td>&nbsp;</td><td>'."\n";
                    echo '<input type="submit" name="action" value="update" />'.'&nbsp;'.'<input type="submit" name="action" value="delete" />'."\n";
                    echo '</td></tr>'."\n";
+
+                 echo '<tr><td>&nbsp;'."\n";
+
+	// Further informations (OS, epo, ...)
+                 echo '<tr><th colspan=2 align=center>Further informations'."\n";
+		 echo '<tr><td colspan=2>'."\n";
+		include('further_informations.inc.php');
+		echo '</tr><td>'."\n";
+
+		   // close the table
                    echo '</table><!input type="hidden" name="action" value="update" /><input type="hidden" name="id" value="'.$row['id'].'" /></form>';
                 }
                 else if ($rights==1)
