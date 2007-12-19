@@ -22,6 +22,10 @@ function main_menu()
             <li><a href="stats.php">Statistics</a>: End_devices per class/OS/VLAN</li>
             <li>Cable + switch port usage: <a href="vmps.php">one switch</a>, <a href="allvmps.php">all switches</a></li>
          </ul>
+	 <h2>Monitoring</h2>
+	<ul>
+		<li><a href="phpsysinfo/">System information</a>
+	</ul>
 EOF;
    return $text;
 }
