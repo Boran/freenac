@@ -259,7 +259,12 @@ if (is_array($switches))
          $query = "UPDATE switch SET hw='$hw',sw='$sw' WHERE id=$switchid;";
          if($domysql) 
          { 
-            mysql_query($query) or die("Unable to update switch info\n"); 
+            $success=mysql_query($query);
+            if (! $success)
+            {
+               $logger->logit("Unable to update switch info", LOG_ERROR);
+               exit(1);
+            } 
          }; // if($domysql)
       } 
       else 
@@ -297,7 +302,12 @@ if (is_array($switches))
                         };
                         if($domysql) 
                         { 
-                           mysql_query($query) or die("unable to query $query\n"); 
+                           $success=mysql_query($query);
+                           if (! $success)
+                           {
+                              $logger->logit("Unable to query $query", LOG_ERROR);
+                              exit(1);
+                           } 
                         };
                         unset($query);
                      }; // if ($sid)

@@ -84,7 +84,12 @@ if (file_exists($file_name))
    }
 }
 #Create PID file
-$file=fopen($file_name,'w') or die("Can't write PID file");
+$file=fopen($file_name,'w');
+if ( ! $file )
+{
+   $logger->logit("Can't write PID file", LOG_ERROR);
+   exit(1);
+} 
 $pid = posix_getpid();
 fprintf($file,'%d',$pid);
 fclose($file);

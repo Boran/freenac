@@ -272,7 +272,7 @@ function logit($msg) {
 */
 function log2db($level, $msg)
 {
-  global $connect;
+  global $connect,$logger;
   $msg=rtrim($msg);
   if (strlen($msg)>0 ) {
     db_connect();                 // just in case its not connected
@@ -284,7 +284,11 @@ function log2db($level, $msg)
     #  . "priority='$level' ";
     #$logger->logit("$query\n");
     $res = mysql_query($query, $connect);
-    if (!$res) { die('Cannot write to vmplog table: ' . mysql_error()); }
+    if (!$res) 
+    { 
+       $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERROR); 
+       exit(1);
+    }
   }
 
   // To view recent entries:
@@ -306,7 +310,11 @@ function log2db3($msg)
       . "priority='" . $level . "' ";
     #$logger->logit("$query\n");
     $res = mysql_query($query, $connect);
-    if (!$res) { die('Cannot write to vmplog table: ' . mysql_error()); }
+    if (!$res) 
+    { 
+       $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERROR); 
+       exit(1);
+    }
   }
 }
 
@@ -470,13 +478,17 @@ function ping_mac($mac)
 # Return: true=Ping successful
 {
   db_connect();
-  global $connect;
+  global $connect, $logger;
   
   $query="SELECT r_ip from systems "
         . " WHERE mac='" . $mac . "'";
         #$logger->logit("$query\n");
         $res= mysql_query($query, $connect);
-        if (!$res) { die('Invalid query: ' . mysql_error()); }
+        if (!$res) 
+        { 
+           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR); 
+           exit(1);
+        }
 
    $rowcount=mysql_num_rows($res);
 

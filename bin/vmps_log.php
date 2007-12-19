@@ -27,9 +27,7 @@ require_once "funcs.inc.php";
 $logger="logger -t vmps_log -p local5.info";
 
 ## Connect to DB
-  $connect=mysql_connect($dbhost, $dbuser, $dbpass)
-     or die("Could not connect : " . mysql_error());
-  mysql_select_db($dbname, $connect) or die("Could not select database");
+db_connect();
 
 $fd = fopen("php://stdin", "r");
 while ( !feof($fd) ) {
@@ -42,7 +40,11 @@ while ( !feof($fd) ) {
       . "SET what='" . $line . "', "
       . "priority='info' ";
     $res = mysql_query($query);
-    if (!$res) { die('Invalid query: ' . mysql_error()); }
+    if (!$res) 
+    { 
+       $logger->logit('Invalid query: ' . mysql_error(), LOG_ERROR); 
+       exit(1);
+    }
   }
 }
 

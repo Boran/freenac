@@ -28,10 +28,7 @@ $logger->setDebugLevel(0);
 #$logger->setLogToStdOut();
 
 ## Connect to DB
-  $connect=mysql_connect($dbhost, $dbuser, $dbpass)
-     or die("Could not connect : " . mysql_error());
-  mysql_select_db($dbname, $connect) or die("Could not select database");
-
+db_connect();
 $msg='';
 
 #$query="SELECT (SELECT swgroup FROM switch where switch.ip=systems.switch) as Stockwerk, port, (SELECT name from switch where switch.ip=systems.switch) as switch, switch as ip,  vlan, (SELECT value from vlan where vlan.id=systems.vlan) as Vlan_name from systems ORDER BY switch;";
@@ -41,7 +38,10 @@ if ($logger->getDebugLevel()) { $query=$query . " LIMIT 10"; }
 
   debug1($query);
   $res = mysql_query($query, $connect);
-  if (!$res) { die('Invalid query: ' . mysql_error()); }
+  if (!$res) 
+  { 
+     $logger->logit('Invalid query: ' . mysql_error(), LOG_ERROR); 
+  }
 
   if (mysql_num_rows($res) ==0) {
     $msg="No port entries found!";

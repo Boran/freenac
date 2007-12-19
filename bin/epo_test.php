@@ -30,13 +30,18 @@ $logger->setLogToStdOut(0);
 set_time_limit(0);
 
 debug1("Connect to alias:".$conf->epo_alias." DB:".$conf->epo_db);
-$msconnect = mssql_connect($conf->epo_dbalias, $epo_dbuser, $epo_dbpass);
+$msconnect = @mssql_connect($conf->epo_dbalias, $epo_dbuser, $epo_dbpass);
 if (! $msconnect ) {
   $logger->logit("Cannot connect to DB server $epo_dbalias:" . mssql_get_last_message());
   return;
 }
 
-$d = mssql_select_db($conf->epo_db, $msconnect) or die("Couldn't open database ".$conf->epo_db." ".mssql_get_last_message());
+$d = @mssql_select_db($conf->epo_db, $msconnect);
+if ( ! $d)
+{
+   $logger->logit("Couldn't open database ".$conf->epo_db." ".mssql_get_last_message(), LOG_ERROR);
+   exit(1);
+}
 
 
 #$query="SELECT name FROM sysobjects WHERE xtype = 'u'";

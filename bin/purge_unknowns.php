@@ -40,10 +40,7 @@ $fgets_timeout=2;        #seconds to wait for results
 
 
 ## Connect to DB
-  $connect=mysql_connect($dbhost, $dbuser, $dbpass)
-     or die("Could not connect : " . mysql_error());
-  mysql_select_db($dbname, $connect) or die("Could not select database");
-
+db_connect();
 
 ## basic validity checks to make sure we don't wipe systems by accident!!
 ## Ensure purge at least 10 days old.
@@ -62,7 +59,11 @@ if (($conf->unknown_purge) && ($conf->unknown_purge>10)) {
 #$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name LIKE '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50"; 
 $query="select mac,vlan,description,lastport,lastseen from systems where name like '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50";
   $res = mysql_query($query, $connect);
-  if (!$res) { die('Invalid query: ' . mysql_error()); }
+  if (!$res) 
+  { 
+     $logger->logit('Invalid query: ' . mysql_error(), LOG_ERROR); 
+     exit(1);
+  }
   while ($line = mysql_fetch_array($res, MYSQL_NUM)) {
     #printf("/opt/vmps/purge_unknowns: %s %s %s %s %s %s\n", $line[0], $line[1], $line[2], $line[3], $line[4] );
     

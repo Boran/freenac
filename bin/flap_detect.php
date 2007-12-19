@@ -62,7 +62,11 @@ function react($cnt, $switch, $port)
   $query="select l.name, s.comment, s.name, s.notify from port p inner join switch s on p.switch=s.id and s.ip='$switch' and p.name='$port' inner join location l on l.id=s.location;";
     #$logger->logit( $query);
     $res = mysql_query($query);
-    if (!$res) { die('Invalid query: ' . mysql_error()); }
+    if (!$res) 
+    { 
+       $logger->logit('Invalid query: ' . mysql_error(), LOG_ERROR);
+       exit(1); 
+    }
   $row=mysql_fetch_array($res, MYSQL_NUM);
 
   msg("Location: $row[0] Description: $row[1]\n");
@@ -123,7 +127,11 @@ function react($cnt, $switch, $port)
   foreach ($arr2 as $mac => $vlan) {
       $query="select s.name,s.comment,s.description,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
         $res = mysql_query($query);
-        if (!$res) { die('Invalid query: ' . mysql_error()); }
+        if (!$res) 
+        {
+           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR);
+           exit(1);
+        }
       $row=mysql_fetch_array($res, MYSQL_NUM);
       msg("$row[0] $mac $row[4], Office=$row[3] $row[2], $row[5]\n");
   }
@@ -165,7 +173,11 @@ function react($cnt, $switch, $port)
     if ($vlan != $best_vlan ) {
        $query="select s.name,s.comment,s.description,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
         $res = mysql_query($query);
-        if (!$res) { die('Invalid query: ' . mysql_error()); }
+        if (!$res) 
+        {
+           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR); 
+           exit(1);
+        }
       $row=mysql_fetch_array($res, MYSQL_NUM);
       #$logger->logit("Problem: $row[0] $mac $row[4], User=$row[2], Office=$row[3] $row[2], $row[5]\n");
       #msg("Problem: $row[0] $mac $row[4], User=$row[2], Office=$row[3] $row[2], $row[5]\n");
@@ -181,8 +193,12 @@ function react($cnt, $switch, $port)
         $best_lan_num=v_sql_1_select("SELECT id FROM vlan WHERE default_name='$best_vlan'");
         $query="UPDATE systems SET vlan='$best_vlan_num' WHERE mac='$mac2'";
           #$logger->logit($query ."\n");
-          $res = mysql_query($query) 
-            OR die("Error in UPDATE DB-Query: " . mysql_error());
+          $res = mysql_query($query);
+          if (!$res)
+          {
+             $logger->logit("Error in UPDATE DB-Query: " . mysql_error(),LOG_ERROR);
+             exit(1);
+          } 
           if (mysql_affected_rows()!=1) {
             $logger->logit("Query error: $query\n"); 
             msg("Query error: $query\n"); 
@@ -217,7 +233,11 @@ function react($cnt, $switch, $port)
       #$query="SELECT mac,AuthLast,vlan_group,AuthVlan from vmpsauth WHERE AuthPort='$port' AND AuthSw='$switch' AND TIME_TO_SEC(TIMEDIFF(NOW(),AuthLast))<7500 ORDER BY AuthLast DESC ";
       $query="select s.mac,vm.authlast,v.vlan_group,v.default_id from systems s inner join vmpsauth vm on s.id=vm.sid inner join vlan v on v.id=vm.authvlan inner join port p on p.id=vm.authport inner join switch sw on p.switch=sw.id and sw.ip='$switch' and p.name='$port' AND TIME_TO_SEC(TIMEDIFF(NOW(),vm.AuthLast))<7500 ORDER BY vm.AuthLast DESC ";
       $res = mysql_query($query, $connect);
-      if (!$res) { die('Invalid query: ' . mysql_error()); }
+      if (!$res) 
+      { 
+         $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR); 
+         exit(1);
+      }
       if (mysql_num_rows($res)==0) {
         #
       } else {
@@ -232,7 +252,11 @@ function react($cnt, $switch, $port)
       #$query="select name,mac,r_ip,r_timestamp,lastseen from systems WHERE port='$port' AND switch='$switch' AND TIME_TO_SEC(TIMEDIFF(NOW(),lastseen))<7500";
       $query="select s.name,s.mac,s.r_ip,s.r_timestamp,s.lastseen from systems s inner join port p on s.lastport=p.id and p.name='$port' inner join switch sw on p.switch=sw.id and sw.ip='$switch' AND TIME_TO_SEC(TIMEDIFF(NOW(),s.lastseen))<7500";
       $res = mysql_query($query, $connect);
-      if (!$res) { die('Invalid query: ' . mysql_error()); }
+      if (!$res) 
+      {
+         $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR);
+         exit(1);
+      }
       if (mysql_num_rows($res)==0) {
         #
       } else {

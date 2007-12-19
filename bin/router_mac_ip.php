@@ -62,7 +62,7 @@ global $connect;
 if ( !$conf->core_routers ) {   // no results, error?
    $logger->logit("no routers specified in core_routers variable in the config table");
    log2db('info',"no routers specified in core_routers variable in the config table");
-   exit -1;
+   exit(1);
 }
 
 
@@ -73,7 +73,11 @@ if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
   #$sql="SELECT mac FROM systems WHERE name='unknown'";
   $sql="SELECT mac FROM systems WHERE name LIKE '%unknown%'";
   $result=mysql_query($sql,$connect);
-  if (!$result) { die('Invalid query: '.mysql_error()); }
+  if (!$result) 
+  { 
+     $logger->logit('Invalid query: '.mysql_error(),LOG_ERROR);
+     exit(1);
+  }
   $i=0;
   $uk_mac=array();
   while($row=mysql_fetch_row($result)){
@@ -156,7 +160,6 @@ foreach (split(' ', $conf->core_routers) as $router) {
               if(strlen($hostname_only)>0) { // We got the host name, now update it
                 $query2=", name='$hostname_only' ";
                 $logger->logit("Change name of $mac to its DNS name $hostname_only");
-                #if (!mysql_query($sql,$connect)) { die('Invalid query: '.mysql_error()); }
               }
             }
           }
@@ -165,10 +168,14 @@ foreach (split(' ', $conf->core_routers) as $router) {
         $rowcount=0;
         if ($mysql_write1) {
           $res = mysql_query($query, $connect);
-          if (!$res) { die('Invalid query:' . mysql_error()); }
+          if (!$res) 
+          { 
+             $logger->logit('Invalid query:' . mysql_error(),LOG_ERROR); 
+             exit(1);
+          }
           #$rowcount=mysql_affected_rows($connect);
           $rowcount=mysql_affected_rows2($connect);
-          $logger->debug($query ."==> rows:" .$rowcount, §2);
+          $logger->debug($query ."==> rows:" .$rowcount, 2);
         } else {
           $logger->logit("QUERY DRYRUN: $query\n");
         }
@@ -200,7 +207,11 @@ foreach (split(' ', $conf->core_routers) as $router) {
           $logger->logit("New unmanaged end-device: mac=$mac ip=$ip dns=$hostname_only");
           $query=$query1 . $query2;
           if ($mysql_write2) {
-            if (!mysql_query($query,$connect)) { die('Invalid query: '.mysql_error()); }
+            if (!mysql_query($query,$connect)) 
+            { 
+               $logger->logit('Invalid query: '.mysql_error(),LOG_ERROR); 
+               exit(1);
+            }
           } else {
             $logger->logit("QUERY DRYRUN: $query\n");
           }

@@ -217,10 +217,15 @@ function walk_ports($switch,$snmp_ro)
 
 function mac_exist($mac) 
 {
-   global $connect;
+   global $connect, $logger;
    $mac=strtolower($mac);
    $query = "SELECT * FROM systems WHERE mac='$mac'";
-   $result = mysql_query($query) or die("Unable to query systems table");
+   $result = mysql_query($query);
+   if (! $result)
+   {
+      $logger->logit("Unable to query systems table", LOG_ERROR);
+      exit(1);
+   } 
    if (mysql_num_rows($result) > 0) 
    {
       $row = mysql_fetch_array($result);
@@ -234,9 +239,14 @@ function mac_exist($mac)
 
 function iface_exist($switchid,$portname) 
 {
-   global $connect;
+   global $connect, $logger;
    $query = "SELECT * FROM port WHERE switch=$switchid AND name='$portname'";
-   $result = mysql_query($query) or die("Unable to query port table");
+   $result = mysql_query($query);
+   if ( ! $result)
+   {
+      $logger->logit("Unable to query port table",LOG_ERROR);
+      exit(1);
+   } 
    if (mysql_num_rows($result) > 0) 
    {
       $row = mysql_fetch_array($result);
@@ -251,9 +261,14 @@ function iface_exist($switchid,$portname)
 
 function switch_exist($name,$value) 
 {
-   global $connect;
+   global $connect, $logger;
    $query = "SELECT * FROM switch WHERE $name='$value'";
-   $result = mysql_query($query) or die("Unable to query switch table");
+   $result = mysql_query($query);
+   if ( ! $result)
+   {
+      $logger->logit("Unable to query switch table", LOG_ERROR);
+      exit(1);
+   } 
    if (mysql_num_rows($result) > 0) 
    {
       $row = mysql_fetch_array($result);
@@ -267,9 +282,14 @@ function switch_exist($name,$value)
 
 function get_vlanid($default_id) 
 {
-   global $connect;
+   global $connect, $logger;
    $query = "SELECT id FROM vlan WHERE default_id='$default_id'";
-   $result = mysql_query($query) or die("Unable to query vlan table");
+   $result = mysql_query($query);
+   if ( ! $result)
+   {
+      $logger->logit("Unable to query vlan table", LOG_ERROR);
+      exit(1);
+   } 
    if (mysql_num_rows($result) > 0) 
    {
       $vlan = mysql_fetch_array($result);

@@ -85,7 +85,10 @@ $file_read=readlink($policy_file);
 if ($conf->default_policy)
    $policy=new $conf->default_policy();
 else
-   die("A default policy hasn't been defined in the config table");
+{
+   $logger->logit("A default policy hasn't been defined in the config table", LOG_ERROR);
+   exit(1);
+}
 
 # Open stdin and stdout - These connect us to vmpsd 
 $in = STDIN;
