@@ -36,7 +36,7 @@ while ( !feof($fd) ) {
     $line=trim($line);           # remove whitespace
     #print "Original:#$line#\n";
 
-    $query="INSERT INTO guilog "
+    $query="INSERT INTO naclog "
       . "SET what='" . $line . "', "
       . "priority='info' ";
     $res = mysql_query($query);
