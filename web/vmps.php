@@ -31,7 +31,14 @@ $sw='';
 function print_switch_sel() {
   global $db;
   global $sw;
-  $sel = "SELECT sw.id as id, sw.name as name, location.name as location FROM switch sw LEFT JOIN location ON location.id = sw.location";
+$sel = "SELECT DISTINCT(switch.id) as id, switch.name as name, switch.ip as ip, CONCAT(building.name,' ',location.name) as location
+ FROM systems
+ LEFT JOIN port ON port.id = systems.LastPort
+ LEFT JOIN switch ON port.switch = switch.id
+ LEFT JOIN location ON location.id = switch.location
+  LEFT JOIN building ON building.id = location.building_id
+WHERE LastSeen > (NOW() - INTERVAL 1 YEAR) AND port.switch != '' 
+ORDER BY switch.name;";
   $res = mysql_query($sel) or die ("Unable to query MySQL ($sel)\n");
   $html = "<select name=sw>\n";
 
