@@ -120,4 +120,8 @@ v3.0.0.150/14.12.07/SB:
     Edit tab.
   Edit: If Unmanaged, change the hint on the Vlan to explain why the vlan cannot be changed.
   Reports: Add 'DNS naming' (note that some fields are not visible by default)
-  
+
+v3.0.0.151/20.12.07/SB:     
+  Overview: Re-enable location and patch cable joins. PortLocation now works.
+    Make more fields read-only, such as patch cable.
+  Edit: improve DHCP fix, Users in Office, Systems name length, User details refreshing
