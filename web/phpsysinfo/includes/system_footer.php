@@ -85,11 +85,13 @@ if( ! $hide_picklist ) {
 	echo "<br>\n";
 }
 
-echo "<hr>\n";
+//echo "<hr>\n";
 echo "<table width=\"100%\">\n\t<tr>\n";
 echo "\t\t<td align=\"" . $arrDirection['left'] . "\"><font size=\"-1\">" . $text['created'] . "&nbsp;<a href=\"http://phpsysinfo.sourceforge.net\" target=\"_blank\">phpSysInfo-" . $VERSION . "</a>&nbsp;" . strftime( $text['gen_time'], time() ) . "</font></td>\n";
 echo "\t\t<td align=\"" . $arrDirection['right'] . "\"><font size=\"-1\">" . round( ( array_sum( explode( " ", microtime() ) ) - $startTime ), 4 ). " sec</font></td>\n";
 echo "\t</tr>\n</table>\n";
+echo "<hr>\n";
+echo "<p align=center><a href=\"../index.php\">NAC Menu</a></p>\n";
 echo "<br>\n</body>\n</html>\n";
 
 ?>
