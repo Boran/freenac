@@ -161,7 +161,7 @@ while ($in && $out)
                $message=$e->getMessage();
                # Do we have the catch_ALLOW method?
                #This method should be used to change our decision
-               if (method_exists($policy,catch_ALLOW))
+               if (method_exists($policy,'catch_ALLOW'))
                {
                   #If we have a DENY, rethrow the exception
                   if ($e instanceof DenyException)
