@@ -120,7 +120,7 @@ $logger->debug($query,2);
 $res = mysql_query($query);
 if (!$res)
 {
-   $logger->logit(mysql_error(),LOG_ERROR);
+   $logger->logit(mysql_error(),LOG_ERR);
    exit(1);
 }
 
@@ -142,7 +142,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       $final = mysql_query($query);
       if (! $final)
       {
-         $logger->logit(mysql_error(), LOG_ERROR);
+         $logger->logit(mysql_error(), LOG_ERR);
       }
       continue;
    }
@@ -156,7 +156,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    $result = mysql_query($query);
    if (! $result)
    {
-      $logger->logit(mysql_error(),LOG_ERROR);
+      $logger->logit(mysql_error(),LOG_ERR);
       continue;
    }
    $ports_up = 0; 
@@ -185,7 +185,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       $final = mysql_query($query);
       if (!$final)
       {
-         $logger->logit(mysql_error(), LOG_ERROR);
+         $logger->logit(mysql_error(), LOG_ERR);
       }
       $ports_up++;
    }
@@ -198,7 +198,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    $final = mysql_query($query);
    if (! $final)
    {
-      $logger->logit(mysql_error(), LOG_ERROR);
+      $logger->logit(mysql_error(), LOG_ERR);
    }
 }
 

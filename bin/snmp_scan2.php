@@ -190,7 +190,7 @@ else
    $res = mysql_query($query);
    if ( ! $res)
    {
-      $logger->logit(mysql_error(),LOG_ERROR);
+      $logger->logit(mysql_error(),LOG_ERR);
       exit(1);
    }
    while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
@@ -211,7 +211,7 @@ if ($ips && is_array($ips))
             $res = mysql_query($query);
             if (! $res)
             {
-               $logger->logit(mysql_error(),LOG_ERROR);
+               $logger->logit(mysql_error(),LOG_ERR);
                continue;
             }
             $switchid=v_sql_1_select("select id from switch where ip='$ip'");
@@ -259,7 +259,7 @@ if ($ips && is_array($ips))
                   $res=mysql_query($query);
                   if (!$res)
                   {
-                     $logger->logit(mysql_error(),LOG_ERROR);
+                     $logger->logit(mysql_error(),LOG_ERR);
                   } // if (!$res)
                } // if ($do_mysql)
                
@@ -276,14 +276,14 @@ if ($ips && is_array($ips))
                   $res=mysql_query($query);
                   if (!$res)
                   {
-                     $logger->logit(mysql_error(),LOG_ERROR);
+                     $logger->logit(mysql_error(),LOG_ERR);
                   } // if (!$res)
                } // if ($do_mysql)
             } // if ($result['id']) 
          } //if ($res)
          else
          {
-            $logger->logit(mysql_error(),LOG_ERROR);
+            $logger->logit(mysql_error(),LOG_ERR);
             continue;
          }
          if (! $switches->software && ! $switches->model )
@@ -300,7 +300,7 @@ if ($ips && is_array($ips))
                {
                   $res=mysql_query($query);
                   if (!$res)
-                     $logger->logit("Unable to update switch info",LOG_ERROR);
+                     $logger->logit("Unable to update switch info",LOG_ERR);
                }; // if($domysql)
             }
             else
@@ -351,7 +351,7 @@ if ($ips && is_array($ips))
                   {
                      $res=mysql_query($query);
                      if (!$res)
-                        $logger->logit(mysql_error(),LOG_ERROR);
+                        $logger->logit(mysql_error(),LOG_ERR);
                   }
                } //if ($sid)
             } // if ($switches->getPortType($port,false,$community)!=3)

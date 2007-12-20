@@ -75,7 +75,7 @@ if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
   $result=mysql_query($sql,$connect);
   if (!$result) 
   { 
-     $logger->logit('Invalid query: '.mysql_error(),LOG_ERROR);
+     $logger->logit('Invalid query: '.mysql_error(),LOG_ERR);
      exit(1);
   }
   $i=0;
@@ -170,7 +170,7 @@ foreach (split(' ', $conf->core_routers) as $router) {
           $res = mysql_query($query, $connect);
           if (!$res) 
           { 
-             $logger->logit('Invalid query:' . mysql_error(),LOG_ERROR); 
+             $logger->logit('Invalid query:' . mysql_error(),LOG_ERR); 
              exit(1);
           }
           #$rowcount=mysql_affected_rows($connect);
@@ -209,7 +209,7 @@ foreach (split(' ', $conf->core_routers) as $router) {
           if ($mysql_write2) {
             if (!mysql_query($query,$connect)) 
             { 
-               $logger->logit('Invalid query: '.mysql_error(),LOG_ERROR); 
+               $logger->logit('Invalid query: '.mysql_error(),LOG_ERR); 
                exit(1);
             }
           } else {

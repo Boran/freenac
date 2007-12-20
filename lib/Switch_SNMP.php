@@ -467,7 +467,7 @@ class Switch_SNMP extends Common
       ## Check if there is SNMP support
       if ( ! defined('SNMP_NULL'))
       {
-         $this->logger->logit("Your installation of PHP lacks support for SNMP", LOG_ERROR);
+         $this->logger->logit("Your installation of PHP lacks support for SNMP", LOG_ERR);
          $this->props['host_down']=true;
       }
       else
@@ -1143,7 +1143,7 @@ class Switch_SNMP extends Common
       ## Get SNMP index
       if ( ! $port_index=get_snmp_index($port_name,$this->interfaces))
       {
-         $this->logger->logit("Port $port_name could not be found on switch {$this->switch_ip}", LOG_ERROR);
+         $this->logger->logit("Port $port_name could not be found on switch {$this->switch_ip}", LOG_ERR);
          return false;
       }
       ## List of vlans on switch
@@ -1152,7 +1152,7 @@ class Switch_SNMP extends Common
       ## Get vlan SNMP index
       if ( ! $vlan_index=get_snmp_index($vlan_name,$this->vlans))
       {
-         $this->logger->logit("VLAN $vlan_name could not be found on switch {$this->switch_ip}", LOG_ERROR);
+         $this->logger->logit("VLAN $vlan_name could not be found on switch {$this->switch_ip}", LOG_ERR);
          return false;
       }
       ## Get description
@@ -1225,7 +1225,7 @@ class Switch_SNMP extends Common
       ## Get port SNMP index
       if ( ! $port_index=get_snmp_index($port_name,$this->interfaces))
       {
-         $this->logger->logit("Port $port_name could not be found on switch {$this->switch_ip}", LOG_ERROR);
+         $this->logger->logit("Port $port_name could not be found on switch {$this->switch_ip}", LOG_ERR);
          return false;
       }
       ## Description

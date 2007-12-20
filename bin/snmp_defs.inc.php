@@ -223,7 +223,7 @@ function mac_exist($mac)
    $result = mysql_query($query);
    if (! $result)
    {
-      $logger->logit("Unable to query systems table", LOG_ERROR);
+      $logger->logit("Unable to query systems table", LOG_ERR);
       exit(1);
    } 
    if (mysql_num_rows($result) > 0) 
@@ -244,7 +244,7 @@ function iface_exist($switchid,$portname)
    $result = mysql_query($query);
    if ( ! $result)
    {
-      $logger->logit("Unable to query port table",LOG_ERROR);
+      $logger->logit("Unable to query port table",LOG_ERR);
       exit(1);
    } 
    if (mysql_num_rows($result) > 0) 
@@ -266,7 +266,7 @@ function switch_exist($name,$value)
    $result = mysql_query($query);
    if ( ! $result)
    {
-      $logger->logit("Unable to query switch table", LOG_ERROR);
+      $logger->logit("Unable to query switch table", LOG_ERR);
       exit(1);
    } 
    if (mysql_num_rows($result) > 0) 
@@ -287,7 +287,7 @@ function get_vlanid($default_id)
    $result = mysql_query($query);
    if ( ! $result)
    {
-      $logger->logit("Unable to query vlan table", LOG_ERROR);
+      $logger->logit("Unable to query vlan table", LOG_ERR);
       exit(1);
    } 
    if (mysql_num_rows($result) > 0) 

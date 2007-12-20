@@ -262,7 +262,7 @@ if (is_array($switches))
             $success=mysql_query($query);
             if (! $success)
             {
-               $logger->logit("Unable to update switch info", LOG_ERROR);
+               $logger->logit("Unable to update switch info", LOG_ERR);
                exit(1);
             } 
          }; // if($domysql)
@@ -305,7 +305,7 @@ if (is_array($switches))
                            $success=mysql_query($query);
                            if (! $success)
                            {
-                              $logger->logit("Unable to query $query", LOG_ERROR);
+                              $logger->logit("Unable to query $query", LOG_ERR);
                               exit(1);
                            } 
                         };

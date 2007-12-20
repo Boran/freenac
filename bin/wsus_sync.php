@@ -58,17 +58,17 @@ if( $enabled )
 	// warning!! this should be done within a transaction
 	
 	if( !empty_tables() ) {
-		$logger->logit("Failed to empty all wsus tables, logical status may be inconsistend!", LOG_ERROR);
+		$logger->logit("Failed to empty all wsus tables, logical status may be inconsistend!", LOG_ERR);
 		cleanup();
 	}
 	
 	if( !get_global_update_list() ) {
-		$logger->logit("Failed to sync global update list", LOG_ERROR);
+		$logger->logit("Failed to sync global update list", LOG_ERR);
 		cleanup();
 	}
 	
 	if( !get_systems() ) {
-		$logger->logit("Failed to sync systems list", LOG_ERROR);
+		$logger->logit("Failed to sync systems list", LOG_ERR);
 		cleanup;
 	}
 	
@@ -129,13 +129,13 @@ function dbwsus_connect()
    $msconnect = mssql_connect($conf->wsus_dbalias, $wsus_dbuser, $wsus_dbpass);
    if ( !$msconnect )
    {
-     $logger->logit("Cannot connect to WSUS server ".$conf->wsus_dbalias.":" . mssql_get_last_message(), LOG_ERROR);
+     $logger->logit("Cannot connect to WSUS server ".$conf->wsus_dbalias.":" . mssql_get_last_message(), LOG_ERR);
      return false;
    }
    $db = mssql_select_db($conf->wsus_db, $msconnect);
    if ( !$db )
    {
-      $logger->logit("Couldn't open database ".$conf->wsus_db." ".mssql_get_last_message(), LOG_ERROR);
+      $logger->logit("Couldn't open database ".$conf->wsus_db." ".mssql_get_last_message(), LOG_ERR);
       return false;
    }
 }
@@ -212,15 +212,15 @@ function empty_tables()
 
 	$logger->debug("Emptying wsus tables", 1);
 	if( !mysql_query('truncate table wsus_systems;') ) {
-		$logger->logit("Could not empty wsus_systems, " . mysql_error(), LOG_ERROR);
+		$logger->logit("Could not empty wsus_systems, " . mysql_error(), LOG_ERR);
 		return false;
 	}
 	if( !mysql_query('truncate table wsus_neededUpdates;') ) {
-		$logger->logit("Could not empty wsus_neededUpdates, " . mysql_error(), LOG_ERROR);
+		$logger->logit("Could not empty wsus_neededUpdates, " . mysql_error(), LOG_ERR);
 		return false;
 	}
 	if( !mysql_query('truncate table wsus_systemToUpdates;') ) {
-		$logger->logit("Could not empty wsus_systemToUpdate, " . mysql_error(), LOG_ERROR);
+		$logger->logit("Could not empty wsus_systemToUpdate, " . mysql_error(), LOG_ERR);
 		return false;
 	}
 	
@@ -241,7 +241,7 @@ function get_global_update_list()
 	$logger->debug("Executing: ".$query, 3);
 	$result = mssql_query($query); 
 	if( !$result ) {
-		$logger->logit("Could not fetch global update list, " . mssql_get_last_message(), LOG_ERROR);
+		$logger->logit("Could not fetch global update list, " . mssql_get_last_message(), LOG_ERR);
 		return false;
 	}
 	
@@ -253,7 +253,7 @@ function get_global_update_list()
 		
 		if( !mysql_query($query) )
 		{
-			$logger->logit("Could insert update list into vmps db, " . mysql_error(), LOG_ERROR);
+			$logger->logit("Could insert update list into vmps db, " . mysql_error(), LOG_ERR);
 			return false;
 		}
 	}
@@ -275,7 +275,7 @@ function get_systems()
 	$result = mssql_query($query);
 	if( !$result )
 	{
-		$logger->logit("Failed to obtain systems from wsus, " . mssql_get_last_message(), LOG_ERROR);
+		$logger->logit("Failed to obtain systems from wsus, " . mssql_get_last_message(), LOG_ERR);
 		return false;
 	}
 	

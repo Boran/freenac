@@ -37,7 +37,7 @@ if ($today_records == 0)
    $res=mysql_query($query);
    if (!$res)
    {
-      $logger->logit(mysql_error(),LOG_ERROR);
+      $logger->logit(mysql_error(),LOG_ERR);
       exit(1);
    }
    $num_systems=mysql_num_rows($res);
@@ -58,7 +58,7 @@ if ($today_records == 0)
    $res=mysql_query($query);
    if (!$res)
    {
-      $logger->logit(mysql_error(),LOG_ERROR);
+      $logger->logit(mysql_error(),LOG_ERR);
       exit(1);
    }
    $num_ports=mysql_num_rows($res);
@@ -82,7 +82,7 @@ if ($today_records == 0)
       $res = mysql_query($query);
       if (!$res)
       {
-         $logger->logit(mysql_error(),LOG_ERROR);
+         $logger->logit(mysql_error(),LOG_ERR);
       } 
    }
 
@@ -94,7 +94,7 @@ if ($today_records == 0)
       $res = mysql_query($query);
       if (!$res)
       {
-         $logger->logit(mysql_error(),LOG_ERROR);
+         $logger->logit(mysql_error(),LOG_ERR);
       }
    }
 
@@ -104,7 +104,7 @@ if ($today_records == 0)
    $res = mysql_query($query);
    if (!$res)
    {
-      $logger->logit(mysql_error(),LOG_ERROR);
+      $logger->logit(mysql_error(),LOG_ERR);
    }
 
    #How many switches were used?
@@ -113,7 +113,7 @@ if ($today_records == 0)
    $res = mysql_query($query);
    if (!$res)
    {
-      $logger->logit(mysql_error(),LOG_ERROR);
+      $logger->logit(mysql_error(),LOG_ERR);
    }
 } //if ($today_records == 0)
 
@@ -123,7 +123,7 @@ $query = "SELECT LAST_DAY(NOW());";
 $logger->debug($query,3);
 $mysql_last_day = v_sql_1_select($query);
 if (!$mysql_last_day)
-   $logger->logit(mysql_error(), LOG_ERROR);
+   $logger->logit(mysql_error(), LOG_ERR);
 if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
 {
    #Create variable holding monthly stats
@@ -134,7 +134,7 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
    $res = mysql_query($query);
    if (!$res)
    {
-      $logger->logit(mysql_error(), LOG_ERROR);
+      $logger->logit(mysql_error(), LOG_ERR);
    }
    while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    {
@@ -147,7 +147,7 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
    $res = mysql_query($query);
    if (!$res)
    {
-      $logger->logit(mysql_error(), LOG_ERROR);
+      $logger->logit(mysql_error(), LOG_ERR);
    }
    while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    {
@@ -161,7 +161,7 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
    $res = mysql_query($query);
    if (!$res)
    {
-      $logger->logit(mysql_error(), LOG_ERROR);
+      $logger->logit(mysql_error(), LOG_ERR);
    }
    while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    {

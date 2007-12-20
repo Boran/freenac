@@ -57,7 +57,7 @@ EOF;
    $res = mysql_query($query);
    if ( ! $res ) 
    {
-      $logger->logit(mysql_error($res), LOG_ERROR);
+      $logger->logit(mysql_error($res), LOG_ERR);
       exit(1);
    }
    while ($result = mysql_fetch_array($res,MYSQL_ASSOC))

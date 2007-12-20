@@ -42,7 +42,7 @@ while ( !feof($fd) ) {
     $res = mysql_query($query);
     if (!$res) 
     { 
-       $logger->logit('Invalid query: ' . mysql_error(), LOG_ERROR); 
+       $logger->logit('Invalid query: ' . mysql_error(), LOG_ERR); 
        exit(1);
     }
   }

@@ -57,7 +57,7 @@ elseif( $EPO_VERSION == 4 )
 }
 else
 {
-	$logger->logit("Version $EPO_VERSION is not supported!", $LOG_ERROR);
+	$logger->logit("Version $EPO_VERSION is not supported!", LOG_ERR);
 	exit;
 }
 
@@ -76,19 +76,19 @@ if( $enabled )
 	
 	if( !empty_tables() )
 	{
-		$logger->logit("Failed to empty all epo tables, logical status may be inconsistend!", LOG_ERROR);
+		$logger->logit("Failed to empty all epo tables, logical status may be inconsistend!", LOG_ERR);
 		cleanup();
 	}
 	
 	if( !get_systems() )
 	{
-		$logger->logit("Failed to sync systems list", LOG_ERROR);
+		$logger->logit("Failed to sync systems list", LOG_ERR);
 		cleanup;
 	}
 	
 	if( !get_versions() )
 	{
-		$logger->logit("Failed to sync versions list", LOG_ERROR);
+		$logger->logit("Failed to sync versions list", LOG_ERR);
 		cleanup;
 	}
 	
@@ -151,13 +151,13 @@ function dbepo_connect()
    $msconnect = mssql_connect($conf->epo_dbalias, $epo_dbuser, $epo_dbpass);
    if ( !$msconnect )
    {
-     $logger->logit("Cannot connect to EPO server ".$conf->epo_dbalias.":" . mssql_get_last_message(), LOG_ERROR);
+     $logger->logit("Cannot connect to EPO server ".$conf->epo_dbalias.":" . mssql_get_last_message(), LOG_ERR);
      return false;
    }
    $db = mssql_select_db($conf->epo_db, $msconnect);
    if ( !$db )
    {
-      $logger->logit("Couldn't open database ".$conf->epo_db." ".mssql_get_last_message(), LOG_ERROR);
+      $logger->logit("Couldn't open database ".$conf->epo_db." ".mssql_get_last_message(), LOG_ERR);
       return false;
    }
 }
@@ -245,11 +245,11 @@ function empty_tables()
 
 	$logger->debug("Emptying tables", 1);
 	if( !mysql_query('truncate table epo_systems;') ) {
-		$logger->logit("Could not empty epo_systems, " . mysql_error(), LOG_ERROR);
+		$logger->logit("Could not empty epo_systems, " . mysql_error(), LOG_ERR);
 		return false;
 	}
 	if( !mysql_query('truncate table epo_versions;') ) {
-		$logger->logit("Could not empty epo_versions, " . mysql_error(), LOG_ERROR);
+		$logger->logit("Could not empty epo_versions, " . mysql_error(), LOG_ERR);
 		return false;
 	}
 	
@@ -271,7 +271,7 @@ function get_systems()
 	$result = mssql_query($query);
 	if( !$result )
 	{
-		$logger->logit("Failed to obtain systems from epo, " . mssql_get_last_message(), LOG_ERROR);
+		$logger->logit("Failed to obtain systems from epo, " . mssql_get_last_message(), LOG_ERR);
 		return false;
 	}
 	
@@ -318,7 +318,7 @@ function get_versions()
 		
 		if( !$result )
 		{
-			$logger->logit("Failed to obtain product versions from epo, " . mssql_get_last_message(), LOG_ERROR);
+			$logger->logit("Failed to obtain product versions from epo, " . mssql_get_last_message(), LOG_ERR);
 			return false;
 		}
 	
@@ -343,7 +343,7 @@ function get_versions()
 		
 		if( !$result )
 		{
-			$logger->logit("Failed to obtain product versions from epo, " . mssql_get_last_message(), LOG_ERROR);
+			$logger->logit("Failed to obtain product versions from epo, " . mssql_get_last_message(), LOG_ERR);
 			return false;
 		}
 	
@@ -361,7 +361,7 @@ function get_versions()
 	}
 	else
 	{
-		$logger->logit("Wrong epo version $EPO_VERSION. The variable must have changed during execution -> very bad!", LOG_ERROR);
+		$logger->logit("Wrong epo version $EPO_VERSION. The variable must have changed during execution -> very bad!", LOG_ERR);
 		exit(1);
 	}
 	

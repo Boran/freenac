@@ -61,7 +61,7 @@ $query="select mac,vlan,description,lastport,lastseen from systems where name li
   $res = mysql_query($query, $connect);
   if (!$res) 
   { 
-     $logger->logit('Invalid query: ' . mysql_error(), LOG_ERROR); 
+     $logger->logit('Invalid query: ' . mysql_error(), LOG_ERR); 
      exit(1);
   }
   while ($line = mysql_fetch_array($res, MYSQL_NUM)) {

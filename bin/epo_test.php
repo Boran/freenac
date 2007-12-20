@@ -39,7 +39,7 @@ if (! $msconnect ) {
 $d = @mssql_select_db($conf->epo_db, $msconnect);
 if ( ! $d)
 {
-   $logger->logit("Couldn't open database ".$conf->epo_db." ".mssql_get_last_message(), LOG_ERROR);
+   $logger->logit("Couldn't open database ".$conf->epo_db." ".mssql_get_last_message(), LOG_ERR);
    exit(1);
 }
 

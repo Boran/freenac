@@ -86,7 +86,7 @@ if ($conf->default_policy)
    $policy=new $conf->default_policy();
 else
 {
-   $logger->logit("A default policy hasn't been defined in the config table", LOG_ERROR);
+   $logger->logit("A default policy hasn't been defined in the config table", LOG_ERR);
    exit(1);
 }
 

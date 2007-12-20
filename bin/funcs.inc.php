@@ -286,7 +286,7 @@ function log2db($level, $msg)
     $res = mysql_query($query, $connect);
     if (!$res) 
     { 
-       $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERROR); 
+       $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERR); 
        exit(1);
     }
   }
@@ -312,7 +312,7 @@ function log2db3($msg)
     $res = mysql_query($query, $connect);
     if (!$res) 
     { 
-       $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERROR); 
+       $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERR); 
        exit(1);
     }
   }
@@ -327,12 +327,12 @@ function db_connect()
 
    if ( ! $connect=@mysql_connect($dbhost, $dbuser, $dbpass))
    {
-      $logger->logit("Could not connect to mysql: " . mysql_error(), LOG_ERROR);
+      $logger->logit("Could not connect to mysql: " . mysql_error(), LOG_ERR);
       exit(1);
    }
    if ( ! @mysql_select_db($dbname, $connect))
    {
-      $logger->logit("Could not select database: ".mysql_error(), LOG_ERROR);
+      $logger->logit("Could not select database: ".mysql_error(), LOG_ERR);
       exit(1);
    }
 }
@@ -486,7 +486,7 @@ function ping_mac($mac)
         $res= mysql_query($query, $connect);
         if (!$res) 
         { 
-           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR); 
+           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERR); 
            exit(1);
         }
 

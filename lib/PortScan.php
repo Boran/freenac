@@ -153,7 +153,7 @@ EOF;
       }
       else
       {
-         $this->logger->logit(mysql_error(),LOG_ERROR);
+         $this->logger->logit(mysql_error(),LOG_ERR);
          return false;
       }
    }

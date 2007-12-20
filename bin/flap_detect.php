@@ -64,7 +64,7 @@ function react($cnt, $switch, $port)
     $res = mysql_query($query);
     if (!$res) 
     { 
-       $logger->logit('Invalid query: ' . mysql_error(), LOG_ERROR);
+       $logger->logit('Invalid query: ' . mysql_error(), LOG_ERR);
        exit(1); 
     }
   $row=mysql_fetch_array($res, MYSQL_NUM);
@@ -129,7 +129,7 @@ function react($cnt, $switch, $port)
         $res = mysql_query($query);
         if (!$res) 
         {
-           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR);
+           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERR);
            exit(1);
         }
       $row=mysql_fetch_array($res, MYSQL_NUM);
@@ -175,7 +175,7 @@ function react($cnt, $switch, $port)
         $res = mysql_query($query);
         if (!$res) 
         {
-           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR); 
+           $logger->logit('Invalid query: ' . mysql_error(),LOG_ERR); 
            exit(1);
         }
       $row=mysql_fetch_array($res, MYSQL_NUM);
@@ -196,7 +196,7 @@ function react($cnt, $switch, $port)
           $res = mysql_query($query);
           if (!$res)
           {
-             $logger->logit("Error in UPDATE DB-Query: " . mysql_error(),LOG_ERROR);
+             $logger->logit("Error in UPDATE DB-Query: " . mysql_error(),LOG_ERR);
              exit(1);
           } 
           if (mysql_affected_rows()!=1) {
@@ -235,7 +235,7 @@ function react($cnt, $switch, $port)
       $res = mysql_query($query, $connect);
       if (!$res) 
       { 
-         $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR); 
+         $logger->logit('Invalid query: ' . mysql_error(),LOG_ERR); 
          exit(1);
       }
       if (mysql_num_rows($res)==0) {
@@ -254,7 +254,7 @@ function react($cnt, $switch, $port)
       $res = mysql_query($query, $connect);
       if (!$res) 
       {
-         $logger->logit('Invalid query: ' . mysql_error(),LOG_ERROR);
+         $logger->logit('Invalid query: ' . mysql_error(),LOG_ERR);
          exit(1);
       }
       if (mysql_num_rows($res)==0) {

@@ -41,7 +41,7 @@ function restart_daemons()
       $result = mysql_query($query);
       if ( ! $result)
       {
-         $logger->logit(mysql_error(), LOG_ERROR);
+         $logger->logit(mysql_error(), LOG_ERR);
       }
       # Restart them
       popen('/etc/init.d/vmps restart 2>&1','r');
@@ -79,7 +79,7 @@ if (file_exists($file_name))
    }
    else
    {
-      $logger->logit("A previous instance of cron_restart_port.php is still running.", LOG_ERROR);
+      $logger->logit("A previous instance of cron_restart_port.php is still running.", LOG_ERR);
       exit(1);
    }
 }
@@ -87,7 +87,7 @@ if (file_exists($file_name))
 $file=fopen($file_name,'w');
 if ( ! $file )
 {
-   $logger->logit("Can't write PID file", LOG_ERROR);
+   $logger->logit("Can't write PID file", LOG_ERR);
    exit(1);
 } 
 $pid = posix_getpid();
@@ -238,7 +238,7 @@ if ( mysql_num_rows($res) )
    $result = mysql_query($query);
    if ( ! $result)
    {
-      $logger->logit(mysql_error(),LOG_ERROR);
+      $logger->logit(mysql_error(),LOG_ERR);
    }
 }
 #Delete PID file

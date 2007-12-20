@@ -22,7 +22,7 @@
 *   - LOG_EMERG   0       System is unusable
 *   - LOG_ALERT   1       Action must be taken immediately
 *   - LOG_CRIT    2       Critical conditions
-*   - LOG_ERROR   3       Error conditions
+*   - LOG_ERR   3       Error conditions
 *   - LOG_WARNING 4       Warning conditions
 *   - LOG_NOTICE  5       Normal, but significant condition
 *   - LOG_INFO    6       Informational message
@@ -206,12 +206,12 @@ final class Logger
    * @param integer $criticality 	How critical is this message? Default is informational
    * @return boolean			True if successful, false otherwise
    */
-   public function logit($message='',$criticality=6)
+   public function logit($message='',$criticality=LOG_INFO)
    {
       define_syslog_variables();
       if (($criticality<0) || ($criticality > 7))	#Sanity check, defaults to LOG_INFO if user entered an invalid value
          $criticality=LOG_INFO;
-      if ($criticality == LOG_ERROR)
+      if ($criticality == LOG_ERR)
          $message="ERROR: $message";
       else if ($criticality == LOG_WARNING)
          $message="WARNING: $message";

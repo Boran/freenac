@@ -40,7 +40,7 @@ if ($logger->getDebugLevel()) { $query=$query . " LIMIT 10"; }
   $res = mysql_query($query, $connect);
   if (!$res) 
   { 
-     $logger->logit('Invalid query: ' . mysql_error(), LOG_ERROR); 
+     $logger->logit('Invalid query: ' . mysql_error(), LOG_ERR); 
   }
 
   if (mysql_num_rows($res) ==0) {
