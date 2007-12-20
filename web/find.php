@@ -429,8 +429,8 @@ function page()
    // display (all) systems
    else {
         // get the systems
-        $sql='SELECT sys.id, sys.name, sys. mac, vstat.value as status, sys.vlan, vlan.default_name as vlanname, lvlan.default_name as lastvlan, us.username as user, us.surname, us.givenname, port.name as port, sys.lastseen, swi.name as switch, swi.ip as switchip, sys.r_ip as lastip
-                FROM systems as sys left JOIN vstatus as vstat ON sys.status=vstat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN vlan as lvlan ON sys.lastvlan=lvlan.id LEFT JOIN users as us ON sys.uid=us.id LEFT JOIN port as port ON sys.lastport=port.id LEFT JOIN switch as swi ON port.switch=swi.id';
+        $sql='SELECT sys.id, sys.name, sys. mac, vstat.value as status, sys.vlan, vlan.default_name as vlanname, lvlan.default_name as lastvlan, us.username as user, us.surname, us.givenname, port.name as port, sys.lastseen, swi.name as switch, swi.ip as switchip, sys.r_ip as lastip, scan.timestamp as scan, epo.lastsync as epo, wsus.lastsync as wsus
+                FROM systems as sys left JOIN vstatus as vstat ON sys.status=vstat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN vlan as lvlan ON sys.lastvlan=lvlan.id LEFT JOIN users as us ON sys.uid=us.id LEFT JOIN port as port ON sys.lastport=port.id LEFT JOIN switch as swi ON port.switch=swi.id  LEFT JOIN epo_systems AS epo ON sys.id = epo.sid LEFT JOIN wsus_systems AS wsus ON sys.id = wsus.sid LEFT JOIN nac_hostscanned AS scan ON sys.id = scan.sid';
 
         // if its a search adjust the where...
         if ($_REQUEST['action']=='search'){
@@ -482,6 +482,10 @@ function page()
     <td width="163" class="center">Last Seen </td>
     <td width="105" class="center">Switch</td>
     <td width="112" class="center">Last IP </td>
+    <td class="center">Scan</td>
+    <td class="center">ePO</td>
+    <td class="center">WSUS</td>
+
   </tr>
         ';
 

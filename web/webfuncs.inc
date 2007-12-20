@@ -255,6 +255,9 @@ function print_resultset($res,$server){
                 $ret.='<td class="center">'.$row['lastseen'].'</td>'."\n";
                 $ret.='<td class="center" title="'.$row['switchip'].'">'.$row['switch'].'</td>'."\n";
                 $ret.='<td class="center">'.($row['lastip']!=''?$row['lastip']:'&nbsp;').'</td>'."\n";
+		$ret.='<td class="center">'.($row['scan']!=''?$row['scan']:'&nbsp;').'</td>'."\n";
+                $ret.='<td class="center">'.($row['epo']!=''?$row['epo']:'&nbsp;').'</td>'."\n";
+                $ret.='<td class="center">'.($row['wsus']!=''?$row['wsus']:'&nbsp;').'</td>'."\n";
                 $ret.='</tr>'."\n";
                 $i++;
         }

@@ -6,7 +6,7 @@ $mac = $row['mac'];
 $wsus_status = array("notinstalled" => "Not installed","downloaded" => "Already downloaded", "installedpendingreboot" => "Installed, pending reboot", "failed" => "Failed");
 
 // 1.0 Missing general properties
-$sel = "SELECT sys_class.value as class, sys_class2.value as class2,
+$sel = "SELECT systems.inventory as inventory,sys_class.value as class, sys_class2.value as class2,
  sys_os.value as os, sys_os1.value as os1, sys_os2.value as os2, sys_os3.value as os3  
  FROM systems
  LEFT JOIN sys_class ON systems.class = sys_class.id
@@ -86,7 +86,8 @@ LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid'
         $out .= "<table cellspacing=0 cellpadding=4 border=1>";
 
 // 2.0 General properties
-//        $out .= '<tr><td>Last seen<td>'.get_location($system['LastPort']).' ('.$system['PatchSocket'].')<td>'.$system['switch'].' '.$system['port']."\t";
+	$out .= '<tr><td colspan=3 bgcolor="#DEDEDE"><b>Administrative informations</b>';
+        $out .= '<tr><td>Inventory<td>'.$system['inventory']."\n";
 	$out .= '<tr><td>Classification'."\n";
                 $out .= '<td>'.(!is_null($system['class'])?$system['class']:'');
                 $out .= '<td>'.(!is_null($system['class2'])?$system['class2']:'')."\n";
