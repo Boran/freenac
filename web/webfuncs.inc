@@ -236,6 +236,31 @@ function user_tooltip($username) {
 };
 
 //
+// Get the proper icon
+//
+function get_icon($os,$os1,$os2,$os3){
+	$os = strtolower($os);
+        $os1 = strtolower($os1);
+        $os2 = strtolower($os2);
+        $os3 = strtolower($os3);
+	$prefix = 'images';
+	
+	if (is_readable($prefix.'/'.$os.'.'.$os1.'.'.$os2.'.'.$os3.'.gif')) {
+		return($prefix.'/'.$os.'.'.$os1.'.'.$os2.'.'.$os3.'.gif');
+	} else {
+		if (is_readable($prefix.'/'.$os.'.'.$os1.'.'.$os2.'.gif')) {
+			return($prefix.'/'.$os.'.'.$os1.'.'.$os2.'.gif');
+		} else {
+			if (is_readable($prefix.'/'.$os.'.gif')) {
+				return($prefix.'/'.$os.'.gif');
+			} else {
+				return($prefix.'/unknown.gif');
+			};
+		};
+	};
+};
+
+//
 // Print the lookup results
 //
 function print_resultset($res,$server){
@@ -258,6 +283,7 @@ function print_resultset($res,$server){
 		$ret.='<td class="center">'.($row['scan']!=''?$row['scan']:'&nbsp;').'</td>'."\n";
                 $ret.='<td class="center">'.($row['epo']!=''?$row['epo']:'&nbsp;').'</td>'."\n";
                 $ret.='<td class="center">'.($row['wsus']!=''?$row['wsus']:'&nbsp;').'</td>'."\n";
+		$ret.='<td class="center"><img width=20 height=20 src="'.get_icon($row['os'],$row['os1'],$row['os2'],$row['os3']).'"></td>'."\n";
                 $ret.='</tr>'."\n";
                 $i++;
         }

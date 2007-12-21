@@ -19,24 +19,19 @@
  *
  */
 
-/*include_once('/opt/nac-2.2/nac-2.2/web1/config.inc');
-include_once('/opt/nac-2.2/nac-2.2/web1/functions.inc');
-include_once('/opt/nac-seclab/web3/objects.inc');
-include_once('/opt/nac-seclab/web3/defs.inc');
-*/
-//include_once('/opt/nac/bin/funcs.inc.php');
-include_once('/opt/nac/web/webfuncs.inc');
-include_once('/opt/nac/etc/config.inc');
+chdir(dirname(__FILE__));
+set_include_path("../:./");
+require_once('../bin/funcs.inc.php');
 
 db_connect($dbuser,$dbpass);
 
 $soa_serial = date("ymdHi");
 
 /*** Origin & SOA *****************************************************/
-$dns_soa = "\$ORIGIN $dns_domain.
+$dns_soa = "\$ORIGIN ".$conf->dns_domain.".
 \$TTL 6h 
 
-@       IN      SOA    $dns_primary $dns_mail (
+@       IN      SOA    ".$conf->dns_primary.' '.$conf->dns_mail." (
 		$soa_serial		;serial
 		1h                      ; refresh
                 30m                     ; retry
@@ -52,16 +47,16 @@ $dns_preamble = "
 /*** Name & Mail servers (NS & MX) **i***********************************/
 
 
-$nameservers = explode(',',$dns_ns);
+$nameservers = explode(',',$conf->dns_ns);
 $dns_inns = "; Name servers (NS) \n";
 foreach ($nameservers as $i => $nameserver) {
-	$dns_inns .= "\t\t\tIN\tNS\t".$nameserver.'.'.$dns_domain.".\n";
+	$dns_inns .= "\t\t\tIN\tNS\t".$nameserver.'.'.$conf->dns_domain.".\n";
 };
 
-$mxservers = explode(',',$dns_mx);
+$mxservers = explode(',',$conf->dns_mx);
 $dns_inmx = "; Mail servers (MX) \n";
 foreach ($mxservers as $prio => $mxserver) {
-	$dns_inmx .= "\t\t\tIN\tMX\t1$prio\t".$mxserver.'.'.$dns_domain.".\n";
+	$dns_inmx .= "\t\t\tIN\tMX\t1$prio\t".$mxserver.'.'.$conf->dns_domain.".\n";
 };
 
 
@@ -109,7 +104,7 @@ function sanitize_name($name) {
 
 $dns_zone = $dns_head.$dns_ina."\n\n\n".$dns_incname;
 
-		$outfile = $dns_outdir.'/'.$dns_forwardzone;
+		$outfile = $conf->dns_outdir.'/'.$conf->dns_domain.'.zone';
 		$fp = fopen($outfile,'w');
 		fwrite($fp,$dns_zone);
 		fclose($fp);

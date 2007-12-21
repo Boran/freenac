@@ -1134,6 +1134,64 @@ function do_delete($table, $field, $identifier)
       return true;
    }
 }
+/** 
+* Get the netmask in 255.255.0.0 form
+* @param integer $netmaskbits Bits of the netmask (1-32)
+* @return string $netmask 	Netmask (255.255.0.0 form)
+*/
+
+function transform_netmask($netmaskbits) {
+$netmask[32] = '255.255.255.255';
+$netmask[31] = '255.255.255.254';
+$netmask[30] = '255.255.255.252';
+$netmask[29] = '255.255.255.248';
+$netmask[28] = '255.255.255.240';
+$netmask[27] = '255.255.255.224';
+$netmask[26] = '255.255.255.192'; 
+$netmask[25] = '255.255.255.128';
+$netmask[24] = '255.255.255.0';
+$netmask[23] = '255.255.254.0';
+$netmask[22] = '255.255.252.0';
+$netmask[21] = '255.255.248.0';
+$netmask[20] = '255.255.240.0';
+$netmask[19] = '255.255.224.0';
+$netmask[18] = '255.255.192.0';
+$netmask[17] = '255.255.128.0';
+$netmask[16] = '255.255.0.0';
+$netmask[15] = '255.254.0.0';
+$netmask[14] = '255.252.0.0';
+$netmask[13] = '255.248.0.0';
+$netmask[12] = '255.240.0.0';
+$netmask[11] = '255.224.0.0';
+$netmask[10] = '255.192.0.0';
+$netmask[9] = '255.128.0.0';
+$netmask[8] = '255.0.0.0';
+$netmask[7] = '254.0.0.0';
+$netmask[6] = '252.0.0.0';
+$netmask[5] = '248.0.0.0';
+$netmask[4] = '240.0.0.0';
+$netmask[3] = '224.0.0.0';
+$netmask[2] = '192.0.0.0';
+$netmask[1] = '128.0.0.0';
+	return($netmask[$netmaskbits]);
+};
+/** 
+* Reformat a MAC Adress from 0123.2345.2345 to 01:23:23:45:23:45
+* @param string $mac	MAC adress of the device (dotted format)
+*/
+function reformat_mac($macdot) {
+  $numbers = explode('.',$macdot);
+
+  $value = $numbers[0].$numbers[1].$numbers[2];
+  for ($i=0; $i <= 6; $i++) {
+        $mac .= substr($value,$i*2,2).':';
+  };
+
+  $mac = rtrim($mac,':.');
+  return($mac);
+
+
+};
 
 /**
 * Delete all references to a MAC address from the FreeNAC tables

@@ -429,8 +429,8 @@ function page()
    // display (all) systems
    else {
         // get the systems
-        $sql='SELECT sys.id, sys.name, sys. mac, vstat.value as status, sys.vlan, vlan.default_name as vlanname, lvlan.default_name as lastvlan, us.username as user, us.surname, us.givenname, port.name as port, sys.lastseen, swi.name as switch, swi.ip as switchip, sys.r_ip as lastip, scan.timestamp as scan, epo.lastsync as epo, wsus.lastsync as wsus
-                FROM systems as sys left JOIN vstatus as vstat ON sys.status=vstat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN vlan as lvlan ON sys.lastvlan=lvlan.id LEFT JOIN users as us ON sys.uid=us.id LEFT JOIN port as port ON sys.lastport=port.id LEFT JOIN switch as swi ON port.switch=swi.id  LEFT JOIN epo_systems AS epo ON sys.id = epo.sid LEFT JOIN wsus_systems AS wsus ON sys.id = wsus.sid LEFT JOIN nac_hostscanned AS scan ON sys.id = scan.sid';
+        $sql='SELECT sys.id, sys.name, sys. mac, vstat.value as status, sys.vlan, vlan.default_name as vlanname, lvlan.default_name as lastvlan, us.username as user, us.surname, us.givenname, port.name as port, sys.lastseen, swi.name as switch, swi.ip as switchip, sys.r_ip as lastip, scan.timestamp as scan, epo.lastsync as epo, wsus.lastsync as wsus, sys_os.value as os, sys_os1.value as os1, sys_os2.value as os2, sys_os3.value as os3
+                FROM systems as sys left JOIN vstatus as vstat ON sys.status=vstat.id LEFT JOIN vlan as vlan ON sys.vlan=vlan.id LEFT JOIN vlan as lvlan ON sys.lastvlan=lvlan.id LEFT JOIN users as us ON sys.uid=us.id LEFT JOIN port as port ON sys.lastport=port.id LEFT JOIN switch as swi ON port.switch=swi.id  LEFT JOIN epo_systems AS epo ON sys.id = epo.sid LEFT JOIN wsus_systems AS wsus ON sys.id = wsus.sid LEFT JOIN nac_hostscanned AS scan ON sys.id = scan.sid  LEFT JOIN sys_os ON sys.os = sys_os.id LEFT JOIN sys_os1 ON sys.os1 = sys_os1.id LEFT JOIN sys_os2 ON sys.os2 = sys_os2.id LEFT JOIN sys_os3 ON sys.os3 = sys_os3.id ';
 
         // if its a search adjust the where...
         if ($_REQUEST['action']=='search'){
@@ -467,7 +467,6 @@ function page()
                 $sql.=' WHERE sys.name=\'unknown\' AND sys.LastSeen > (NOW() - INTERVAL 1 DAY)';
                 $sql.=' ORDER BY sys.LastSeen DESC;';
         }
-
         $result=mysql_query($sql) or die('Query failed: ' . mysql_error());
         // echo table head
         echo '<table width="1000" border="0">
@@ -485,6 +484,7 @@ function page()
     <td class="center">Scan</td>
     <td class="center">ePO</td>
     <td class="center">WSUS</td>
+    <td class="center">OS</td>
 
   </tr>
         ';

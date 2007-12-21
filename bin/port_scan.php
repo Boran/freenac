@@ -718,7 +718,7 @@ function get_ips()	//This function will get some ips to scan
          else
             $devices['ip'][$counter]=$result['r_ip'];
          if (empty($result['name']))
-            check_and_abort("Illegal value found in systems table.\n",0);
+            check_and_abort("Illegal value found in systems table (empty name).\n",0);
          else
             $devices['hostname'][$counter]=$result['name'];
          $devices['sid'][$counter]=$result['id'];
@@ -800,11 +800,11 @@ function get_ips()	//This function will get some ips to scan
          else
             $devices['ip'][$counter]=$result['r_ip'];
          if (empty($result['name']))
-            check_and_abort("Illegal value found in systems table.\n",0);
+            check_and_abort("Illegal value found in systems table (empty name).\n",0);
          else
             $devices['hostname'][$counter]=$result['name'];
          if (empty($result['lastseen']))
-            check_and_abort("Illegal value found in systems table.\n",0);
+            check_and_abort("Illegal value found in systems table (not seen).\n",0);
          else
             $devices['lastseen'][$counter]=$result['lastseen'];
          $devices['sid'][$counter]=$result['id'];

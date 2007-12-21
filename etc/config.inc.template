@@ -105,25 +105,13 @@
     $dotcmd = 'neato';                                  # graphviz executable (cf `man dot` for choices)
 
 
-# Web interface
-## Show DHCP parts ?
+# Web interface (temp)
    $showdhcp = FALSE;
-## show DNS related
+   $showdns = FALSE;
 
 # logtail
    $logtail_file = '/var/log/messages';
    $logtail_length = '100';
 
-
-## DNS Generation (generate_dns*)
-   $showdns = TRUE;						# Show DNS-related fields in GUI
-   $dns_forwardzone = '/var/named/pri/dot_com.zone';		# where will the DNS zone file be written
-   $dns_domain = 'dot.com';					# FQDN
-   $dns_ns = "ns1,ns2,ns3";					# Name servers (comma separated, no space, shortnames)
-								# Verify that those servers are in FreeNAC DB
-								# or that they exists otherwise (A records)
-   $dns_mx = "mail1,mail2";					# Mail servers (by priority, comma separated, ...)
-   $dns_primary = 'ns1.dot.com.';				# Primary nameserver, where the DNS Zone file will be used
-   $dns_mail = 'administrator.dot.com.';			# Email (DNS-forward)
 
 ?>

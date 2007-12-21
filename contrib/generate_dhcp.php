@@ -18,10 +18,9 @@
  * @link			http://www.freenac.net
  *
  */
-
-//include_once('/opt/nac/bin/funcs.inc.php');
-include_once('/opt/nac/web/webfuncs.inc');
-include_once('/opt/nac/etc/config.inc');
+dir(dirname(__FILE__));
+set_include_path("../:./");
+require_once('bin/funcs.inc.php');
 
 db_connect($dbuser,$dbpass);
 
@@ -31,7 +30,7 @@ $dhcp_preamble = "
 # DON'T EDIT - Generated automatically from FreeNAC 
 #\n";
 
-$dhcp_preamble .= $dhcp_defaults;
+$dhcp_preamble .= $conf->dhcp_default;
 
 
 // 1. Options
@@ -73,7 +72,7 @@ $res = mysql_query($sel) or die ("Cannot query MySQL");
 
 if (mysql_num_rows($res) > 0) {
 	while ($subnet = mysql_fetch_array($res)) {
-		$dhcp_subnets .= "subnet ".$subnet['ip_address']." netmask ".$netmask[$subnet['ip_netmask']]." {\n";
+		$dhcp_subnets .= "subnet ".$subnet['ip_address']." netmask ".transform_netmask($subnet['ip_netmask'])." {\n";
 		$dhcp_subnets .= "\trange dynamic-bootp ".$subnet['dhcp_from']." ".$subnet['dhcp_to'].";\n";
 		$dhcp_subnets .= "\toption routers ".$subnet['dhcp_defaultrouter'].";\n";
 		$dhcp_subnets .= $options[$subnet['scope']];
@@ -83,7 +82,7 @@ if (mysql_num_rows($res) > 0) {
 
 $dhcp_config = $dhcp_preamble. $options[0] . $dhcp_fixedips. $dhcp_subnets;
 
-		$outfile = $dhcp_configfile;
+		$outfile = $conf->dhcp_configfile;
 		$fp = fopen($outfile,'w');
 		fwrite($fp,$dhcp_config);
 		fclose($fp);
