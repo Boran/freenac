@@ -230,6 +230,7 @@ postfix.* enabling PIX <CRLF>.<CRLF> workaround
 postfix.* server refused mail service
 postfix.*: (statistics)
 postfix.*: (daemon started|reload)
+postfix.* enabling PIX workarounds
 
 
 # Incoming:
