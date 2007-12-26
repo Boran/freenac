@@ -399,6 +399,10 @@ User-Password.*
 # : Info: 
 
 
+# cron Ubuntu
+pam_unix\((su|cron):session\): session
+Successful su for nobody by root
+
 ########## VMPS / FreeNAC ####################
 # 'normal' messages we can ignore
 vmpsd_external.*: (get_port_status|decide|Debug|ping|Ping)
