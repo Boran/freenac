@@ -3,13 +3,25 @@
 #
 # FILE: monitor_mysql_slave
 #
-# FUNCTION: Alert once every 15 mins, if replication dies
-# USAGE:    Call from cron, if an emails come, react!
-#     */5  7-18 * * 1-5 /opt/vmps/monitor_mysql_slave
+# FUNCTION: Alert once every $repeat_alert_interval mins, if replication dies.
+#     By default below, we suggest being called from cron every five minutes
+#     during working hours, but only being sent a reminder alerts once per 
+#     hour (to reduce email floods).
+#     Adust $repeat_alert_interval and the cron interval to your needs.
 #
-# 2006.07.19/Sean Boran. Based on original from:
-#  http://forge.mysql.com/snippets/view.php?id=6
-#  Matthew Montgomery mmontgom@rackspace.com 
+# USAGE:    Call from cron e.g. every 5 minutes, if an emails come, react!
+#     */5  7-18 * * 1-5 /opt/vmps/monitor_mysql_slave
+#  
+# Based on original from:
+#   Matthew Montgomery mmontgom@rackspace.com 
+#   http://forge.mysql.com/snippets/view.php?id=6
+#
+# @package                     FreeNAC
+# @author                      FreeNAC Core Team
+# @copyright                   2007 FreeNAC
+# @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+# @version                     SVN: $Id$
+# @link                        http://www.freenac.net
 #
 ########################
 
@@ -19,7 +31,7 @@ tempfile2=/tmp/monitor_replication.$$
 
 
 
-repeat_alert_interval=15 # minutes
+repeat_alert_interval=60 # minutes
 lock_file=/tmp/slave_alert.lck
 active=yes
 
