@@ -3,5 +3,6 @@
 
 echo "Monitor /var/log/messages for key FreeNAC messages..."
 #tail -f /var/log/messages |egrep -v "Debug1:|Debug2|nothing else conflicting " | egrep "vmpsd_external|vmps_lastseen"
-tail -f /var/log/messages |egrep -v "nothing else conflicting" | egrep "vmpsd_external|vmps_lastseen|postconnect"
+#tail -f /var/log/messages |egrep -v "nothing else conflicting" | egrep "vmpsd_external|vmps_lastseen|postconnect"
+tail -f /var/log/messages  |egrep -v "has been updated" | egrep "vmpsd_external|vmps_lastseen|postconnect"
 
