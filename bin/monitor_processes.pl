@@ -1,4 +1,4 @@
-#!/bin/perl 
+#!/usr/bin/perl 
 # 
 # name     : monitor_processes.pl
 #
@@ -67,8 +67,8 @@ if ($os =~ /BSD/) {
   $pattern = '(.+ +\d+:\d\d.\d\d )(.*)'; 	
 }
 elsif ($os =~ /Linux/) {
-  $mail='/bin/mail';
-  $logger='/bin/logger ';
+  $mail='/usr/bin/mail';
+  $logger='/usr/bin/logger ';
   #$pattern = '(.+ +\d+:\d\d.\d\d )(.*)'; 	
   $pattern = '(.+ +\d+:\d\d )(.*)';
   #$ps_options = '/bin/ps -ax';
