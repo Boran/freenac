@@ -111,6 +111,11 @@ v3.0.0.147/26.11.07/SB:
   Server log: scroll to top
   gridServerLog2DBTableView1.Controller.Options.dcoFocsuTopRowAfterSorting:=true
   
+  Overview: Tickbox to enable patch lookups on the overview? (Speed).
+  Allow columns to be enabled/disabled, hide most by default for simplicity.
+  Enable vlanloc table depending on server variable.
+  Vlan column titles: Note that default_id is used for emergency recovery.
+  
 v3.0.0.148/7.12.07/SB:    
   Add a Print icon to the overview and patches tabs.
 v3.0.0.149/13.12.07/SB:    
@@ -125,3 +130,11 @@ v3.0.0.151/20.12.07/SB:
   Overview: Re-enable location and patch cable joins. PortLocation now works.
     Make more fields read-only, such as patch cable.
   Edit: improve DHCP fix, Users in Office, Systems name length, User details refreshing
+  
+v3.0.0.152/3.1.08/SB: 
+  Add feature to connect to a Secondary server, for FreeNAC v3.01 which has a "multi-master" mysql replication setup.
+  To enable this, add a "server2" entry after the vmps > mysql > server  entry in vmps.xml
+  A additional connection button then appears on the GUI.
+  There is no automated detection of primary/secondary connection status, its up to the users to decide which connnect button to press.
+  
+  Add links to the User/tech/install guides on the Support tab.
