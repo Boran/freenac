@@ -52,6 +52,13 @@ require_once "$policy_file";
 
 $file_read=readlink($policy_file);
 
+## Read hostname (to only see syslog messages from this server)
+$hostname = trim(syscall('hostname'));
+if ( ! empty($hostname) )
+   $string = "(.*) $hostname vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<";
+else
+   $string = "(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<";
+
 // create policy object
 $policy=new $conf->default_policy();
 
@@ -67,7 +74,7 @@ while ( ! feof($in) )
    if (strlen($line)<=0) 
       continue;
    $regs=array();
-   if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<", $line, $regs))
+   if (ereg($string, $line, $regs))
    {
       $success=trim($regs[2]);
       $mac=trim($regs[3]);
