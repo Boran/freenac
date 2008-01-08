@@ -18,9 +18,9 @@
  * @link			http://www.freenac.net
  *
  */
-dir(dirname(__FILE__));
+chdir(dirname(__FILE__));
 set_include_path("../:./");
-require_once('bin/funcs.inc.php');
+require_once('../bin/funcs.inc.php');
 
 db_connect($dbuser,$dbpass);
 
@@ -54,10 +54,16 @@ $res = mysql_query($sel) or die ("Cannot query MySQL");
 
 if (mysql_num_rows($res) > 0) {
 	while ($host = mysql_fetch_array($res)) {
+		if (! $dhcp_configuredip[$host['dhcp_ip']] ) {
 		$dhcp_fixedips .= "host ".$host['name']." {\n";
 		$dhcp_fixedips .= "\thardware ethernet ".reformat_mac($host['mac']).";\n";
 		$dhcp_fixedips .= "\tfixed-address ".$host['dhcp_ip'].";\n";
 		$dhcp_fixedips .= "}\n\n";
+		$dhcp_configuredip[$host['dhcp_ip']] = TRUE;
+		} else {
+			$dhcp_fixedips .= "\n#\n# Desired IP address for host ".$host['name']." (".reformat_mac($host['mac']);
+			$dhcp_fixedips .= ") is already configured (was ".$host['dhcp_ip'].")\n#\n\n";
+		};
 	};
 };
 

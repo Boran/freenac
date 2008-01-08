@@ -82,14 +82,17 @@ function get_arpaname($subnet) {
 /*** Make IN PTR Records **********************************************/
 function make_ptr($subnet) {
   global $conf;
-        $query = "SELECT * FROM systems WHERE r_ip regexp('$subnet') ORDER by r_ip ASC";
+        $query = "SELECT * FROM systems WHERE r_ip regexp('$subnet') ORDER by LastSeen DESC";
 	$res = mysql_query($query) or die("Unable to query MySQL : $query; \n");
 
         if (mysql_num_rows($res) > 0) {
                 while ($host = mysql_fetch_array($res)) {
                         $ip = explode('.',$host[r_ip]);
                         $num = $ip[3];
-                        $dns_inptr .= $num."\t\tIN\tPTR\t".sanitize_name($host['name']).".$conf->dns_domain.\n";
+			if (! $ptr[$num]) {
+				$ptr[$num] = TRUE;
+	                        $dns_inptr .= $num."\t\tIN\tPTR\t".sanitize_name($host['name']).".$conf->dns_domain.\n";
+			};
                 };
         };
         return($dns_inptr);
