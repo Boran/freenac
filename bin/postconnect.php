@@ -90,7 +90,13 @@ while ( ! feof($in) )
       #If there are empty parameters, go to next request
       if (empty($switch) || empty($port) || empty($success) || empty($vlan) || empty($mac))
          continue;
+    
+      #Dont react if we receive an unvalid MAC address
+      if ( strcasecmp($mac,'000000000000') == 0 )
+         continue;
+
       $mac="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
+
       try 
       {
          $result=new SyslogRequest($mac,$switch,$port,$success,$vlan);
