@@ -181,7 +181,7 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
          $code = $code[1];
          $temp_key = array_search($code,$status['code']);
          $description = $status['description'][$temp_key];
-         $messages['status'][] = "Number of systems with $description status: $v\n";
+         $messages['status'][] = "Connections received from systems with $description status: $v\n";
       }
       # Health messages
       else if (strstr($k,'health'))
@@ -190,7 +190,7 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
          $code = $code[1];
          $temp_key = array_search($code,$health['code']);
          $description = $health['description'][$temp_key];
-         $messages['health'][] = "Number of systems with health $description: $v\n";
+         $messages['health'][] = "Connections received from systems with health $description: $v\n";
       }
    }
    $average_ports = round( $month_stats['ports'] / $days);
