@@ -84,7 +84,8 @@ if (! isset($sw))      { $sw = '192.168.245.71'; };
 ## its goes to the command line.
 #if (! isset($dottype)) { $dottype = 'dot'; };
 #if (!      ($dottype)) { $dottype = 'dot'; };
-$dottype="/usr/bin/dot";
+#$dottype="/usr/bin/dot";
+$dottype=$conf->web_dotcmd;
 debug2("sw=$sw, dottype=$dottype");
 
 $dotvmps=''; $dotpatch=''; $dothosts=''; $dotdose=''; $dotports='';
@@ -124,7 +125,7 @@ if (mysql_num_rows($doses) > 0) {
 // 2. Make nodes for all the hosts since in the last $querdays Days.
 #$today = "AND LastSeen regexp " . date("Y-m-d");
 #$today = "";
-$today = " AND (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$vmpsdot_querydays)";
+$today = " AND (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-".$conf->web_lastdays.")";
 
 $sel_hosts = "SELECT systems.mac as mac, systems.name as name, users.username as description, vlan.color as vlan_color, port.name as port, port.id as portid
         FROM systems 

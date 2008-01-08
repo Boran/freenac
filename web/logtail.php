@@ -43,7 +43,7 @@ else
 	
    echo header_read();
    echo main_stuff();
-   echo logtail($logtail_file,$logtail_length);
+   echo logtail($conf->web_logtail_file,$conf->web_logtail_length);
    echo read_footer();
 }
 

@@ -157,7 +157,7 @@ foreach (split(' ', $conf->core_routers) as $router) {
           if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
             if (in_array($mac,$uk_mac)) {
               $logger->debug("router_mac_ip_update_from_dns FQDN=$fqdn IP=$ip MAC=$mac", 1);
-              if(strlen($hostname_only)>0) { // We got the host name, now update it
+              if((strlen($hostname_only)>0) && ($hostname_only != 'unknown')) { // We got the host name, now update it
                 $query2=", name='$hostname_only' ";
                 $logger->logit("Change name of $mac to its DNS name $hostname_only");
               }

@@ -33,20 +33,20 @@ require_once('../etc/config.inc');
 // include functions
 require_once('./webfuncs.inc');
 // include pear module (if activated in config)
-if ($xls_output){
+if ($conf->web_xls_output){
         require_once "Spreadsheet/Excel/Writer.php";
 }
 
 function page()
 {
-   global $dbhost, $dbuser, $dbname, $dbpass,$rights,$showdhcp;
+   global $dbhost, $dbuser, $dbname, $dbpass,$rights,$conf;
    //session setup
    session_name('FreeNAC');
    session_start();
 
    // if not already set, set the $_SESSION vars
    if (!isset($_SESSION['name'])){
-        $_SESSION['name']=$unknown;
+        $_SESSION['name']=$conf->unknown;
         $_SESSION['mac']='';
         $_SESSION['username']='';
    }
@@ -68,7 +68,7 @@ function page()
    if ($_REQUEST['action']=='search'){
         // clear
         if ($_REQUEST['submit']=='Clear'){
-                $_SESSION['name']=$unknown;
+                $_SESSION['name']=$conf->unknown;
                 $_SESSION['mac']='';
                 $_SESSION['vlan']='';
                 $_SESSION['username']='';
@@ -128,7 +128,7 @@ function page()
    }
 
    // print the page header; so the user knows there's (much) more to come
-   echo print_header($entityname, $xls_output);
+   echo print_header();
    // let's find out what we're supposed to do
    // edit the properties of a given system
    $remote_host=validate_webinput($_SERVER['REMOTE_ADDR']);
@@ -217,7 +217,7 @@ function page()
                    echo (is_null($row['lastseen'])?'NEVER':$row['lastseen'])."\n";
                    echo '</td></tr>'."\n";
 		   // DHCP Fix IP
-		   if ($showdhcp) {
+		   if ($conf->web_showdhcp) {
 			echo '<tr><td>Fix DHCP IP<td>'."\n";
 			if ($row['dhcp_fix'] == 1) {
 				echo '<input name="dhcp_fix" type=checkbox value="dhcp_fix" checked> to ';
@@ -239,7 +239,7 @@ function page()
                  echo '<tr><td>&nbsp;'."\n";
 
 	// Further informations (OS, epo, ...)
-                 echo '<tr><th colspan=2 align=center>Further informations'."\n";
+                 echo '<tr><th colspan=2 align=center>Further information'."\n";
 		 echo '<tr><td colspan=2>'."\n";
 		include('further_informations.inc.php');
 		echo '</tr><td>'."\n";
@@ -343,7 +343,7 @@ function page()
                    $sql.=($_REQUEST['comment']!=''?', comment=\''.$_REQUEST['comment'].'\'':'');
 		   // DHCP ?
 			// TODO : validate dhcp_ip as ip address
-		   if ($showdhcp) {
+		   if ($conf->web_showdhcp) {
 			if (($_REQUEST['dhcp_fix'] == 'dhcp_fix') && ($_REQUEST['dhcp_ip'] != '')) {
 				 $sql.=", dhcp_fix=1, dhcp_ip='".$_REQUEST['dhcp_ip']."'";
 			};

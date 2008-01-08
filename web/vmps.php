@@ -31,14 +31,14 @@ $sw='';
 function print_switch_sel() {
   global $db;
   global $sw;
-  global $vmpsdot_querydays;
+  global $conf;
 $sel = "SELECT DISTINCT(switch.id) as id, switch.name as name, switch.ip as ip, CONCAT(building.name,' ',location.name) as location
  FROM systems
  LEFT JOIN port ON port.id = systems.LastPort
  LEFT JOIN switch ON port.switch = switch.id
  LEFT JOIN location ON location.id = switch.location
   LEFT JOIN building ON building.id = location.building_id
-WHERE  (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$vmpsdot_querydays) AND port.switch != '' 
+WHERE  (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-".$conf->web_lastdays.") AND port.switch != '' 
 ORDER BY switch.name;";
   $res = mysql_query($sel) or die ("Unable to query MySQL ($sel)\n");
   $html = "<select name=sw>\n";
@@ -78,11 +78,11 @@ function print_dot_sel() {
 
 function vmps_stuff()
 {
-   global $dbuser,$dbpass,$sw,$vmpsdot_querydays;
+   global $dbuser,$dbpass,$sw,$conf;
    //-------------- main () -------------------
    db_connect($dbuser,$dbpass);
    echo "<br>";
-   echo "List all ports used on the specified switch in the last $vmpsdot_querydays days, and which end-devices were seen on each port. For each end device, the node name and associated user is shown.<br>";
+   echo "List all ports used on the specified switch in the last ".$conf->web_lastdays." days, and which end-devices were seen on each port. For each end device, the node name and associated user is shown.<br>";
    echo "<br>";
    echo "<form method=get action=\"$PHP_SELF\">\n";
    echo "Select a switch from the list:<br>";

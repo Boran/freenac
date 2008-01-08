@@ -6,6 +6,8 @@ set_include_path("./:../");
 require_once('../etc/config.inc');
 // include functions
 require_once('./webfuncs.inc');
+//require_once('../bin/funcs.inc.php');
+
 
 include_once('defs.inc');
 
@@ -13,8 +15,8 @@ $graphtype = $_GET["graphtype"];
 $stattype =  $_GET["stattype"];
 $order =  $_GET["order"];
 
-include_once($jpgraph_path.'/jpgraph.php');
-include_once($jpgraph_path.'/jpgraph_'.$graphtype.'.php');
+include_once($conf->web_jpgraph.'/jpgraph.php');
+include_once($conf->web_jpgraph.'/jpgraph_'.$graphtype.'.php');
 
 function cbFmtPercentage($aVal) {
     	return sprintf("%.0f",$aVal); // Convert to string

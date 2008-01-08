@@ -19,10 +19,10 @@ require_once('./webfuncs.inc');
 
 function allvmps_stuff()
 {
-   global $dbuser,$dbpass,$vmpsdot_querydays;
+   global $dbuser,$dbpass,$conf;
    db_connect($dbuser,$dbpass);
    echo "<br>";
-   echo "List all ports used on all switches in the last $vmpsdot_querydays days, and which end-devices were seen on each port. For each end device, the node name and associated user is shown.<br>";
+   echo "List all ports used on all switches in the last ".$conf->web_lastdays.", and which end-devices were seen on each port. For each end device, the node name and associated user is shown.<br>";
    echo "<br>";
 
 $sel = "SELECT DISTINCT(switch.id) as id, switch.name as name, switch.ip as ip, CONCAT(building.name,' ',location.name) as location
@@ -31,7 +31,7 @@ $sel = "SELECT DISTINCT(switch.id) as id, switch.name as name, switch.ip as ip, 
  LEFT JOIN switch ON port.switch = switch.id
  LEFT JOIN location ON location.id = switch.location
   LEFT JOIN building ON building.id = location.building_id
-WHERE  (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$vmpsdot_querydays) AND port.switch != '' 
+WHERE  (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-".$conf->web_lastdays.") AND port.switch != '' 
 ORDER BY switch.name;";
 
 $res = mysql_query($sel) or die('Query failed: ' . mysql_error());

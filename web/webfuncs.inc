@@ -23,7 +23,8 @@
 chdir(dirname(__FILE__));
 set_include_path("./");
 require_once "../etc/config.inc";
-
+require_once "../bin/funcs.inc.php";
+/* funcs.inc
 function db_connect($username,$password)
 {
   global $connect, $dbhost, $dbname;
@@ -33,6 +34,7 @@ function db_connect($username,$password)
   mysql_select_db($dbname, $connect) or die("Could not select database")
      or die("Could not select DB: " . mysql_error());;
 }
+*/
 
 function ismemberof($username,$group)
 {
@@ -115,14 +117,14 @@ function user_rights($username)
    return $rights;
 }
 
-function print_header($entityname, $xls_output){
-   global $entityname;	
+function print_header(){
+   global $conf;	
    if (!defined(HEADER)){
 		$ret='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 		<html xmlns="http://www.w3.org/1999/xhtml">
 		<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-		<title>FreeNAC @'.$entityname.'</title>
+		<title>FreeNAC @'.$conf->entityname.'</title>
 		<link href="bw.css" rel="stylesheet" type="text/css" />
 		</head>
 
@@ -138,7 +140,7 @@ function print_header($entityname, $xls_output){
 		  </tr>
 		  <tr>
 			<td class="center" colspan="2"><a href="'.$_SERVER['PHP_SELF'].'">List Unknowns</a> | <a href="'.$_SERVER['PHP_SELF'].'?action=search">Search</a>';
-		if ($xls_output){
+		if ($conf->web_xls_output){
 			$ret.=' | <a href="'.$_SERVER['PHP_SELF'].'?action=export">Export</a>';
 		}
 		$ret.='</td>
@@ -164,14 +166,14 @@ function print_footer(){
 
 function header_read()
 {
-   global $entityname;
+   global $conf;
    if (!defined(HEADER))
    {
       $ret='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
             <html xmlns="http://www.w3.org/1999/xhtml">
             <head>
                <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-               <title>FreeNAC @'.$entityname.'</title>
+               <title>FreeNAC @'.$conf->entityname.'</title>
                <link href="bw.css" rel="stylesheet" type="text/css" />
             </head>
             <body>';
@@ -459,8 +461,7 @@ function vmps_footer()
   echo '<p ALIGN=CENTER><a href="./index.html">NAC Menu</a></p>';
 }
 
-
-
+/*
 function debug1($msg) {
   global $debug_flag1, $debug_to_syslog;
   $msg=rtrim($msg);
@@ -483,7 +484,7 @@ function debug2($msg) {
     }
   }
 }
-
+*/
 function get_nmap_id($sid) {
    global $dbuser,$dbpass;
    db_connect($dbuser,$dbpass);
@@ -742,12 +743,11 @@ function format_mac($macdouble) {
   $mac = rtrim($mac,'.');
   return($mac);
 };
-
+// funcs.inc.php
 /**
  * Format mac from aabb.ccdd.eeff to aa:bb:cc:dd:ee:ff
  * @param string $macdot MAC (aa:bb:cc:dd:ee:ff)
  * @return string $mac MAC (aabb.ccdd.eeff)
- */
 function reformat_mac($macdot) {
   $numbers = explode('.',$macdot);
 
@@ -761,6 +761,7 @@ function reformat_mac($macdot) {
 
 
 };
+*/
 
 function get_vlan_descr($vlan) {
 

@@ -25,7 +25,7 @@ require_once('./webfuncs.inc');
 function get_hosts($port) {
 	$sel = "SELECT s.name, CONCAT(users.Surname, ' ',users.GivenName, ', ',users.Department) as owner FROM systems as s LEFT JOIN users ON users.id = s.uid WHERE LastPort='$port';";
   #debug1($sel);
-  $res = mysql_query($sel) or die("Unable to query the database");
+  $res = mysql_query($sel) or die("Unable to query the database (get_hosts)");
   if (mysql_num_rows($res) > 0) {
 	  while ($port = mysql_fetch_array($res)) {
     $out .= $port['name'].' ('.$port['owner'].')<br>';
@@ -40,24 +40,24 @@ function get_hosts($port) {
 function hubs_stuff()
 {
    // ----------- main () -------------------
-   global $dbuser,$dbpass,$hubs_queryday;
+   global $dbuser,$dbpass,$conf;
    db_connect($dbuser,$dbpass);
   
-  echo("The following ports may have a hub, i.e.  with more than one end-device see in the last $hubs_querydays days:<br>");
+  echo("The following ports may have a hub, i.e.  with more than one end-device see in the last ".$conf->web_lastdays." days:<br>");
    $sel = "SELECT port.name,port.switch,port.location,count(*) ".
 	"FROM systems, port ".
 	"WHERE systems.port = port.name AND systems.switch=port.switch ".
-         " AND (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$hubs_querydays)".
+         " AND (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-".$conf->web_lastdays.")".
 	"GROUP BY port.name,port.switch;";
 
-   $hubs_querydays = 99;
+//   $hubs_querydays = 99; WTF?
    $sel = "SELECT switch.name, port.name, LastPort as portid,count(*) FROM systems 
 	LEFT JOIN port ON systems.LastPort = port.id
 	LEFT JOIN switch ON port.switch = switch.id
-	 WHERE (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-$hubs_querydays) GROUP BY LastPort";
+	 WHERE (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-".$conf->web_lastdays.") GROUP BY LastPort";
 
    debug1($sel);
-   $res = mysql_query($sel) or die("Unable to query the database");
+   $res = mysql_query($sel) or die("Unable to query the database (hubs_stuff)");
 
    if (mysql_num_rows($res) > 0) {
 	echo '<br>';
