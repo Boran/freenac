@@ -188,8 +188,8 @@ function main_stuff()
       <td valign="center"><a href="./index.html"><img src="./images/logo_small.png" border="0" /></a></td>
       <td align="right">
          <a href="http://www.freenac.net">FreeNAC website</a><br />
-         <a href="http://www.freenac.net/en/installguide">Documentation</a><br />
-         <a href="http://www.freenac.net/phpBB2">Support</a>
+         <a href="http://www.freenac.net/en/usersguide">Users Guide</a><br />
+         <a href="http://www.freenac.net/phpBB2">Community Forum</a>
       </td>
    </tr>
    <tr valign="top">
