@@ -233,7 +233,7 @@ function page()
 	           };	
                    // Comment
                    echo '<tr><td>Comment:</td><td>'."\n";
-                   echo '<input name="comment" type="text" value="'.stripslashes($row['comment']).'"/>'."\n";
+                   echo '<input name="comment" type="text" size=40 value="'.stripslashes($row['comment']).'"/>'."\n";
                    echo '</td></tr>'."\n";
 
                    // Submit

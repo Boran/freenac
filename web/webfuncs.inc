@@ -322,11 +322,11 @@ function get_userdropdown($selected_user) {
         if ($rights>=2)
         {
            $ret='<select name="username">';
-           $sql='SELECT id, username, surname, givenname FROM users ORDER BY surname'; // Get details for all users
+           $sql='SELECT id, username, CONCAT(surname,\' \',givenname,\', \',department) as displayname FROM users ORDER BY surname'; // Get details for all users
            $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
            if (mysql_num_rows($res)>0){
                 while ($r=mysql_fetch_array($res)){
-                        $ret.='<option value="'.$r['id'].'" '.($r['id']==$selected_user?'selected="selected"':'').'>'.$r['surname'].' '.$r['givenname'].'</option>'."\n";
+                        $ret.='<option value="'.$r['id'].'" '.($r['id']==$selected_user?'selected="selected"':'').'>'.$r['displayname'].'</option>'."\n";
                 }
            }
            $ret.='</select>'."\n";

@@ -96,7 +96,7 @@ LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid'
 
 /* UGLY
 // meta-things
-		$out .= '<tr><td colspan=3 bgcolor="#DEDEDE"><b>Meta-informations</b>';
+		$out .= '<tr><td colspan=3 bgcolor="#DEDEDE"><b>Meta information</b>';
 		$out .= '<tr><th colspan=3>Operating System';
 		$out .= '<tr><td>Inventory<td>'.$system['class'].'<td>'.$system['os1'];
 		$out .= '<tr><td>McAfee ePO<td>';

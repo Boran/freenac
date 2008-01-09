@@ -86,7 +86,7 @@ LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid'
         $out .= "<table cellspacing=0 cellpadding=4 border=1>";
 
 // 2.0 General properties
-	$out .= '<tr><td colspan=3 bgcolor="#DEDEDE"><b>Administrative informations</b>';
+	$out .= '<tr><td colspan=3 bgcolor="#DEDEDE"><b>Administrative information</b>';
         $out .= '<tr><td>Inventory<td>'.$system['inventory']."\n";
 	$out .= '<tr><td>Classification'."\n";
                 $out .= '<td>'.(!is_null($system['class'])?$system['class']:'');
