@@ -150,7 +150,7 @@ function page()
    if ($_REQUEST['action']=='edit'){
         // check that what we got is a number
         if (is_numeric($_REQUEST['id'])){
-                $sql=' SELECT sys.id, sys.name, sys.mac, sys.status, sys.vlan, lvlan.default_name as lastvlan, sys.uid as user, sys.office, port.name as port, sys.lastseen, swloc.name as location, swi.name as switch, sys.r_ip as lastip, sys.r_timestamp as lastipseen, sys.comment, eth.vendor, dhcp_fix, dhcp_ip
+                $sql=' SELECT sys.id, sys.name, sys.mac, sys.status, sys.vlan, lvlan.default_name as lastvlan, sys.uid as user, sys.office, port.name as port, sys.lastseen, swloc.name as location, swi.name as switch, sys.r_ip as lastip, sys.r_timestamp as lastipseen, sys.comment, eth.vendor, dns_alias, dhcp_fix, dhcp_ip
                         FROM systems as sys LEFT JOIN vlan as lvlan ON sys.lastvlan=lvlan.id LEFT JOIN port as port ON port.id=sys.lastport LEFT JOIN switch as swi ON port.switch=swi.id LEFT JOIN location as swloc ON swloc.id=swi.location LEFT JOIN ethernet as eth ON (SUBSTR(sys.mac,1,4)=SUBSTR(eth.mac,1,4) AND SUBSTR(sys.mac,6,2)=SUBSTR(eth.mac,5,2))
                         WHERE sys.id=\''.$_REQUEST['id'].'\';';
                 $result=mysql_query($sql) or die('Query failed: ' . mysql_error());
@@ -216,6 +216,11 @@ function page()
                    echo '<tr><td>LastSeen:</td><td>'."\n";
                    echo (is_null($row['lastseen'])?'NEVER':$row['lastseen'])."\n";
                    echo '</td></tr>'."\n";
+		   // DNS Aliases
+		   if ($conf->web_showdns) {
+			echo '<tr><td>DNS Alias(es)<td>'."\n";
+			echo '<input name="dns_alias" type="text" value="'.stripslashes($row['dns_alias']).'"/>'."\n";
+		   };
 		   // DHCP Fix IP
 		   if ($conf->web_showdhcp) {
 			echo '<tr><td>Fix DHCP IP<td>'."\n";
@@ -341,6 +346,11 @@ function page()
                    $sql.=($_REQUEST['office']!=''?', office='.$_REQUEST['office'].'':'');
                    // got comment?
                    $sql.=($_REQUEST['comment']!=''?', comment=\''.$_REQUEST['comment'].'\'':'');
+		   // DNS Alias
+		   if ($conf->web_showdns) {
+			// TODO : validate DNS aliases
+			$sql.=", dns_alias='".$_REQUEST['dns_alias']."'";
+		   };
 		   // DHCP ?
 			// TODO : validate dhcp_ip as ip address
 		   if ($conf->web_showdhcp) {
