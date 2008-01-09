@@ -27,10 +27,16 @@ db_connect($dbuser,$dbpass);
 
 $dhcp_preamble = "
 #
-# DON'T EDIT - Generated automatically from FreeNAC 
+# DON'T EDIT THIS FILE - Generated automatically from FreeNAC 
+#
+# You can edit
+# - the default in the configuration (dhcp_default variable)
+# - subnets and their options in dhcp_subnets and dhcp_options
+# - fix IP adresses trough the system table (main view)
+#
 #\n";
 
-$dhcp_preamble .= $conf->dhcp_default;
+$dhcp_preamble .= $conf->dhcp_default."\n\n";
 
 
 // 1. Options
