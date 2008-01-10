@@ -9,6 +9,8 @@
 # Example cron usage:
 #    0 8-18 * * 1-5 /opt/nac/bin/check_disk  99 200
 #
+# 2008.01.10 HO: Added sanity checks to test if the variable to compare is a number
+#
 # 2007.11.03 SB: Strange, 'tail -n 1" needed on linux for $tail
 #            Wonder why its not like that for all platforms?
 # 2005.10.02 SB: Major Update. Fix & test for HP-UX, 
@@ -98,22 +100,39 @@ for filesys in `$mount |egrep -v "$ignore"  | awk '{print $3}'`; do
 
   fs_space=`$df  $filesys|$tail |awk '{print $5}'| sed 's/\%//' `
   [ $DEBUG ] && $echo "space=$fs_space"
-  if [ $fs_space -gt $fs_limit ]; then
-    $echo "Filesystem $filesys is $fs_space % full" > $tempfile
-    [ $DEBUG ] && $echo "Filesystem $filesys is $fs_space % full (limit=$fs_limit)"
+
+  ## Test to see if the value of the variable is a number
+  expr "$fs_space" + 1 2>/dev/null
+
+  ## In case it isn't, $? will have a value other than 0
+  if [ $? -eq 0 ]
+  then
+     ## The variable is a number
+     if [ $fs_space -gt $fs_limit ]; then
+        $echo "Filesystem $filesys is $fs_space % full" > $tempfile
+        [ $DEBUG ] && $echo "Filesystem $filesys is $fs_space % full (limit=$fs_limit)"
+     fi
   fi
 
 done
 
 ## check system load over last 5 minutes
 ##
-if [ $load -gt $load_limit ]; then
-  $echo "System under heavy load (greater than $load_limit)..." >> $tempfile
-  [ $DEBUG ] && $echo "System under heavy load (greater than
-$load_limit)..."
-else
-  [ $DEBUG ] && $echo "Current load over 15 mins=$load"
-fi
+## Test to see if the value of the variable is a number
+  expr "$load" + 1 2>/dev/null
+
+  ## In case it isn't, $? will have a value other than 0
+  if [ $? -eq 0 ]
+  then
+     ## The variable is a number
+     if [ $load -gt $load_limit ]; then
+        $echo "System under heavy load (greater than $load_limit)..." >> $tempfile
+        [ $DEBUG ] && $echo "System under heavy load (greater than
+        $load_limit)..."
+     else
+        [ $DEBUG ] && $echo "Current load over 15 mins=$load"
+     fi
+  fi
 
 ## Were any problems found above? If yes, email results
 if [ -f $tempfile ] ; then
