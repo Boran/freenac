@@ -41,7 +41,7 @@ then
   echo "Mysql socket has disappeared, so lets restart it"
   /etc/init.d/mysql stop
   killall  mysqld
-  killall  safe_mysqld
+  killall  mysqld_safe
   /etc/init.d/mysql start  
   message="MySQL socket disappeared, it has been restarted";
   logger $message -t check_mysql;
