@@ -109,7 +109,7 @@
     missingok
     notifempty
     size +30M
-    create 640 root root
+    create 640 root freenac
     sharedscripts
 
     ## Once a week we rotate logs, do some analysis, and restart all VMPS components:
