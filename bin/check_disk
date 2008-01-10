@@ -24,7 +24,7 @@
 admin=root
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
-ignore="nfs|shm|smb|hsfs|cdfs|subfs|devpts|usbdevfs|sysfs|iso9660|/dev/fd|mnttab|/proc|/mnt"     # Ignore these Filesystems
+ignore="nfs|shm|smb|hsfs|cdfs|subfs|devpts|usbdevfs|sysfs|iso9660|/dev/fd|mnttab|/proc|/mnt|securityfs"     # Ignore these Filesystems
 subject="Disk/performance problems"
 subject2="Disk/performance FIXED - OK"
 tempfile=/tmp/check_disk.$$
