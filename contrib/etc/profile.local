@@ -2,7 +2,7 @@
 # /etc/profile.local
 #
 # Useful defaults for all system users who use bash
-# On SOLARIS: Append this to /etc/profile
+# On SOLARIS: source this in /etc/bashrc
 # On Suse   : Append this to /etc/profile.local
 
 os=`uname -r`
@@ -12,20 +12,22 @@ net=`getent hosts $this_host|awk '{print $1}'|cut -f1-3 -d '.'`
 ##### Sean's settings ####
 ## PATH
 [ -d /secure ]              && PATH=${PATH}:/secure
+[ -d /sbin ]                && PATH=${PATH}:/sbin
 [ -d /usr/local/bin ]       && PATH=${PATH}:/usr/local/bin
 [ -d /usr/local/sbin ]      && PATH=${PATH}:/usr/local/sbin
 [ -d /usr/local/php/bin ]   && PATH=${PATH}:/usr/local/php/bin
 [ -d /usr/local/samba/bin ] && PATH=${PATH}:/usr/local/samba/bin
 [ -d /usr/local/samba/sbin ] && PATH=${PATH}:/usr/local/samba/sbin
+[ -d /usr/local/mysql/bin ] && PATH=${PATH}:/usr/local/mysql/bin
+[ -d /usr/local/ssl/bin ]   && PATH=${PATH}:/usr/local/ssl/bin
 [ -d /opt/samba/bin ]       && PATH=${PATH}:/opt/samba/bin
 [ -d /opt/samba/sbin ]      && PATH=${PATH}:/opt/samba/sbin
-[ -d /usr/local/ssl/bin ]   && PATH=${PATH}:/usr/local/ssl/bin
 [ -d /opt/postfix ]         && PATH=${PATH}:/opt/postfix
 [ -d /opt/libxml2/bin ]     && PATH=${PATH}:/opt/libxml2/bin
+[ -d /opt/nac/bin ]         && PATH=${PATH}:/opt/nac/bin
 
 
 # MAN PAGES
-[ -d /usr/local/mysql/bin ] && PATH=${PATH}:/usr/local/mysql/bin
 [ -d /usr/local/samba/man ] && MANPATH=/usr/local/samba/man:${MANPATH}
 [ -d /usr/local/mysql/man ] && MANPATH=/usr/local/mysql/man:${MANPATH}
 [ -d /usr/local/share/man ] && MANPATH=/usr/local/share/man:${MANPATH}
@@ -34,8 +36,8 @@ net=`getent hosts $this_host|awk '{print $1}'|cut -f1-3 -d '.'`
 [ -d /opt/local/openldap/man ] && MANPATH=/opt/local/openldap/man:${MANPATH}
 [ -d /opt/local/kerberos5/man ] && MANPATH=/opt/local/kerberos5/man:${MANPATH}
 
-EDITOR=/bin/vi;       export EDITOR
-VISUAL=/bin/vi;       export VISUAL
+EDITOR=vi;       export EDITOR
+VISUAL=vi;       export VISUAL
 # Set prompt to user@host:/currect/directory [history number]
 PS1="\u@\h:\w[\!]\$ "; export PS1
 
@@ -46,6 +48,8 @@ HISTSIZE=40
 set -o emacs
 # Don't save history of commands, it can be a security leak
 HISTFILESIZE=0
+unset HISTFILE
+
 # you might want to set:
 #  http_proxy="http://proxy2.mydomain.ch:80";
 #  ftp_proxy="http://proxy2.mydomain.ch:80";
@@ -53,7 +57,6 @@ HISTFILESIZE=0
 
 # useful aliases
 alias cp='cp -i'
-#alias df='df -k'
 alias df='df -h'
 alias h='history'
 alias ls='ls -aF'
@@ -61,11 +64,12 @@ alias ls='ls -aF'
 alias mv='mv -i'
 alias rm='rm -i'
 alias del='rm -i'
+alias postfix='/opt/postfix/postfix'
 alias leases='grep ddns-fwd-name /var/lib/dhcp/dhcpd.leases'
 [ -f /var/adm/messages ] && alias log='tail -f /var/adm/messages'
 [ -f /var/log/messages ] && alias log='tail -f /var/log/messages'
-[ -f /var/log/messages ] && alias logv='tail -f /var/log/messages |egrep "ALLOW|DENY|vmpsd_external|vmps_lastseen" '
 [ -f /var/log/mail ]     && alias logm='tail -f /var/log/mail | egrep -v popper'
+[ -f /var/log/mail.info ] && alias logm='tail -f /var/log/mail.info | egrep -v popper'
 [ -f /var/log/maillog ]  && alias logm='tail -f /var/log/maillog | egrep -v popper'
 alias move=mv
 alias copy=cp
@@ -77,10 +81,17 @@ function biggies ()    { find . -xdev -mtime -7 -size +1000 -ls; }
 function geth ()       { egrep -i "$1" /etc/hosts; }
 function getu ()       { egrep -i "$1" /etc/aliases; egrep -i "$1" /etc/passwd; }
 function oldies  ()    { find . -xdev -ctime +60 -type f    -ls; }
+#function remoldies  () { find . -xdev -ctime +60 -type f -exec rm \{\} \; }
 function mailverify () { /usr/lib/sendmail -bv $1; }
 function psg () {
   echo "Looking for processes containing $1 ..."
   ps waux | grep "$1" | egrep -v "psg|grep"
+  #ps -waux | grep "$1" | egrep -v "psg|grep"
+  #ps -ef | grep "$1" | egrep -v "psg|grep"
 }
-##### end Sean's settings ####
+
+# Document system mods centrally:
+function mods () { logger -p local6.info "MOD:$USER:$*"; echo "`date +%y%m%d` $USER:$*" >>/etc/mods; }
+
+##### end Sean's /etc/profile.local settings ####
 
