@@ -97,8 +97,10 @@ $ports = mysql_query($sel_ports) or die ("Unable to query MySQL ($sel_ports)");
 $dotports .= "\n# 1. Make the ports\n\n";
 if (mysql_num_rows($ports) > 0) {
 	while ($port = mysql_fetch_array($ports)) {
+	  if ((stristr($port['name'],'Fa')) || (stristr($port['name'],'Gi'))) {
 	  $portref = 'port'.strtr($port['name'], "/", "e");
 	  $dotports .= $portref." [ label=\"".$port['name']."\",shape=\"box\" ] \n";
+	  };
 	};
 };
 
@@ -142,7 +144,8 @@ $dotvmps .= "\n\n#3. Make links\n";
 if (mysql_num_rows($hosts) > 0) {
 	while ($host = mysql_fetch_array($hosts)) {
 	  $hostref = 'host'.strtr($host['mac'], ".", "e");
-	  $dothosts .= $hostref." [ label=\"".$host['name'].'\n'.$host['description'].'",style="filled",fontsize=10,fillcolor="'.$host['vlan_color']."\" ] \n";
+	if ($host['vlan_color'] == '') { $host['vlan_color'] = 'DEDEDE';};
+	  $dothosts .= $hostref." [ label=\"".$host['name'].'\n'.$host['description'].'",style="filled",fontsize=10,fillcolor="#'.$host['vlan_color']."\" ] \n";
 
 	// 3. Make links
 	  #$portref = $switchref. 'port'. strtr($host['port'], "/", "e");

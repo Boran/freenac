@@ -22,7 +22,7 @@ function allvmps_stuff()
    global $dbuser,$dbpass,$conf;
    db_connect($dbuser,$dbpass);
    echo "<br>";
-   echo "List all ports used on all switches in the last ".$conf->web_lastdays.", and which end-devices were seen on each port. For each end device, the node name and associated user is shown.<br>";
+   echo "List all ports used on all switches in the last ".$conf->web_lastdays." days, and which end-devices were seen on each port. For each end device, the node name and associated user is shown.<br>";
    echo "<br>";
 
 $sel = "SELECT DISTINCT(switch.id) as id, switch.name as name, switch.ip as ip, CONCAT(building.name,' ',location.name) as location
