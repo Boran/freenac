@@ -77,7 +77,7 @@ function get_patch($port) {
 db_connect($dbuser,$dbpass);
 
 $sw     = validate_webinput($_REQUEST['sw']);
-$dottype= validate_webinput($_REQUEST['dottype']);
+#$dottype= validate_webinput($_REQUEST['dottype']);
 if (! isset($sw))      { $sw = '192.168.245.71'; };
 
 ## We don't need this as a paramter for now, and its dangerous, since
