@@ -171,7 +171,7 @@ else
 
 if (!$singlevl) 
 {
-   $vlans =  mysql_fetch_all("SELECT * FROM vlan WHERE default_id != 0 AND default_id != 1");
+   $vlans =  mysql_fetch_all("SELECT * FROM vlan WHERE default_id != 0");
    # default, don't need to log
    $logger->debug("Scanning all VLANs");
 } 
