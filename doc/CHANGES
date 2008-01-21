@@ -8,7 +8,11 @@ This reports, but does not commit any changes.
 History of this Branch 3.0
 ===========================
 
-Created on 2007.11.16 from revision 1090 from svn
+Version 3.01 created on 2008.01.21 from revision 1233 from SVN 
+
+Contains several bux fixes to version 3.0 as well as some changes to the Web GUI. See the detailed changelog for more information
+
+Version 3.00 created on 2007.11.16 from revision 1090 from SVN
 
 A substantial change in FreeNAC v3.0 is the introduction of an OO (objected oriented) policy interface, which provides greater flexibility and encapsulation of individual decisions regarding access to the network. The main programs have been rewritten using OO techniques, some others have been modified to work with our framework, and some others have been added to this new release.
 
