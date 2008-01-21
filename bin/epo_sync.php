@@ -27,7 +27,7 @@
 		MAIN
 **************************************/
 
-$EPO_VERSION = 3;	// either 3 or 4
+$EPO_VERSION = 4;	// either 3 or 4
 
 
 // Php weirdness: change to script dir, then look for includes
