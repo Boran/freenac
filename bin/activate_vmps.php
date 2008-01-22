@@ -38,6 +38,7 @@ $logger->setLogToStdOut();
 
 function print_usage($code)
 {
+   global $logger;
    $usage=<<<EOF
 USAGE: activate_vmps.php [switches...] [OPTIONS]
 
@@ -272,7 +273,7 @@ else
          continue;
       }
       $counter=0;
-      
+     
       foreach($ports as $port)
       {
          if (! $port_index = get_snmp_index($port,$ports_on_switch))            //Is the port present in this switch?
@@ -281,7 +282,7 @@ else
             continue;
          }
 
-         if (set_port_as_dynamic($switch,$port_index))    //Try to set port as dynamic
+         if (set_port_as_dynamic($switch, $port, $port_index))    //Try to set port as dynamic
          {
             $logger->logit("\tPort $port successfully set to dynamic.\n");
             $counter++;

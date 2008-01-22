@@ -53,6 +53,30 @@ $logger=Logger::getInstance();
 $conf=Settings::getInstance();
 
 /**
+* Get WINS Name from IP Address
+* @param string $ip   Ip Address
+* @return string      WINS Name
+*/
+function getwinsfromip($ip)
+{
+   $command = "nmblookup -A $ip";
+   $output = shell_exec($command);
+   $fmoutput= (str_split("$output",strpos($output,"\n")));
+   print_r($fmoutput);
+   $foutput = substr($fmoutput[1],0,strpos($fmoutput[1]," "));
+   $foutput= trim($foutput);
+   echo $foutput;
+   if ($foutput=="No")
+   {
+      return $ip;
+   }
+   else
+   {
+      return $foutput;
+   }
+}
+
+/**
 * Converts a vlan id to a vlan name
 * @param integer $vlanID 	Vlan ID
 * @return mixed 		Vlan name
@@ -133,6 +157,7 @@ function turn_on_port($switch,$port,$port_index=false)
 */
 function get_snmp_port_index($switch,$port)
 {
+   global $logger;
    if ($switch && $port)
    {
       if ( ! $ports_on_switch = ports_on_switch($switch) )              //Get the list of ports on the switch
@@ -833,6 +858,7 @@ function mysql_fetch_one($query){
 * @return mixed         Result of the query if successful, or error otherwise
 */
 function mssql_fetch_all($query){
+  global $logger;
   $r=@mssql_query($query);
   if (! $r) { 
     $logger->logit("Cannot execute query " .mssql_get_last_message());
