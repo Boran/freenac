@@ -151,7 +151,7 @@ if (!$file)
 while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
 {
    $switch=$result['ip'];
-   $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.auth_profile='2' and sw.ip='$switch';";
+   $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.last_auth_profile='2' and sw.ip='$switch';";
    $logger->debug($query,3);
    while (!$res1=mysql_query($query));						//Execute query
    $rows=mysql_num_rows($res1);
@@ -230,7 +230,7 @@ while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
 fclose($file);
 if ($j==1)
 {
-   $total_db=v_sql_1_select("select count(*) from port where auth_profile='2';");
+   $total_db=v_sql_1_select("select count(*) from port where last_auth_profile='2';");
    $string="Switches in total: $total_switches\tPorts affected: $affected_ports out of $total_ports\tNumber of ports to be affected (from db): $total_db";
    $logger->logit( "$string\n");
    $logger->setLogToStdOut(false);

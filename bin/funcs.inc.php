@@ -1030,7 +1030,7 @@ function set_port_as_dynamic($switch,$port, $snmp_port_index=false)
    {
       $oid=$snmp_port['type'].'.'.$snmp_port_index;
       $logger->debug("Setting $oid to 2 in $switch (dynamic)",3);
-      if (snmpset($switch,$snmp_rw,$oid,'i',2))                                   //Set port to dynamic
+      if (@snmpset($switch,$snmp_rw,$oid,'i',2))                                   //Set port to dynamic
       {
          if (turn_on_port($switch, $port, $snmp_port_index))                                      //Done, turn it on
          {
@@ -1085,7 +1085,7 @@ function set_port_as_static($switch, $port, $vlan,$snmp_port_index=false)
    {
       $oid=$snmp_port['type'].'.'.$snmp_port_index;
       $logger->debug("Setting $oid to 1 in $switch (Static)",3);
-      if (snmpset($switch,$snmp_rw,$oid,'i',1))                              //Set port to static
+      if (@snmpset($switch,$snmp_rw,$oid,'i',1))                              //Set port to static
       {
          $oid=$snmp_if['vlan'].'.'.$snmp_port_index;
          $logger->debug("Setting $oid in $switch (VLAN)",3);

@@ -171,7 +171,7 @@ if ($read_from_db)
    {
       $switch=$result['ip'];
 
-      $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.auth_profile='2' and sw.ip='$switch';";
+      $query="select p.name as port_name, v.default_name as vlan from port p inner join switch sw on p.switch=sw.id inner join vlan v on p.last_vlan=v.id where p.last_vlan>2 and p.last_auth_profile='2' and sw.ip='$switch';";
       $logger->debug($query,3);
       while (!$res1=mysql_query($query));						//Execute query
       $rows=mysql_num_rows($res1);
