@@ -1,5 +1,5 @@
 -- New epo_systems table
-CREATE TABLE epo_systems (
+CREATE TABLE IF NOT EXISTS epo_systems (
   sid int not null,
   nodename varchar(30),
   domainname varchar(100),
@@ -24,7 +24,7 @@ CREATE TABLE epo_systems (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='list of systems with the epo client installed, synced from epo database';
 
 -- New epo_versions table
-CREATE TABLE epo_versions (
+CREATE TABLE IF NOT EXISTS epo_versions (
   id int not null auto_increment,
   product varchar(255) not null,
   version varchar(255) not null,
@@ -77,7 +77,7 @@ create table if not exists wsus_systemToUpdates (
 ) engine=myisam default charset=utf8 row_format=dynamic comment='mapping of systems to updates';
 
 -- New stats table
-CREATE TABLE `stats` (
+CREATE TABLE IF NOT EXISTS `stats` (
   `id` int(11) NOT NULL auto_increment,
   `code` varchar(100) default NULL,
   `value` int(11) NOT NULL,
@@ -86,23 +86,78 @@ CREATE TABLE `stats` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- New health table
-CREATE TABLE `health` (
+CREATE TABLE IF NOT EXISTS `health` (
 	`id` int(10) unsigned not null,
 	`value` varchar(30) not null,
 	`color` varchar(6) default null,
 	`comment` varchar(100) default null,
 	PRIMARY KEY (`id`)
 );
-INSERT INTO health(id, value, comment) VALUES (0,'Unknown','No health information available');
-INSERT INTO health(id, value, comment) VALUES (1, 'OK', '');
-INSERT INTO health(id, value, comment) VALUES (4, 'Transition', 'Scan needed');
-INSERT INTO health(id, value, comment) VALUES (5, 'Quarantine', 'AV or patch update needed');
-INSERT INTO health(id, value, comment) VALUES (6, 'Infected', '');
+INSERT INTO health(id, value, comment) VALUES (0,'Unknown','No health information available') ON DUPLICATE KEY UPDATE comment=comment;
+INSERT INTO health(id, value, comment) VALUES (1, 'OK', '') ON DUPLICATE KEY UPDATE comment=comment;
+INSERT INTO health(id, value, comment) VALUES (4, 'Transition', 'Scan needed') ON DUPLICATE KEY UPDATE comment=comment;
+INSERT INTO health(id, value, comment) VALUES (5, 'Quarantine', 'AV or patch update needed') ON DUPLICATE KEY UPDATE comment=comment;
+INSERT INTO health(id, value, comment) VALUES (6, 'Infected', '') ON DUPLICATE KEY UPDATE comment=comment;
 
 -- Status table, delete transition, quarantine, infected
+DELETE FROM vstatus WHERE id='2';
 DELETE FROM vstatus WHERE id='4';
 DELETE FROM vstatus WHERE id='5';
 DELETE FROM vstatus WHERE id='6';
+
+--Adding a unique key to the config table
+ALTER TABLE config ADD UNIQUE (name);
+
+-- New configuration entries in the config table
+INSERT INTO config SET type='string', name='default_policy', value='BasicPolicy', COMMENT='Policy to load' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='boolean', name='router_mac_ip_discoverall', value='false', comment='Discover/document all MAC/IPs found or only those already in the DB?' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='boolean', name='scan_unmanaged', value='false', comment='Should port_scan scan unmanaged systems?' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='integer', name='scan_hours_for_ip', value='3', comment='Number of hours for an IP address to be considered as up-to-date' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='boolean', name='vm_lan_like_host', value='false', comment='If VM, assign the same VLAN as its host?' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='boolean', name='wsus_enabled', value='false', COMMENT='Enable the WSUS module' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='string', name='wsus_dbalias', COMMENT='DNS name' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='string', name='wsus_db', COMMENT='DB instance' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='boolean', name='epo_enabled', value='false', COMMENT='Enable antivirus checking' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='string', name='epo_dbalias', COMMENT='DNS name' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='string', name='epo_db', COMMENT='DB instance' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='boolean', name='restart_daemons', value='false', COMMENT='Restart master daemons?' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO config SET type='integer', name='delete_not_seen', value='0', comment='Delete systems not seen for XX months' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='boolean', NAME='dhcp_enabled', VALUE='false', COMMENT='Enable DHCP management' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dhcp_configfile', VALUE='/etc/dhcp/dhcpd.conf.freenac', COMMENT='DHCP Configuration file (will be overwritten)' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dhcp_default', VALUE='default-lease-time 36000
+                max-lease-time 72000;
+                authoritative;
+                use-host-decl-names on;
+                ddns-update-style ad-hoc;', COMMENT='Default DHCP settings'  ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='boolean', NAME='dns_enabled', VALUE='false', COMMENT='Enable DNS management' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dns_config', VALUE='file', COMMENT='DNS Management : \'file\' (generate zone files or \'update\' (send Dynamic DNS updates)' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dns_domain', VALUE='domain.com', COMMENT='DNS Full Qualified Domain Name (top zone)' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dns_outdir', VALUE = '/var/named/pri', COMMENT='DNS Configuration directory' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dns_subnets', VALUE='192.168.0,192.168.1', COMMENT='List of subnet for reverse DNS' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dns_ns', VALUE='ns1,ns2', COMMENT='DNS Name servers' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dns_mx', VALUE='mx1,mx2', COMMENT='DNS Mail servers (listed by priority)' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dns_primary', VALUE='mydns.somewhereelse.com', COMMENT='Primary name server (SOA)' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='dns_mail', VALUE='dnsadmin.domain.com', COMMENT='Email adress (SOA)' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='ddns_server', VALUE='192.168.0.1', COMMENT='Primary server for DDNS updates' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='integer', NAME='ddns_ttl', VALUE='86400', COMMENT='TTL for dynamic dns updates' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='integer', NAME='ddns_level', VALUE='1', COMMENT='Level of DNS updates : 0 = all hosts, 1 = static ip & unmanaged hosts, 2 = all hosts' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='integer', NAME='web_lastdays', VALUE='14', COMMENT='Show devices seen in the last XX days' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='web_jpgraph', VALUE='/usr/share/jpgraph', COMMENT='Include path for the jpgraph library' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='web_dotcmd', VALUE='/usr/bin/neato', COMMENT='Graphviz binary to use (cf man dot for choices)' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='boolean', NAME='web_showdhcp', VALUE='false', COMMENT='Show DHCP configuration-related fields' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='boolean', NAME='web_showdns', VALUE='false', COMMENT='Show DNS configuration-related fields' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='web_logtail_file', VALUE='/var/log/messages', COMMENT='Logfile to tail (must be readable by web daemon)' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='integer', NAME='web_logtail_length', VALUE='100', COMMENT='Number of lines to tail' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='entityname', VALUE='ACME', COMMENT='Name of the company/department' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='string', NAME='unknown', VALUE='%unknown%', COMMENT='Mask for unknown machines in the database' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='boolean', NAME='xls_output', VALUE='false', COMMENT='Enable XLS export from web interface' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+INSERT INTO `config` SET TYPE='integer', NAME='delete_users_threshold', VALUE='360', COMMENT='Delete users not seen in the central directory for more than XX days' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
+
+
+
+UPDATE config SET comment='Global default vlan index for unknowns. Set to 0 for default deny' WHERE name='default_vlan';
+UPDATE config SET comment='Vlan index for unknowns when auto added to the DB, normally=default_vlan' WHERE name='set_vlan_for_unknowns';
+UPDATE config SET comment='Enable the use of a default vlan index per port - 0/1' WHERE name='use_port_default_vlan';
 
 -- New fields needed for switch monitoring
 ALTER TABLE switch ADD COLUMN last_monitored datetime COMMENT "Last time the switch was polled";
@@ -122,57 +177,6 @@ ALTER TABLE systems ADD COLUMN last_hostname varchar(100) COMMENT "DNS or DHCP n
 ALTER TABLE systems ADD COLUMN last_nbtname varchar(100) COMMENT "NetBIOS name";
 ALTER TABLE systems ADD COLUMN last_uid int COMMENT "Last user logged on to PC";
 ALTER TABLE systems ADD COLUMN email_on_connect varchar(100) COMMENT "Email address to alert";
-
--- New configuration entries in the config table
-INSERT INTO config SET type='string', name='default_policy', value='BasicPolicy', COMMENT='Policy to load';
-INSERT INTO config SET type='boolean', name='router_mac_ip_discoverall', value='false', comment='Discover/document all MAC/IPs found or only those already in the DB?';
-INSERT INTO config SET type='boolean', name='scan_unmanaged', value='false', comment='Should port_scan scan unmanaged systems?';
-INSERT INTO config SET type='integer', name='scan_hours_for_ip', value='3', comment='Number of hours for an IP address to be considered as up-to-date';
-INSERT INTO config SET type='boolean', name='vm_lan_like_host', value='false', comment='If VM, assign the same VLAN as its host?';
-INSERT INTO config SET type='boolean', name='wsus_enabled', value='false', COMMENT='Enable the WSUS module';
-INSERT INTO config SET type='string', name='wsus_dbalias', COMMENT='DNS name';
-INSERT INTO config SET type='string', name='wsus_db', COMMENT='DB instance';
-INSERT INTO config SET type='boolean', name='epo_enabled', value='false', COMMENT='Enable antivirus checking';
-INSERT INTO config SET type='string', name='epo_dbalias', COMMENT='DNS name';
-INSERT INTO config SET type='string', name='epo_db', COMMENT='DB instance';
-INSERT INTO config SET type='boolean', name='restart_daemons', value='false', COMMENT='Restart master daemons?';
-INSERT INTO config SET type='integer', name='delete_not_seen', value='0', comment='Delete systems not seen for XX months';
-INSERT INTO `config` SET TYPE='boolean', NAME='dhcp_enabled', VALUE='false', COMMENT='Enable DHCP management';
-INSERT INTO `config` SET TYPE='string', NAME='dhcp_configfile', VALUE='/etc/dhcp/dhcpd.conf.freenac', COMMENT='DHCP Configuration file (will be overwritten)';
-INSERT INTO `config` SET TYPE='string', NAME='dhcp_default', VALUE='default-lease-time 36000;
-                max-lease-time 72000;
-                authoritative;
-                use-host-decl-names on;
-                ddns-update-style ad-hoc;', COMMENT='Default DHCP settings';
-INSERT INTO `config` SET TYPE='boolean', NAME='dns_enabled', VALUE='false', COMMENT='Enable DNS management';
-INSERT INTO `config` SET TYPE='string', NAME='dns_config', VALUE='file', COMMENT='DNS Management : \'file\' (generate zone files or \'update\' (send Dynamic DNS updates)';
-INSERT INTO `config` SET TYPE='string', NAME='dns_domain', VALUE='domain.com', COMMENT='DNS Full Qualified Domain Name (top zone)';
-INSERT INTO `config` SET TYPE='string', NAME='dns_outdir', VALUE = '/var/named/pri', COMMENT='DNS Configuration directory';
-INSERT INTO `config` SET TYPE='string', NAME='dns_subnets', VALUE='192.168.0,192.168.1', COMMENT='List of subnet for reverse DNS';
-INSERT INTO `config` SET TYPE='string', NAME='dns_ns', VALUE='ns1,ns2', COMMENT='DNS Name servers';
-INSERT INTO `config` SET TYPE='string', NAME='dns_mx', VALUE='mx1,mx2', COMMENT='DNS Mail servers (listed by priority)';
-INSERT INTO `config` SET TYPE='string', NAME='dns_primary', VALUE='mydns.somewhereelse.com', COMMENT='Primary name server (SOA)';
-INSERT INTO `config` SET TYPE='string', NAME='dns_mail', VALUE='dnsadmin.domain.com', COMMENT='Email adress (SOA)';
-INSERT INTO `config` SET TYPE='string', NAME='ddns_server', VALUE='192.168.0.1', COMMENT='Primary server for DDNS updates';
-INSERT INTO `config` SET TYPE='integer', NAME='ddns_ttl', VALUE='86400', COMMENT='TTL for dynamic dns updates';
-INSERT INTO `config` SET TYPE='integer', NAME='ddns_level', VALUE='1', COMMENT='Level of DNS updates : 0 = all hosts, 1 = static ip & unmanaged hosts, 2 = all hosts';
-INSERT INTO `config` SET TYPE='integer', NAME='web_lastdays', VALUE='14', COMMENT='Show devices seen in the last XX days';
-INSERT INTO `config` SET TYPE='string', NAME='web_jpgraph', VALUE='/usr/share/jpgraph', COMMENT='Include path for the jpgraph library';
-INSERT INTO `config` SET TYPE='string', NAME='web_dotcmd', VALUE='/usr/bin/neato', COMMENT='Graphviz binary to use (cf man dot for choices)';
-INSERT INTO `config` SET TYPE='boolean', NAME='web_showdhcp', VALUE='false', COMMENT='Show DHCP configuration-related fields';
-INSERT INTO `config` SET TYPE='boolean', NAME='web_showdns', VALUE='false', COMMENT='Show DNS configuration-related fields';
-INSERT INTO `config` SET TYPE='string', NAME='web_logtail_file', VALUE='/var/log/messages', COMMENT='Logfile to tail (must be readable by web daemon)';
-INSERT INTO `config` SET TYPE='integer', NAME='web_logtail_length', VALUE='100', COMMENT='Number of lines to tail';
-INSERT INTO `config` SET TYPE='string', NAME='entityname', VALUE='ACME', COMMENT='Name of the company/department';
-INSERT INTO `config` SET TYPE='string', NAME='unknown', VALUE='%unknown%', COMMENT='Mask for unknown machines in the database';
-INSERT INTO `config` SET TYPE='boolean', NAME='xls_output', VALUE='false', COMMENT='Enable XLS export from web interface';
-INSERT INTO `config` SET TYPE='integer', NAME='delete_users_threshold', VALUE='360', COMMENT='Delete users not seen in the central directory for more than XX days';
-
-
-UPDATE config SET comment='Global default vlan index for unknowns. Set to 0 for default deny' WHERE name='default_vlan';
-UPDATE config SET comment='Vlan index for unknowns when auto added to the DB, normally=default_vlan' WHERE name='set_vlan_for_unknowns';
-UPDATE config SET comment='Enable the use of a default vlan index per port - 0/1' WHERE name='use_port_default_vlan';
-
 -- DB fixes
 alter table systems change column description description varchar(100) default null comment "v3: not used";
 alter table systems change column uid uid int(11) default null;
