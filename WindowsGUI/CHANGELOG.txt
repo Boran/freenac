@@ -139,6 +139,8 @@ v3.0.0.152/3.1.08/SB:
   
   Add links to the User/tech/install guides on the Support tab.
   
-v3.0.0.154/15.1.08/SB: Oops, the read-only mode wasn't wuite readonly!
+v3.0.0.154/15.Jan.08/SB: Oops, the read-only mode wasn't quite readonly!
   Some minor text corrections in Admin->User
-    
+v3.0.0.155/28.Jan.08/SB:
+  Edit > Naming: DNS parameters were not being saved (change systems update query)
+  Add mask for IP address in format xxx.xxx.xxx.xxx

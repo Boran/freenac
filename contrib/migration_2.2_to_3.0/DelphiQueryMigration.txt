@@ -61,18 +61,26 @@ WHERE
   
 -- quSwitch
 SELECT switch.id, ip, switch.name, location, location.name as LocationName,
-  building.name as building, comment, swgroup, notify, scan, hw, sw 
+  building.name as building, comment, swgroup, notify, vlan_id,
+  scan, hw, sw, last_monitored, up 
   FROM switch 
   LEFT JOIN location ON switch.location = location.id 
-  LEFT JOIN building ON location.building_id = building.id   
+  LEFT JOIN building ON location.building_id = building.id
   limit 1;
- 
+
+INSERT INTO switch
+    (ip,name,location,comment,swgroup,notify,scan,vlan_id)
+  VALUES
+    (:ip,name,:location,:comment,:swgroup,:notify,:scan,:vlan_id) 
 UPDATE switch s
   SET s.name=:name, s.comment=:comment, s.swgroup=:swgroup, s.notify=:notify, 
-  s.location=:location
+  s.location=:location, s.scan=:scan, s.vlan_id=:vlan_id
   WHERE s.id=:Old_id   
   [The location updating is provided by a LookupCombox in Delphi]    
-  
+DELETE FROM switch
+  WHERE id=:Old_id
+
+
   
   
 -- quUsers
@@ -218,15 +226,38 @@ SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_conn
   LEFT JOIN sys_os2  os2 ON s.os2 = os2.id 
   LEFT JOIN sys_os3  os3 ON s.os3 = os3.id       
   LEFT JOIN sys_class  cl1 ON s.class  = cl1.id        
-  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id  
+  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id
   
-# testing: 
-# SELECT s.id, s.uid,
-  s.name, r_ping_timestamp    
+  
+  
+# 14.12.07
+SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_connect,
+  health.value AS HealthStatus, dhcp_fix, dhcp_ip, dns_alias,
+  v1.default_id as vlan_default_id, v1.id as vlanid,  v2.default_name as LastVlan,
+  v1.default_name as vlanname, v1.vlan_group as vlangroup, v1.vlan_description,
+  s.status, vstatus.value as statusname,
+  s.name, s.inventory, s.comment, 
+  s.mac, ChangeDate, LastSeen, building.name as building,
+  s.office, port.name as port, s.LastPort as portid, l2.name as PortLocation, port.comment as PortComment,
+  switch.ip as switch, switch.name as SwitchName, l3.name as SwitchLocation, 
+  switch.swgroup, switch.comment as SwitchComment,
+  CONCAT(patchcable.outlet, ', ', l2.name, ', ', patchcable.comment) as PatchCable, 
+  s.history,
+  users1.username as user_name,      users1.TelephoneNumber as UserTel,  
+  users1.Surname as UserSurname,     users1.GivenName as UserForename,    users1.Department as UserDept,
+  users1.rfc822mailbox as UserEmail, users1.HouseIdentifier as UserHouse, users1.PhysicalDeliveryOfficeName as UserOffice,
+  users1.Mobile as UserMobileTel,    users1.LastSeenDirectory as UserLastSeenDirex, 
+  users2.username as ChangeUser, 
+  CONCAT(users2.Surname, ' ', users2.GivenName, ' ', users1.Department) as ChangeUserFullName,
+  s.os, os.value as OsName, os1, os1.value as os1name, os2, os2.value as os2name, 
+  os3, os3.value as os3name, s.os4,
+  class, class2, cl1.value as ClassName, cl2.value as Class2Name,
+  scannow, s.expiry, r_ip, r_timestamp, r_ping_timestamp    
   FROM systems s
   LEFT JOIN vlan v1      on s.vlan = v1.id 
   LEFT JOIN vlan v2      on s.LastVlan = v2.id   
-  LEFT JOIN vstatus      on s.status = vstatus.id  
+  LEFT JOIN vstatus      on s.status = vstatus.id
+  LEFT JOIN health       on s.health = health.id    
   LEFT JOIN users users1 on s.uid = users1.id  
   LEFT JOIN users users2 on s.ChangeUser = users2.id   
   LEFT JOIN location l1  ON s.office = l1.id 
@@ -241,12 +272,15 @@ SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_conn
   LEFT JOIN sys_os2  os2 ON s.os2 = os2.id 
   LEFT JOIN sys_os3  os3 ON s.os3 = os3.id       
   LEFT JOIN sys_class  cl1 ON s.class  = cl1.id        
-  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id    
+  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id
+  limit 1 \G;    
+     
   
 UPDATE `systems` SET
   uid=:uid, vlan=:vlan, status=:status, name=:name, inventory=:inventory, comment=:comment,
   mac=:mac, office=:office, history=:history, os=:os, os1=:os1, os2=:os2, os3=:os3, os4=:os4,
-  class=:class, expiry=:expiry, class2=:class
+  class=:class, expiry=:expiry, class2=:class,
+  dhcp_ip=:dhcp_ip, dhcp_fix=:dhcp_fix, dns_alias=:dns_alias
 WHERE  
   `id` = :Old_1
 
@@ -424,7 +458,9 @@ begin
  ---Filter cxgrid	     ---
   general filter: 
      DataController.Filter.Active=true,	
-     DataController.Filter.PercentWildCardd=*    Options.fcoCaseInsensitive=true
+     DataController.Filter.PercentWildCardd=*    
+                          .Options.fcoCaseInsensitive=true
+                          .Options.AutoDataSetFilter=true  (overview)
      DataController.Options.dcoAnsiSort=true       
   FilterRow.Visible=true    Enable filter row at the top.
   OptionsCustomize.ColumnHiding=true
