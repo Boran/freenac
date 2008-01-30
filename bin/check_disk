@@ -9,6 +9,7 @@
 # Example cron usage:
 #    0 8-18 * * 1-5 /opt/nac/bin/check_disk  99 200
 #
+# 2007.11.28 SB: Ubuntu 7.10, sync with freenac version
 # 2008.01.10 HO: Added sanity checks to test if the variable to compare is a number
 #
 # 2007.11.03 SB: Strange, 'tail -n 1" needed on linux for $tail
@@ -24,7 +25,10 @@
 admin=root
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
-ignore="nfs|shm|smb|hsfs|cdfs|subfs|devpts|usbdevfs|sysfs|iso9660|/dev/fd|mnttab|/proc|/mnt|securityfs"     # Ignore these Filesystems
+
+# Ignore these Filesystems
+ignore="nfs|shm|smb|hsfs|cdfs|subfs|devpts|usbdevfs|sysfs|iso9660|/dev/fd|mnttab|/proc|/mnt|/sys|securityfs"    
+
 subject="Disk/performance problems"
 subject2="Disk/performance FIXED - OK"
 tempfile=/tmp/check_disk.$$
@@ -57,8 +61,9 @@ elif [ "$os" = "Linux" ] ; then
   df='df -P'
   load=`uptime | awk -F',' '{print 100*$4}' `  # load over 5 mins
   top="top -b -n 1"
-  #tail="tail -n 2"
   tail="tail -n 1"
+  #tail="tail +2"
+  #tail="tail -n +2"
   # Gentoo: differentiate later: tail="tail -n 2"
   mailit=/bin/mail
   mount="mount";
