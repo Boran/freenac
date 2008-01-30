@@ -53,26 +53,100 @@ $logger=Logger::getInstance();
 $conf=Settings::getInstance();
 
 /**
+* Tell if an IPv4 address is valid (well-formed)
+* @param string $ip	IP address to test
+* return boolean	True if IP address is valid, false otherwise
+*/
+function valid_ip($ip)
+{
+   $tmp = explode(".", $ip);
+   if (count($tmp) != 4)
+   {
+      return false;
+   }
+   else
+   {
+      foreach($tmp AS $sub)
+      {
+         if (!preg_match("/^([0-9]{1,3})$/", $sub))
+         {
+            return false;
+         }
+      }
+   }
+   return true;
+}
+
+/**
 * Get WINS Name from IP Address
+* Original contribution from johnboy68
 * @param string $ip   Ip Address
 * @return string      WINS Name
 */
 function getwinsfromip($ip)
 {
+   #Try to avoid command injection
+   $ip = ereg_replace("[|&;`]", "", $ip);
+   if (! valid_ip($ip))
+   {
+      echo "INVALID IP";
+      return false;
+   }
+   /*
+   Successful query
+   
+   added interface ip=192.168.201.216 bcast=192.168.201.255 nmask=255.255.255.0
+   Socket opened.
+   Looking up status of 192.168.202.222
+        HOST59          <00> -         M <ACTIVE>
+        WORK            <00> - <GROUP> M <ACTIVE>
+        HOST59          <20> -         M <ACTIVE>
+        WORK            <1e> - <GROUP> M <ACTIVE>
+        WORK            <1d> -         M <ACTIVE>
+        ..__MSBROWSE__. <01> - <GROUP> M <ACTIVE>
+
+        MAC Address = CC-00-FF-EE-EE-EE
+   */
+
+   /*
+   Failed query
+   
+   added interface ip=192.168.201.216 bcast=192.168.201.255 nmask=255.255.255.0
+   Socket opened.
+   Looking up status of 192.168.202.223
+   No reply from 192.168.202.223
+   */
+
+   /*
+   Case where we are trying to lookup the hostname of the server running this script
+
+   added interface ip=192.168.201.216 bcast=192.168.201.255 nmask=255.255.255.0
+   Socket opened.
+   Looking up status of 192.168.202.216
+   No reply from 192.168.202.216   
+   */
+
+   #Call nmblookup for this ip address
    $command = "nmblookup -A $ip";
    $output = shell_exec($command);
    $fmoutput= (str_split("$output",strpos($output,"\n")));
-   print_r($fmoutput);
-   $foutput = substr($fmoutput[1],0,strpos($fmoutput[1]," "));
-   $foutput= trim($foutput);
-   echo $foutput;
+   $foutput = explode("$ip",$fmoutput[1]); // all after the IP
+   $foutput = explode(" ",$foutput[1]);    // fields sep. by spaces
+   $foutput = trim($foutput[0]);           // get first filed, i.e. STNS59 above
+   # Check if we have a result;
    if ($foutput=="No")
    {
-      return $ip;
+      #No result, return IP address
+      return mysql_escape_string($ip);
+   }
+   else if (strpos($ip,"bcast="))
+   {
+      return mysql_escape_string($ip);
    }
    else
    {
-      return $foutput;
+      #Return the hostname we've just learnt
+      return mysql_escape_string($foutput);
    }
 }
 

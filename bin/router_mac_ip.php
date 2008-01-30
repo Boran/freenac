@@ -128,23 +128,29 @@ foreach (split(' ', $conf->core_routers) as $router) {
      }
 
 
+     
      // v3: get DNS name for all IPs
      $fqdn=gethostbyaddr($ip);
-       if($fqdn!=$ip) { // We got the last host name, now save it
-         $fqdn = strtolower($fqdn);
-         // Sometime a DHCP server adds a 12 digit number with the IP to thename, we strip it here.
-         // myhost-193005232074.mydomain.net
-         $fqdn=preg_replace('/-\d\d\d\d\d\d\d\d\d\d\d\d\./', '.', $fqdn);
-         $query_dns=", last_hostname='$fqdn' ";
-         list($hostname_only) = split('[.]', $fqdn);  // strip domain name
-         $logger->debug("Save last DNS of $mac as $hostname_only, $fqdn", 2);
-
-       } else {
-         $query_dns='';     // don't set last_hostname
-         $hostname_only='';
-         $fqdn='';
-       }
-
+     if($fqdn=$ip) 
+     { //If DNS query doesn't work, try WINS Query.
+        $fqdn=getwinsfromip($ip); // Defined in funcs.inc.php
+     }
+     if ($fqdn!=$ip) 
+     { // We got the last host name, now save it
+        $fqdn = strtolower($fqdn);
+        // Sometime a DHCP server adds a 12 digit number with the IP to thename, we strip it here.
+        // myhost-193005232074.mydomain.net
+        $fqdn=preg_replace('/-\d\d\d\d\d\d\d\d\d\d\d\d\./', '.', $fqdn);
+        $query_dns=", last_hostname='$fqdn' ";
+        list($hostname_only) = split('[.]', $fqdn);  // strip domain name
+        $logger->debug("Save last DNS of $mac as $hostname_only, $fqdn", 2);
+     } 
+     else 
+     {
+        $query_dns='';     // don't set last_hostname
+        $hostname_only='';
+        $fqdn='';
+     } 
 
      // suggestion from PB: (Reply from SB: elegant as its just one query, simpler, but very mysql specific?)
      #$query1="INSERT INTO systems SET  mac='$mac', vlan='1', status=3, r_timestamp=NOW(), r_ip='$ip', comment='Auto discovered by router_mac_ip'";
