@@ -132,8 +132,7 @@ function getwinsfromip($ip)
    #Call nmblookup for this ip address
    $command = "nmblookup -A $ip";
    $output = shell_exec($command);
-   $fmoutput= (str_split("$output",strpos($output,"\n")));
-   $foutput = explode("$ip",$fmoutput[1]); // all after the IP
+   $foutput = explode("$ip",$output); // all after the IP
    $foutput = explode(" ",$foutput[1]);    // fields sep. by spaces
    $foutput = trim($foutput[0]);           // get first filed, i.e. STNS59 above
    # Check if we have a result;
