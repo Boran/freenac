@@ -674,21 +674,6 @@ function check_and_abort($message,$resource)	//This function checks if there is 
    }
 }
 
-function valid_ip($ip)
-{
-   if (ereg("^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$",$ip,$res))
-   {
-      for($i=1;$i<5;$i++)
-        if($res[$i]>255)
-          return FALSE;
-   }
-   else 
-   {
-      return FALSE;
-   }
-   return TRUE;
-}
-
 function ip_to_bin($ip)
 {
    $address=explode('.',$ip);

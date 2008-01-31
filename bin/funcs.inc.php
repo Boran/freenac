@@ -72,6 +72,10 @@ function valid_ip($ip)
          {
             return false;
          }
+         if (($sub < 1) || ($sub > 255))
+         {
+            return false;
+         }
       }
    }
    return true;
