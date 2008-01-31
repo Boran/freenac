@@ -89,7 +89,6 @@ function getwinsfromip($ip)
    $ip = ereg_replace("[|&;`]", "", $ip);
    if (! valid_ip($ip))
    {
-      echo "INVALID IP";
       return false;
    }
    /*
