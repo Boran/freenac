@@ -131,13 +131,13 @@ foreach (split(' ', $conf->core_routers) as $router) {
      
      // v3: get DNS name for all IPs
      $fqdn=gethostbyaddr($ip);
-     if($fqdn=$ip) 
+     if($fqdn == $ip) 
      { //If DNS query doesn't work, try WINS Query.
         $fqdn=getwinsfromip($ip); // Defined in funcs.inc.php
      }
-     if ($fqdn!=$ip) 
+     if ($fqdn != $ip) 
      { // We got the last host name, now save it
-        $fqdn = strtolower($fqdn);
+        $fqdn = mysql_escape_string(strtolower($fqdn));
         // Sometime a DHCP server adds a 12 digit number with the IP to thename, we strip it here.
         // myhost-193005232074.mydomain.net
         $fqdn=preg_replace('/-\d\d\d\d\d\d\d\d\d\d\d\d\./', '.', $fqdn);
