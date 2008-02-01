@@ -23,6 +23,7 @@
  */
 
 require_once 'funcs.inc.php';
+require_once 'snmp_defs.inc.php';
 
 $logger->setDebugLevel(0);
 $logger->setLogToStdOut(false);

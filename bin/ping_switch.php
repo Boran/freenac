@@ -31,8 +31,8 @@
 
 chdir(dirname(__FILE__));
 set_include_path("../:./");
-require_once "bin/funcs.inc.php";               # Load settings & common functions
-require_once "bin/snmp_defs.inc.php";
+require_once "./funcs.inc.php";               # Load settings & common functions
+require_once "./snmp_defs.inc.php";
 
 $logger->setDebugLevel(0);       // 0=errors only, 1=medium, 3=queries
 $logger->setLogToStdOut(true);

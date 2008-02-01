@@ -41,6 +41,7 @@
 
 
 require_once "funcs.inc.php";               # Load settings & common functions
+require_once 'snmp_defs.inc.php';
 # Debugging
 $logger->setDebugLevel(0);
 $logger->setLogToStdOut(false);
@@ -102,7 +103,10 @@ foreach (split(' ', $conf->core_routers) as $router) {
     continue;
   }
   else {
-    $results=array_map("remove_type",$results);  // remove type prefix
+    if (is_array($results))
+       $results=array_map("remove_type",$results);  // remove type prefix
+    else
+       continue;
   }
 
   // go through each pair and update the SYSTEMS table
