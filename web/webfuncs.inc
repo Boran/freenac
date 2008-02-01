@@ -36,6 +36,35 @@ function db_connect($username,$password)
 }
 */
 
+function vlans_for($username)
+{
+   global $ad_auth;
+   if ( $ad_auth )
+   {
+      if ( ! $username )
+      {
+         return true;
+      }
+      $user = mysql_escape_string($username);
+      $query = "select GuiVlanRights from users where username='$user';";
+      $res = mysql_query($query);
+      if ( ! $res )
+      {
+         return true;
+      }
+      if (mysql_num_rows($res)>0)
+      {
+         $restriction = mysql_fetch_row($res);
+         $restriction = $restriction[0];
+      }
+      return $restriction;
+   }
+   else
+   {
+      return false;
+   }
+}
+
 function ismemberof($username,$group)
 {
    ## This function says whether a username in the form user@domain.com is belongs to the AD group specified
@@ -100,12 +129,26 @@ function ismemberof($username,$group)
 function user_rights($username)
 #This function outputs the rights associated to the username
 {
+   
    global $dbuser,$dbpass;
    db_connect($dbuser,$dbpass);
+   if (empty($username))
+   {
+      echo "<html>\n";
+      echo "<head>\n";
+      echo "\t<title>Oops, we have an empty username</title>\n";
+      echo "</head>\n";
+      echo "<body>\n";
+      echo "\tCan't authenticate an <strong>empty username</strong>.<br /><br />\n";
+      echo "\tIt seems as if you were trying to perform AD auth but you forgot to enable the required <strong>mod_authnz_ldap</strong> module in Apache<br />\n";
+      echo "</body>\n";
+      echo "</html>\n";
+      die();
+   }
    $query='select * from guirights order by code desc;';
    $res=mysql_query($query);
    $rights=-1;
-   while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
+   /*while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
    {
       if ( ! empty($result['ad_group']))
          if (ismemberof($username,$result['ad_group']))
@@ -113,6 +156,27 @@ function user_rights($username)
             $rights<$result['code'] ? $rights=$result['code'] : $result['code']=$rights;
             break;
          }
+   }*/
+   $user = explode('@',$username);
+   $user = $user[0];
+   $user = mysql_escape_string($user);
+   $query = "select nac_rights from users where username='$user'";
+   $res = mysql_query($query);
+   if ($res)
+   {
+      if (mysql_num_rows($res)>0)
+      {
+         $rights = mysql_fetch_row($res);
+         $rights = $rights[0];
+      }
+      else
+      {
+         $rights = -1;
+      }
+   }
+   else
+   {
+      die (); 
    }
    return $rights;
 }

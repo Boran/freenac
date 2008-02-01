@@ -180,9 +180,29 @@ function page()
                    echo get_status($row['status']);
                    echo '</td></tr>'."\n";
                    // VLAN
-                   echo '<tr><td>VLAN:</td><td>'."\n";
+                   ## See if we need to restrict the vlans shown to this user.
+                   $user = $temp;
+                   $restriction = vlans_for($user);
+                   echo "<tr><td>VLAN: </td><td>\n";
                    echo '<select name="vlan">';
-                   $sql='SELECT id, default_name as value FROM vlan ORDER BY value;'; // Get details for all vlans
+                   if ( $restriction )
+                   {
+                      $sql = "SELECT id, default_name AS value FROM vlan WHERE ";
+                      $restriction .= ',';
+                      $vlans_to_show = explode(',',$restriction);
+                      $number_vlans = count($vlans_to_show) - 1;
+                      for ($i = 0; $i < $number_vlans; $i++)
+                      {
+                         if ( $i < ($number_vlans - 1) )
+                            $sql .= "id = '{$vlans_to_show[$i]}' OR ";
+                         else
+                            $sql .= "id = '{$vlans_to_show[$i]}'";
+                      }
+                      $sql.=' ORDER BY value;';
+                   }
+                   else
+                      $sql='SELECT id, default_name as value FROM vlan ORDER BY value;'; // Get details for all vlans
+
                    $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
                    if (mysql_num_rows($res)>0){
                         while ($r=mysql_fetch_array($res)){
@@ -269,7 +289,7 @@ function page()
                    echo get_status($row['status']);
                    echo '</td></tr>'."\n";
                    // VLAN
-                   echo '<tr><td>VLAN:</td><td>'."\n";
+                   echo "<tr><td>VLAN: </td><td>\n";
                    $sql="SELECT default_name FROM vlan where id='{$row['vlan']}';"; // Get details for all vlans
                    $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
                    if (mysql_num_rows($res)>0)
@@ -322,16 +342,42 @@ function page()
    else if ($_REQUEST['action']=='update' && is_numeric($_REQUEST['id'])
                         && is_numeric($_REQUEST['status']) && is_numeric($_REQUEST['vlan'])
                         && is_numeric($_REQUEST['username']) && $_REQUEST['name']!='') {
-        // make sure we got a matching systems, a vlan with this number and a useraccount
-        $sql='SELECT port.id, port.name as port, swi.name as switch, users.username, vlan.id as vlan
+        // Check if the user is allowed to assign that vlan
+        $update_vlan = false;
+        $restriction = vlans_for($temp);
+        if ( $restriction )
+        {
+           $restrictions = explode(',', $restriction);
+           if (array_search($_REQUEST['vlan'], $restrictions) === false)
+           {
+              echo "<br /><strong>You are not allowed to assign that vlan.</strong><br />";
+               // we're done. and as all tags need to be closed, print the footer now!    
+              echo print_footer();
+              echo "<br /><p align=\"center\"><a href=\"index.php\">NAC menu</a></p>"; 
+              die();
+           }
+           else
+           {
+              $update_vlan = true;
+           }
+        }
+        else
+        {
+           $update_vlan = true;
+        }
+        if ( $update_vlan )
+        {
+        
+           // make sure we got a matching systems, a vlan with this number and a useraccount
+           $sql='SELECT port.id, port.name as port, swi.name as switch, users.username, vlan.id as vlan
                 FROM systems as sys LEFT JOIN port as port ON port.id=sys.lastport LEFT JOIN switch as swi ON port.switch=swi.id, vlan, users
                 WHERE sys.id='.$_REQUEST['id'].' AND vlan.id='.$_REQUEST['vlan'].' AND users.id=\''.$_REQUEST['username'].'\';';
-        $result=mysql_query($sql) or die('Query failed: ' . mysql_error());
-        if (mysql_num_rows($result)!=1){
+           $result=mysql_query($sql) or die('Query failed: ' . mysql_error());
+           if (mysql_num_rows($result)!=1){
                 echo 'System, VLAN or User missmatch.';
-        }
-        // Got it, prepare statment and insert changes into DB
-        else {
+           }
+           // Got it, prepare statment and insert changes into DB
+           else {
                 if ($rights>=2)
                 {
                    $row=mysql_fetch_array($result);
@@ -373,6 +419,7 @@ function page()
                    // Ask the user if he want's to restart the associated port
                    echo '<br />To restart Port '.$row['port'].' on Switch '.$row['switch'].' click <a href="'.$_SERVER['PHP_SELF'].'?action=restartport&port='.$row['id'].'">here</a>.';
                 }
+              }
         }
    }
    // parse request and delete record
@@ -510,8 +557,29 @@ function page()
                 // Status
                 echo '<td>&nbsp;</td>'."\n";
                 // VLAN
+                // VLAN
+                ## See if we need to restrict the vlans shown to this user.
+                $user = $temp;
+                $restriction = vlans_for($user);
                 echo '<td><select name="vlan">';
-                $sql='SELECT id, default_name as value FROM vlan ORDER BY value;'; // Get details for all vlans
+                if ( $restriction )
+                {
+                   $sql = "SELECT id, default_name AS value FROM vlan WHERE ";
+                   $restriction .= ',';
+                   $vlans_to_show = explode(',',$restriction);
+                   $number_vlans = count($vlans_to_show) - 1;
+                   for ($i = 0; $i < $number_vlans; $i++)
+                   {
+                      if ( $i < ($number_vlans - 1) )
+                         $sql .= "id = '{$vlans_to_show[$i]}' OR ";
+                      else
+                         $sql .= "id = '{$vlans_to_show[$i]}'";
+                   }
+                   $sql.=' ORDER BY value;';
+                }
+                else
+                   $sql='SELECT id, default_name as value FROM vlan ORDER BY value;'; // Get details for all vlans
+
                 $res=mysql_query($sql) or die('Query failed: ' . mysql_error());
                 if (mysql_num_rows($res)>0){
                         echo '<option value=""></option>'."\n";
