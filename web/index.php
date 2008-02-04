@@ -34,7 +34,6 @@ EOF;
 if ($ad_auth===true)
 {
    $rights=user_rights($_SERVER['PHP_AUTH_USER']);
-   echo "RIGHTS: $rights;";
    if ($rights>=1)
    {
       echo header_read();
