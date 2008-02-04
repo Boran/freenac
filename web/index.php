@@ -33,7 +33,8 @@ EOF;
 
 if ($ad_auth===true)
 {
-   $rights=user_rights($_SERVER['AUTHENTICATE_USERPRINCIPALNAME']);
+   $rights=user_rights($_SERVER['PHP_AUTH_USER']);
+   echo "RIGHTS: $rights;";
    if ($rights>=1)
    {
       echo header_read();
@@ -41,7 +42,9 @@ if ($ad_auth===true)
       echo main_menu();
       echo read_footer();   
    }
-   else echo "<h1>ACCESS DENIED</h1>";
+   else {
+      echo "<h1>ACCESS DENIED</h1>";
+   }
 }
 else
 {

@@ -54,7 +54,7 @@ $res = mysql_query($sel) or die('Query failed: ' . mysql_error());
 
 if ($ad_auth===true)
 {
-   $rights=user_rights($_SERVER['AUTHENTICATE_USERPRINCIPALNAME']);
+   $rights=user_rights($_SERVER['PHP_AUTH_USER']);
    if ($rights>=1)
    {
       echo header_read();

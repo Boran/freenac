@@ -132,12 +132,13 @@ function page()
    // let's find out what we're supposed to do
    // edit the properties of a given system
    $remote_host=validate_webinput($_SERVER['REMOTE_ADDR']);
-   if (empty($_SERVER['AUTHENTICATE_USERPRINCIPALNAME']))
+   if (empty($_SERVER['PHP_AUTH_USER']))
       $uname='1';
    else
    {
-      $temp=explode('@',$_SERVER['AUTHENTICATE_USERPRINCIPALNAME']);
-      $temp=validate_webinput($temp[0]);
+      #$temp=explode('@',$_SERVER['PHP_AUTH_USER']);
+      #$temp=validate_webinput($temp[0]);
+      $temp=validate_webinput($temp);
       $res=mysql_query("select id from users where username like '%$temp%'");
       if (mysql_num_rows($res)!=1)
          $uname='1';
@@ -182,14 +183,13 @@ function page()
                    // VLAN
                    ## See if we need to restrict the vlans shown to this user.
                    $user = $temp;
-                   $restriction = vlans_for($user);
+                   $restriction = vlans_for($_SERVER['PHP_AUTH_USER']);
                    echo "<tr><td>VLAN: </td><td>\n";
                    echo '<select name="vlan">';
                    if ( $restriction )
                    {
                       $sql = "SELECT id, default_name AS value FROM vlan WHERE ";
-                      $restriction .= ',';
-                      $vlans_to_show = explode(',',$restriction);
+                      $vlans_to_show = $restriction;
                       $number_vlans = count($vlans_to_show) - 1;
                       for ($i = 0; $i < $number_vlans; $i++)
                       {
@@ -344,10 +344,10 @@ function page()
                         && is_numeric($_REQUEST['username']) && $_REQUEST['name']!='') {
         // Check if the user is allowed to assign that vlan
         $update_vlan = false;
-        $restriction = vlans_for($temp);
+        $restriction = vlans_for($_SERVER['PHP_AUTH_USER']);
         if ( $restriction )
         {
-           $restrictions = explode(',', $restriction);
+           $restrictions = $restriction;
            if (array_search($_REQUEST['vlan'], $restrictions) === false)
            {
               echo "<br /><strong>You are not allowed to assign that vlan.</strong><br />";
@@ -559,14 +559,13 @@ function page()
                 // VLAN
                 // VLAN
                 ## See if we need to restrict the vlans shown to this user.
-                $user = $temp;
+                $user = $_SERVER['PHP_AUTH_USER'];
                 $restriction = vlans_for($user);
                 echo '<td><select name="vlan">';
-                if ( $restriction )
+                if ( $restriction && is_array($restriction) )
                 {
                    $sql = "SELECT id, default_name AS value FROM vlan WHERE ";
-                   $restriction .= ',';
-                   $vlans_to_show = explode(',',$restriction);
+                   $vlans_to_show = $restriction;
                    $number_vlans = count($vlans_to_show) - 1;
                    for ($i = 0; $i < $number_vlans; $i++)
                    {
@@ -654,7 +653,7 @@ function page()
 
 if ($ad_auth===true)
 {
-   $rights=user_rights($_SERVER['AUTHENTICATE_USERPRINCIPALNAME']);
+   $rights=user_rights($_SERVER['PHP_AUTH_USER']);
    if ($rights>=1)
    {
       page();

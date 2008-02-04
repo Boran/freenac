@@ -43,21 +43,32 @@ function vlans_for($username)
    {
       if ( ! $username )
       {
-         return true;
+         $restriction[0]='';
+         return $restriction;
       }
       $user = mysql_escape_string($username);
       $query = "select GuiVlanRights from users where username='$user';";
       $res = mysql_query($query);
       if ( ! $res )
       {
-         return true;
+         $restriction[0]='';
+         return $restriction;
       }
       if (mysql_num_rows($res)>0)
       {
          $restriction = mysql_fetch_row($res);
          $restriction = $restriction[0];
+         if ( empty($restriction) )
+            return false;
+         else
+         {
+            $restriction .= ',';
+            $restriction = explode(',',$restriction);
+            return $restriction;
+         }
       }
-      return $restriction;
+      else
+         return false;
    }
    else
    {
