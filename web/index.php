@@ -38,6 +38,14 @@ if ($ad_auth===true)
    {
       echo header_read();
       echo main_stuff();
+      echo "<div align=\"right\">Rights: <strong>";
+      if ($rights == 99)
+         echo "Administrator";
+      else if ($rights == 2)
+         echo "Write";
+      else 
+         echo "Read";
+      echo "</strong></div>\n";
       echo main_menu();
       echo read_footer();   
    }

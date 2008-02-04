@@ -186,19 +186,31 @@ function page()
                    $restriction = vlans_for($_SERVER['PHP_AUTH_USER']);
                    echo "<tr><td>VLAN: </td><td>\n";
                    echo '<select name="vlan">';
+                   if ( $rights == 99 )
+                      $restriction = false;
+                   if ( ( $rights == 2 ) && ( ! $restriction ) )
+                      $restriction = array('');
                    if ( $restriction )
                    {
-                      $sql = "SELECT id, default_name AS value FROM vlan WHERE ";
                       $vlans_to_show = $restriction;
                       $number_vlans = count($vlans_to_show) - 1;
-                      for ($i = 0; $i < $number_vlans; $i++)
+                      $sql = "SELECT id, default_name AS value FROM vlan WHERE ";
+                      if ( $number_vlans == 0 )
                       {
-                         if ( $i < ($number_vlans - 1) )
-                            $sql .= "id = '{$vlans_to_show[$i]}' OR ";
-                         else
-                            $sql .= "id = '{$vlans_to_show[$i]}'";
+                         echo "<option value=\"\">No vlans defined</option>";
+                         $sql .= "id='';";
                       }
-                      $sql.=' ORDER BY value;';
+                      else
+                      {
+                         for ($i = 0; $i < $number_vlans; $i++)
+                         {
+                            if ( $i < ($number_vlans - 1) )
+                               $sql .= "id = '{$vlans_to_show[$i]}' OR ";
+                            else
+                               $sql .= "id = '{$vlans_to_show[$i]}'";
+                         }
+                         $sql.=' ORDER BY value;';
+                      }
                    }
                    else
                       $sql='SELECT id, default_name as value FROM vlan ORDER BY value;'; // Get details for all vlans
@@ -345,6 +357,10 @@ function page()
         // Check if the user is allowed to assign that vlan
         $update_vlan = false;
         $restriction = vlans_for($_SERVER['PHP_AUTH_USER']);
+        if ( $rights == 99 )
+           $restriction = false;
+        if ( ( $rights == 2 ) && ( ! $restriction ) )
+            $restriction = array('');
         if ( $restriction )
         {
            $restrictions = $restriction;
@@ -562,19 +578,32 @@ function page()
                 $user = $_SERVER['PHP_AUTH_USER'];
                 $restriction = vlans_for($user);
                 echo '<td><select name="vlan">';
+                if ( $rights == 99 )
+                   $restriction = false;
+                if ( ( $rights == 2 ) && ( ! $restriction ) )
+                   $restriction = array('');
                 if ( $restriction && is_array($restriction) )
                 {
-                   $sql = "SELECT id, default_name AS value FROM vlan WHERE ";
                    $vlans_to_show = $restriction;
                    $number_vlans = count($vlans_to_show) - 1;
-                   for ($i = 0; $i < $number_vlans; $i++)
+                   $sql = "SELECT id, default_name AS value FROM vlan WHERE ";
+                   if ( $number_vlans == 0 )
                    {
-                      if ( $i < ($number_vlans - 1) )
-                         $sql .= "id = '{$vlans_to_show[$i]}' OR ";
-                      else
-                         $sql .= "id = '{$vlans_to_show[$i]}'";
+                      echo "<option value=\"\">No vlans defined</option>";
+                      $sql .= "id='';";
                    }
-                   $sql.=' ORDER BY value;';
+                   else
+                   {
+                      for ($i = 0; $i < $number_vlans; $i++)
+                      {
+                         if ( $i < ($number_vlans - 1) )
+                            $sql .= "id = '{$vlans_to_show[$i]}' OR ";
+                         else
+                            $sql .= "id = '{$vlans_to_show[$i]}'";
+                      }
+                      $sql.=' ORDER BY value;';
+                   }
+                   echo $sql;
                 }
                 else
                    $sql='SELECT id, default_name as value FROM vlan ORDER BY value;'; // Get details for all vlans
