@@ -39,7 +39,7 @@ if ($conf->web_xls_output){
 
 function page()
 {
-   global $dbhost, $dbuser, $dbname, $dbpass,$rights,$conf;
+   global $dbhost, $dbuser, $dbname, $dbpass,$rights,$conf, $ad_auth;
    //session setup
    session_name('FreeNAC');
    session_start();
@@ -182,14 +182,21 @@ function page()
                    echo '</td></tr>'."\n";
                    // VLAN
                    ## See if we need to restrict the vlans shown to this user.
-                   $user = $temp;
-                   $restriction = vlans_for($_SERVER['PHP_AUTH_USER']);
                    echo "<tr><td>VLAN: </td><td>\n";
                    echo '<select name="vlan">';
-                   if ( $rights == 99 )
+                   if ($ad_auth === true)
+                   { 
+                      $user = $temp;
+                      $restriction = vlans_for($_SERVER['PHP_AUTH_USER']);
+                      if ( $rights == 99 )
+                         $restriction = false;
+                      if ( ( $rights == 2 ) && ( ! $restriction ) )
+                         $restriction = array('');
+                   }
+                   else
+                   {
                       $restriction = false;
-                   if ( ( $rights == 2 ) && ( ! $restriction ) )
-                      $restriction = array('');
+                   }
                    if ( $restriction )
                    {
                       $vlans_to_show = $restriction;
@@ -356,11 +363,18 @@ function page()
                         && is_numeric($_REQUEST['username']) && $_REQUEST['name']!='') {
         // Check if the user is allowed to assign that vlan
         $update_vlan = false;
-        $restriction = vlans_for($_SERVER['PHP_AUTH_USER']);
-        if ( $rights == 99 )
+        if ( $ad_auth === true )
+        {
+           $restriction = vlans_for($_SERVER['PHP_AUTH_USER']);
+           if ( $rights == 99 )
+              $restriction = false;
+           if ( ( $rights == 2 ) && ( ! $restriction ) )
+               $restriction = array('');
+        }
+        else
+        {
            $restriction = false;
-        if ( ( $rights == 2 ) && ( ! $restriction ) )
-            $restriction = array('');
+        }
         if ( $restriction )
         {
            $restrictions = $restriction;
@@ -575,13 +589,20 @@ function page()
                 // VLAN
                 // VLAN
                 ## See if we need to restrict the vlans shown to this user.
-                $user = $_SERVER['PHP_AUTH_USER'];
-                $restriction = vlans_for($user);
                 echo '<td><select name="vlan">';
-                if ( $rights == 99 )
+                if ($ad_auth === true )
+                {
+                   $user = $_SERVER['PHP_AUTH_USER'];
+                   $restriction = vlans_for($user);
+                   if ( $rights == 99 )
+                      $restriction = false;
+                   if ( ( $rights == 2 ) && ( ! $restriction ) )
+                      $restriction = array('');
+                }
+                else
+                {
                    $restriction = false;
-                if ( ( $rights == 2 ) && ( ! $restriction ) )
-                   $restriction = array('');
+                }
                 if ( $restriction && is_array($restriction) )
                 {
                    $vlans_to_show = $restriction;
