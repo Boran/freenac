@@ -4,7 +4,7 @@
   <settings company="DEMO"  StaticInvEnabled="0" NmapEnabled="1" AntiVirusEnabled="0"
   PatchCableEnabled="1"/>
 	<mysql server="195.176.209.80" port="3306" 
-        auth="9pBTSB1doVGRovnd8vGfDfwcGIM8" database="nacdemo" />
+        auth="9pBTSB1doVGRovnd8vGfDfwcGIM8" database="nacdemo3" />
 	<mssql-inv server="UnusedServer\UnusedInstance"  
         auth="XX" database="YYY" />        	
 </vmps>
