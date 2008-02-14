@@ -53,14 +53,6 @@ final class VMPSRequest	extends Request		# Disallow inheriting from this class
       }
    }
 
-   public function __destruct()
-   {
-      //Added to avoid memory exhaustion since PHP's garbage collector
-      //doesn't free circular references
-      foreach ($this as $index => $value)
-         unset($this->index);
-   }
-  
    /**
    * Get the value of one property if it exists
    * @param mixed $key          Property to lookup

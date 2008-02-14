@@ -116,9 +116,6 @@ EOF;
          $this->db_row['office_id']=1;
 	 $this->db_row['lastvlan_id']=1;
 
-         # Store a reference to the Request object
-         $this->db_row['request'] = &$object;
-
          #Passing of information between objects
          $this->setPortID($object->switch_port->getPortID());
          $this->setOfficeID($object->switch_port->getOfficeID());
@@ -126,6 +123,7 @@ EOF;
          $this->setAlertSubject($object->switch_port->getAlertSubject());
          $this->setAlertMessage($object->switch_port->getAlertMessage());
          $this->setNotifyInfo($object->switch_port->getNotifyInfo());
+         
 
       }
       else
@@ -134,8 +132,6 @@ EOF;
          DENY('Unknown instance of object passed to the constructor');
       } 
    }
-
-
 
    # Policy Checks ------------------------------------------------------------ 
 
@@ -480,10 +476,6 @@ EOF;
          }
          else
          {
-            if ( ! $this->port_id )
-            {  
-               $this->port_id = $this->request->switch_port->getport_id();
-            }
             #Normal case, update lastseen, lastport and lastvlan
             $query="UPDATE systems SET LastSeen=NOW(), LastPort='{$this->port_id}', email_on_connect='', health='{$this->health}', LastVlan='{$this->lastvlan_id}' where id='{$this->sid}';";
          }
