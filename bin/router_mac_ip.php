@@ -132,11 +132,15 @@ foreach (split(' ', $conf->core_routers) as $router) {
      }
 
 
-     
+     $fqdn = $ip;
      // v3: get DNS name for all IPs
-     $fqdn=gethostbyaddr($ip);
-     if($fqdn == $ip) 
-     { //If DNS query doesn't work, try WINS Query.
+     if ($conf->router_mac_ip_update_from_dns === true)
+     {
+        $fqdn=gethostbyaddr($ip);
+     }
+     //If DNS query doesn't work, try WINS Query. 
+     if (($conf->router_mac_ip_update_from_nmb === true ) && ($fqdn == $ip)) 
+     { 
         $fqdn=getwinsfromip($ip); // Defined in funcs.inc.php
      }
      if ($fqdn != $ip) 
