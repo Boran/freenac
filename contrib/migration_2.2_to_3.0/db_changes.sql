@@ -155,8 +155,7 @@ INSERT INTO `config` SET TYPE='string', NAME='entityname', VALUE='ACME', COMMENT
 INSERT INTO `config` SET TYPE='string', NAME='unknown', VALUE='%unknown%', COMMENT='Mask for unknown machines in the database' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
 INSERT INTO `config` SET TYPE='boolean', NAME='xls_output', VALUE='false', COMMENT='Enable XLS export from web interface' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
 INSERT INTO `config` SET TYPE='integer', NAME='delete_users_threshold', VALUE='360', COMMENT='Delete users not seen in the central directory for more than XX days' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
-
-
+INSERT INTO `config` SET TYPE='boolean', NAME='router_mac_ip_update_from_nmb', VALUE='false', COMMENT='Auto-update system names from WINS for \'unknowns\'? Note: DNS has still priority';
 
 UPDATE config SET comment='Global default vlan index for unknowns. Set to 0 for default deny' WHERE name='default_vlan';
 UPDATE config SET comment='Vlan index for unknowns when auto added to the DB, normally=default_vlan' WHERE name='set_vlan_for_unknowns';
