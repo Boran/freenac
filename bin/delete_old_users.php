@@ -66,7 +66,7 @@ while ( $result = mysql_fetch_assoc($res) )
       {
          $logger->logit(mysql_error(), LOG_ERR);
       }
-      #else
+      else
       {
          $deleted_users[] = $result;
       }
