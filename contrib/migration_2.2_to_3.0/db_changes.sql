@@ -108,6 +108,9 @@ DELETE FROM vstatus WHERE id='6';
 --Adding a unique key to the config table
 ALTER TABLE config ADD UNIQUE (name);
 
+-- A new grant
+GRANT SELECT, INSERT, UPDATE, DELETE on opennac.users to inventwrite@localhost;
+
 -- New configuration entries in the config table
 INSERT INTO config SET type='string', name='default_policy', value='BasicPolicy', COMMENT='Policy to load' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
 INSERT INTO config SET type='boolean', name='router_mac_ip_discoverall', value='false', comment='Discover/document all MAC/IPs found or only those already in the DB?' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
