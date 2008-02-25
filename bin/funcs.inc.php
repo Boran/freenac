@@ -25,7 +25,7 @@
 */
 
 chdir(dirname(__FILE__));
-set_include_path("./:../");
+set_include_path("./:../lib/:../");
 
 /**
 * Load automagically a file containing the class specified by classname
