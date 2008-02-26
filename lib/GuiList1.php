@@ -1,7 +1,7 @@
 <?php
 /**
  * 
- * Report1.php
+ * GuiList1.php
  *
  * Long description for file:
  * Class to Display a generic Query, with sorting and active buttons
@@ -59,9 +59,9 @@ TXT;
 EOF;
        foreach ($fields as $field) {
          if ($order==$field->name) {
-           $output.="<OPTION SELECTED LABEL='". $field->name . "'>" . $field->name ."</OPTION>";
+           $output.="<OPTION SELECTED VALUE='" .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>";
          } else {
-           $output.="<OPTION LABEL='". $field->name . "'>" . $field->name ."</OPTION>";
+           $output.="<OPTION VALUE='"          .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>";
          }
        }
 
@@ -70,14 +70,15 @@ EOF;
        </SELECT><br/>
        <li>Search:<input type='text' value='$searchstring' 
            name='searchstring' size='19' maxlength='20' /></li>
+
        <li>Search Field:<SELECT NAME=searchby>
 EOF;
        $output.= $text;
        foreach ($fields as $field) {
-         if ($searchby==$field->name) {
-           $output.="<OPTION SELECTED LABEL='". $field->name . "'>" . $field->name ."</OPTION>";
+         if ($searchby=="$field->table.$field->orgname") {
+           $output.="<OPTION SELECTED VALUE='" .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>";
          } else {
-           $output.="<OPTION LABEL='". $field->name . "'>" . $field->name ."</OPTION>";
+           $output.="<OPTION VALUE='"          .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>";
          }
        }
 
@@ -111,18 +112,18 @@ EOF;
       $searchstring=$this->real_escape_string1($searchstring, $conn);
       $searchby=$this->real_escape_string1($searchby, $conn);
       if ((strlen($searchby)>0) && (strlen($searchstring)>0) ) {
-        #$q.=" WHERE `$searchby` LIKE '%$searchstring%' ";    // TBD
-        $q.=" WHERE sys.name LIKE '%$searchstring%' "; 
+        $q.=" WHERE $searchby LIKE '%$searchstring%' ";    // TBD
+        #$q.=" WHERE sys.name LIKE '%$searchstring%' "; 
       } 
-      $this->debug("Report1.php->query searchby=$searchby, searchstring=$searchstring", 3);
+      $this->debug("query searchby=$searchby, searchstring=$searchstring", 3);
 
       // Sort & limit 
       // TBD: strip unwanted characters
       $order=$this->real_escape_string1($order, $conn);
       $limit=$this->real_escape_string1($limit, $conn);
-      $this->debug("Report1.php->query limit=$limit, order=$order", 3);
+      $this->debug("GuiList1.php->query limit=$limit, order=$order", 3);
 
-      if (strlen($order)>0) $q.=" ORDER BY `$order` DESC"; 
+      if (strlen($order)>0) $q.=" ORDER BY $order DESC"; 
       if ($limit>0)         $q.=" LIMIT $limit"; 
 
       $this->debug("query $q", 3);
@@ -181,7 +182,8 @@ EOF;
         $shade = !$shade;  // toggle shading for the next line
       }
 
-      $_SESSION['report1_indices']=serialize($indices);  // remember index values
+      if (! empty($indices))
+        $_SESSION['report1_indices']=serialize($indices);  // remember index values
       // Inform the user if no data was returned
       if ( ($rowcount)==0 ) {
         $output.= "<br/><tr><td colspan='4' align='center' class='text16red'>The report is empty</td></tr><tr></tr><br/>";
@@ -218,7 +220,7 @@ if ( isset($_POST['submit']) ) {             // form submit, check fields
   $logger=Logger::getInstance();
   $logger->setDebugLevel(1);
 
-  $logger->debug("Report1 main -submit");
+  $logger->debug("GuiList1 main -submit");
   #echo handle_submit();
 
 } else {    
