@@ -23,6 +23,7 @@
 class Common {
    protected $conf;
    protected $logger;
+   protected $db_conn;
    
    /**
    * Get the current instance of our Settings and Logger classes
@@ -32,4 +33,48 @@ class Common {
       $this->conf=Settings::getInstance();
       $this->logger=Logger::getInstance();
    }	
+
+   /**
+   * Connect to database via mysqli
+   */
+  public function getConnection()
+  {
+    global $dbhost, $dbuser, $dbpass, $dbname;
+    try {
+      $this->db_conn = new mysqli($dbhost, $dbuser, $dbpass, $dbname);
+      if (mysqli_connect_errno() !== 0) {
+        throw new DatabaseErrorException(mysqli_connect_error());
+      }
+      $this->logger->debug( get_class($this). " getConnection() to {$dbname} on $dbhost.", 3);
+
+    } catch (Exception $e) {
+      if ($in_db_conn === NULL and isset($conn))
+        $conn->close();
+      throw $e;
+    }
+    return $this->db_conn;
+  }
+
+
+  /**
+   * Removing possibly dangerous characters
+   * TBD: what about ';'?
+   */
+  public function real_escape_string1 ($in_string, $in_conn, $in_removePct=FALSE)
+  {
+    $this->logger->debug("real_escape_string1", 3);
+    $str=$in_string;
+
+    if (!is_numeric($str)){
+      // mysqli: prepends backslashes to: \x00, \n, \r, \, ', " and \x1a
+      $str = $in_conn->real_escape_string($str);
+
+      if ($in_removePct)     // escape %
+        $str = ereg_replace('(%)', "\\\1'", $str);
+    }
+
+    $this->logger->debug("real_escape_string1: ret=$str", 3);
+    return rtrim($str);
+  }
+
 }
