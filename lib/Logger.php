@@ -31,7 +31,7 @@
 * Example usage:
 *   - $logger=Logger::getInstance();		Needed, before other lines
 *   - $logger->setDebugLevel(3);		Log debug1,2,3 (default is only 1)
-*   - $logger->logToStdErr();			If you don't want to use syslog
+*   - $logger->setLogToStdErr();		If you don't want to use syslog
 *   - $logger->logit("Hello world");		Will appear in syslog or stderr
 *   - $logger->debug("Hello debug world");	Will be prefixed "debug1"
 *   - $logger->debug("Hello debug world",3);	Will be prefixed "debug3"
