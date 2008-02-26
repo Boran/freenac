@@ -44,7 +44,9 @@ class CallWrapper extends Common {
    */
    public function __call($methodName, $parameters) {
       $value = call_user_func_array(array( $this->object, $methodName ), $parameters);
+
       $this->logger->debug( get_class($this->object) ."->". $methodName ."(". join(",",$parameters).") = ". $value ."\n",2); 
+
       return $value;
    }
 }

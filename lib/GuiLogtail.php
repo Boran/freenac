@@ -1,14 +1,12 @@
 <?php
 /**
  * 
- * GuiPrint.php
+ * GuiLogtail.php.php
  *
- * Generic class to show one html page with one record,
- * based on a query. It is normally called from a control script
- * that instaniates GuiList1 first.
+ * Show log files in the web GUI
  *
  * @package     FreeNAC
- * @author      Sean Boran (FreeNAC Core Team)
+ * @author      Sean Boran/Thomas Dagonnier (FreeNAC Core Team)
  * @copyright   2008 FreeNAC
  * @license     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 3
  * @version     SVN: $Id$
@@ -17,27 +15,63 @@
  */
 
 
-class GuiPrint extends WebCommon {
+class GuiLogtail extends WebCommon {
   // See also WebCommon and Common
 
 
-  function __construct($rep_name='')
+  function __construct($filename, $length=10, $pattern="vmpsd|postconnect")
   {
     parent::__construct();     // See also WebCommon and Common
     $this->logger->setDebugLevel(3);
-    $this->debug("__construct " .$_SESSION['login_data'] 
-       .":$rep_name:" .$_SESSION['db_name']
-       , 1);
 
-    // Show Webpage start, is the constructor the right place?
-    //echo print_header(false);  //false=no links
 
-    $txt=<<<TXT
-<div style='text-align: centre;' class='text18'>
-  <p>{$rep_name}
-</div><br/>
-TXT;
-    echo $txt;
+    if ($ad_auth===true)
+    {
+       if ($_SESSION['nac_rights']>=1) {
+         echo $this->logtail($filename, $length, $pattern);
+       }
+       else {
+         echo "<h1>ACCESS DENIED</h1>";
+         echo "<p>Please verify the nac_rights for username: <" .$_SESSION['username']
+          .">.</p>";
+         $this->logger->logit("ACCESS DENIED: verify the nac_rights for username: <" .$_SESSION['username'] .">.</p>");
+       }
+    }
+    else {       // TBD: test if ad_auth=false
+       echo $this->logtail($filename, $length, $pattern);
+    }
+
+    echo $this->print_footer();
+
+  }
+
+  function logtail($filename, $length=10, $pattern='')
+  {
+        $logfile = fopen($filename,'r');
+        // TBD: catch error if file cannot be read, or non existant.
+
+        if ( strlen($pattern)>0 ) { 
+          $cmd="/usr/bin/tail -n $length $filename | egrep \"$pattern\"";
+        }
+        else {
+          $cmd="/usr/bin/tail -n $length $filename ";
+        }
+        $this->debug($cmd, 3);
+        exec($cmd, $logtext, $error);
+
+        $text = "<h2>The last $length lines in the log $filename :</h2>";
+        if ($error){
+            $text .= "Tail Error: ($cmd) $error\n";
+            $this->logger->logit("Tail Error: ($cmd) $error");
+        }
+        else {
+            $text .= "\n<p>\n<pre>\n";
+            foreach ($logtext as $logline) {
+                $text .= $logline."\n";
+            };
+            $text .= "</pre>";
+        };
+        return($text);
   }
 
 

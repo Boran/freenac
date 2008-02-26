@@ -49,7 +49,7 @@ TXT;
     if (! $this->dynamic ) return;
 
     $output=<<<EOF
-    <form name="SubmitSortOrderChanges" action="{$this->calling_script}" method="post">
+    <form name="GuiList1" action="{$this->calling_script}" method="post">
     <div id="reportmenu">
     <ul class=text16>
        <li>Max. records:<input type='text' value='$limit' 

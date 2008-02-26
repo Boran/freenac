@@ -8,7 +8,7 @@
  * see also the 'Common' Class from which this extends
  *
  * @package     FreeNAC
- * @author      Sean Boran (FreeNAC Core Team)
+ * @author      FreeNAC Core Team
  * @copyright   2008 FreeNAC
  * @license     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 3
  * @version     SVN: $Id
@@ -38,7 +38,13 @@ class WebCommon extends Common
    */
   protected function debug($msg, $level=1) 
   {
-    $this->logger->debug(get_class($this) ." " .$msg, $level);
+    if (isset($_SESSION['uid'])) $uid="uid={$_SESSION['uid']} ";
+    $this->logger->debug($uid .get_class($this) ." " .$msg, $level);
+  }
+  protected function logit($msg) 
+  {
+    if (isset($_SESSION['uid'])) $uid="uid={$_SESSION['uid']} ";
+    $this->logger->logit(get_class($this) ." " .$msg);
   }
 
 
@@ -69,8 +75,8 @@ class WebCommon extends Common
 
     if (defined('HEADER')){   // already displayed?
       $this->debug('print_headerSmall: HEADER already true',2);
-
-    } else {
+    } 
+    else {
       if ($print_links===false) {
         $lthis->debug('print_header: do not print right links', 3);
         $head_right1='';
@@ -87,11 +93,63 @@ class WebCommon extends Common
 
   public function print_footer()
   {
-        if(!defined(FOOTER)){
-                $ret="</table></body></html>";
-                define('FOOTER',true);
-                return $ret;
+    global $sql_auth, $drupal_auth;
+
+    if (defined('FOOTER')){   // already displayed?
+      $this->debug('print_footer: FOOTER already true',2);
+    } 
+    else {
+      if (!isset ($_SESSION['login_data'])) {
+        $userdata=">> Not logged in <<";
+        $text=<<<EOF
+  <div align='center'>
+  <font class=user_footer>$userdata</font></p>
+  </div>
+  </tr> </table> </body> </html>
+EOF;
+      }
+      else {
+        $userdata="<br>Logged in as: " .$_SESSION['login_data']
+          ." (" .$_SESSION['nac_rights_text'] .")";
+
+        if (($sql_auth===true) || ($drupal_auth===true)) {
+          $logout_button="<li><a href='./logout.php'>Log out</a></li>";
         }
+        else {
+          $logout_button='';
+        }
+
+        $text=<<<EOF
+  <div align='center'>
+  <font class=user_footer>$userdata</font></p>
+  </div>
+  <div id="headermenue">
+  <ul>
+     <li><A HREF='javascript:javascript:history.go(-1)'< Back</A></li>
+     <li><a href="./index.php">Main Menu</a></li>
+     $logout_button
+  </ul> </div>
+  </tr> </table> </body> </html>
+EOF;
+     #<li><a href="./ChooseAccount.php">Change Account</a></li>
+      }
+      return $text;
+
+    }
+  }
+
+
+  /* no menu on the botton */
+  public function print_footer_empty()
+  {
+    if (defined('FOOTER')){   // already displayed?
+      $this->debug('print_footer: FOOTER already true',2);
+    } 
+    else {
+      $ret="</table></body></html>";
+      define('FOOTER',true);
+      return $ret;
+    }
   }
 
 
