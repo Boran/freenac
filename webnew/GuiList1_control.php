@@ -88,7 +88,7 @@ if ( isset($_POST['change']) ) {
 
 ###### CUSTOM: Print button  ############
 } else if (isset($_POST['action']) && $_POST['action']=='Print') { 
-  $logger->debug("action: ". $_POST['action'], 1);
+  $logger->debug("GuiList1_control action: ". $_POST['action'], 1);
 
   if ( !isset($_POST['action_fieldname']) || !isset($_POST['action_idxname']) || !isset($_POST['action_idx']) ) {
     throw new InvalidWebInputException("Report has no valid action parameters");
@@ -96,7 +96,7 @@ if ( isset($_POST['change']) ) {
   $action_fieldname=$_POST['action_fieldname'];
   $action_idxname  =$_POST['action_idxname'];
   $action_idx      =$_POST['action_idx'];
-  $logger->debug("action_idx=$action_idx fieldname=$action_fieldname action_idxname=$action_idxname", 2);
+  $logger->debug("GuiList1_control action_idx=$action_idx fieldname=$action_fieldname action_idxname=$action_idxname", 2);
   $title="$action_fieldname $action_idx";
 
   // Security: is the index really a value that was shown in GuiList1,
