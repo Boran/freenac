@@ -5,6 +5,7 @@
  *
  * Long description for file:
  * Class to Display a generic Query, with sorting and active buttons
+ * See also GuiEditDevice_control.php, which manages the Buttons and POST/Submits.
  *
  * @package     FreeNAC
  * @author      Sean Boran (FreeNAC Core Team)
@@ -30,11 +31,10 @@ class GuiList1 extends WebCommon
     $this->debug(" __construct() " .$_SESSION['login_data'] 
        .":$rep_name:" .$_SESSION['db_name'] , 1);
 
-    # TBD: align='centre' does not work
     $txt=<<<TXT
-<div style='text-align: centre;' class='text18'>
+<div style='text-align: center;' class='text18'>
   <p>{$rep_name} 
-</div><br/>
+</div>
 TXT;
     echo $txt;
   }
@@ -130,7 +130,7 @@ EOF;
 
       $res = $conn->query($q);
       if ($res === FALSE)
-        throw new DatabaseErrorException($conn->error);
+        throw new DatabaseErrorException("Query=$q;" .$conn->error);
 
       if ( is_array($action_menu) )
         $output.="<th>Action</th>";         // field for menu icons

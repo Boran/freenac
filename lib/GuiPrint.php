@@ -24,16 +24,14 @@ class GuiPrint extends WebCommon {
   function __construct($rep_name='')
   {
     parent::__construct();     // See also WebCommon and Common
-    $this->logger->setDebugLevel(3);
-    $this->debug("__construct " .$_SESSION['login_data'] 
-       .":$rep_name:" .$_SESSION['db_name']
-       , 1);
+    $this->logger->setDebugLevel(1);   // set to 3 for debugging
+    $this->debug("__construct " .$_SESSION['login_data'] .":$rep_name:", 1);
 
     // Show Webpage start, is the constructor the right place?
     //echo print_header(false);  //false=no links
 
     $txt=<<<TXT
-<div style='text-align: centre;' class='text18'>
+<div style='text-align: left;' class='text18'>
   <p>{$rep_name}
 </div><br/>
 TXT;
@@ -90,6 +88,17 @@ TXT;
     return($output);
   }
 
+  function print_footer()            // Override 
+  {
+    $txt=<<<TXT
+<A HREF='javascript:javascript:history.go(-1)'< Back</A>        <A HREF='javascript:window.print()'>Print</A>
+TXT;
+
+  // TBD: why does the second part not work?
+  #echo "<A HREF='javascript:javascript:history.go(-1)'<<< back</A><SCRIPT TYPE='text/javascript' <!-- var gb = new backlink(); gb.type='button'; gb.form=false; gb.text = 'Back'; gb.write(); //--></SCRIPT>\n";
+
+    return($txt);
+  }
 
 
 } // class
