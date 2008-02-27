@@ -3,7 +3,7 @@
  *
  * GuiList1_control.php
  *
- * Main, generic logic for instantiating the Report1 class
+ * Main, generic logic for instantiating the GuiList1 class
  * and controlling form submission.
  * 
  * @package     FreeNAC
@@ -17,7 +17,7 @@
 ## ----- Initialise (standard header for all modules)
   dir(dirname(__FILE__)); set_include_path("./:../lib/:../");
   require_once('webfuncs.inc');
-  include '/opt/nac/lib/session.inc.php';
+  include '/opt/nac/lib/session.inc.php'; // TBD: get rid of absolute path?
 
   $logger=Logger::getInstance();
   $logger->setDebugLevel(3); // 0 to 3 syslog debugging levels
@@ -59,7 +59,8 @@ if ( isset($_POST['change']) ) {
        )  { // show an error message
 
     $logger->debug('No change submitted: order or limit invalid', 1);
-    $report=new CallWrapper(GuiList1($title, false)); 
+    #$report=new CallWrapper(GuiList1($title, false));   // very verbose!
+    $report=(GuiList1($title, false)); 
     echo "<hr><font class=text16red><p>No change selected: order or limit invalid.</p></font>";
     echo $report->print_footer();
 
@@ -98,7 +99,7 @@ if ( isset($_POST['change']) ) {
   $logger->debug("action_idx=$action_idx fieldname=$action_fieldname action_idxname=$action_idxname", 2);
   $title="$action_fieldname $action_idx";
 
-  // Security: is the index really a value that was shown in report1,
+  // Security: is the index really a value that was shown in GuiList1,
   //   or perhaps a value injected by a bad guy?
   $indices=unserialize($_SESSION['report1_indices']);  // recover index values
   if (!is_array($indices)) {
@@ -111,14 +112,10 @@ if ( isset($_POST['change']) ) {
   }
   $q=$_SESSION['report1_query'] . " WHERE {$action_idxname}={$action_idx} LIMIT 1";
 
-  $report=new CallWrapper(new GuiPrint($title));
+  #$report=new CallWrapper(new GuiPrint($title));
+  $report=(new GuiPrint($title));
   echo $report->query($q);
-
-  // TBD: why does the second part not work?
-  #echo "<A HREF='javascript:javascript:history.go(-1)'<<< back</A><SCRIPT TYPE='text/javascript' <!-- var gb = new backlink(); gb.type='button'; gb.form=false; gb.text = 'Back'; gb.write(); //--></SCRIPT>\n";
-  echo "<A HREF='javascript:javascript:history.go(-1)'< Back</A>        <A HREF='javascript:window.print()'>Print</A>\n";
-TXT;
-  //echo $report->print_footer();     // better not to have it for a cleaner print.
+  echo $report->print_footer();     
 
 
 

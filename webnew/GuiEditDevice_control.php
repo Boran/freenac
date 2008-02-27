@@ -31,14 +31,6 @@
    $_COOKIE=array_map('validate_webinput',$_COOKIE);
 
 
-  // Security: is the index really a value that was shown in report1,
-  //   or perhaps a value injected by a bad guy?
-  if (! isset($_SESSION['report1_index']))
-    throw new InvalidWebInputException("Session no longer valid - record invalid");
-  if (! is_numeric($_SESSION['report1_index']))
-    throw new InvalidWebInputException("Session no longer valid - record invalid");
-
-###### Update button  ############
 if (isset($_POST['action']) && $_POST['action']=='Update') {
   $logger->debug("action ". $_POST['action'], 1);
   #$report=new CallWrapper(new GuiEditDevice($_SESSION['report1_index']));
@@ -52,17 +44,48 @@ else if (isset($_POST['action']) && $_POST['action']=='Delete') {
   $report=new GuiEditDevice($_SESSION['report1_index']);
   echo $report->Delete();
 
+
 ###### CUSTOM: Edit button  ############
 } else if (isset($_POST['action']) && $_POST['action']=='Edit') {
   $logger->debug("action: ". $_POST['action'], 1);
 
+
   if ( !isset($_POST['action_fieldname']) || !isset($_POST['action_idxname']) || !isset($_POST['action_idx']) ) {
     throw new InvalidWebInputException("Report has no valid action parameters");
   }
-  $logger->debug("{$_POST['action_fieldname']}, idxname={$_POST['action_idxname']}, {$_POST['action_idx']}", 2);
+  $action_fieldname=$_POST['action_fieldname'];
+  $action_idxname  =$_POST['action_idxname'];
+  $action_idx      =$_POST['action_idx'];
+  $logger->debug("GuiList1_control action_idx=$action_idx fieldname=$action_fieldname action_idxname=$action_idxname", 2);
 
-  $q="{$_SESSION['report1_query']} AND {$_POST['action_idxname']}={$_POST['action_idx']} LIMIT 1";
-  $report=new CallWrapper(new GuiEditDevice($_POST['action_idx']));
+  // Security: is the index really a value that was shown in report1,
+  //   or perhaps a value injected by a bad guy?
+
+  //if (! isset($_SESSION['report1_index']))
+  //  throw new InvalidWebInputException("Session no longer valid - index invalid");
+  //if (! is_numeric($_SESSION['report1_index']))
+  //  throw new InvalidWebInputException("Session no longer valid - index not numeric");
+
+  $indices=unserialize($_SESSION['report1_indices']);  // recover index values
+  if (!is_array($indices)) {
+    throw new InvalidWebInputException("Invalid indices: not an array");
+  } 
+  else {
+    $count=array_search($action_idx, $indices);
+    #$logger->logit("count=$count");
+    if ( !is_numeric($count)  )
+      throw new InvalidWebInputException("Invalid index: not from previous report, idx=$count.");
+  }
+
+  $_SESSION['report1_index']=$action_idx; // we're pretty confident, store the index
+
+
+
+###### Update button  ############
+
+  $q="{$_SESSION['report1_query']} AND {$_POST['action_idxname']}={$_SESSION['report1_index']} LIMIT 1";
+  #$report=new CallWrapper(new GuiEditDevice($_SESSION['report1_index']));
+  $report=(new GuiEditDevice($_SESSION['report1_index']));
   echo $report->query();
   echo $report->print_footer();
 

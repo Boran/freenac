@@ -32,8 +32,8 @@
 
 
 // set parameters   fro gui_control.php
-$title="List of End-devices";
-$sortlimit=10;
+$title="List of End-devices - last seen";
+$sortlimit=20;
 #$sortby='sys.name';
 $sortby='sys.LastSeen';
 $searchby='sys.name';
@@ -60,18 +60,19 @@ SELECT
   sys.name as Systemname, 
   sys.mac as 'MAC Address', 
   status.value as Status, 
-  sys.lastseen, 
-  $idx_fieldname AS '$action_fieldname', 
+  sys.lastseen AS 'Last seen layer2',
   vlan.default_name as Vlan, lvlan.default_name as LastVlan, 
-  sys.inventory, sys.description, sys.comment, 
+  sys.r_ip AS 'Last IP Address', sys.r_timestamp AS 'Last time IP seen',
+  sys.comment, 
   b.name as building, loc.name as office, 
+  swi.name as Switch,
   p.name as port, pcloc.name as PortLocation, p.comment as PortComment,
-  swi.name as Switch, swloc.name as SwitchLocation,
+  swloc.name as SwitchLocation,
   usr.username as Username, 
   usr.surname AS Firstname, usr.givenname AS FamilyName, usr.department, 
   usr.telephonenumber as UserTelephone,
   sys.os4 as OS4,
-  sys.r_ip AS 'Last IP Address', sys.r_timestamp AS 'Last time IP seen'
+  $idx_fieldname AS '$action_fieldname'
     FROM systems as sys LEFT JOIN vlan as vlan ON vlan.id=sys.vlan
       LEFT JOIN vlan as lvlan ON lvlan.id=sys.lastvlan
       LEFT JOIN vstatus as status ON status.id=status
@@ -93,6 +94,7 @@ SELECT
       LEFT JOIN sys_class2 as sclass2 ON sclass2.id=sys.class2
 TXT;
 
+# sys.inventory
 
 require_once "GuiList1_control.php";
 
