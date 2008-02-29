@@ -248,22 +248,34 @@ final class Logger
          {
             $message=trim($message);
             $message.="\n";
-            $fd = fopen($this->stderr_stream,'w');
-            fputs($fd, $message);
-            fclose($fd);
-            ob_flush();
+            if ($this->facility == WEB )
+            {
+               $fd = fopen($this->stderr_stream,'w');
+               fputs($fd, $message);
+               fclose($fd);
+            }
+            else
+            {  
+               fputs(STDERR, $message);   
+               ob_flush();
+            }
          }
          else if ($this->stdout)
          {
             $message=trim($message);
             if ($this->facility == WEB )
+            {
                $message.="<br />\n";
+               $fd = fopen($this->stdout_stream,'w');
+               fputs($fd, $message);
+               fclose($fd);
+            }
             else
+            {
                $message.="\n";
-            $fd = fopen($this->stdout_stream,'w');
-            fputs($fd, $message);
-            fclose($fd);
-            ob_flush();
+               fputs(STDOUT, $message);
+               ob_flush();
+            }
          }
          else
          {
