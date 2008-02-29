@@ -416,10 +416,10 @@ final class Logger
             case WEB:
                {
                   closelog();
+                  $this->facility=$facility;
                   $this->stdout_stream = "php://output";
                   $this->stderr_stream = "php://stderr";
-                  $this->facility=$facility;
-                  return true;
+                  return openlog($this->identifier,LOG_CONS | LOG_NDELAY | LOG_PID, $this->facility));
                }
             default:
                return false;
