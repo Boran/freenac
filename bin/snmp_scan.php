@@ -179,7 +179,7 @@ else
 {
    $vlans = mysql_fetch_all("SELECT * FROM vlan WHERE default_name='$singlevlan'");
    $logger->logit("Scanning only one vlan : $singlevlan");
-   logdb('info', "Scanning only one vlan : $singlevlan");
+   log2db('info', "Scanning only one vlan : $singlevlan");
 };
 
 
