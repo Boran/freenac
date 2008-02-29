@@ -256,7 +256,10 @@ final class Logger
          else if ($this->stdout)
          {
             $message=trim($message);
-            $message.="\n";
+            if ($this->facility == WEB )
+               $message.="<br />\n";
+            else
+               $message.="\n";
             $fd = fopen($this->stdout_stream,'w');
             fputs($fd, $message);
             fclose($fd);
@@ -419,7 +422,7 @@ final class Logger
                   $this->facility=$facility;
                   $this->stdout_stream = "php://output";
                   $this->stderr_stream = "php://stderr";
-                  return openlog($this->identifier,LOG_CONS | LOG_NDELAY | LOG_PID, $this->facility));
+                  return openlog($this->identifier,LOG_CONS | LOG_NDELAY | LOG_PID, $this->facility);
                }
             default:
                return false;
