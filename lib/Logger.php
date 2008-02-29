@@ -37,6 +37,31 @@
 *   - $logger->debug("Hello debug world",3);	Will be prefixed "debug3"
 *	
 */
+
+/* Define some other values for the facility to open
+ * The ones defined by default are:
+ * LOG_AUTH 	32
+ * LOG_AUTHPRIV	80
+ * LOG_CRON	72
+ * LOG_DAEMON	24	
+ * LOG_KERN	0
+ * LOG_LOCAL0	128
+ * LOG_LOCAL1	136
+ * LOG_LOCAL2	144
+ * LOG_LOCAL3	152
+ * LOG_LOCAL4	160
+ * LOG_LOCAL5	168
+ * LOG_LOCAL6	176
+ * LOG_LOCAL7	184
+ * LOG_LPR	48
+ * LOG_MAIL	16
+ * LOG_NEWS	56
+ * LOG_SYSLOG	40
+ * LOG_USER	8
+ * LOG_UUCP	64
+*/
+define('WEB',500);
+
 final class Logger
 {
    /**
@@ -49,6 +74,8 @@ final class Logger
    private $facility=NULL;
    private $stderr=false;
    private $stdout=false;
+   private $stdout_stream = NULL;
+   private $stderr_stream = NULL;
    private $httpd_log=false;			//Log to webserver log?
    private $email_alert=false;			//Send Err or higher via email
    
@@ -221,14 +248,18 @@ final class Logger
          {
             $message=trim($message);
             $message.="\n";
-            fputs(STDERR,$message);
+            $fd = fopen($this->stderr_stream,'w');
+            fputs($fd, $message);
+            fclose($fd);
             ob_flush();
          }
          else if ($this->stdout)
          {
             $message=trim($message);
             $message.="\n";
-            fputs(STDOUT,$message);
+            $fd = fopen($this->stdout_stream,'w');
+            fputs($fd, $message);
+            fclose($fd);
             ob_flush();
          }
          else
@@ -378,7 +409,17 @@ final class Logger
                {
                   closelog();
                   $this->facility=$facility;
+                  $this->stdout_stream = STDOUT;
+                  $this->stderr_stream = STDERR; 
                   return openlog($this->identifier,LOG_CONS | LOG_NDELAY | LOG_PID, $this->facility);
+               }
+            case WEB:
+               {
+                  closelog();
+                  $this->stdout_stream = "php://output";
+                  $this->stderr_stream = "php://stderr";
+                  $this->facility=$facility;
+                  return true;
                }
             default:
                return false;
