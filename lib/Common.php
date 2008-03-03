@@ -45,7 +45,7 @@ class Common {
       if (mysqli_connect_errno() !== 0) {
         throw new DatabaseErrorException(mysqli_connect_error());
       }
-      $this->logger->debug( get_class($this). " getConnection() to {$dbname} on $dbhost.", 3);
+      //$this->logger->debug( get_class($this). " getConnection() to {$dbname} on $dbhost.", 3);
 
     } catch (Exception $e) {
       if ($in_db_conn === NULL and isset($conn))

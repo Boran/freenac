@@ -274,21 +274,6 @@ TXT;
   }                               // function
 
 
-function get_vlan($s)
-{
-   $conn=$this->getConnection();     //  make sure we have a DB connection
-   $ret='';
-   $q="select default_name from vlan where id='$s'";
-     $res = $conn->query($q);
-     if ($res === FALSE)
-       throw new DatabaseErrorException($q .'; ' .$conn->error);
-
-     while (($row = $res->fetch_assoc()) !== NULL) {
-         $ret=$row['default_name'];
-     }
-   return($ret);
-}
-
 function get_vlandropdown($s)
 {
    $conn=$this->getConnection();     //  make sure we have a DB connection
