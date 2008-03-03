@@ -39,7 +39,7 @@ function error_page($msg)
       We are sorry, but an error has occurred while executing the application. <br/> 
       The system administrators have been notified.
       </font></b>
-      <p>The error was in: $msg </p>
+      <p>$msg</p>
       <p>
         Please go back to the <a href='./index.php' >Main Menu</a> and start again, or try again later.
       </p>

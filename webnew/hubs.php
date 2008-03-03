@@ -18,7 +18,7 @@
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3);
+  $logger->setDebugLevel(1);
 
   ## Loggin in? User identified?
   include 'session.inc.php';
@@ -66,13 +66,11 @@ TXT;
 
 
   $report=(new GuiList1($title, false));                //true=dynamic with filtering
+  $report->logger->setDebugLevel(1); 
   // we don't use the standrad query() to build the grid, and our needs are a bit more complex.
-    #echo $report->query($q, $sortlimit, $sortby,
-    #   $action_menu, $action_fieldname, $idx_fieldname,
-    #   $searchstring, $searchby);   // run query, generate report
-   $conn=$report->getConnection();     //  make sure we have a DB connection
-   $report->debug($q, 3);
-   $res = $conn->query($q);
+  $conn=$report->getConnection();     //  make sure we have a DB connection
+  $report->debug($q, 3);
+  $res = $conn->query($q);
      if ($res === FALSE)
        throw new DatabaseErrorException($q .'; ' .$conn->error);
 
