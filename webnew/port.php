@@ -36,14 +36,14 @@ if ($_SESSION['nac_rights']<1) {
   throw new InsufficientRightsException($_SESSION['nac_rights']);
 } 
 else if ($_SESSION['nac_rights']==1) {
-  $action_menu=array('');   // no options
+  $action_menu='';   // no options
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('');   // no options
+  $action_menu='';   // no options
   //$action_menu=array('Print','Edit');   // 'buttons' in action column
 }
 else if ($_SESSION['nac_rights']==99) {
-  $action_menu=array('');   // no options
+  $action_menu='';   // no options
   //$action_menu=array('Print', 'Edit', 'Delete');   // 'buttons' in action column
 }
 
