@@ -81,7 +81,7 @@ function make_ptr($subnet) {
 			
 			$dns_name = sanitize_name($host['name']);
 			$dns_ipname = make_arpa($host['ip']);
-			if (($dns_name != 'unknown') && ($host['ip'] != '')) {
+			if (($dns_name != 'unknown') && ($host['ip'] != '') && ($dns_name != '')) {
 				$dns_inptr .= 'update delete '.$dns_ipname."\t PTR\r\n";
 	                        $dns_inptr .= 'update add '.$dns_ipname."\t".$conf->ddns_ttl." PTR ".$dns_name.'.'.$conf->dns_domain.".\r\n";
                         };
