@@ -22,7 +22,7 @@
 */
 class Common {
    protected $conf;
-   protected $logger;
+   public $logger;      // allow access outside derviced classes
    protected $db_conn;
    
    /**

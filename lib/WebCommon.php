@@ -189,7 +189,7 @@ SELECT s.name,
   LEFT JOIN users ON users.id = s.uid 
   WHERE LastPort='$port'  AND (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-{$this->conf->web_lastdays}) 
 TXT;
-     $this->debug($q ,3);
+     //$this->debug($q ,3);
      $res = $conn->query($q);
      if ($res === FALSE)
        throw new DatabaseErrorException($q .'; ' .$conn->error);
@@ -197,7 +197,7 @@ TXT;
      while (($row = $res->fetch_assoc()) !== NULL) {
          $ret.=$row['name'] .' (' .$row['owner'] .'), ' .$row['LastSeen'] .'<br>';
      }
-   $this->debug($ret ,3);
+   //$this->debug($ret ,3);
    return($ret);
 }
 
@@ -217,7 +217,7 @@ public function get_locationid($port)
   if ($res === FALSE)
        throw new DatabaseErrorException($q .'; ' .$conn->error);
 
-     while (($row = $res->fetch_assoc()) !== NULL) {
+  while (($row = $res->fetch_assoc()) !== NULL) {
 
        if (($row['patchlocid'] = '') || (!$row['patchlocid'])) {
          return($row['switchlocid']);
@@ -225,7 +225,7 @@ public function get_locationid($port)
        else {
          return($row['patchlocid']);
        }
-     }
+  }
 }
 
 /**
@@ -251,7 +251,7 @@ TXT;
   if ($res === FALSE)
        throw new DatabaseErrorException($q .'; ' .$conn->error);
 
-     while (($row = $res->fetch_assoc()) !== NULL) {
+  while (($row = $res->fetch_assoc()) !== NULL) {
 
        if (($row['patchloc'] = '') || (!$row['patchloc'])) {
          return($row['switchloc']);
@@ -259,7 +259,80 @@ TXT;
        else {
          return($row['patchloc']);
        }
+  }
+}
+
+public function strip_datversion($long_version) 
+{
+     $list=explode('.',$long_version);
+     $short_version = $list[2];
+     return($short_version);
+}
+
+
+public function print_dat_stats($q) 
+{
+  $conn=$this->getConnection();     //  make sure we have a DB connection
+  $readme_url='http://vil.nai.com/vil/DATReadme.aspx';
+  $ret='';
+  $total=0;
+  $res = $conn->query($q);
+  if ($res === FALSE)
+       throw new DatabaseErrorException($q .'; ' .$conn->error);
+
+  $ret.= "<table cellspacing=0 cellpadding=5 border=1>\n";
+  $ret.= "<tr><th><a href=\"$readme_url\">DAT Version</a><th>count";
+
+     while (($row = $res->fetch_assoc()) !== NULL) {
+       $short_version = strip_datversion($row['DATversion']);
+       if ($short_version > 0) {
+               $ret.= "<tr>";
+               $ret.= "<td>$short_version</a>";
+               $ret.= "<td>".$row['count'];
+               $ret.= "\n";
+       } else {
+               $unknown = $unknown + $row['count'];
+       };
+       $total = $total + $row['count'];
+
      }
+     $ret.= "<tr><td>Unknown<td>$unknown";
+     $ret.= "</table>\n<b>Total = $total\n";
+  return($ret);
+}
+
+
+public function print_stats($q)
+{
+  $conn=$this->getConnection();     //  make sure we have a DB connection
+  $ret='';
+  $total=0;
+  //$this->debug($q);
+  $res = $conn->query($q);
+  if ($res === FALSE)
+       throw new DatabaseErrorException($q .'; ' .$conn->error);
+
+  $ret.= "<table cellspacing=0 cellpadding=5 border=1>\n";
+     while (($row = $res->fetch_assoc()) !== NULL) {
+        #if (!$th) {
+        if (!isset($th)) {
+                $ret.= "<tr>";
+                foreach ($row as $key => $value) {
+                        $ret.= "<th>$key";
+                };
+                $ret.= "\n";
+                $th = TRUE;
+        };
+        $ret.= "<tr>";
+        foreach ($row as $value) {
+                $ret.= "<td>$value &nbsp;";
+        };
+        $ret.= "\n";
+        $total = $total + $value;
+
+     }
+     $ret.= "</table>\n<b>Total = $total\n";
+  return($ret);
 }
 
 
