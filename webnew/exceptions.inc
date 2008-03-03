@@ -116,7 +116,7 @@ class InsufficientRightsException extends Exception
       .$_SESSION['login_data'] .", " .$_SESSION['uid'] .", " .$_SESSION['nac_rights'] 
       .' from ' .$_SERVER['REMOTE_ADDR']);
     $_SESSION['exception']=true;    // indicate that we've handled it
-    parent::__construct("Insufficient rights: ", $_SESSION['login_data']); 
+    parent::__construct("Insufficient rights: ". $_SESSION['login_data']); 
   }
 }
 class InvalidLoginException extends Exception
