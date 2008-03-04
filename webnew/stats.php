@@ -29,7 +29,8 @@
 
 ### --------- main() -------------
 include_once('graphdefs.inc');
-$stattypes = array("class","class2","os","os1","os2","os3","switch","vlan","vlan_group","dat");
+#$stattypes = array("switch","vlan","vlan_group","dat", "class","class2","os","os1","os2","os3");
+$stattypes = array("switch","vlan","dat", "wsus1", "class","class2","os","os1","os2","os3");
 $graphtypes = array("pie","bar");
 $orders = array("DESC","ASC");
 // TBD: Organisation unit, Vendor (dell, ...), active or not
@@ -65,34 +66,29 @@ $searchstring='';
 $action_fieldname="";     $idx_fieldname="";
 
 
-$q=<<<TXT
-SELECT switch.name AS Switch, port.name, LastPort as portid, count(*) 
-    FROM systems
-    LEFT JOIN port ON systems.LastPort = port.id
-    LEFT JOIN switch ON port.switch = switch.id
-    WHERE (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-{$conf->web_lastdays}) GROUP BY LastPort
-TXT;
-
 // TODO need to put proper parsing
 // TBD: maybe use the SESSION variable?
-   $type = $_GET["type"];
-   $graphtype = $_GET["graphtype"];
+   if ( isset($_GET["type"]) )
+     $type = $_GET["type"];
+   else 
+     $type = 'os';
 
-   if (!isset($type))      { $type = 'os'; };
-   if (!isset($graphtype)) { $graphtype = 'bar'; };
-   if (!isset($order))     { $order = 'DESC'; };
-// TODO need to put proper parsing
-   $type = $_GET["type"];
-   $graphtype = $_GET["graphtype"];
+   if ( isset($_GET["graphtype"]) )
+     $graphtype = $_GET["graphtype"];
+   else 
+     $graphtype = 'bar';
 
-   if (!$type) { $type = 'os'; };
-   if (!$graphtype) { $graphtype = 'bar'; };
-   if (!$order) { $order = 'DESC'; };
+   if ( isset($_GET["order"]) )
+     $order = $_GET["order"];
+   else 
+     $order = 'DESC';
 
 
 // Do the work: generate a webpage
 
   $report=(new GuiList1($title, false));                //true=dynamic with filtering
+  $report->logger->setDebugLevel(3);
+  $conn=$report->getConnection();     //  make sure we have a DB connection
 
    // ugly temporary "menu bar" TODO nice
    echo "Group by : ";
@@ -105,22 +101,26 @@ TXT;
    };
    echo '<hr>';
 
-
-  // we don't use the standrad query() to build the grid, and our needs are a bit more complex.
-  $conn=$report->getConnection();     //  make sure we have a DB connection
-
-  $q= $sel[$type]['graph'] ." ORDER BY count(*) $order;";  // see graphdefs.inc
-  $logger->debug($q, 3);
-  // TBD: nasty: send via the session variable?
+  echo "\n\n";
   echo '<img src="statgraph.php?stattype='.$type.'&order='.$order.'&graphtype='.$graphtype."\"><br>\n";
+  echo '<br>';
 
+  #$q= $sel[$type]['graph'] ." ORDER BY count(*) $order;";  // see graphdefs.inc
   switch ($type) {
+   case 'wsus1':
+      $q= $sel[$type]['table'] ;  // see graphdefs.inc
+      echo $report->print_stats($q);
+      break;
    case 'dat':
-      echo $report->print_dat_stats($q);
+      $q= $sel[$type]['table'] ." ORDER BY count(*) $order;";  // see graphdefs.inc
+      $report->debug($q, 3);
+      #echo $report->print_dat_stats($q);
+      echo $report->print_stats($q);
       break;
    default:
+      $q= $sel[$type]['table'] ." ORDER BY count(*) $order;";  // see graphdefs.inc
       echo $report->print_stats($q);
-     break;
+      break;
   };
 
   echo $report->print_footer();

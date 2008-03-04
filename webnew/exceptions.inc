@@ -86,7 +86,7 @@ function exception_handler($ex)
 class DatabaseErrorException extends Exception
 {
   function __construct($in1) {
-    logit(' DB error: ' .$in1);
+    logit('DatabaseErrorException: ' .$in1);
     error_page("Database error");
     $_SESSION['exception']=true;    // indicate that we've handled it
     parent::__construct("DB: $in1"); 
@@ -98,6 +98,7 @@ class ArgumentTypeException extends Exception
 {
   function __construct($in_type, $in_expected) {
     $_SESSION['exception']=true;    // indicate that we've handled it
+    logit("ArgumentTypeException: Expected: $in_expected, received: $in_type");
     parent::__construct("Expected: $in_expected, received: $in_type"); 
   }
 }
@@ -112,7 +113,7 @@ class ArgumentRangeException extends Exception
 class InsufficientRightsException extends Exception
 {
   function __construct($in1='') {
-    logit('Insufficient rights: logindata/uid/nacxi_rights' 
+    logit('InsufficientRightsException: logindata/uid/nac_rights' 
       .$_SESSION['login_data'] .", " .$_SESSION['uid'] .", " .$_SESSION['nac_rights'] 
       .' from ' .$_SERVER['REMOTE_ADDR']);
     $_SESSION['exception']=true;    // indicate that we've handled it
@@ -122,7 +123,7 @@ class InsufficientRightsException extends Exception
 class InvalidLoginException extends Exception
 {
   function __construct($in1='') {
-    logit(' Login failed: ' .$in1 .' from ' .$_SERVER['REMOTE_ADDR']);
+    logit('InvalidLoginException: ' .$in1 .' from ' .$_SERVER['REMOTE_ADDR']);
     $_SESSION['exception']=true;    // indicate that we've handled it
     parent::__construct("Login failed: $in1"); 
   }
@@ -152,7 +153,7 @@ function app_error_handler ( $in_errno, $in_errstr, $in_errfile, $in_errline, $i
   #error_log(date('c')
   #          . " Unhandled Error ($in_errfile, $in_errline): "
   #          . "$in_errno, '$in_errstr'\r\n", 3, LOGFILE_PATH);
-  $logger->logit("app_error: $in_errstr"
+  $logger->logit("app_error_handler: $in_errstr"
             . ", in $in_errfile, line: $in_errline, errno=$in_errno");
 
   #/**

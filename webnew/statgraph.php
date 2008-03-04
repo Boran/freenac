@@ -18,28 +18,13 @@
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3);
+  $logger->setDebugLevel(0);     // set to 0 to see graphs
 
   ## Loggin in? User identified?
   include 'session.inc.php';
   check_login(); // logged in?
   #$logger->debug('Start, uid=' .$_SESSION['uid'], 3);
 ## end of standardc header ------
-
-
-include_once('graphdefs.inc');
-// Clean inputs from the web, (security)
-   $_GET=array_map('validate_webinput',$_GET);
-   $_POST=array_map('validate_webinput',$_POST);
-   $_COOKIE=array_map('validate_webinput',$_COOKIE);
-
-
-$graphtype = $_GET["graphtype"];
-$stattype =  $_GET["stattype"];
-$order =  $_GET["order"];
-
-include_once($conf->web_jpgraph.'/jpgraph.php');
-include_once($conf->web_jpgraph.'/jpgraph_'.$graphtype.'.php');
 
 
 // 1. Check rights
@@ -65,22 +50,62 @@ function cbFmtPercentage($aVal) {
 };
 
 
+// ------------ main () ----------------
+
+// Build a query object
+  $report= new WebCommon(false);      // new webpage, no header
+  $report->logger->setDebugLevel(0);  // set to 0 to see graphs
+  $conn=$report->getConnection();     //  make sure we have a DB connection
 
 
-  // Query the data
-  $obj= new Common();
-  $conn=$obj->getConnection();     //  make sure we have a DB connection
-  $q = $sel[$stattype]['graph']." ORDER BY count(*) $order;";
+// Clean inputs from the web, (security)
+   $_GET=array_map('validate_webinput',$_GET);
+   $_POST=array_map('validate_webinput',$_POST);
+   $_COOKIE=array_map('validate_webinput',$_COOKIE);
+
+   if ( isset($_GET["stattype"]) )
+     $stattype = $_GET["stattype"];
+   else
+     $stattype = 'os';
+   //if ($stattype = '') $stattype = 'os';
+
+   if ( isset($_GET["graphtype"]) )
+     $graphtype = $_GET["graphtype"];
+   else
+     $graphtype = 'bar';
+
+   if ( isset($_GET["order"]) )
+     $order = $_GET["order"];
+   else
+     $order = 'DESC';
+
+  $report->debug("stattype=$stattype, graphtype=$graphtype, order=$order", 2);
+  include_once('graphdefs.inc');                      // generic queries
+  include_once($conf->web_jpgraph.'/jpgraph.php');    //TBD handle err if libraries not found
+  include_once($conf->web_jpgraph.'/jpgraph_'.$graphtype.'.php');
+
+
+  // build and run the query
+  switch ($stattype) {
+   case 'wsus1':
+      $q = $sel[$stattype]['graph'] ;
+      break;
+   default:
+      $q = $sel[$stattype]['graph'] ." ORDER BY count(*) $order";
+      break;
+  };
+
+  $report->debug($q, 3);
   $res = $conn->query($q);
   if ($res === FALSE)
        throw new DatabaseErrorException($q .'; ' .$conn->error);
 
   while (($row = $res->fetch_assoc()) !== NULL) {
-	      $data[] = $row["count"];
-	      $data_names[] = $row["datax"]; //." (%.0f%%)";
+      $data[] = $row["count"];
+      $data_names[] = $row["datax"]; //." (%.0f%%)";
   }
 		
-
+  // create the graph
 	if ($graphtype == 'bar') {
 		$graph = new Graph(800,400);
 
@@ -127,5 +152,7 @@ function cbFmtPercentage($aVal) {
 	};
 
 	$graph->Stroke();
+
+
 
 ?> 
