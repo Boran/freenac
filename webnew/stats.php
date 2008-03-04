@@ -4,6 +4,9 @@
  * stats.php
  *
  * Long description for file:
+ * Generate a graphic (by linking to statgraph.php) and printing a table
+ * of corresponding values. Provide a menu at the top.
+ * Queries are listed in graphdefs.inc and include by both this file and statgraph.php.
  *
  * @package     FreeNAC
  * @author      Core team, Originally T.Dagonnier
@@ -31,6 +34,9 @@
 include_once('graphdefs.inc');
 #$stattypes = array("switch","vlan","vlan_group","dat", "class","class2","os","os1","os2","os3");
 $stattypes = array("switch","vlan","dat", "wsus1", "class","class2","os","os1","os2","os3");
+#$stattypes = array("title" -> array ("Switch port usage")
+#                   "action"-> array ("switch")
+#);
 $graphtypes = array("pie","bar");
 $orders = array("DESC","ASC");
 // TBD: Organisation unit, Vendor (dell, ...), active or not
@@ -94,10 +100,12 @@ $action_fieldname="";     $idx_fieldname="";
    echo "Group by : ";
    foreach ($stattypes as $sttp) {
      echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$graphtype&type=$sttp\">$sttp</a> - ";
+     #echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$graphtype&type={$sttp->action}\">{$sttp->title}</a> - ";
    };
    echo "<br>Graph : ";
    foreach ($graphtypes as $grtp) {
-     echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$graphtype&type=$grtp\">$grtp</a> - ";
+     #echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$graphtype&type=$grtp\">$grtp</a> - ";
+     echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$grtp\">$grtp</a> - ";
    };
    echo '<hr>';
 

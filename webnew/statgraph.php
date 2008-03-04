@@ -4,6 +4,8 @@
  * statgraph.php
  *
  * Long description for file:
+ * Generate a grphic given a query.
+ * This script generates a webpage with no text, and graphics must be generated before text.
  *
  * @package     FreeNAC
  * @author      Core team, Originally T.Dagonnier
@@ -11,6 +13,9 @@
  * @license     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 3
  * @version     SVN: $Id: find.php,v 1.1 2008/02/22 13:04:57 root Exp root $
  * @link        http://freenac.net
+ *
+ * To test call from a browser with parameters like this:
+ * http://SERVERNAME/nac/statgraph.php?stattype=os&order=DESC&graphtype=bar
  *
  */
 
@@ -67,7 +72,6 @@ function cbFmtPercentage($aVal) {
      $stattype = $_GET["stattype"];
    else
      $stattype = 'os';
-   //if ($stattype = '') $stattype = 'os';
 
    if ( isset($_GET["graphtype"]) )
      $graphtype = $_GET["graphtype"];
@@ -80,9 +84,18 @@ function cbFmtPercentage($aVal) {
      $order = 'DESC';
 
   $report->debug("stattype=$stattype, graphtype=$graphtype, order=$order", 2);
+
   include_once('graphdefs.inc');                      // generic queries
-  include_once($conf->web_jpgraph.'/jpgraph.php');    //TBD handle err if libraries not found
-  include_once($conf->web_jpgraph.'/jpgraph_'.$graphtype.'.php');
+  $incs=array($conf->web_jpgraph.'/jpgraph.php', $conf->web_jpgraph.'/jpgraph_'.$graphtype.'.php');
+  foreach ($incs as $f) {
+    if (file_exists($f)) {
+      $logger->debug("include $f", 3);
+      include_once($f);       
+    } else {
+      throw new FileMissingException("ERROR: The file $f cannot be opened");
+    } 
+  } 
+
 
 
   // build and run the query

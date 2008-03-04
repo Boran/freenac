@@ -94,6 +94,16 @@ class DatabaseErrorException extends Exception
 }
 
 
+class FileMissingException extends Exception
+{
+  function __construct($in) {
+    $_SESSION['exception']=true;    // indicate that we've handled it
+    logit("FileMissingException: $in");
+    parent::__construct($in); 
+  }
+}
+
+
 class ArgumentTypeException extends Exception
 {
   function __construct($in_type, $in_expected) {
