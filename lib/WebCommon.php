@@ -20,7 +20,7 @@ class WebCommon extends Common
   protected $calling_script;
 
 
-  function __construct()
+  function __construct($show_header=true)
   {
     parent::__construct();
     $this->calling_script=basename($_SERVER['SCRIPT_FILENAME']);   // TBD: clean?
@@ -29,8 +29,8 @@ class WebCommon extends Common
       throw new DatabaseErrorException("PHP has not been compiled with mysqli support");
     }
 
-    // Show Webpage start, is the constructor the right place?
-    echo $this->print_header();  
+    if ($show_header===true) // Show Webpage start, is the constructor the right place?
+      echo $this->print_header();  
   }
 
   /**
@@ -275,6 +275,7 @@ public function print_dat_stats($q)
   $conn=$this->getConnection();     //  make sure we have a DB connection
   $readme_url='http://vil.nai.com/vil/DATReadme.aspx';
   $ret='';
+  $unknown='';
   $total=0;
   $res = $conn->query($q);
   if ($res === FALSE)
@@ -284,7 +285,8 @@ public function print_dat_stats($q)
   $ret.= "<tr><th><a href=\"$readme_url\">DAT Version</a><th>count";
 
      while (($row = $res->fetch_assoc()) !== NULL) {
-       $short_version = strip_datversion($row['DATversion']);
+       #$short_version = $this->strip_datversion($row['virusdatver']);
+       $short_version = $row['virusdatver'];
        if ($short_version > 0) {
                $ret.= "<tr>";
                $ret.= "<td>$short_version</a>";
