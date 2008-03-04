@@ -28,7 +28,8 @@ class GuiList1 extends WebCommon
     $this->logger->setDebugLevel(3);
     $this->dynamic=$dynamic;
     
-    $this->debug(" __construct() " .$_SESSION['login_data'] .":$rep_name", 1);
+    #$this->debug(" __construct() " .$_SESSION['login_data'] .":$rep_name", 1);
+    $this->debug(" __construct() $rep_name", 1);
 
     $txt=<<<TXT
 <div style='text-align: center;' class='text18'>

@@ -21,9 +21,9 @@
  * This class can be extended with 'common' code to simplify derived classes and ensure consistency.
 */
 class Common {
-   protected $conf;
-   public $logger;      // allow access outside derviced classes
-   protected $db_conn;
+   public $conf;
+   public $logger;      // allow access outside derviced classes, ideally would be read-only
+   public $db_conn;
    
    /**
    * Get the current instance of our Settings and Logger classes

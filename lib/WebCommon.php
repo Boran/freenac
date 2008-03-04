@@ -228,6 +228,94 @@ public function get_locationid($port)
   }
 }
 
+
+/**
+ * Lookup the patch outlet name
+ */
+public function get_patch($port)
+{
+  $conn=$this->getConnection(); 
+  $q = "SELECT outlet,location.name as location FROM patchcable LEFT JOIN location ON location.id = patchcable.office WHERE port='$port'";
+  $res = $conn->query($q);
+  if ($res === FALSE)
+       throw new DatabaseErrorException($q .'; ' .$conn->error);
+
+  while (($row = $res->fetch_assoc()) !== NULL) {
+    return($row['outlet'] ." (" .$row['location'] .")");
+  } 
+  return(FALSE);
+}
+
+
+/**
+ * Lookup the patch outlet name
+ */
+public function get_dose($port)
+{
+  $conn=$this->getConnection(); 
+  $q = "SELECT outlet FROM patchcable WHERE port='$port'";
+  $res = $conn->query($q);
+  if ($res === FALSE)
+       throw new DatabaseErrorException($q .'; ' .$conn->error);
+
+  while (($row = $res->fetch_assoc()) !== NULL) {
+    return($row['outlet']);
+  } 
+  return(FALSE);
+}
+
+
+/**
+ * Print a HTML lookup list of switches
+ */
+public function print_switch_sel($sw)
+{
+  $conn=$this->getConnection(); 
+  $q = "SELECT DISTINCT(switch.id) as id, switch.name as name, switch.ip as ip, CONCAT(building.name,' ',location.name) as location
+ FROM systems
+ LEFT JOIN port ON port.id = systems.LastPort
+ LEFT JOIN switch ON port.switch = switch.id
+ LEFT JOIN location ON location.id = switch.location
+  LEFT JOIN building ON building.id = location.building_id
+WHERE  (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-" .$this->conf->web_lastdays .") AND port.switch != ''
+ORDER BY switch.name;";
+
+  $res = $conn->query($q);
+  $html="<select name=sw>\n";
+  if ($res === FALSE)
+       throw new DatabaseErrorException($q .'; ' .$conn->error);
+
+  while (($row = $res->fetch_assoc()) !== NULL) {
+    $html .= '<option value="' .$row['id'] .'"';
+    if ($sw == $row['id']) {
+      $html .= ' selected ';
+    };
+    $html .='>'.$row['name'].' ('.$row['location'].")</option>\n";
+  };
+  $html .= "</select>\n";
+  return($html);
+}
+
+/* not used? */
+function print_dot_sel() 
+{
+  $types = array('dot','neato','fdp','twopi','circo');
+  $html = "<select name=\"dottype\">\n";
+
+  foreach ($types as $mytype) {
+    $html .= '<option value="'.$mytype.'"';
+    if ($this->conf->web_dotcmd == $mytype) {
+      $html .= ' selected ';
+    };
+    $html .= ">$mytype</option>\n";
+  };
+  $html .= "</select>\n";
+  return($html);
+}
+
+
+
+
 /**
  * Look up the first switch or patch location for a port
  */
