@@ -5,7 +5,7 @@
  *
  * Long description for file:
  * Class of common objects/functions for the WebGUI
- * see also the 'Common' Class from which this extends
+ * see also the 'Common' Class which this extends
  *
  * @package     FreeNAC
  * @author      FreeNAC Core Team
@@ -34,17 +34,24 @@ class WebCommon extends Common
   }
 
   /**
-   * Add the class name to debug messages
+   * Add the class name and uid to debug messages
    */
   public function debug($msg, $level=1) 
   {
-    if (isset($_SESSION['uid'])) $uid="uid={$_SESSION['uid']} ";
-    $this->logger->debug($uid .get_class($this) ." " .$msg, $level);
+    if (isset($_SESSION['uid'])) {
+       $this->logger->debug("uid={$_SESSION['uid']} "  .get_class($this) ." " .$msg, $level);
+    } else {
+       $this->logger->debug(get_class($this) ." " .$msg, $level);
+    }
   }
+
   public function logit($msg) 
   {
-    if (isset($_SESSION['uid'])) $uid="uid={$_SESSION['uid']} ";
-    $this->logger->logit(get_class($this) ." " .$msg);
+    if (isset($_SESSION['uid'])) {
+       $this->logger->logit("uid={$_SESSION['uid']} "  .get_class($this) ." " .$msg);
+    } else {
+       $this->logger->logit(get_class($this) ." " .$msg);
+    }
   }
 
 
