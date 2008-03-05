@@ -49,7 +49,6 @@ function main_menu()
             <li><a href="hubs.php">Hub finder</a>: list ports with more than one end-device</li>
             <li><a href="stats.php">Statistics</a>: End_devices per class/OS/VLAN</li>
             <li>Cable + switch port usage: <a href="graphswitch.php">one switch</a>, <a href="graphswitchall.php">all switches</a></li>
-            <li>TBD: Open Ports, Wsus, Epo, Daily stats..
          </ul>
 	 <h3>Configuration</h3>
 	 <ul>

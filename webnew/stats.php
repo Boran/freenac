@@ -34,6 +34,7 @@
 include_once('graphdefs.inc');
 #$stattypes = array("switch","vlan","vlan_group","dat", "class","class2","os","os1","os2","os3");
 $stattypes = array("switch","vlan","dat", "wsus1", "class","class2","os","os1","os2","os3");
+#TBD: create a 2D array with actions and title, to make titles prettier
 #$stattypes = array("title" -> array ("Switch port usage")
 #                   "action"-> array ("switch")
 #);
@@ -77,7 +78,7 @@ $action_fieldname="";     $idx_fieldname="";
    if ( isset($_GET["type"]) )
      $type = $_GET["type"];
    else 
-     $type = 'os';
+     $type = 'switch';
 
    if ( isset($_GET["graphtype"]) )
      $graphtype = $_GET["graphtype"];
@@ -92,17 +93,17 @@ $action_fieldname="";     $idx_fieldname="";
 
 // Do the work: generate a webpage
 
-  $report=(new GuiList1($title, false));                //true=dynamic with filtering
+  $report=(new GuiList1("$title - $type", false));                //true=dynamic with filtering
   $report->logger->setDebugLevel(3);
   $conn=$report->getConnection();     //  make sure we have a DB connection
 
    // ugly temporary "menu bar" TODO nice
-   echo "Group by : ";
+   echo "Report type: ";
    foreach ($stattypes as $sttp) {
      echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$graphtype&type=$sttp\">$sttp</a> - ";
      #echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$graphtype&type={$sttp->action}\">{$sttp->title}</a> - ";
    };
-   echo "<br>Graph : ";
+   echo "<br>Graph type: ";
    foreach ($graphtypes as $grtp) {
      #echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$graphtype&type=$grtp\">$grtp</a> - ";
      echo "<a href=\"" .$_SERVER['PHP_SELF'] ."?graphtype=$grtp\">$grtp</a> - ";

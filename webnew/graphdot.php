@@ -20,7 +20,7 @@
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3);
+  $logger->setDebugLevel(1);
 
   ## Loggin in? User identified?
   include 'session.inc.php';
@@ -86,7 +86,7 @@ if (! isset($sw))
   throw new Exception('Invalid switch');
 
 // generate the HTML page object
-  $report=(new GuiList1($title, false));                //true=dynamic with filtering
+  $report=new WebCommon(false);     // new webpage, no header
   $report->logger->setDebugLevel(1); 
   $conn=$report->getConnection();     //  make sure we have a DB connection
   $dottype=$report->conf->web_dotcmd;   // path to dot tool

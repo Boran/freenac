@@ -96,7 +96,8 @@ ORDER BY switch.name;";
        $row['name']. ' ('. 
        $row['location']. " / ".
        $row['ip']." )\n";
-       echo "<br><img src=\"graphdot.php?sw=". $swi['id']. "\" border=0>\n";
+
+       echo "<br><br><img src=\"graphdot.php?sw=". $row['id']. "\" border=0>\n";
      }
   }
   echo '</table>';
