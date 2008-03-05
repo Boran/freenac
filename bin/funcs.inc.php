@@ -501,6 +501,7 @@ function array_find_value($str,$array,$token,$number)
 */
 function str_get_last($string,$token,$number)          
 {
+   $final='';
    if (! $string || ! $token || ! $number)
       return false;
    $temp=explode($token,$string);
