@@ -8,6 +8,8 @@
  */
 
 
+date_default_timezone_set('CET');
+
 // Web page contents
    $entityname='Swisscom';                # name of your company
    $head_title="$entityname :: FreeNAC ::";
@@ -15,7 +17,6 @@
    $head_right2="<a href='./'>Main Menu</a>";
    $head_left1="<a href='./index.html'><img src='./images/logo_small.png' border='0' /></a>";
 
-date_default_timezone_set('CET');
 
   $sess_name='freenac';
   #$sess_time=3600;       // 3600=60min=1h
@@ -30,7 +31,6 @@ date_default_timezone_set('CET');
   //$drupal_auth=false; # lookup user password & uid from drupal
   $drupal_auth=false;    # lookup user password & uid from drupal
   $drupal_db="drupal";
-
 
 
 // Enable XLS export? (requires the PEAR module Spreadsheet_Excel_Writer)
