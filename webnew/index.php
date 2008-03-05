@@ -47,8 +47,8 @@ function main_menu()
 
          <h3>Reporting</h3> <ul>
             <li><a href="hubs.php">Hub finder</a>: list ports with more than one end-device</li>
-            <li><a href="stats.php">Statistics</a>: End_devices per class/OS/VLAN</li>
-            <li>Cable + switch port usage: <a href="graphswitch.php">one switch</a>, <a href="graphswitchall.php">all switches</a></li>
+            <li><a href="stats.php">Statistics</a>: Port usage, End_devices per Vlan/Class/OS, Epo/Wsus</li>
+            <li>Switch port diagram: <a href="graphswitch.php">one switch</a>, <a href="graphswitchall.php">all switches</a></li>
          </ul>
 	 <h3>Configuration</h3>
 	 <ul>
