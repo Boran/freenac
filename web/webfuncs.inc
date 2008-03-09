@@ -130,10 +130,8 @@ $header1=<<<TEXT
 	</head>
 TEXT;
 
-#  <tr><td>{$head_left1}</td></tr>
-#  <tr><td align="right">{$head_right1}<p>{$head_right2}</p> </td></tr>
 $header2=<<<TEXT
-<table class="bw" width="1000" border="0">
+<table class="header2" width="1000" border="0">
   <tr height="80"> 
     <td valign="center">{$head_left1}</td>
     <td align="right">{$head_right1}<p>{$head_right2}</p> </td>
@@ -141,8 +139,9 @@ $header2=<<<TEXT
   </table>
   <p/>
 TEXT;
+// TBD: why will it not table the width from table#header2_small in bw.css?
 $header2_small=<<<TEXT
-<table class="bw" width="500" border="0" >
+<table id="header2_small" width="500">
   <tr height="80"> 
     <td valign="center">{$head_left1}</td>
     <td align="right">{$head_right1}<p>{$head_right2}</p> </td>

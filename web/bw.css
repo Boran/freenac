@@ -42,13 +42,11 @@ table {
 	background-position: 0px 0px;
 	vertical-align: middle;
 }
-.user_footer {
-	color: grey;
-}
 .text16red {
 	font-size: 16px;
 	color: red;
 }
+
 .text13 {
 	font-size: 13px;
 }
@@ -70,15 +68,10 @@ table {
 
 
 /* 
- * company / account menu
  *
  */
 table#t1 td {
     padding: 4px;
-/*    #border-style: hidden;
-    border: none;  
-    border-width:6px;
-    #border: solid #000 1px; */
 }
 table#t1 {
 /*	# ignored: width='300'; cellspacing='10';
@@ -117,17 +110,87 @@ textarea,input,select {
 	font-size: x-small;
 }
 
-#reportmenu {
-font-size: 140%;
-width: 600px;
-padding: 3px 0;
-border: 1px solid #fff;
-margin: 1 auto;
+#GuiList1Title {
+	text-align: center;
+	font-size: 18px;
+    	padding: 0px;
 }
-#reportmenu li {
-display: inline;
-margin: 3px;
-padding: 4px;
+table#GuiList1Table {
+        color : black;
+	text-align: center;
+	font-size: 13px;
+	border: none;
+}
+table#GuiList1Table td {
+	text-align: left;
+    	padding: 3px;
+}
+#GuiList1form1 {
+	font-size: 140%;
+	width: 600px;
+	padding: 0px 0;
+	border: 0px solid #fff;
+	margin: 1 auto;
+}
+#GuiList1form1 ul {
+	margin: 2px;
+	padding: 2px;
+	line-height: 60%
+}
+#GuiList1form1 li {
+	display: inline;
+	text-align: left;
+	font-size: 13px;
+	margin: 2px;
+	padding: 3px;
+	line-height: 100%
+}
+
+#header2 table  {
+	width: 758px;
+	border: 1px solid #fff;
+}
+table#header2_small {
+	width: 500px;
+	border: 1px solid #0000FF;
+}
+table#header2_small tr {
+	border: 2px;
+}
+
+#user_footer {
+	font-size: 11px;
+	color: grey;
+	text-align: center;
+	width: 500px;
+	padding: 0px 0;
+}
+
+/**
+ * main menu
+ */
+#menu1 {
+	font-size: 140%;
+	width: 758px;
+	padding: 3px 0;
+	border: 0px solid #fff;
+	margin: 0 auto;
+}
+#menu1 h3 {
+	font-size: 16px;
+	padding: 0px; 
+	line-height: 0%
+	text-indent: 50px;
+	letter-spacing: 1px;
+	word-spacing: -1px;
+	text-align: left;
+}
+#menu1 li {
+	font-size: 15px;
+	display: inline;
+	margin: 2px;
+	padding: 3px;
+	line-height: 80%
 }
 
 /*
@@ -135,15 +198,15 @@ padding: 4px;
  *
  */
 #headermenue {
-font-size: 140%;
+	font-size: 140%;
 /*background-color: #00c;*/
-background-color: blue;
-width: 758px;
-padding: 3px 0;
-border: 9px solid #fff;
-margin: 1 auto;
-
+	background-color: blue;
+	width: 500px;
+	padding: 3px 0;
+	border: 9px solid #fff;
+	margin: 1 auto;
 }
+
 #headermenue ul {
 list-style-type: none;
 margin: 0px;
@@ -169,4 +232,19 @@ color: #0c0;
 }
 #headermenue li a:hover, #headermenue li a:focus, #headermenue li a:active {
 color: #ff3; 
+}
+
+.bluebox {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bolder;
+	color: #FFFFFF;
+	background-color: #006699;
+	border: 1px solid #000000;
+}
+.greybox {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	width: 50px;
+	border: 1px solid #000000;
 }

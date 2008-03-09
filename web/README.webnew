@@ -1,34 +1,35 @@
 
 History:
-This is a new OO rewrite of the WebGUI. The original was by Thomas Dagonnier and then Patrick Bizeau rewrote the end device listing and editing. Since then littele features had been creeping in, but no major improvements.
-So this is a complete re-write using mysqli, and OO techniques. The aim is to keep some class generic, that can be easily reused. OO helps with encapsulation: maintenance, adding of new features.
+This is a new OO rewrite of the WebGUI. The original was by Thomas Dagonnier and then Patrick Bizeau rewrote the end device listing and editing. Since then little features had been creeping in, but no major improvements.
+So this is a complete re-write using mysqli and OO techniques. The aim is to keep classes generic where possible, that can be easily reused. OO helps with encapsulation: maintenance, adding of new features.
 
 Overview:
-The Common class in FreeNAC provides access to debug and config options. For the Web GUI this was extended to the WebCommon class with stuff we need for all WebGUI pages: headers/footers. Common was also extended with mysqli funtions.
-So all WebGUI classes are derived from these, which should aviod replicated common DB and HTML tasks. The GuiList1 class is the key generic class for displaying queries as a grid.
-Classes are stored in the /lib directory, web scripts are currently in /webnew (although they will move to /web, once this GUI is out of beta and replaces the old one).
+The Common class in FreeNAC provides access to debug and config options. For the Web GUI this was extended to the WebCommon class with stuff we need for all WebGUI pages: headers/footers. Common was also extended with mysqli functions.
+So all WebGUI classes are derived from these, which should avoid replicated common DB and HTML tasks. 
+Classes are stored in the /lib directory, web scripts are currently in /web.
+The GuiList1 class is the key generic class for displaying queries as a grid.
 
-When the user connects to the WebGUI, it starts with index.html and then index.php, which is a menu and corresponding list of php scripts to start. Most of these work as follows:
- - calling scripts set a query and title variables and call GuiList1_control.php.
- - GuiList1_control.php handles the SubmiT/Post request and instiantes GuiList1 classes as needed.
+When the user connects to the WebGUI, it starts with index.html and then index.php, which is a menu and presents a corresponding list of php scripts to start. Most of these work as follows:
+ - calling scripts set a query + title variables and call GuiList1_control.php.
+ - GuiList1_control.php handles the Submit/Post requests and instantiates GuiList1 classes as needed.
 
 
 Session handling:
+-----------------
 Each script has a standard bit at the top:
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
   include 'session.inc.php';
   check_login(); // logged in?
-This makes aure the debugging class in available, all standard stuff includes, and,
-includes the session handing which resumes or creates a new PHP session (cookie based). check_login() ensures the user is identified stores his/her atributes in the SESSION variable.
-The GuiUserManager class is desgn to encapsulated user logins, currently its working with Apachae base AD login, but there is skeleton code in there for integration into drupal and an sql based login.
+This makes sure the logging class is loaded, all standard stuff included, and,
+includes the session handing which resumes or creates a new PHP session (cookie based). check_login() ensures the user is identified and stores his/her attributes in the SESSION variable.
+The GuiUserManager class is designed to encapsulated user logins, currently its working with Apachae base AD login, but there is skeleton code in there for integration into drupal and an sql based login.
 
 
 A web page with pending issues has been started:
   http://freenac.net/en/techguide/pendingwebgui
-Post you comments/fixes etc. there, or in the Forum.
+Post your comments/fixes etc. there, or in the Support Forum.
 
-27.2.2008/Sean Boran - first beta
-
+08.Mar.2008/Sean Boran - first release
 
 

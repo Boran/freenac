@@ -28,42 +28,63 @@
 
 /**
  * main_menu
- * TBD: make prettier, current focus is functiionality, not form
+ * use bw.css for formatting
  */
 function main_menu()
 {
-         #<ul class=text16 style='list-style: &#187; padding: 0 0 1em 0; margin-bottom: 1em;'>
-         #<div class='button'>
-         #<font class=text20 style='word-spacing: -1px'>FreeNAC for {$_SESSION['organisation']}</font>
-            #<li><a href="report_specs.php"  >List products (specifications)</a></li>
    $text=<<<EOF
          <p>  </p>
-         <div class='text16' style='padding: 4px; line-height: 150%'>
-         <h3>End-device administration</h3> <ul>
-            <li><a href="unknowns.php">List Unknown End-Device/PCs</a></li>
-            <li><a href="find.php">List End-Device/PCs: last seen</a></li>
-            <li><a href="listall.php">List End-Device/PCs: more details</a></li>
+         <div id=menu1>
+         <h3>End-device administration</h3> 
+         <ul>
+            <li><a href="unknowns.php" title="List unknown end devices and print/edit/delete them">Find unknowns</a></li>
+            <li><a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a></li>
+            <li><a href="listall.php"  title="List end devices with lots of detail">Detailed list</a></li>
          </ul>
 
-         <h3>Reporting</h3> <ul>
-            <li><a href="hubs.php">Hub finder</a>: list ports with more than one end-device</li>
-            <li><a href="stats.php">Statistics</a>: Port usage, End_devices per Vlan/Class/OS, Epo/Wsus</li>
-            <li>Switch port diagram: <a href="graphswitch.php">one switch</a>, <a href="graphswitchall.php">all switches</a></li>
+         <h3>Reporting</h3> 
+         <ul>
+            <li><a href="stats.php" title="Port usage, End devices per Vlan/Class/Operating System, 
+	Anti-virus status/Windows Update Errors">Statistics & Graphs</a></li>
+            <li><a href="hubs.php" title="List ports with more than one end-device">Hub finder</a></li>
          </ul>
-	 <h3>Configuration</h3>
+         <ul>
+            <li>Switch port diagrams:</li>
+            <li><a href="graphswitch.php" title="Graphs cables/ports recently used for one switch">single switch</a></li>
+            <li><a href="graphswitchall.php" title="Graphs cables/ports recently used for all switches">all switches</a></li>
+         </ul>
+	 <h3 title="View current FreeNAC settings">Configuration</h3>
 	 <ul>
-		<li><a href="port.php">Switch-Port config</a>, <a href="switch.php">Switches</a>,
-                          <a href="patchcable.php">Patch cables</a>
-		<li>Base: <a href="config.php">Global config</a>, <a href="vlan.php">Vlans</a>, 
-                          <a href="vlanswitch.php">Vlan exceptions</a>
-		<li><a href="user.php">Users</a>, <a href="location.php">Locations</a>, <a href="nmapsubnet.php">Subnets </a>
-		<li><a href="class1.php">Device Class1</a>, <a href="class2.php">Class2</a>
+	    <li><a href="port.php" title="Switch port naming, usage, configuration">Switch-Port</a></li>
+            <li><a href="switch.php" title="Switch names/IPs/settings">Switches</a></li> 
+            <li><a href="patchcable.php" title="Document of cable between switch ports and end devices">Patch cables</a></li>
+	 </ul> 
+	 <ul>
+	    <li>Key settings:</li>
+            <li><a href="config.php" title="Main configuration table">Config</a></li>
+            <li><a href="vlan.php"   title="Definiton of vlan names, numbers">Vlans</a></li>
+            <li><a href="vlanswitch.php" title="Non standard vlan on selected switches">Vlan exceptions</a></li>
+	 </ul> 
+	 <ul>
+	    <li><a href="user.php">Users</a></li>
+            <li><a href="location.php">Locations</a></li>
+            <li><a href="nmapsubnet.php">Subnets </a></li>
+	    <li><a href="class1.php">Device Class1</a></li>
+            <li><a href="class2.php">Class2</a></li>
 	 </ul> 
 	 <h3>Monitoring</h3>
 	 <ul>
-		<li><a href="phpsysinfo/">System information</a>
-		<li>DB history: <a href="loggui.php">GUI changes</a>, <a href="logserver.php">Server activity</a>
-		<li>Syslog: <a href="logtail1.php">messages</a>, <a href="logtaildebug.php">Debug Log</a>
+	    <li><a href="phpsysinfo/">Server information</a></li>
+	 </ul> 
+	 <ul>
+	    <li>DB history:</li>
+            <li><a href="loggui.php">GUI change log</a></li>
+            <li><a href="logserver.php">Server summary log</a></li>
+	 </ul> 
+	 <ul>
+	    <li>Syslog:</li>
+            <li><a href="logtail1.php">Message log</a></li>
+            <li><a href="logtaildebug.php">Debug Log</a></li>
 	 </ul> 
 
          </div>
@@ -73,9 +94,10 @@ EOF;
 
 
 ### --------- main() -------------
-  ob_start();
-  echo print_headerSmall();
+  $report=new WebCommon(false);  
+  $report->logger->setDebugLevel(1);
+  echo $report->print_headerSmall(true);
   #var_dump($_SESSION);
   echo main_menu();
-  echo read_footer();
+  echo $report->print_footer();
 ?>

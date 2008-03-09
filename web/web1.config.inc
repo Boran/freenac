@@ -12,10 +12,10 @@ date_default_timezone_set('CET');
 
 // Web page contents
    $entityname='Swisscom';                # name of your company
-   $head_title="$entityname :: FreeNAC ::";
-   $head_right1="<a href='http://freenac.net'>FreeNAC website</a>";
+   $head_title="FreeNAC :: $entityname ::";
+   $head_right1="<a href='http://freenac.net' title='Visit the FreeNAC Internet Site'>FreeNAC website</a>";
    $head_right2="<a href='./'>Main Menu</a>";
-   $head_left1="<a href='./index.html'><img src='./images/logo_small.png' border='0' /></a>";
+   $head_left1="<a href='./index.html' title='Main Menu'><img src='./images/logo_small.png' border='0' /></a>";
 
 
   $sess_name='freenac';
