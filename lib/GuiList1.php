@@ -32,7 +32,7 @@ class GuiList1 extends WebCommon
     $this->debug(" __construct() $rep_name", 1);
 
     $txt=<<<TXT
-<div style='text-align: center;' class='text18'>
+<div id="GuiList1Title">
   <p>{$rep_name} 
 </div>
 TXT;
@@ -50,12 +50,11 @@ TXT;
 
     $output=<<<EOF
     <form name="GuiList1" action="{$this->calling_script}" method="post">
-    <div id="reportmenu">
-    <ul class=text16>
-       <li>Max. records:<input type='text' value='$limit' 
-           name='sortlimit' size='9' maxlength='20' /></li>
+    <div id="GuiList1form1">
+    <ul>
+       <li>Max. records:<input type='text' value='$limit' name='sortlimit' size='11' maxlength='20' /></li>
 
-       <li>Sort order:<SELECT NAME=sortby>
+       <li>Sort order: <SELECT NAME=sortby>
 EOF;
        foreach ($fields as $field) {
          if ($order==$field->name) {
@@ -65,12 +64,16 @@ EOF;
          }
        }
 
+       $text=<<<EOF
+       </SELECT></li>
+    </ul>
+EOF;
+       $output.= $text;
        // Search fields
        $text=<<<EOF
-       </SELECT><br/>
+    <ul>
        <li>Search:<input type='text' value='$searchstring' 
            name='searchstring' size='19' maxlength='20' /></li>
-
        <li>Search Field:<SELECT NAME=searchby>
 EOF;
        $output.= $text;
@@ -85,7 +88,7 @@ EOF;
        // Change button
        $text=<<<EOF
        </SELECT> </li>
-       <li><input type='submit' name='change' value='Change'/></li>
+       <li><input class="bluebox" type='submit' name='change' value='Change'/></li>
        </ul></div>
        </form>
 EOF;
@@ -103,7 +106,8 @@ EOF;
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $_SESSION['report1_query']=$q;    // save for Report2, for re-use
     
-    $output="<table id='t2' width='1000' border='0' class='text13'>";
+    #$output="<table id='GuiList1Table' width='1000' border='0' class='text13'>";
+    $output="<table id='GuiList1Table'>";
 
     try {
       $rowcount=0;
@@ -167,7 +171,7 @@ EOF;
      <input type=hidden name='action_idxname'   value='{$idx_name}' />
      <input type=hidden name='action_fieldname' value='{$action_fieldname}' />
      <input type=hidden name='action_idx'       value='{$row_id}' />
-     <input type='submit' name='action' value='{$menu_item}'/>
+     <input class="greybox" type='submit' name='action' value='{$menu_item}'/>
  </form>
 EOF;
           } 

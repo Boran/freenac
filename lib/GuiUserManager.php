@@ -25,7 +25,7 @@ class GuiUserManager extends WebCommon
   function __construct()
   {
     parent::__construct();     // See also WebCommon and Common
-    $this->logger->setDebugLevel(3);
+    $this->logger->setDebugLevel(1);
     // broken $this->logger->setLogToStdErr();
     $this->debug(' __construct()', 3);  
     

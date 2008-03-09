@@ -78,21 +78,21 @@ class WebCommon extends Common
 
   public function print_headerSmall($print_links=true)
   {
-    global $header1, $header2, $head_right1, $head_right2;
+    global $header1, $header2, $head_right1, $head_right2, $header2_small;
 
     if (defined('HEADER')){   // already displayed?
       $this->debug('print_headerSmall: HEADER already true',2);
     } 
     else {
       if ($print_links===false) {
-        $lthis->debug('print_header: do not print right links', 3);
+        $lthis->debug('print_headerSmall: do not print right links', 3);
         $head_right1='';
         $head_right2='';
       }
       #$ret= $header1 . $header2;
       $ret= $header1 . $header2_small;
       define('HEADER',true); // The header is out
-      $this->debug('print_header: done', 3);
+      $this->debug('print_headerSmall done', 3);
       return $ret;
     }
   }
@@ -109,10 +109,8 @@ class WebCommon extends Common
       if (!isset ($_SESSION['login_data'])) {
         $userdata=">> Not logged in <<";
         $text=<<<EOF
-  <div align='center'>
-  <font class=user_footer>$userdata</font></p>
-  </div>
-  </tr> </table> </body> </html>
+  </tr> </table> 
+  </body> </html>
 EOF;
       }
       else {
@@ -127,9 +125,7 @@ EOF;
         }
 
         $text=<<<EOF
-  <div align='center'>
-  <font class=user_footer>$userdata</font></p>
-  </div>
+  <div id='user_footer'><p>$userdata</p></div>
   <div id="headermenue">
   <ul>
      <li><A HREF='javascript:javascript:history.go(-1)'< Back</A></li>
