@@ -92,12 +92,123 @@ EOF;
    return $text;
 }
 
+/**
+ * new stly drop down menus
+ * TBD: implement this as a reusable claas!
+*/
+function main_menu2()
+{
+   $text=<<<EOF
+
+<script type="text/javascript"> <!--
+function showHideLayers() { //v9.0
+  var i,p,v,obj,args=showHideLayers.arguments;
+  for (i=0; i<(args.length-2); i+=3) 
+  with (document) if (getElementById && ((obj=getElementById(args[i]))!=null)) { v=args[i+2];
+    if (obj.style) { obj=obj.style; v=(v=='show')?'visible':(v=='hide')?'hidden':v; }
+    obj.visibility=v; }
+}
+//--> </script>
+
+
+<table id="menu0">
+<tbody>
+<tr>
+
+<td><div class="div.smenu_title" id="apDiv2"
+  onmouseover="showHideLayers('smenu_device1','','show')" 
+  onmouseout ="showHideLayers('smenu_device1','','hide')">
+  <a >End-Devices</a>
+  <div class="smenu" id="smenu_device1">
+    <a href="unknowns.php" title="List unknown end devices and print/edit/delete them">Find unknowns</a><br/>
+    <a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a><br/>
+    <a href="listall.php"  title="List end devices with lots of detail">Detailed list</a><br/>
+  </div>
+</div></td>
+
+<td><div class="div.smenu_title" id="apDiv3" 
+  onmouseover="showHideLayers('smenu_stats1','','show')" 
+  onmouseout ="showHideLayers('smenu_stats1','','hide')">
+  <a >Reports</a>
+<div  class="smenu" id="smenu_stats1">
+   <a href="stats.php" title="Port usage, End devices per Vlan/Class/Operating System, Anti-virus status/Windows Update Errors">Statistics & Graphs</a><br/>
+   <a href="hubs.php" title="List ports with more than one end-device">Hub finder</a><br/>
+   <a href="graphswitch.php" title="Graphs cables/ports recently used for one switch">Switch port diagram: single switch</a><br/>
+   <a href="graphswitchall.php" title="Graphs cables/ports recently used for all switches">Switch port diagram: all switches</a><br/>
+</div>
+</div></td>
+
+<td><div class="div.smenu_title" id="apDiv4"
+  onmouseover="showHideLayers('smenu_config','','show')"
+  onmouseout ="showHideLayers('smenu_config','','hide')">
+  <a >Configuration</a>
+<div class="smenu" id="smenu_config">
+
+   <a href="port.php" title="Switch port naming, usage, configuration">Switch-Port</a><br/>
+   <a href="switch.php" title="Switch names/IPs/settings">Switches</a><br/>
+            <a href="config.php" title="Main configuration table">Main Configuration</a><br/>
+            <a href="vlan.php"   title="Definiton of vlan names, numbers">Vlans</a><br/>
+   <a href="patchcable.php" title="Document of cable between switch ports and end devices">Patch cables</a><br/>
+            <a href="vlanswitch.php" title="Non standard vlan on selected switches">Vlan exceptions</a></li>
+	    <a href="user.php">Users</a><br/>
+            <a href="location.php">Locations</a><br/>
+            <a href="nmapsubnet.php">Subnets </a><br/>
+	    <a href="class1.php">Device Class1</a><br/>
+            <a href="class2.php">Class2</a></li>
+</div>
+</div></td>
+
+
+<td><div class="div.smenu_title" 
+  onmouseover="showHideLayers('smenu_mon','','show')"
+  onmouseout ="showHideLayers('smenu_mon','','hide')">
+  <a >Monitoring</a>
+<div class="smenu" id="smenu_mon">
+            <a href="phpsysinfo/">Server information</a><br/>
+            <a href="loggui.php">GUI change log</a><br/>
+            <a href="logserver.php">Server summary log</a><br/>
+            <a href="logtail1.php">Syslog Message log</a><br/>
+            <a href="logtaildebug.php">Syslog Debug Log</a><br/>
+</div>
+</div></td>
+
+
+<td><div class="div.smenu_title"
+  onmouseover="showHideLayers('smenu_help','','show')"
+  onmouseout ="showHideLayers('smenu_help','','hide')">
+  <a >Help</a>
+<div class="smenu" id="smenu_help">
+  <a href="http://freenac.net/en/community?q=en/usersguide">Users Guide</a><br/>
+  <a href="http://freenac.net/en/community?q=en/installguide">Install Guide</a><br/>
+  <a href="http://freenac.net/en/community?q=en/techguide">Technical Guide</a><br/>
+  <a href="http://freenac.net/en/community?q=en/support/faqs">FAQ</a><br/>
+  <a href="http://freenac.net/phpBB2/">FreeNAC Forum</a><br/>
+  <a href="http://freenac.net/en/community">FreeNAC Website</a><br/>
+</div>
+</div></td>
+
+<td><a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a><td>
+
+
+</tr>
+</tbody>
+</table>
+
+EOF;
+   return $text;
+}
 
 ### --------- main() -------------
   $report=new WebCommon(false);  
   $report->logger->setDebugLevel(1);
-  echo $report->print_headerSmall(true);
+  echo $report->print_headerMin();
+
+  echo main_menu2();
+  #echo main_menu();
+  echo <<<EOF
+  <img src='./images/logo500.png' border='0' />
+EOF;
+
   #var_dump($_SESSION);
-  echo main_menu();
-  echo $report->print_footer();
+  echo $report->print_footer(false);
 ?>

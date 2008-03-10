@@ -153,6 +153,8 @@ table#GuiList1Table td {
 table#header2_small {
 	width: 500px;
 	border: 1px solid #0000FF;
+	/*border-top-style: none;
+	border-right-style: none; */
 }
 table#header2_small tr {
 	border: 2px;
@@ -197,25 +199,24 @@ table#header2_small tr {
  * h_emf_pixel_001 http://www.css-menü_menues/horizontal_menue_effekte_mit_farben_pixel_001_003.htm
  *
  */
+
 #headermenue {
 	font-size: 140%;
-/*background-color: #00c;*/
 	background-color: blue;
 	width: 500px;
 	padding: 3px 0;
 	border: 9px solid #fff;
 	margin: 1 auto;
 }
-
 #headermenue ul {
-list-style-type: none;
-margin: 0px;
-padding: px;
+	list-style-type: none;
+	margin: 0px;
+	padding: px;
 }
 #headermenue li {
-display: inline;
-margin: 6px;
-padding: 4px;
+	display: inline;
+	margin: 6px;
+	padding: 4px;
 }
 /*
 color: white;
@@ -234,6 +235,7 @@ color: #0c0;
 color: #ff3; 
 }
 
+
 .bluebox {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 12px;
@@ -248,3 +250,124 @@ color: #ff3;
 	width: 50px;
 	border: 1px solid #000000;
 }
+
+
+/* new menus 
+ *
+ * */
+#apDivX {
+        position:relative;
+        z-index:3;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        color: #FF0000;
+        padding-right: 33px;
+        padding-left: 0px;
+        padding-top: 7px;
+        height: 20px;
+} 
+#apDivX a {
+	font-style: normal;
+	font-weight: normal;
+	color: #000000;
+	text-decoration: none;
+}
+#apDivX a:hover {
+	font-style: normal;
+	font-weight: normal;
+	color: #FF0000;
+	text-decoration: none;
+}
+
+
+/*
+	padding: 3px 0;
+	margin: 1 auto;
+	background-color: blue;
+color: #fff;
+green color: #0c0;
+color: #ff3;
+color: yellow;
+color: white;
+*/
+
+/*background-color: #00c;*/
+/*background-color: blue;*/
+#menu0 {
+        width: 500px;
+        font-size: 14px;
+        border: 9px solid #fff;
+        cellpadding="0";
+        cellspacing="0";
+}
+#menu0 td {
+        margin: 6px;
+        padding: 4px;
+}
+#menu0 td a, #menu0 li a:link {
+        text-decoration: none;
+        padding: 0 5px;
+        color: black;
+}
+#menu0 td a:visited {
+        color: grey;
+}
+#menu0 td a:hover, #menu0 li a:focus, #menu0 li a:active {
+        color: blue;
+}
+
+/*
+ * Sub-menus of the mainmenu
+        position: relative;
+	top: 57px;
+        left: 150px;
+        left: 0px;
+ */
+div.smenu {
+        filter:alpha(opacity=70);   /* IE */
+        -moz-opacity:0.7;           /* Firefox */
+        opacity: 0.7;               /* standard CSS3 */
+        -khtml-opacity: 0.7;        /* Konqueror */
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        font-size: 12px;
+	color: #000000;
+        border: 1px solid #CCCCCC;
+        background-color: #FFFFFF;
+        line-height: 20px;
+
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: 20px;
+	position: absolute;
+        width: 360px;
+	top: 40px;
+        left: 50px;
+        visibility: hidden;
+        text-align: left;
+}
+
+div.smenu_title {
+        z-index:3;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        padding-top: 7px;
+        padding-right: 33px;
+        height: 30px;
+	position:relative;
+	padding-left: 0px;
+	font-size: 14px;
+	color: #FF0000;
+        background-color: red;
+}
+#apDiv2 a {
+	font-style: normal;
+	font-weight: normal;
+	color: #000000;
+	text-decoration: none;
+}
+#apDiv2 a:hover {
+	font-style: normal;
+	font-weight: normal;
+	color: #FF0000;
+	text-decoration: none;
+} 
+
