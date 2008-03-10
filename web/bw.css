@@ -66,6 +66,17 @@ table {
 	font-size: 20px;
 }
 
+.logtext {
+	white-space:pre;
+	font-size: 13px;
+	color: black;
+        padding-right: -2px;
+        padding-left: 0px;
+        padding-top: 0px;
+        padding-bottom: 0px;
+        margin-left: 1em;
+	line-height: 80%
+}
 
 /* 
  *
@@ -292,7 +303,9 @@ color: white;
 */
 
 /*background-color: #00c;*/
-/*background-color: blue;*/
+/*background-color: blue;
+	border-bottom:1px solid #D6D6D6;
+ * */
 #menu0 {
         width: 500px;
         font-size: 14px;
@@ -300,15 +313,19 @@ color: white;
         cellpadding="0";
         cellspacing="0";
 }
-#menu0 td {
-        margin: 6px;
-        padding: 4px;
+#menu0 td a {
+        margin: 5px;
+        padding: 0pt 0px 0.5em;
+	position: relative;
+	right:0px;
+	top: 4px;
 }
-#menu0 td a, #menu0 li a:link {
+/*#menu0 td a, #menu0 li a:link {
+        margin: 5px;
         text-decoration: none;
         padding: 0 5px;
         color: black;
-}
+} */
 #menu0 td a:visited {
         color: grey;
 }
@@ -318,53 +335,71 @@ color: white;
 
 /*
  * Sub-menus of the mainmenu
+ 	background-image:url(images/bullet-triangle.png);
+	background-position:left center;	
+	background-repeat:no-repeat;
         position: relative;
 	top: 57px;
         left: 150px;
         left: 0px;
+	color: #000000;
+        background-color: #FFFFFF;
+        border: 1px solid #CCCCCC;
  */
 div.smenu {
-        filter:alpha(opacity=70);   /* IE */
-        -moz-opacity:0.7;           /* Firefox */
-        opacity: 0.7;               /* standard CSS3 */
-        -khtml-opacity: 0.7;        /* Konqueror */
+        width: 240px;
+        filter:alpha(opacity=90);   /* IE */
+        -moz-opacity:0.9;           /* Firefox */
+        opacity: 0.9;               /* standard CSS3 */
+        -khtml-opacity: 0.9;        /* Konqueror */
         font-family: Verdana, Arial, Helvetica, sans-serif;
         font-size: 12px;
-	color: #000000;
-        border: 1px solid #CCCCCC;
-        background-color: #FFFFFF;
+	color: black;
+        border: 1px solid blue;
+        background-color: white;
         line-height: 20px;
-
         padding-top: 10px;
         padding-bottom: 10px;
-        padding-left: 20px;
+        padding-left: 10px;
 	position: absolute;
-        width: 360px;
-	top: 40px;
-        left: 50px;
+	top: 35px;
+        left: 0px;
         visibility: hidden;
         text-align: left;
 }
+div.smenu a {
+ 	background-image:none;
+	position: absolute;
+        padding-left: 20px;
+}
 
-div.smenu_title {
+/* Title Row */
+div.smenutitle {
         z-index:3;
         font-family: Verdana, Arial, Helvetica, sans-serif;
         padding-top: 7px;
         padding-right: 33px;
         height: 30px;
 	position:relative;
-	padding-left: 0px;
-	font-size: 14px;
+	padding-left: 6px;
+	font-size: 16px;
 	color: #FF0000;
-        background-color: red;
+ 	background-image:url(images/bullet-triangle.png);
+	background-position:left center;	
+	background-repeat:no-repeat;
+	text-ident: 30px;
 }
-#apDiv2 a {
+/*
+	color: red;
+	font-weight: bold;
+ */
+div.smenutitle a {
 	font-style: normal;
 	font-weight: normal;
 	color: #000000;
 	text-decoration: none;
 }
-#apDiv2 a:hover {
+div.smenutitle a:hover {
 	font-style: normal;
 	font-weight: normal;
 	color: #FF0000;

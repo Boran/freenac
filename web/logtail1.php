@@ -27,6 +27,6 @@
 ## end of standardc header ------
 
 
-  new GuiLogtail($conf->web_logtail_file,$conf->web_logtail_length);
+  new GuiLogtail($conf->web_logtail_file, $conf->web_logtail_length);
 
 ?>

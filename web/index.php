@@ -115,7 +115,7 @@ function showHideLayers() { //v9.0
 <tbody>
 <tr>
 
-<td><div class="div.smenu_title" id="apDiv2"
+<td><div class="smenutitle" id="apDiv2"
   onmouseover="showHideLayers('smenu_device1','','show')" 
   onmouseout ="showHideLayers('smenu_device1','','hide')">
   <a >End-Devices</a>
@@ -126,19 +126,19 @@ function showHideLayers() { //v9.0
   </div>
 </div></td>
 
-<td><div class="div.smenu_title" id="apDiv3" 
+<td><div class="smenutitle" 
   onmouseover="showHideLayers('smenu_stats1','','show')" 
   onmouseout ="showHideLayers('smenu_stats1','','hide')">
   <a >Reports</a>
-<div  class="smenu" id="smenu_stats1">
-   <a href="stats.php" title="Port usage, End devices per Vlan/Class/Operating System, Anti-virus status/Windows Update Errors">Statistics & Graphs</a><br/>
-   <a href="hubs.php" title="List ports with more than one end-device">Hub finder</a><br/>
-   <a href="graphswitch.php" title="Graphs cables/ports recently used for one switch">Switch port diagram: single switch</a><br/>
-   <a href="graphswitchall.php" title="Graphs cables/ports recently used for all switches">Switch port diagram: all switches</a><br/>
-</div>
+  <div  class="smenu" id="smenu_stats1">
+     <a href="stats.php" title="Port usage, End devices per Vlan/Class/Operating System, Anti-virus status/Windows Update Errors">Statistics & Graphs</a><br/>
+     <a href="hubs.php" title="List ports with more than one end-device">Hub finder</a><br/>
+     <a href="graphswitch.php" title="Graphs cables/ports recently used for one switch">Switch port diagram: single switch</a><br/>
+     <a href="graphswitchall.php" title="Graphs cables/ports recently used for all switches">Switch port diagram: all switches</a><br/>
+  </div>
 </div></td>
 
-<td><div class="div.smenu_title" id="apDiv4"
+<td><div class="smenutitle" 
   onmouseover="showHideLayers('smenu_config','','show')"
   onmouseout ="showHideLayers('smenu_config','','hide')">
   <a >Configuration</a>
@@ -149,7 +149,7 @@ function showHideLayers() { //v9.0
             <a href="config.php" title="Main configuration table">Main Configuration</a><br/>
             <a href="vlan.php"   title="Definiton of vlan names, numbers">Vlans</a><br/>
    <a href="patchcable.php" title="Document of cable between switch ports and end devices">Patch cables</a><br/>
-            <a href="vlanswitch.php" title="Non standard vlan on selected switches">Vlan exceptions</a></li>
+            <a href="vlanswitch.php" title="Non standard vlan on selected switches">Vlan exceptions</a><br/>
 	    <a href="user.php">Users</a><br/>
             <a href="location.php">Locations</a><br/>
             <a href="nmapsubnet.php">Subnets </a><br/>
@@ -159,7 +159,7 @@ function showHideLayers() { //v9.0
 </div></td>
 
 
-<td><div class="div.smenu_title" 
+<td><div class="smenutitle" 
   onmouseover="showHideLayers('smenu_mon','','show')"
   onmouseout ="showHideLayers('smenu_mon','','hide')">
   <a >Monitoring</a>
@@ -173,7 +173,7 @@ function showHideLayers() { //v9.0
 </div></td>
 
 
-<td><div class="div.smenu_title"
+<td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_help','','show')"
   onmouseout ="showHideLayers('smenu_help','','hide')">
   <a >Help</a>
@@ -189,7 +189,6 @@ function showHideLayers() { //v9.0
 
 <td><a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a><td>
 
-
 </tr>
 </tbody>
 </table>
@@ -204,9 +203,9 @@ EOF;
   echo $report->print_headerMin();
 
   echo main_menu2();
-  #echo main_menu();
+  #echo main_menu();   // TBD: show the old menu if there is no java script?
   echo <<<EOF
-  <img src='./images/logo500.png' border='0' />
+  <img src='./images/logo500.png' border='0' style="padding-left: 30px;"/>
 EOF;
 
   #var_dump($_SESSION);
