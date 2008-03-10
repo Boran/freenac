@@ -76,6 +76,16 @@ class WebCommon extends Common
   }
 
 
+  public function print_headerMin()
+  {
+    global $header1, $header2, $head_right1, $head_right2, $header2_small;
+
+    if (defined('HEADER')){   // already displayed?
+      $this->debug('print_headerSmall: HEADER already true',2);
+    } 
+    return $header1;
+  }
+
   public function print_headerSmall($print_links=true)
   {
     global $header1, $header2, $head_right1, $head_right2, $header2_small;
@@ -85,7 +95,7 @@ class WebCommon extends Common
     } 
     else {
       if ($print_links===false) {
-        $lthis->debug('print_headerSmall: do not print right links', 3);
+        $this->debug('print_headerSmall: do not print right links', 3);
         $head_right1='';
         $head_right2='';
       }
@@ -98,7 +108,7 @@ class WebCommon extends Common
   }
 
 
-  public function print_footer()
+  public function print_footer($print_links=true)
   {
     global $sql_auth, $drupal_auth;
 
@@ -126,15 +136,23 @@ EOF;
 
         $text=<<<EOF
   <div id='user_footer'><p>$userdata</p></div>
+EOF;
+        if ($print_links===true) {
+          $text.=<<<EOF
   <div id="headermenue">
   <ul>
      <li><A HREF='javascript:javascript:history.go(-1)'< Back</A></li>
      <li><a href="./index.php">Main Menu</a></li>
      $logout_button
   </ul> </div>
-  </tr> </table> </body> </html>
 EOF;
      #<li><a href="./ChooseAccount.php">Change Account</a></li>
+        }
+
+          $text.=<<<EOF
+  </tr> </table> </body> </html>
+EOF;
+
       }
       return $text;
 
