@@ -65,11 +65,14 @@ class GuiLogtail extends WebCommon {
             $this->logger->logit("Tail Error: ($cmd) $error");
         }
         else {
-            $text .= "\n<p>\n<pre>\n";
+            //$text .= "\n<p>\n<pre>\n";
+            $text .= "\n<p class='logtext'>";
             foreach ($logtext as $logline) {
-                $text .= $logline."\n";
+                //$text .= $logline."\n";
+                $text .= $logline ."<br/>\n";
             };
-            $text .= "</pre>";
+            //$text .= "</pre>";
+            $text .= "</p>";
         };
         return($text);
   }
