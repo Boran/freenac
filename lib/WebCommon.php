@@ -78,10 +78,10 @@ class WebCommon extends Common
 
   public function print_headerMin()
   {
-    global $header1, $header2, $head_right1, $head_right2, $header2_small;
+    global $header1;
 
     if (defined('HEADER')){   // already displayed?
-      $this->debug('print_headerSmall: HEADER already true',2);
+      $this->debug('print_headerMin: HEADER already true',2);
     } 
     return $header1;
   }

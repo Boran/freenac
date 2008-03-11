@@ -84,6 +84,9 @@ LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid'
 #                                                LEFT JOIN nac_servicestcp ON nac_openports.port = nac_servicestcp.port
 #                                                WHERE host = '$nmap_id' and protocol='tcp' ;";
                 $ports = mysql_query($sel) or die ("Unable to query MySQL ($sel)");
+		$openport_descr=array();
+		$openport_banner=array();
+		$openport_proto=array();
                 if (mysql_num_rows($ports) > 0) {
                         while ($port = mysql_fetch_array($ports)) {
                                 $openport[$port['serviceid']] = $port['port'];
@@ -162,11 +165,17 @@ LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid'
                 $out .= '<tr><td>Time of last scan<td colspan=2>'.$nmap['timestamp'];
                 $out .= '<tr><td>OS Detection<td colspan=2>'.$nmap['os'];
                 $out .= '<tr><td colspan=3 bgcolor="#EEEEEE"><b>Open TCP ports</b>';
+		$banner ='';
+		$sdescr =array();
                         foreach($openport as $num => $port) {
-                                $sdescr = explode(',',$openport_descr[$num]);
-                                $banner = $openport_banner[$num];
-                                $out .= '<tr><td>'.$port.'/'.strtolower($openport_proto[$num]);
-                                $out .= '<td>'.$sdescr[0].'<td>'.$openport_banner[$num];
+                                if ( isset( $openport_descr[$num] ) ) 
+					$sdescr = explode(',',$openport_descr[$num]);
+                                if ( isset( $openport_banner[$num] ) ) 
+                                	$banner = $openport_banner[$num];
+                                if ( isset( $openport_proto[$num] ) ) 
+                                	$out .= '<tr><td>'.$port.'/'.strtolower($openport_proto[$num]);
+                                if ( isset( $sdescr[0] ) ) 
+                                	$out .= '<td>'.$sdescr[0].'<td>'.$banner;
                         };
         };
 

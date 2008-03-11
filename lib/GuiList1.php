@@ -25,7 +25,7 @@ class GuiList1 extends WebCommon
   function __construct($rep_name='', $dynamic=false)
   {
     parent::__construct();     // See also WebCommon and Common
-    $this->logger->setDebugLevel(3);
+    $this->logger->setDebugLevel(1);  // 3 for max debugging
     $this->dynamic=$dynamic;
     
     #$this->debug(" __construct() " .$_SESSION['login_data'] .":$rep_name", 1);
@@ -106,8 +106,7 @@ EOF;
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $_SESSION['report1_query']=$q;    // save for Report2, for re-use
     
-    #$output="<table id='GuiList1Table' width='1000' border='0' class='text13'>";
-    $output="<table id='GuiList1Table'>";
+    $output="<table id='GuiList1Table'>"; // note the CSS id: do your formatting in CSS!
 
     try {
       $rowcount=0;
@@ -116,8 +115,7 @@ EOF;
       $searchstring=$this->real_escape_string1($searchstring, $conn);
       $searchby=$this->real_escape_string1($searchby, $conn);
       if ((strlen($searchby)>0) && (strlen($searchstring)>0) ) {
-        $q.=" WHERE $searchby LIKE '%$searchstring%' ";    // TBD
-        #$q.=" WHERE sys.name LIKE '%$searchstring%' "; 
+        $q.=" WHERE $searchby LIKE '%$searchstring%' "; 
       } 
       $this->debug("query searchby=$searchby, searchstring=$searchstring", 3);
 
@@ -184,17 +182,20 @@ EOF;
         } 
         $output.= "</tr>";
         $shade = !$shade;  // toggle shading for the next line
-      }
+      }                    // while row
 
       if (! empty($indices))
         $_SESSION['report1_indices']=serialize($indices);  // remember index values
+
       // Inform the user if no data was returned
       if ( ($rowcount)==0 ) {
         $output.= "<br/><tr><td colspan='4' align='center' class='text16red'>The report is empty</td></tr><tr></tr><br/>";
 
       } else {
         // There is data, show the Limit/sortOrder menus
+        #$output.= '<tr><td style="color:#000000; font-weight:bold;">' .$rowcount .' result(s) returned.</td></tr>';
         $output.= $this->print_report_menu($limit, $order, $fields, $searchby, $searchstring);
+        $output.= '<br>' .$rowcount .' matching result(s) found:</br>';
       }
 
       $res->close();

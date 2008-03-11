@@ -4,10 +4,11 @@
  * GuiEditDevice.php
  *
  * Long description for file:
- * Class to Display a generic Query, with sorting and active buttons
+ * Allow End-Device records to edited, deleted or inserted.
+ * Specific to the FreeNAC DB schema.
  *
  * @package     FreeNAC
- * @author      Sean Boran (FreeNAC Core Team)
+ * @author      Many: S.Boran, T.Dagonnier, P.Bizeau
  * @copyright   2008 FreeNAC
  * @license     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 3
  * @version     SVN: $Id$
@@ -21,29 +22,24 @@ class GuiEditDevice extends WebCommon
   private $id;      // See also WebCommon and Common
 
 
-  function __construct($id=0)
+  function __construct($id=0, $rep_name='Edit End-Device Details')
   {
-    parent::__construct();     // See also WebCommon and Common
+    parent::__construct(false);     // See also WebCommon and Common
     $this->logger->setDebugLevel(3);
-    if ( ($id===0) || (!is_numeric($id)) ) 
+
+    //if ( ($id===0) || (!is_numeric($id)) ) 
+    if ( (!is_numeric($id)) )     // allow 0 as a default, must be a number though
        throw new InvalidWebInputException("invalid record index");
 
-    $this->id=$id;                   // remember the recoprd number
+    $this->id=$id;                   // remember the record number
     $_SESSION['report1_index']=$id;  // for passing to other scripts
 
     
     $this->debug($_SESSION['login_data'] .":Id=$id:" , 1);
 
     // Show Webpage start, is the constructor the right place?
-    echo $this->print_header();
-
-    # TBD: align='centre' does not work
-    $txt=<<<TXT
-<div style='text-align: centre;' class='text18'>
-  <p>Edit End-Device Details
-</div><br/>
-TXT;
-    echo $txt;
+    echo $this->print_headerSmall(false);
+    echo "<div id='GuiList1Title'>{$rep_name}</div>";
   }
 
 
@@ -80,6 +76,36 @@ TXT;
     }
   }
 
+  /**
+   * Insert a newrecord
+   */
+  public function UpdateNew()
+  {
+    $this->debug("UpdateNew()", 3);
+    var_dump($_REQUEST);
+    if ($_SESSION['nac_rights']<2)
+      throw new InsufficientRightsException($_SESSION['nac_rights']);
+    $conn=$this->getConnection();     //  make sure we have a DB connection
+
+    #echo "<p class='UpdateMsg'>Insert Pending</p>";
+    #$this->id
+    $q=<<<TXT
+INSERT INTO systems SET man=$mac, name=$name, comment=$comment 
+TXT;
+
+    try {
+      $q='';
+
+
+      $this->logit("UpdateNew() Index {$this->id} done");
+
+    } catch (Exception $e) {
+      throw $e;
+    }
+
+ }
+
+
 
   /**
    * Update a record
@@ -87,11 +113,7 @@ TXT;
   public function Update()
   {
     $this->debug("Update()", 3);
-      $txt=<<<TXT
-<div style='text-align: centre;' class='text18'>
-  <p>Update pending
-</div><br/>
-TXT;
+    #echo "<p class='UpdateMsg'>Update Pending</p>";
     #var_dump($_REQUEST);
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
@@ -146,12 +168,7 @@ TXT;
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
 
-      $txt=<<<TXT
-<div style='text-align: center;' class='text18'>
-  Update Successful
-</div>
-TXT;
-      echo $txt;
+      echo "<p class='UpdateMsg'>Update Successful</p>";
 
     } catch (Exception $e) {
       throw $e;
@@ -160,7 +177,56 @@ TXT;
 
 
   /**
-   * Generic query report
+   * Add a new device
+   */
+  public function add()
+  {
+    $conn=$this->getConnection();     //  make sure we have a DB connection
+    $this->debug("EditDevice::Add() ", 3);
+    #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
+    $output ='<form action="GuiEditDevice_control.php" method="POST">';
+    #$output.="<table id='t3' width='760' border='0' class='text13'>";
+    $output.="<table id='GuiEditDeviceAdd'>";
+
+    $name='unknown'; $mac='0001.0001.0001'; $comment='New device DATE';
+    try {
+
+        // Name, MAC
+        $output.=<<<TXT
+        <tr><td width="87" title="What name is to be used by FreeNAC to reference this device?">Name:</td>
+            <td width="400"> <input name="name" type="text" value="{$name}" />
+        </td></tr>
+        <tr><td width="87"  title="Enter a valid 12 digit hex MAC address, in the format xxxx.yyyy.zzzz ">MAC:</td>
+            <td width="400"> <input name="mac" type="text" value="{$mac} "/>
+        </td></tr>
+TXT;
+        // Status
+        $output.=  '<tr><td title="Is the new device to be allowed on the network">Status:</td><td>'."\n";
+        $output.=  $this->get_statusdropdown(1) . '</td></tr>'."\n";
+        // VLAN, last vlan/date
+        $output.= "<tr><td title='What vlan to be assigned to this device?'>VLAN: </td><td>\n"
+          . $this->get_vlandropdown($this->conf->default_vlan) . '</td>';
+
+      $output.=<<<TXT
+        <tr><td></td><td>
+        <input type="submit" class="bluebox" name="action" value="Add" onclick="return checkForm();"
+		title="Click to add a new device with the above details"/>
+	</td>
+        </form>
+	</table>
+TXT;
+
+    } catch (Exception $e) {
+      throw $e;
+    }
+    return($output);
+  }                               // function
+
+
+
+
+  /**
+   * Display a device record, allow changes.
    */
   public function query()
   {
@@ -176,7 +242,6 @@ SELECT sys.id, sys.name, sys.mac, sys.status, sys.vlan, lvlan.default_name as la
   LIMIT 1
 TXT;
 
-
     try {
       $this->debug("EditDevice::query() $q", 3);
       $res = $conn->query($q);
@@ -185,14 +250,12 @@ TXT;
 
       // Title: Grab the list of field names
       $fields=$res->fetch_fields();
-      while (($row = $res->fetch_assoc()) !== NULL) {
-        #$this->debug(var_dump($row), 3);
-
       #  foreach ($fields as $field) {
       #    $fname=$field->name;
       #    $output.="<tr><td>$fname</td><td>{$row[$fname]}</td></tr>";
       #  }
-
+      while (($row = $res->fetch_assoc()) !== NULL) {
+        #$this->debug(var_dump($row), 3);
         // Name
         $output.= '<tr><td width="87">Name:</td><td width="400">' ."\n";
         $output.= '<input name="name" type="text" value="' .stripslashes($row['name']) .'"/>' ."\n";
@@ -247,8 +310,8 @@ TXT;
          // Submit
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
         $output.= '<tr><td>&nbsp;</td><td>' ."\n"
-           . '<input type="submit" name="action" value="Update" />' .'&nbsp;'
-           . '<input type="submit" name="action" value="Delete" />' ."\n"
+           . '<input type="submit" name="action" class="bluebox" value="Update" />' .'&nbsp;'
+           . '<input type="submit" name="action" class="bluebox" value="Delete" />' ."\n"
            . '</td></tr>' ."\n";
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
@@ -264,7 +327,6 @@ TXT;
 
 
     } catch (Exception $e) {
-      #if ($in_db_conn === NULL and isset($conn))
       if (isset($conn))
         $conn->close();
       throw $e;
@@ -481,7 +543,6 @@ if ( isset($_POST['submit']) ) {             // form submit, check fields
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
   $logger->setDebugLevel(1);
-
   $logger->debug("EditDevice main -submit");
   #echo handle_submit();
 
