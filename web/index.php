@@ -40,6 +40,7 @@ function main_menu()
             <li><a href="unknowns.php" title="List unknown end devices and print/edit/delete them">Find unknowns</a></li>
             <li><a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a></li>
             <li><a href="listall.php"  title="List end devices with lots of detail">Detailed list</a></li>
+            <li><a href="GuiEditDevice_control.php"  title="Add a new end device to the database">Add end-device</a></li>
          </ul>
 
          <h3>Reporting</h3> 
@@ -93,7 +94,7 @@ EOF;
 }
 
 /**
- * new stly drop down menus
+ * new style drop down menus
  * TBD: implement this as a reusable claas!
 */
 function main_menu2()
@@ -123,6 +124,7 @@ function showHideLayers() { //v9.0
     <a href="unknowns.php" title="List unknown end devices and print/edit/delete them">Find unknowns</a><br/>
     <a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a><br/>
     <a href="listall.php"  title="List end devices with lots of detail">Detailed list</a><br/>
+    <a href="GuiEditDevice_control.php?action=Add"  title="Add a new End-Device/PC to the Database">Add new End-Device</a><br/>
   </div>
 </div></td>
 

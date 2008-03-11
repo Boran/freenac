@@ -20,7 +20,7 @@
   include '/opt/nac/lib/session.inc.php'; // TBD: get rid of absolute path?
 
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3); // 0 to 3 syslog debugging levels
+  $logger->setDebugLevel(1); // 0 to 3 syslog debugging levels
   check_login();             // logged in? User identified?
   #$logger->debug('Start, uid=' .$_SESSION['uid'], 3);
 # --- end of standard header ------
@@ -28,6 +28,7 @@
 // Clean inputs from the web, (security)
    $_GET=array_map('validate_webinput',$_GET);
    $_POST=array_map('validate_webinput',$_POST);
+   $_REQUEST=array_map('validate_webinput',$_REQUEST);
    $_COOKIE=array_map('validate_webinput',$_COOKIE);
 
 
@@ -48,14 +49,14 @@ $idx_fieldname    = isset($idx_fieldname) ? $idx_fieldname : $action_fieldname;
 
 
 ###### Standard CHANGE (limit|sort) button ############
-if ( isset($_POST['change']) ) {      
-  $logger->debug("POST: change", 1);
-  #$logger->debug(var_dump($_POST), 3);
+if ( isset($_REQUEST['change']) ) {      
+  $logger->debug("REQUEST: change", 1);
+  #$logger->debug(var_dump($_REQUEST), 3);
 
   global $logger, $q;
 
-  if ( ( !isset($_POST['sortby']) || !isset($_POST['sortlimit']) )
-       || empty($_POST['sortby']) || empty($_POST['sortlimit'])
+  if ( ( !isset($_REQUEST['sortby']) || !isset($_REQUEST['sortlimit']) )
+       || empty($_REQUEST['sortby']) || empty($_REQUEST['sortlimit'])
        )  { // show an error message
 
     $logger->debug('No change submitted: order or limit invalid', 1);
@@ -65,15 +66,15 @@ if ( isset($_POST['change']) ) {
     echo $report->print_footer();
 
   } else {
-    if ( isset($_POST['sortby'])  )
-      $sortby   =$_POST['sortby'];    // inputs validated in Report1->query
-    if ( isset($_POST['sortlimit'])  )
-      $sortlimit=$_POST['sortlimit'];
-    if ( isset($_POST['searchby']) && isset($_POST['searchstring']) ) {
-      $searchby   =$_POST['searchby'];    // Column title, but what about name?
-      $searchstring=$_POST['searchstring'];
+    if ( isset($_REQUEST['sortby'])  )
+      $sortby   =$_REQUEST['sortby'];    // inputs validated in Report1->query
+    if ( isset($_REQUEST['sortlimit'])  )
+      $sortlimit=$_REQUEST['sortlimit'];
+    if ( isset($_REQUEST['searchby']) && isset($_REQUEST['searchstring']) ) {
+      $searchby   =$_REQUEST['searchby'];    // Column title, but what about name?
+      $searchstring=$_REQUEST['searchstring'];
     } 
-    $logger->debug("Report1_control.php: sortby=$sortby, sortlimit=$sortlimit, "
+    $logger->debug("GuiList1_control.php: sortby=$sortby, sortlimit=$sortlimit, "
       ."searchby=$searchby, searchstring=$searchstring", 1);
 
     #$report=new CallWrapper(new GuiList1($title, true));                //true=dynamic with filtering
@@ -87,15 +88,15 @@ if ( isset($_POST['change']) ) {
 
 
 ###### CUSTOM: Print button  ############
-} else if (isset($_POST['action']) && $_POST['action']=='Print') { 
-  $logger->debug("GuiList1_control action: ". $_POST['action'], 1);
+} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Print') { 
+  $logger->debug("GuiList1_control action: ". $_REQUEST['action'], 1);
 
-  if ( !isset($_POST['action_fieldname']) || !isset($_POST['action_idxname']) || !isset($_POST['action_idx']) ) {
+  if ( !isset($_REQUEST['action_fieldname']) || !isset($_REQUEST['action_idxname']) || !isset($_REQUEST['action_idx']) ) {
     throw new InvalidWebInputException("Report has no valid action parameters");
   }
-  $action_fieldname=$_POST['action_fieldname'];
-  $action_idxname  =$_POST['action_idxname'];
-  $action_idx      =$_POST['action_idx'];
+  $action_fieldname=$_REQUEST['action_fieldname'];
+  $action_idxname  =$_REQUEST['action_idxname'];
+  $action_idx      =$_REQUEST['action_idx'];
   $logger->debug("GuiList1_control action_idx=$action_idx fieldname=$action_fieldname action_idxname=$action_idxname", 2);
   $title="$action_fieldname $action_idx";
 
@@ -120,42 +121,42 @@ if ( isset($_POST['change']) ) {
 
 
 ###### CUSTOM buttons  ############
-} else if (isset($_POST['action']) && $_POST['action']=='Edit') {
-  $logger->debug("action: ". $_POST['action'], 1);
+} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Edit') {
+  $logger->debug("action: ". $_REQUEST['action'], 1);
   $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
   include "GuiEditDevice_control.php";
 
-} else if (isset($_POST['action']) && $_POST['action']=='Update') {
-  $logger->debug("action: ". $_POST['action'], 1);
+} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Update') {
+  $logger->debug("action: ". $_REQUEST['action'], 1);
   $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
   include "GuiEditDevice_control.php";
 
-} else if (isset($_POST['action']) && $_POST['action']=='Delete') {
-  $logger->debug("action: ". $_POST['action'], 1);
+} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Delete') {
+  $logger->debug("action: ". $_REQUEST['action'], 1);
   $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
   include "GuiEditDevice_control.php";
 
 
 ###### Default page: menu ############
 } else {             // this is where we start, first time
-  if (isset($_POST['action']) )
-     $logger->debug("Report1_control:default action: " .$_POST['action'], 1);
+  if (isset($_REQUEST['action']) )
+     $logger->debug("GuiList1_control.php:default action: " .$_REQUEST['action'], 1);
   else
-     $logger->debug("Report1_control:default action ", 3);
+     $logger->debug("GuiList1_control.php:default action ", 3);
   #$report=new CallWrapper(new GuiList1($title, true));                  //true=dynamic with filtering
   #echo $report->query($q, 10, '', $action_menu, $action_fieldname, $idx_fieldname);      // query, limit, no order
   #echo $report->print_footer();
 
-  // Use the default setting in our calling script, or what we get via POST:
-    if ( isset($_POST['sortby'])  )
-      $sortby   =$_POST['sortby'];    // inputs validated in Report1->query
-    if ( isset($_POST['sortlimit'])  )
-      $sortlimit=$_POST['sortlimit'];
-    if ( isset($_POST['searchby']) && isset($_POST['searchstring']) ) {
-      $searchby   =$_POST['searchby'];    // Column title, but what about name?
-      $searchstring=$_POST['searchstring'];
+  // Use the default setting in our calling script, or what we get via REQUEST:
+    if ( isset($_REQUEST['sortby'])  )
+      $sortby   =$_REQUEST['sortby'];    // inputs validated in Report1->query
+    if ( isset($_REQUEST['sortlimit'])  )
+      $sortlimit=$_REQUEST['sortlimit'];
+    if ( isset($_REQUEST['searchby']) && isset($_REQUEST['searchstring']) ) {
+      $searchby   =$_REQUEST['searchby'];    // Column title, but what about name?
+      $searchstring=$_REQUEST['searchstring'];
     } 
-    $logger->debug("Report1_control.php: sortby=$sortby, sortlimit=$sortlimit, "
+    $logger->debug("GuiList1_control.php: sortby=$sortby, sortlimit=$sortlimit, "
       ."searchby=$searchby, searchstring=$searchstring", 1);
     #$report=new CallWrapper(new GuiList1($title, true));                //true=dynamic with filtering
     $report=(new GuiList1($title, true));                //true=dynamic with filtering

@@ -66,6 +66,7 @@ function cbFmtPercentage($aVal) {
 // Clean inputs from the web, (security)
    $_GET=array_map('validate_webinput',$_GET);
    $_POST=array_map('validate_webinput',$_POST);
+   $_REQUEST=array_map('validate_webinput',$_REQUEST);
    $_COOKIE=array_map('validate_webinput',$_COOKIE);
 
    if ( isset($_GET["stattype"]) )
@@ -88,7 +89,7 @@ function cbFmtPercentage($aVal) {
   include_once('graphdefs.inc');                      // generic queries
   $incs=array($conf->web_jpgraph.'/jpgraph.php', $conf->web_jpgraph.'/jpgraph_'.$graphtype.'.php');
   foreach ($incs as $f) {
-    if (file_exists($f)) {
+    if (is_readable($f)) {
       $logger->debug("include $f", 3);
       include_once($f);       
     } else {

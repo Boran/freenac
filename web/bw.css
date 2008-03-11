@@ -77,6 +77,14 @@ table {
         margin-left: 1em;
 	line-height: 80%
 }
+.UpdateMsg {
+	font-size: 17px;
+        font-family: "Courier New", Courier, mono;
+	line-height: 80%;
+	text-align: left;
+	color: red;
+}
+
 
 /* 
  *
@@ -122,9 +130,20 @@ textarea,input,select {
 }
 
 #GuiList1Title {
-	text-align: center;
+	text-align: left;
 	font-size: 18px;
-    	padding: 0px;
+        padding-right: 3px;
+        padding-left: 25px;
+        padding-top: 27px;
+        height:0px;
+}
+table#GuiEditDeviceAdd {
+        color : black;
+        text-align: left;
+        font-size: 14px;
+        border: none;
+    	padding: 50px;
+        line-height: 25px;
 }
 table#GuiList1Table {
         color : black;
@@ -405,4 +424,6 @@ div.smenutitle a:hover {
 	color: #FF0000;
 	text-decoration: none;
 } 
+
+
 

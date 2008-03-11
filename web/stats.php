@@ -45,6 +45,7 @@ $orders = array("DESC","ASC");
 // Clean inputs from the web, (security)
    $_GET=array_map('validate_webinput',$_GET);
    $_POST=array_map('validate_webinput',$_POST);
+   $_REQUEST=array_map('validate_webinput',$_REQUEST);
    $_COOKIE=array_map('validate_webinput',$_COOKIE);
 
 

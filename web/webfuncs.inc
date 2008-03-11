@@ -128,7 +128,46 @@ $header1=<<<TEXT
 	  <title>{$head_title}</title>
 	  <link href="bw.css" rel="stylesheet" type="text/css" />
 	</head>
+
+<script language="JavaScript">
+function checkForm()
+{
+        var cname, cmac;
+        with(window.document.msgform)
+        {
+                cname    = name;
+                cmac   = mac;
+        }
+
+        if(trim(cname.value) == \'\')
+        {
+                alert(\'Please enter a name\');
+                cname.focus();
+                return false;
+        }
+        else if(trim(cmac.value) == \'\')
+        {
+                alert(\'Please enter a mac\');
+                cmac.focus();
+                return false;
+        }
+        else
+        {
+                cname.value    = trim(cname.value);
+                cmac.value   = trim(cemail.value);
+                return true;
+        }
+}
+/* Strip whitespace from the beginning and end of a string
+Input : a string
+*/
+function trim(str)
+{
+        return str.replace(/^\s+|\s+$/g,\'\');
+}
+</script>
 TEXT;
+
 
 $header2=<<<TEXT
 <table class="header2" width="1000" border="0">
@@ -543,6 +582,7 @@ function debug_dump()
     echo "</table>\n";
   }
 
+dump_array($_REQUEST);
 dump_array($_POST);
 dump_array($_GET);
  */

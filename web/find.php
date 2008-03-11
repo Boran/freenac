@@ -19,7 +19,7 @@
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3);
+  $logger->setDebugLevel(1);
 
   ## Loggin in? User identified?
   include 'session.inc.php';
