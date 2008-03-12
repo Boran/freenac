@@ -159,7 +159,7 @@ EOF;
             # Get the time difference between the current time and the expiry date		
             $timestamp=date('Y-m-d H:i:s');
             $time=time_diff($timestamp,$expiry);
-            if ($time<0) 
+            if ((! $time) || ($time<0)) 
             {
                return true;
             }
@@ -262,6 +262,8 @@ EOF;
       $query="SELECT vendor FROM ethernet WHERE mac LIKE '%$prefix%';";
       $this->logger->debug($query,3);
       $vendor=v_sql_1_select($query);
+      if ( ! $vendor )
+         return '';
       $vendor=rtrim($vendor,',');
       return trim($vendor);
    }

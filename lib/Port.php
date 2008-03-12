@@ -137,7 +137,7 @@ EOF;
             $query="SELECT id FROM vlan WHERE default_name='$lastvlan';";
             $this->logger->debug($query,3);
             $temp_vlan=v_sql_1_select($query);
-            if ($temp_vlan>0)
+            if ($temp_vlan && ($temp_vlan>0))
                $this->props['last_vlan']=$temp_vlan;
             else
                $this->props['last_vlan']=0;
