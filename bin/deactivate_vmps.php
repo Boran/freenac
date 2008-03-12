@@ -231,6 +231,8 @@ fclose($file);
 if ($j==1)
 {
    $total_db=v_sql_1_select("select count(*) from port where last_auth_profile='2';");
+   if (! $total_db)
+      $total_db = 0;
    $string="Switches in total: $total_switches\tPorts affected: $affected_ports out of $total_ports\tNumber of ports to be affected (from db): $total_db";
    $logger->logit( "$string\n");
    $logger->setLogToStdOut(false);

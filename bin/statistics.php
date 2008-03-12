@@ -29,7 +29,7 @@ $query = "SELECT count(*) FROM stats WHERE datetime >= DATE_SUB(NOW(), INTERVAL 
 $logger->debug($query,3);
 $today_records = v_sql_1_select($query);
 # Do we have records from today?
-if ($today_records == 0)
+if ($today_records && ($today_records == 0))
 {
    #Get number of active systems within last 24 hours
    $query="select id, health, status from systems where date_sub(CURDATE(),interval 1 day) <= LastSeen;";

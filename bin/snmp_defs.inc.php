@@ -253,7 +253,7 @@ function detect_hub ($REQUEST)
       $logger->debug($query,3);
       $last_vlan_group = v_sql_1_select($query);
 
-      if ($last_vlan_group == $new_vlan_group)
+      if (($new_vlan_group) && ($last_vlan_group == $new_vlan_group))
       {
          #Stay with the existing vlan, to preserve connectivity
          $result = $lvlan_id;
@@ -292,7 +292,7 @@ EOF;
                $query = "SELECT vlan_group FROM vlan WHERE id='$other_vlan';";
                $logger->debug($query,3);
                $other_vlan_group = v_sql_1_select($query);
-               if ($other_vlan_group == $new_vlan_group)
+               if (($other_vlan_group) && ($other_vlan_group == $new_vlan_group))
                {
                   $result = $other_vlan;
                   continue;
@@ -343,9 +343,14 @@ function snmp_restart_port_id($port_id)
    {
       $query="select p.name as port, s.ip as switch from port p inner join switch s on p.switch=s.id where p.id='$port_id' limit 1;";
       $result=mysql_fetch_one($query);
-      $port=$result['port'];
-      $switch=$result['switch'];
-      snmp_restart_port($port,$switch);
+      if ($result)
+      {
+         $port=$result['port'];
+         $switch=$result['switch'];
+         return snmp_restart_port($port,$switch);
+      }
+      else
+         return false;
    }
 }
 

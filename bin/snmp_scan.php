@@ -85,7 +85,7 @@ function print_usage()
 
 function print_vlans() 
 {
-   global $snmp_ro, $default_user_unknown;
+   global $snmp_ro;
    global $logger;
    $switches =  mysql_fetch_all("SELECT * FROM switch");
    $vlan = array();
@@ -211,7 +211,11 @@ if (is_array($switches))
                $type_id=0;
             $vlan='';
             if ($if['vlan']&&($if['vlan']>1))
+            {
                $vlan=v_sql_1_select("select id from vlan where default_id='".$if['vlan']."'");
+               if ( ! $vlan )
+                  $vlan = '';
+            }
             $query="select * from port where name='".$if['name']."' and switch='$switchid';";
             $res=mysql_query($query);
             if ($res)		 	//Is this port in the DB?
@@ -297,7 +301,7 @@ if (is_array($switches))
                         else
                         {
                            $query = 'INSERT INTO systems (name, mac, LastPort, vlan, status,LastSeen,description) VALUES ';
-                           $query .= "('unknown','".$mac['mac']."',$portid,".get_vlanid($vlanid).",3,NOW(),'$default_user_unknown');";
+                           $query .= "('unknown','".$mac['mac']."',$portid,".get_vlanid($vlanid).",3,NOW(),'{$conf->default_user_unknown}');";
                            $logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
                         };
                         if($domysql) 

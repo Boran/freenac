@@ -73,6 +73,11 @@ if (file_exists($file_name))
 {
    $pid = file_get_contents($file_name);
    $processes = syscall("ps uax | grep $pid | awk '{print $2}'");
+   if ( ! $processes )
+   {
+      $logger->logit("An error ocurred when calling syscall.", LOG_ERR);
+      exit(1);
+   }
    $processes = explode("\n",$processes);
    if (array_search($pid, $processes) === false )
    {

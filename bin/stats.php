@@ -34,7 +34,7 @@ if ($res)
          continue;
       $total=0;
       $total=v_sql_1_select("select count(*) from systems where status='".$result['id']."' and date_sub(CURDATE(),interval 1 day) <= LastSeen;");
-      if ($total>0)
+      if ($total && ($total>0))
       {
          $query="insert into stat_systems set date=curdate(), vstatus='".$result['id']."', count='$total';";
          mysql_query($query);

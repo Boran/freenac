@@ -188,10 +188,12 @@ function react($cnt, $switch, $port)
       $new_vlan_group=v_sql_1_select("SELECT vlan_group FROM vlan WHERE default_name='$best_vlan'");
       $othervlangroup=v_sql_1_select("SELECT vlan_group FROM vlan WHERE default_name='$vlan'");
 
-      if ($othervlangroup==$new_vlan_group) {
+      if (($new_vlan_group !== false) && ($othervlangroup==$new_vlan_group)) {
 
         ## DO SOMETHING: switch vlan
-        $best_lan_num=v_sql_1_select("SELECT id FROM vlan WHERE default_name='$best_vlan'");
+        $best_vlan_num=v_sql_1_select("SELECT id FROM vlan WHERE default_name='$best_vlan'");
+        if ( ! $best_vlan_num )
+           $best_vlan_num = 0;
         $query="UPDATE systems SET vlan='$best_vlan_num' WHERE mac='$mac2'";
           #$logger->logit($query ."\n");
           $res = mysql_query($query);

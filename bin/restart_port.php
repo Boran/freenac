@@ -37,7 +37,7 @@ require_once "./funcs.inc.php";               # Load settings & common functions
 require_once './snmp_defs.inc.php';
 
 $logger->setDebugLevel(0);
-$logger->setLogToStdOut(false);
+$logger->setLogToStdOut(true);
 
 //
 //------------------------------------------ Functions ------------------------------------------------

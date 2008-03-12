@@ -158,6 +158,7 @@ function getwinsfromip($ip)
 */
 function vlanId2Name($vlanID) {
    // Todo: Proper Error Handling, and use better Database abstraction
+   $vlan_name = NULL;
    if (is_numeric($vlanID))
    {
       $vlan_name=v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
@@ -196,16 +197,50 @@ function get_last_index($oid)
 */
 function time_diff($date1,$date2)
 {
-   $temp=explode(' ',$date1);
-   $time_info_1=explode(':',$temp[1]);
-   $date_info_1=explode('-',$temp[0]);
-   $temp=explode(' ',$date2);
-   $time_info_2=explode(':',$temp[1]);
-   $date_info_2=explode('-',$temp[0]);
-   $time1=mktime((int)$time_info_1[0],(int)$time_info_1[1],(int)$time_info_1[2],(int)$date_info_1[1],(int)$date_info_1[2],(int)$date_info_1[0]);
-   $time2=mktime((int)$time_info_2[0],(int)$time_info_2[1],(int)$time_info_2[2],(int)$date_info_2[1],(int)$date_info_2[2],(int)$date_info_2[0]);
-   $time=$time2-$time1;
-   return $time;
+   if ($date1 && $date2)
+   {
+      $temp=explode(' ',$date1);
+      //Return false if there are no spaces in $date1
+      if (count($temp) == 1)
+         return false;
+      $time_info_1=explode(':',$temp[1]);
+      //Return false because the date format is not what we expected
+      if ( strcmp($time_info_1[0],$temp[1]) ===0 )
+         return false;
+      $date_info_1=explode('-',$temp[0]);
+      //Return false because the date format is not what we expected
+      if ( strcmp($date_info_1[0], $temp[0]) === 0 )
+         return false;
+      $temp=explode(' ',$date2);
+      //Return false if there are no spaces in $date2
+      if (count($temp) == 1)
+         return false;
+      $time_info_2=explode(':',$temp[1]);
+      //Return false because the date format is not what we expected
+      if ( strcmp($time_info_2[0],$temp[1]) ===0 )
+         return false;
+      $date_info_2=explode('-',$temp[0]);
+      //Return false because the date format is not what we expected
+      if ( strcmp($date_info_2[0], $temp[0]) === 0 )
+         return false;
+      $time1=mktime((int)$time_info_1[0],(int)$time_info_1[1],(int)$time_info_1[2],(int)$date_info_1[1],(int)$date_info_1[2],(int)$date_info_1[0]);
+      $time2=mktime((int)$time_info_2[0],(int)$time_info_2[1],(int)$time_info_2[2],(int)$date_info_2[1],(int)$date_info_2[2],(int)$date_info_2[0]);
+      if ( ($time1 !== false) && ($time2 !== false) )
+      {
+         $time=$time2-$time1;
+         return $time;
+      }
+      else
+      {
+         //Invalid arguments
+         return false;
+      }
+   }
+   else
+   {
+      //No dates were specified
+      return false;
+   }
 }
 
 /**
@@ -270,25 +305,32 @@ function logit($msg) {
 */
 function log2db($level, $msg)
 {
-  global $connect,$logger;
-  $msg=rtrim($msg);
-  if (strlen($msg)>0 ) {
-    db_connect();                 // just in case its not connected
-    #$query="INSERT DELAYED INTO naclog "
-    $query="insert into naclog set what='".mysql_real_escape_string($msg)."', host='".mysql_real_escape_string($_SERVER['HOSTNAME'])."', priority='".$level."'";
-    #$query="INSERT INTO naclog "
-    #  . "SET what='" . mysql_real_escape_string($msg )  . "', "
-    #  . "host='"     . mysql_real_escape_string($_SERVER["HOSTNAME"]) . "', "
-    #  . "priority='$level' ";
-    #$logger->logit("$query\n");
-    $res = mysql_query($query, $connect);
-    if (!$res) 
-    { 
-       $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERR); 
-       exit(1);
-    }
-  }
-
+  if ( $level && $msg )
+  {
+     global $connect,$logger;
+     $msg=rtrim($msg);
+     if (strlen($msg)>0 ) {
+       db_connect();                 // just in case its not connected
+       #$query="INSERT DELAYED INTO naclog "
+       $query="insert into naclog set what='".mysql_real_escape_string($msg)."', host='".mysql_real_escape_string($_SERVER['HOSTNAME'])."', priority='".$level."'";
+       #$query="INSERT INTO naclog "
+       #  . "SET what='" . mysql_real_escape_string($msg )  . "', "
+       #  . "host='"     . mysql_real_escape_string($_SERVER["HOSTNAME"]) . "', "
+       #  . "priority='$level' ";
+       #$logger->logit("$query\n");
+       $res = mysql_query($query, $connect);
+       if (!$res) 
+       { 
+          $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERR); 
+          return false;
+       }
+       return true;
+     }
+     else
+        return false;
+   }
+   else
+      return false;
   // To view recent entries:
   // select * from naclog ORDER BY datetime DESC LIMIT 5;
 }
@@ -297,23 +339,31 @@ function log2db($level, $msg)
 ## log2db3: write to naclog if debug level=3 
 function log2db3($msg)
 {
-  global $connect, $logger;
-  $level='debug';
-  $msg=rtrim($msg);
-  if (($logger->getDebugLevel()==3) && (strlen($msg)>0) ) {
-    db_connect();                 // just in case its not connected
-    #$query="INSERT INTO naclog "
-    $query="INSERT DELAYED INTO naclog "
-      . "SET what='" . $msg   . "', "
-      . "priority='" . $level . "' ";
-    #$logger->logit("$query\n");
-    $res = mysql_query($query, $connect);
-    if (!$res) 
-    { 
-       $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERR); 
-       exit(1);
-    }
-  }
+  if ($msg)
+  {
+     global $connect, $logger;
+     $level='debug';
+     $msg=rtrim($msg);
+     if (($logger->getDebugLevel()==3) && (strlen($msg)>0) ) {
+        db_connect();                 // just in case its not connected
+        #$query="INSERT INTO naclog "
+        $query="INSERT DELAYED INTO naclog "
+          . "SET what='" . $msg   . "', "
+          . "priority='" . $level . "' ";
+        #$logger->logit("$query\n");
+        $res = mysql_query($query, $connect);
+        if (!$res) 
+        { 
+           $logger->logit('Cannot write to vmplog table: ' . mysql_error(), LOG_ERR); 
+           return false;
+        }
+        return true;
+      }
+      else
+         return false;
+   }
+   else
+      return false;
 }
 
 /**
@@ -343,18 +393,24 @@ function db_connect()
  * @return mixed		Result from that command
  */
 function syscall($command){
-   $result='';
-   #if ( $proc = popen("($command) ","r") ) {
-   if ( $proc = popen("($command) 2>&1","r") ) {
-       while (!feof($proc))
-         $result .= fgets($proc, 1000);
-       pclose($proc);
-       #debug2("syscall(): executed $command, RETURN=$result");
-       return $result;
-   #} else {       # will never be reaches, popen does not pass back command success
-   #  logit("syscall error ", $proc);
-   #  return undef;
+   if ($command)
+   {
+      $result='';
+      #if ( $proc = popen("($command) ","r") ) {
+      if ( $proc = popen("($command) 2>&1","r") ) {
+          while (!feof($proc))
+            $result .= fgets($proc, 1000);
+          pclose($proc);
+          #debug2("syscall(): executed $command, RETURN=$result");
+          return $result;
+      #} else {       # will never be reaches, popen does not pass back command success
+      #  logit("syscall error ", $proc);
+      #  return undef;
+      }
+      else
+         return false;
    }
+   else return false;
 }
 
 function ping_mac($mac)
@@ -418,16 +474,21 @@ function ping_mac($mac)
 */
 function array_isearch($str,$array)                    
 {
-   if ( ! is_array($array))
-      return false;
-   foreach($array as $k => $v)
+   if ($str && $array)
    {
-      if (strcasecmp($v,$str)==0)
+      if ( ! is_array($array))
+         return false;
+      foreach($array as $k => $v)
       {
-         return $k;
+         if (strcasecmp($v,$str)==0)
+         {
+            return $k;
+         }
       }
+      return false;
    }
-   return false;
+   else
+      return false;
 }
 
 /**
@@ -438,14 +499,19 @@ function array_isearch($str,$array)
 */
 function array_multi_isearch($str,$array)
 {
-   if ( ! is_array($array))
-      return false;
-   foreach($array as $k)
+   if ($str && $array)
    {
-      if (array_isearch($str,$k))
-         return $k;
+      if ( ! is_array($array))
+         return false;
+      foreach($array as $k)
+      {
+         if (array_isearch($str,$k))
+            return $k;
+      }
+      return false;
    }
-   return false;
+   else
+      return false;
 }
 
 /**
@@ -458,16 +524,21 @@ function array_multi_isearch($str,$array)
 */
 function array_find_key($str,$array,$token,$number)   
 {
-   if ( ! is_array($array))
-      return false;
-   foreach($array as $k => $v)
+   if ($str && $array && $token && $number)
    {
-      if (strcasecmp(str_get_last($k,$token,$number),str_get_last($str,$token,$number))==0)
+      if ( ! is_array($array))
+         return false;
+      foreach($array as $k => $v)
       {
-         return $v;
+         if (strcasecmp(str_get_last($k,$token,$number),str_get_last($str,$token,$number))==0)
+         {
+            return $v;
+         }
       }
+      return false;
    }
-   return false;
+   else
+      return false;
 }
 
 /**
@@ -480,16 +551,21 @@ function array_find_key($str,$array,$token,$number)
 */
 function array_find_value($str,$array,$token,$number)   
 {
-   if ( ! is_array($array))
-      return false;
-   foreach($array as $k => $v)
+   if ($str && $array && $token && $number)
    {
-      if (strcasecmp(str_get_last($v,$token,$number),str_get_last($str,$token,$number))==0)
+      if ( ! is_array($array))
+         return false;
+      foreach($array as $k => $v)
       {
-         return $v;
+         if (strcasecmp(str_get_last($v,$token,$number),str_get_last($str,$token,$number))==0)
+         {
+            return $v;
+         }
       }
+      return false;
    }
-   return false;
+   else
+      return false;
 }
 
 /**
@@ -505,6 +581,9 @@ function str_get_last($string,$token,$number)
    if (! $string || ! $token || ! $number)
       return false;
    $temp=explode($token,$string);
+   //Token not found in the string
+   if (strcmp($temp[0],$string)===0)
+      return false;
    $tokens=count($temp);
    for ($i=$tokens-$number;$i<$tokens;$i++)
       $final.=$token.$temp[$i];
@@ -517,6 +596,8 @@ function str_get_last($string,$token,$number)
 * @return mixed         Result of the query if successful, or error otherwise
 */
 function v_sql_1_update($query) {
+  if (!$query)
+     return false;
   #logit($query);
   global $connect;
   db_connect();
@@ -540,11 +621,13 @@ function v_sql_1_update($query) {
 * @return mixed         Result of the query if successful, or error otherwise
 */
 function v_sql_1_select($query) {
+  if (!$query)
+     return false;
   #logit($query);
   global $connect;
   db_connect();
 
-  $result=NULL;
+  $result=false;
   $res = mysql_query($query, $connect);
   if (!$res) { 
     logit('Invalid query: ' . mysql_error()); 
@@ -563,11 +646,15 @@ function v_sql_1_select($query) {
 * @return mixed 		MACC address converted
 */
 function normalise_mac($old_mac) {
+  if ( ! $old_mac )
+     return false;
   $mac = $old_mac;
 
   // Add zero to fill to 2 digits where needed, e.g.
   // convert 0:0:c:7:ac:1 to 00:00:0c:07:ac:01
   $digits=split(':',$old_mac);              # get one string per "part"
+  if ($digits === false)
+     return false;
   #$logger->logit("Join= " . join('', $digits) . "\n");
   $digits = preg_replace('/^([0-9a-fA-F])$/', '0${1}', $digits); 
   $mac = join(':', $digits);
@@ -597,7 +684,10 @@ function normalise_mac($old_mac) {
 * @return mixed		Result of the query if successful, or error otherwise
 */
 function mysql_fetch_all($query){
+  if (!$query)
+     return false;
   $r=@mysql_query($query);
+  $result = false;
   if($err=mysql_errno()) return $err;
 
   if(@mysql_num_rows($r))
@@ -612,6 +702,8 @@ function mysql_fetch_all($query){
 * @return mixed         Result of the query if successful, or error otherwise
 */
 function mysql_fetch_one($query){
+  if (!$query)
+     return false;  
   #$logger->logit("QUERY: $query\n");
   $r=@mysql_query($query);
   if($err=mysql_errno())return $err;
@@ -628,11 +720,14 @@ function mysql_fetch_one($query){
 * @return mixed         Result of the query if successful, or error otherwise
 */
 function mssql_fetch_all($query){
+  if ( ! $query)
+     return false;
   global $logger;
   $r=@mssql_query($query);
+  $return = false;
   if (! $r) { 
     $logger->logit("Cannot execute query " .mssql_get_last_message());
-    return -1;
+    return false;
   }
 
   if(@mssql_num_rows($r))
@@ -647,6 +742,8 @@ function mssql_fetch_all($query){
 * @return mixed         Result of the query if successful, or error otherwise
 */
 function mssql_fetch_one($query){
+  if (! $query)
+     return false;
   #global $logger;
   #$logger->logit("QUERY: $query\n");
   $r=@mssql_query($query);
@@ -664,10 +761,13 @@ function mssql_fetch_one($query){
  *    mysql_query("INSERT INTO table values('val1','val2', 'valetc')", $linkid);
  * }
  */
-function get_mysql_info($linkid = null)
+function get_mysql_info($linkid = false)
 {
     $linkid? $strInfo = mysql_info($linkid) : $strInfo = mysql_info();
 
+    if ($strInfo === false)
+       return false;
+    //TODO: What about those variables? Where are we getting those? SB please explain
     $return = array();
     ereg("Records: ([0-9]*)", $strInfo, $records);
     ereg("Duplicates: ([0-9]*)", $strInfo, $dupes);
@@ -688,11 +788,14 @@ function get_mysql_info($linkid = null)
     return $return;
 }
 
-function mysql_affected_rows2($linkid = null)
+function mysql_affected_rows2($linkid = false)
 {
     global $logger;
 
     $linkid? $strInfo = mysql_info($linkid) : $strInfo = mysql_info();
+    if ($strInfo === false)
+       return false;
+    //TODO: What about the variable count? Where are we getting it? SB please explain
     if (ereg("Records: ([0-9]*)", $strInfo, $count) == false) {
       ereg("Rows matched: ([0-9]*)", $strInfo, $count);
     }
@@ -702,17 +805,26 @@ function mysql_affected_rows2($linkid = null)
 
 function write_auth($port_id, $system_id, $vlan)
 {
-   global $logger;
-   if ($vlan>=0)
+   if ( $port_id && $system_id && $vlan )
    {
-      $query="REPLACE vmpsauth set AuthLast=NOW(), AuthVlan='$vlan', AuthPort='$port_id', sid='$system_id';";
-      $logger->debug($query,3);
-      return v_sql_1_update($query);
+      if ( ! is_integer($port_id))
+         return false;
+      if ( ! is_integer($system_id))
+         return false;
+      global $logger;
+      if (is_integer($vlan) && ($vlan>=0))
+      {
+         $query="REPLACE vmpsauth set AuthLast=NOW(), AuthVlan='$vlan', AuthPort='$port_id', sid='$system_id';";
+         $logger->debug($query,3);
+         return v_sql_1_update($query);
+      }
+      else
+      {
+          return false;
+      }
    }
    else
-   {
-       return false;
-   }
+      return false;
 }
 
 /**
@@ -724,19 +836,27 @@ function write_auth($port_id, $system_id, $vlan)
 */
 function do_delete($table, $field, $identifier)
 {
-   global $logger;
-   $query="DELETE FROM $table WHERE $field='$identifier';";
-   $logger->debug($query,3);
-   $res = mysql_query($query);
-   if (!$res)
+   if ( $table && $field && $identifier )
    {
-      $logger->logit(mysql_error());
-      return false;
+      global $logger;
+      $table = mysql_escape_string($table);
+      $field = mysql_escape_string($field);
+      $identifier = mysql_escape_string($field);
+      $query="DELETE FROM $table WHERE $field='$identifier';";
+      $logger->debug($query,3);
+      $res = mysql_query($query);
+      if (!$res)
+      {
+         $logger->logit(mysql_error());
+         return false;
+      }
+      else
+      {
+         return true;
+      }
    }
    else
-   {
-      return true;
-   }
+      return false;
 }
 /** 
 * Get the netmask in 255.255.0.0 form
@@ -745,6 +865,7 @@ function do_delete($table, $field, $identifier)
 */
 
 function transform_netmask($netmaskbits) {
+$netmask = array();
 $netmask[32] = '255.255.255.255';
 $netmask[31] = '255.255.255.254';
 $netmask[30] = '255.255.255.252';
@@ -784,8 +905,13 @@ $netmask[1] = '128.0.0.0';
 * @param string $mac	MAC adress of the device (dotted format)
 */
 function reformat_mac($macdot) {
+  if ( ! $macdot ) 
+     return false;
+  
   $numbers = explode('.',$macdot);
-
+  if (strcmp($numbers[0],$macdot)===0)
+     return false;
+ 
   $value = $numbers[0].$numbers[1].$numbers[2];
   for ($i=0; $i <= 6; $i++) {
         $mac .= substr($value,$i*2,2).':';

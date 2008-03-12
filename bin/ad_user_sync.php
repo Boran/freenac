@@ -176,6 +176,8 @@ function fill_db($users) {
                               if ($res)
                               {
                                  $location_id=v_sql_1_select("select id from location where name like '$physical_delivery_office_name';");
+                                 if (! $location_id)
+                                    $location_id=1;
                               }
                               else
                                  $location_id=1;

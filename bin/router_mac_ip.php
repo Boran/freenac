@@ -116,7 +116,8 @@ foreach (split(' ', $conf->core_routers) as $router) {
      $ip=ltrim(str_get_last($k,'.',4),'.');
      #$logger->debug("$ip - $matches[3] ",2);
      $mac=normalise_mac($v);
-
+     if ( ! $mac )
+        continue;
      #Check for an invalid mac
      if (strcasecmp($mac,'ffff.ffff.ffff')==0)
         continue;
