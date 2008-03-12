@@ -970,7 +970,7 @@ function parse_scanfile($scan_file,$list)
                for ($i=0;$i<$list['counter'];$i++) //Grabs devices' ids
                {
                   if ($i==0)
-                     $query="select id, r_ip, name from systems where ip='{$list['ip'][$i]}'";
+                     $query="select id, r_ip, name from systems where r_ip='{$list['ip'][$i]}'";
                   else
                      $query.=" or ip='".$list['ip'][$i]."'";
                }
