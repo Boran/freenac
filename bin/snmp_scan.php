@@ -91,7 +91,7 @@ function print_vlans()
          continue;
       foreach ($switch_vlans as $idx => $svalue) 
       {
-         if ( ! isset($switch_vlans[$idx]['type']) || ! isset($switch_vlans[$idx]['state']) || ! $switch_vlans[$idx]['name']) )
+         if ( ! isset($switch_vlans[$idx]['type']) || ! isset($switch_vlans[$idx]['state']) || ! isset($switch_vlans[$idx]['name']) )
             continue;
          if (($switch_vlans[$idx]['type'] == 1) && ($switch_vlans[$idx]['state'] == 1)) 
          {
