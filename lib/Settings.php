@@ -86,7 +86,10 @@ class Settings
    */
    public function __get($key)							# Get the value of one var
    {
-      return $this->props[$key];
+      if (isset($this->props[$key]))
+         return $this->props[$key];
+      else
+         return false;
    }
 
    /**
