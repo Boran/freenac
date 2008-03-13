@@ -605,18 +605,20 @@ function set_port_as_static($switch, $port, $vlan,$snmp_port_index=false)
  */
 function is_port_vmps($myiface) 
 {
+   if ( ! isset($myiface['phys']) || ! isset($myiface['trunk']) || ! isset($myiface['type']) || ! isset($myiface['name']) )
+      return false;
    if ( ($myiface['phys'] == 1) && ($myiface['trunk'] != 1) && ($myiface['type'] == 2) &&
       (( stristr($myiface['name'],'Fa') || stristr($myiface['name'],'Gi') ||
       preg_match("/\d+\/\d+/", $myiface['name'])     )) )
       {
-         debug2("$switchname int=" .$myiface['name']
+         debug2(" int=" .$myiface['name']
            .', vlan=' .$myiface['vlan'] .', trunk= ' .$myiface['trunk']
            .', phys=' .$myiface['phys'] .', vmps=YES' );
          return(TRUE);
       } 
       else 
       {
-         debug2("$switchname int=" .$myiface['name']
+         debug2(" int=" .$myiface['name']
            .', vlan=' .$myiface['vlan'] .', trunk= ' .$myiface['trunk']
            .', phys=' .$myiface['phys'] .', vmps=NO' );
          return(FALSE);
@@ -644,7 +646,7 @@ function walk_ports($switch,$snmp_ro)
       $idx = $oids[12];
       if ($idx > 0 && ($oids[7] == '31')) 
       {
-         $iface[$id]['id'] = $idx;
+         $iface[$idx]['id'] = $idx;
          $index[] = $idx;
       };
    };
@@ -880,7 +882,6 @@ function walk_macs($switch,$vlanid,$snmp_ro)
    debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_mac");
    $macs = @snmprealwalk($switch,$snmp_ro_vlan,$snmp_mac);
         
-
    $mac=array();
    $mac2=array();
 
@@ -920,8 +921,10 @@ function walk_macs($switch,$vlanid,$snmp_ro)
    foreach($ports as $oid => $portid) 
    {
       $oids = explode('.',$oid);
+      if (strcmp($oids[0],$oid)===0)
+         continue;
       $idx = $oids[12];
-      if ($mac2[$idx]) 
+      if (isset($mac2[$idx])) 
       {
          $mac2[$idx]['portid'] = $portid;
          $mac2[$idx]['port'] = $switch_ifaces[$portid]['name'];
@@ -980,6 +983,7 @@ function walk_switchhw($switch,$snmp_ro)
 {
    global $snmp_sw;
    $hw_versions = @snmprealwalk($switch,$snmp_ro,$snmp_sw['ciscohw']);
+   $cisco_hw = false;
    if ((!empty($hw_versions))&&(count($hw_versions)>0))
    {
       foreach ($hw_versions as $value) 

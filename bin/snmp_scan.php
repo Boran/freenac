@@ -45,12 +45,13 @@ set_include_path("../:./:/opt/nac/");
 require_once "./funcs.inc.php";               # Load settings & common functions
 require_once "./snmp_defs.inc.php";
 
-$logger->setDebugLevel(1);
+$logger->setDebugLevel(0);
 $logger->setLogToStdOut(false);
 
 db_connect();
 
-
+$singlesw = NULL;
+$singlevl = NULL;
 // Enable debugging to understand how the script works
 $debug_to_syslog=true;
 // allow performance measurements
@@ -58,17 +59,6 @@ $mtime = microtime();
 $mtime = explode(" ",$mtime);
 $mtime = $mtime[1] + $mtime[0];
 $starttime = $mtime;
-
-
-if ($snmp_dryrun) 
-{
-  $logger->setDebugLevel(2);
-  $domysql=false;
-}
-else 
-{
-  $domysql=true;
-};
 
 
 function print_usage()
@@ -89,14 +79,20 @@ function print_vlans()
    global $logger;
    $switches =  mysql_fetch_all("SELECT * FROM switch");
    $vlan = array();
+   if ( ! $switches )
+      return false;
    foreach ($switches as $switchrow) 
    {
       $switchid = $switchrow['id'];
       $switchip = $switchrow['ip'];
       $switch_name = $switchrow['name'];
       $switch_vlans = walk_vlans($switch,$snmp_ro);
+      if ( ! is_array($switch_vlans) )
+         continue;
       foreach ($switch_vlans as $idx => $svalue) 
       {
+         if ( ! isset($switch_vlans[$idx]['type']) || ! isset($switch_vlans[$idx]['state']) || ! $switch_vlans[$idx]['name']) )
+            continue;
          if (($switch_vlans[$idx]['type'] == 1) && ($switch_vlans[$idx]['state'] == 1)) 
          {
             $vlan_name = $switch_vlans[$idx]['name'];
@@ -104,7 +100,6 @@ function print_vlans()
          };
       }; //foreach ($switch_vlans as $idx => $svalue)
    }; //foreach ($switches as $switchrow)
-
    foreach ($vlan as $vlan_name => $vlan_ids) 
    {
       $first = TRUE;
@@ -198,6 +193,7 @@ if (is_array($switches))
       // first, switch details
       foreach ($switch_ifaces as $if)
       {
+         $port_type='';
          if ($if['phys']==1)		//Port type?
          {
             if ($if['trunk']==1)	//Trunk
@@ -261,15 +257,12 @@ if (is_array($switches))
          //If we don't find the hardware, at least let's update the software we found
          $logger->debug("($switchid) $switchip : HW = $hw / SW = $sw");
          $query = "UPDATE switch SET hw='$hw',sw='$sw' WHERE id=$switchid;";
-         if($domysql) 
-         { 
-            $success=mysql_query($query);
-            if (! $success)
-            {
-               $logger->logit("Unable to update switch info", LOG_ERR);
-               exit(1);
-            } 
-         }; // if($domysql)
+         $success=mysql_query($query);
+         if (! $success)
+         {
+            $logger->logit("Unable to update switch info", LOG_ERR);
+            exit(1);
+         } 
       } 
       else 
       {
@@ -287,6 +280,8 @@ if (is_array($switches))
             {
                foreach ($macs as $idx => $mac) 
                {
+                  if ( ! isset($mac['trunk']) || ! isset($mac['mac']) || ! isset($mac['port']) )
+                     continue;
                   if (($mac['trunk'] != 1) && !(preg_match($conf->router_mac_ip_ignore_mac, $mac['mac'])) && ($mac['port'] != '')) 
                   {
                      $portid = iface_exist($switchid,$mac['port']);
@@ -304,15 +299,12 @@ if (is_array($switches))
                            $query .= "('unknown','".$mac['mac']."',$portid,".get_vlanid($vlanid).",3,NOW(),'{$conf->default_user_unknown}');";
                            $logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - insert new host ");
                         };
-                        if($domysql) 
-                        { 
-                           $success=mysql_query($query);
-                           if (! $success)
-                           {
-                              $logger->logit("Unable to query $query", LOG_ERR);
-                              exit(1);
-                           } 
-                        };
+                        $success=mysql_query($query);
+                        if (! $success)
+                        {
+                           $logger->logit("Unable to query $query", LOG_ERR);
+                           exit(1);
+                        } 
                         unset($query);
                      }; // if ($sid)
                   }; // if ($portid)
