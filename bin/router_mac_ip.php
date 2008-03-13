@@ -72,7 +72,7 @@ if ( !$conf->core_routers ) {   // no results, error?
 if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
 
   #$sql="SELECT mac FROM systems WHERE name='unknown'";
-  $sql="SELECT mac FROM systems WHERE name LIKE '%unknown%'";
+  $sql="SELECT mac FROM systems WHERE status='0'";
   $result=mysql_query($sql,$connect);
   if (!$result) 
   { 
