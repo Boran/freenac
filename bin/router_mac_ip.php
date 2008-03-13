@@ -93,7 +93,7 @@ if (!empty($router_ro))
 // Connect to each router and download its ARP table
 foreach (split(' ', $conf->core_routers) as $router) {
   $count_updates=0;
-
+  $logger->debug("Connecting to ".$router, 2);
   // query interface list and split into an array
   // Ignore warnings on stderr
   #$results=snmprealwalk($router, $snmp_ro, 'ipNetToMediaPhysAddress');
