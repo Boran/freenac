@@ -37,7 +37,7 @@
 require_once "funcs.inc.php";
 $output=TRUE;
 
-$logger->setDebugLevel(3);
+$logger->setDebugLevel(0);
 $logger->setLogToStdOut(true);
 
 #Compatibility with old vars
@@ -593,6 +593,7 @@ function execute_query($query)
 
 function add_entry($data)	//A new host in our network that needs to be added to the database
 {
+   global $queries; 
    $new=false;
    if ((!isset($data))||(!is_array($data)))
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
@@ -639,6 +640,7 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
    syscall("touch ".$xml_file);	//Just to avoid an error while running from cron
    $scan=$which_nmap." ".$nmap_flags." -oX ".$xml_file." ";
    $list=get_ips();		//We need some IPs to scan
+   $hosts='';
    for ($i=0;$i<$list['counter'];$i++) //Put those ips in a string
    {
       message("Scanning host ".$list['ip'][$i]."\n");
@@ -682,6 +684,9 @@ function check_and_abort($message,$resource)	//This function checks if there is 
 function ip_to_bin($ip)
 {
    $address=explode('.',$ip);
+   if (strcmp($address[0],$ip)===0)
+      return false;
+   $bin=array();
    for ($m=0;$m<4;$m++)
       $bin[$m]=str_pad(decbin($address[$m]),8,"0",STR_PAD_LEFT);
    $address=implode("",$bin);
@@ -832,10 +837,10 @@ function get_ips()	//This function will get some ips to scan
          $number++;
       }
       $logger->debug("Number of networks defined in subnets: $number");
-      for ($l=0;$l<$devices['counter'];$l++)
+      foreach ($devices['ip'] as $l => $k)
       {
          $take_into_account=true;
-         if ($keys_to_delete)
+         if (isset($keys_to_delete) && is_array($keys_to_delete))
          {
             foreach($keys_to_delete as $key_to_delete)
             {
@@ -853,34 +858,50 @@ function get_ips()	//This function will get some ips to scan
             $address=ip_to_bin($network[$i]['ip']);
             $net=bindec(str_pad(substr($address,0,$network[$i]['netmask']),32,0));
             $broadcast=bindec(str_pad(substr($address,0,$network[$i]['netmask']),32,1));
-            $host=bindec(ip_to_bin($devices['ip'][$l]));
-            if (($host>=$net)&&($host<$broadcast))
-               $candidate++;
+            if ( isset($devices['ip'][$l]) )
+            {
+               $host=bindec(ip_to_bin($devices['ip'][$l]));
+               if (($host>=$net)&&($host<$broadcast))
+                  $candidate++;
+            }
          }
          $there=0;
 	 if (($candidate)&&($argc==1)) //This is an ip which is a good candidate to be scanned and no parameters present on the command line
          {
-            $lastseen=$devices['lastseen'][$l];
-            $diff=(int)date_diff($lastseen,$timestamp,$what_units_time);
-            if (($diff) && ($diff<=$time_threshold))
+            if (isset($devices['lastseen'][$l]))
             {
-	       for ($k=0;$k<=$counter;$k++)
-                  if ($devices['ip'][$l]==$list['ip'][$k])
-                     $there++;
-               if (!$there)
+               $lastseen=$devices['lastseen'][$l];
+               $diff=(int)date_diff($lastseen,$timestamp,$what_units_time);
+               if (($diff) && ($diff<=$time_threshold))
                {
-                  $list['ip'][$counter]=$devices['ip'][$l];
-		  $list['hostname'][$counter]=$devices['hostname'][$l];
-                  $list['sid'][$counter]=$devices['sid'][$l];
-                  $counter++;
+	          for ($k=0;$k<=$counter;$k++)
+                  {
+                     if ( isset($devices['ip'][$l]) && isset($list['ip'][$k]) )
+                     {
+                        if ($devices['ip'][$l]==$list['ip'][$k])
+                           $there++;
+                     }
+                  }
+                  if (!$there)
+                  {
+                     $list['ip'][$counter]=$devices['ip'][$l];
+		     $list['hostname'][$counter]=$devices['hostname'][$l];
+                     $list['sid'][$counter]=$devices['sid'][$l];
+                     $counter++;
+                  }
                }
-            }
+             }
           }
           else if (($candidate)&&($argc>1))
           {
             for ($k=0;$k<=$counter;$k++)
-               if ($devices['ip'][$l]==$list['ip'][$k])
-                  $there++;
+            {
+               if ( isset($devices['ip'][$l]) && isset($list['ip'][$k]) )
+               {
+                  if ($devices['ip'][$l]==$list['ip'][$k])
+                     $there++;
+               }
+            }
             if (!$there)
             {
                $list['ip'][$counter]=$devices['ip'][$l];
