@@ -111,7 +111,7 @@ foreach (split(' ', $conf->core_routers) as $router) {
 
   // go through each pair and update the SYSTEMS table
   foreach ($results as $k => $v) {
-  $logger->debug("Pre-match results: " .$results[$i], 2);
+  $logger->debug("Pre-match results: " .$results[$k], 2);
 
      $ip=ltrim(str_get_last($k,'.',4),'.');
      #$logger->debug("$ip - $matches[3] ",2);
