@@ -26,7 +26,6 @@ class GuiUserManager extends WebCommon
   {
     parent::__construct();     // See also WebCommon and Common
     $this->logger->setDebugLevel(1);
-    // broken $this->logger->setLogToStdErr();
     $this->debug(' __construct()', 3);  
     
   }
@@ -56,11 +55,11 @@ class GuiUserManager extends WebCommon
   private function newSession ($userid=0)
   {
     global $sess_time;
-    global $drupal_auth, $drupal_db;                // config.inc
+    global $ad_auth, $anon_auth, $sql_auth, $drupal_auth, $drupal_db;                // config.inc
     $this->debug("newSession() userid=$userid", 3);
     $conn = $this->getConnection();
 
-    if ($userid > 0) {
+    //if ($userid > 0) {     // do we really care if user=0?
         // new session
         include('session.inc.php');      // retrieve session
         $this->debug("newSession(): new session timeout/id/name=$sess_time, " 
@@ -88,6 +87,8 @@ class GuiUserManager extends WebCommon
          $_SESSION['address']='';
          $_SESSION['login_data']='';
          $_SESSION['GuiVlanRights']='';
+         $_SESSION['nac_rights_text']="none"; // default is full access
+
 
       if ($drupal_auth===true) {
         $this->logger->debug("newSession(): get user values from drupal");
@@ -134,7 +135,7 @@ TXT;
           .' ' .$_SESSION['profile_familyname'] ;
 
 
-      } else {    // freenac user table, not drupal
+      } else if ($ad_auth===true) {   // we have a userid from The Apache AD login
 
         $q = "SELECT * FROM users WHERE id = '$userid' LIMIT 1";
         $this->debug($q, 2);
@@ -161,28 +162,24 @@ TXT;
               $_SESSION['nac_rights_text']="read-only";
           }
         }
+      } else if ($anon_auth===true) {   // we know almost nothing
+         $_SESSION['login_data']='Anonymous '. $_SERVER['REMOTE_ADDR'];
+         $_SESSION['nac_rights_text']="administrator"; // default is full access
+         $_SESSION['nac_rights'] = 99;
+         $_SESSION['GuiVlanRights']='';
+
+      } else {    // should never get her!
+        throw new InvalidLoginException("Neither _auth metho not set");
       }
       
       if ($this->logger->getDebugLevel()>2) {
         print_r($_SESSION);
         #var_dump($_SESSION);
       }
-    }
+    //}
 
   }
 
-
-  // Removing possibly dangerous characters
-  private function super_escape_string ( $in_string, $in_conn, $in_removePct = FALSE)
-  {
-    return( $this->real_escape_string1($in_string, $in_conn, $in_removePct) );
-    #$this->logger->debug("super_escape_string", 3);
-    #$str = $in_conn->real_escape_string($in_string);
-    #if ($in_removePct)
-    #  $str = ereg_replace('(%)', "\\\1'", $str);
-    #$this->logger->debug("super_escape_string: ret=$str", 3);
-    #return $str;
-  }
 
   // - get db connection
   // - verify that username and password are valid
@@ -250,12 +247,25 @@ TXT;
 
   private function confirmAdUser( $in_db_conn = NULL)
   {
+    global $ad_auth, $anon_auth;
+
     $userid=-1;     # invalid
     $this->debug("confirmAdUser()", 3);
 
+    if ( !isset($ad_auth) || !isset($anon_auth) ) 
+        throw new InvalidLoginException("No authentication method has been set, please set ad_auth or anon_auth.");
 
-    if (!isset ($_SERVER['PHP_AUTH_USER']) || !$_SERVER['PHP_AUTH_USER']) {
-      throw new InvalidLoginException("PHP_AUTH_USER not set");
+    if ( ($ad_auth===false) && ($anon_auth===false) ) 
+        throw new InvalidLoginException("No authentication method has been set, set either ad_auth or anon_auth to true");
+
+    if ($ad_auth===true) {      // Enforce Active Directory login
+      if ( !isset($_SERVER['PHP_AUTH_USER']) || !$_SERVER['PHP_AUTH_USER']) {
+        throw new InvalidLoginException("PHP_AUTH_USER not set");
+      }
+
+    } else if ($anon_auth===true) {
+      $this->logit('Anonymous anon_auth=true so no user authentication');
+      return $userid=1;            // no further processing
     }
 
     // 1. make sure we have a database connection.
@@ -263,7 +273,7 @@ TXT;
 
     try {
       // 2. make sure incoming username is safe for queries.
-      $uname = $this->super_escape_string($_SERVER['PHP_AUTH_USER'], $conn);
+      $uname = $this->sqlescape($_SERVER['PHP_AUTH_USER']);
 
       #$this->debug("Checking user $uname in NAC users table  ..", 2);
       $q = <<<EOQ
@@ -320,7 +330,7 @@ EOQ;
 
     try {
       // 2. make sure incoming username is safe for queries.
-      $uname = $this->super_escape_string($in_uname, $conn);
+      $uname = $this->sqlescape($in_uname);
 
       // 3. get the record with this username
       //    either from users, or drupal users
@@ -454,9 +464,9 @@ EOQ;
 
       // 3a. make sure the parameters are safe for insertion,
       //      and encrypt the password for storage.
-      $uname = $this->super_escape_string($in_uname, $conn);
-      $fname = $this->super_escape_string($in_fname, $conn);
-      $email = $this->super_escape_string($in_email, $conn);
+      $uname = $this->sqlescape($in_uname);
+      $fname = $this->sqlescape($in_fname);
+      $email = $this->sqlescape($in_email);
       $pw = md5($in_pw);
 
       // 3b. create query to insert new user.  we can be sure

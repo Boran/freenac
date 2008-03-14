@@ -128,7 +128,7 @@ TXT;
           }
         }
         else {    // no restrictions
-          $this->logger->debug("Web user {$_SESSION['uid']} is allowed to assign any vlan:  vlan idx="  .$_REQUEST['vlan']);
+          $this->debug("Web user {$_SESSION['uid']} is allowed to assign any vlan:  vlan idx="  .$_REQUEST['vlan'], 3);
           $q.=', vlan='  .$_REQUEST['vlan'];
         }
      }
@@ -179,6 +179,7 @@ TXT;
     $conn=$this->getConnection();     //  make sure we have a DB connection
 
     try {
+      
       $q='';
         $q='UPDATE systems SET ';
         // got name?
@@ -212,7 +213,7 @@ TXT;
           }
         }
         else {    // no restrictions
-          $this->logger->logit("Web user {$_SESSION['uid']} is allowed to assign any vlan");
+          $this->logit("Web user {$_SESSION['uid']} is allowed to assign any vlan", 1);
           $q.=', vlan='  .$_REQUEST['vlan'];
         }
 
@@ -221,14 +222,13 @@ TXT;
         $q.=", changedate=NOW()";
         $q.=" WHERE id={$this->id} LIMIT 1";     // only this record
 
-
       $this->debug($q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
 
       echo "<p class='UpdateMsgOK'>Update Successful</p>";
-      $this->loggui("end-device $name/$mac updated");
+      $this->loggui("end-device " .$_REQUEST['name'] ."/" .$_REQUEST['mac'] ." updated");
 
     } catch (Exception $e) {
       throw $e;
