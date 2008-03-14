@@ -22,19 +22,18 @@ date_default_timezone_set('CET');
   #$sess_time=3600;       // 3600=60min=1h
   $sess_time=60;    // testing: 1 min
 
-  // ad_auth disables SQL/drupal auth
-  $ad_auth=true;       # apache does the auth for us
+  // Which method should be used for WebGUI authentication?
+  // only ad_auth and anon_auth work at this stage.
+  $ad_auth=false;       # apache does the domain login for us
+  $anon_auth=true;     # No auth all aal, rely on Apache IP access control, or Firewall!
 
-  // SQL auth: alpha stuff
+  // SQL & drupal auth: alpha stuff
   $sql_auth=false;       # lookup users from mysql
-  // drupal auth: alpha stuff
-  //$drupal_auth=false; # lookup user password & uid from drupal
   $drupal_auth=false;    # lookup user password & uid from drupal
   $drupal_db="drupal";
 
 
 // Enable XLS export? (requires the PEAR module Spreadsheet_Excel_Writer)
    $xls_output=false; // To enable set it to: true
-
 
 ?>

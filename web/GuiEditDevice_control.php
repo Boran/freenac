@@ -35,8 +35,8 @@
 
 
 if (isset($_REQUEST['action']) && $_REQUEST['action']=='Update') {
-  $logger->debug("action=". $_REQUEST['action'] 
-    .", report1_index=" .$_SESSION['report1_index'] .", action_idx=" .$_REQUEST['action_idx'], 1);
+  $logger->debug("action=". $_REQUEST['action'] .", report1_index=" .$_SESSION['report1_index'], 1);
+  if (isset($_REQUEST['action_idx'])) $logger->debug("action_idx=" .$_REQUEST['action_idx'], 1);
 
   if (is_numeric($_SESSION['report1_index']) && ($_SESSION['report1_index']>0) ) {
     #$report=new CallWrapper(new GuiEditDevice($_SESSION['report1_index']));

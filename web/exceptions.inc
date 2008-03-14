@@ -143,6 +143,7 @@ class InsufficientRightsException extends Exception
 class InvalidLoginException extends Exception
 {
   function __construct($in1='') {
+    error_page("Invalid Login: $in1");
     logit('InvalidLoginException: ' .$in1 .' from ' .$_SERVER['REMOTE_ADDR']);
     $_SESSION['exception']=true;    // indicate that we've handled it
     parent::__construct("Login failed: $in1"); 
@@ -151,7 +152,6 @@ class InvalidLoginException extends Exception
 class InvalidWebInputException extends Exception
 {
   function __construct($in1='') {
-    #echo print_headerSmall();
     echo print_header();
     error_page("Invalid Argument");
     logit('InvalidWebInputException: ' .$in1);

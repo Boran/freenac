@@ -21,9 +21,11 @@ Each script has a standard bit at the top:
   $logger=Logger::getInstance();
   include 'session.inc.php';
   check_login(); // logged in?
+
 This makes sure the logging class is loaded, all standard stuff included, and,
-includes the session handing which resumes or creates a new PHP session (cookie based). check_login() ensures the user is identified and stores his/her attributes in the SESSION variable.
-The GuiUserManager class is designed to encapsulated user logins, currently its working with Apachae base AD login, but there is skeleton code in there for integration into drupal and an sql based login.
+includes the session handing which resumes or creates a new PHP session (cookie based). 
+
+check_login() calls the GuiUserManager::processAdLogin() if the session is new. Which calls confirmAdUser() to ensure the user is identified and stores his/her attributes in the SESSION variable and starts a new session. The GuiUserManager class is designed to encapsulated user logins, currently its working with Apache based AD login or anonymous, but there is skeleton code in there for integration into drupal and an sql based login.
 
 
 A web page with pending issues has been started:
