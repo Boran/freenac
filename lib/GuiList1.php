@@ -102,9 +102,11 @@ EOF;
 
     try {
       $rowcount=0;
-      $searchstring=$this->sqlescape($searchstring);   // strip/escape unwanted characters
-      $searchby=$this->sqlescape($searchby);
+      $searchby=preg_replace('/^\./', '', $searchby);  // kill leadeing dot, if any
+      $order   =preg_replace('/^\./', '', $order);    
       if ((strlen($searchby)>0) && (strlen($searchstring)>0) ) {
+        $searchby=$this->sqlescape($searchby);
+        $searchstring=$this->sqlescape($searchstring);   // strip/escape unwanted characters
         $q.=" WHERE $searchby LIKE '%$searchstring%' "; 
       } 
 
@@ -180,7 +182,6 @@ EOF;
 
       } else {
         // There is data, show the Limit/sortOrder menus
-        #$output.= '<tr><td style="color:#000000; font-weight:bold;">' .$rowcount .' result(s) returned.</td></tr>';
         $output.= $this->print_report_menu($limit, $order, $fields, $searchby, $searchstring);
         $output.= '<br>' .$rowcount .' matching result(s) found:</br>';
       }
@@ -188,7 +189,6 @@ EOF;
       $res->close();
 
     } catch (Exception $e) {
-      #if ($in_db_conn === NULL and isset($conn))
       if (isset($conn))
         $conn->close();
       throw $e;
