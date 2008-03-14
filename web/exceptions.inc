@@ -29,26 +29,27 @@ set_exception_handler('exception_handler');
 function error_page($msg)
 {
   #echo print_header();
-  #<table width='80%' border='1' align='center' >
-  #<table border='1' align='center' >
-  echo <<<XX
+/*  echo <<<XX
   <table width='80%' border='0' align='center' >
   <tr>
     <td align='center'>
+      <p>$msg</p>
       <font color='red'><b>
       We are sorry, but an error has occurred while executing the application. <br/> 
       The system administrators have been notified.
       </font></b>
-      <p>$msg</p>
-      <p>
-        Please go back to the <a href='./index.php' >Main Menu</a> and start again, or try again later.
-      </p>
+      <p> Please go back to the <a href='./index.php' >Main Menu</a> and start again, or try again later.  </p>
     </td>
   </tr>
   </table>
+XX; */
+  echo <<<XX
+  <p class='UpdateMsg'>$msg</p>
+  <p>Please go <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>, or the 
+  <a href='./index.php' >Main Menu</a> and start again, or try again later.  </p>
 XX;
 
-  echo read_footer();
+  #echo read_footer();
 }
 
 
@@ -88,6 +89,15 @@ class DatabaseErrorException extends Exception
   function __construct($in1) {
     logit('DatabaseErrorException: ' .$in1);
     error_page("Database error");
+    $_SESSION['exception']=true;    // indicate that we've handled it
+    parent::__construct("DB: $in1"); 
+  }
+}
+class DatabaseInsertException extends Exception
+{
+  function __construct($in1) {
+    logit('DatabaseErrorInsertException: ' .$in1);
+    error_page("ERROR: The entry could not be inserted ". $in1);
     $_SESSION['exception']=true;    // indicate that we've handled it
     parent::__construct("DB: $in1"); 
   }
@@ -145,6 +155,16 @@ class InvalidWebInputException extends Exception
     echo print_header();
     error_page("Invalid Argument");
     logit('InvalidWebInputException: ' .$in1);
+    $_SESSION['exception']=true;    // indicate that we've handled it
+    parent::__construct($in1); 
+  }
+}
+class InvalidWebInputShowException extends Exception
+{
+  function __construct($in1='') {
+    echo print_header();
+    error_page("$in1");
+    logit('InvalidWebInputShowException: ' .$in1);
     $_SESSION['exception']=true;    // indicate that we've handled it
     parent::__construct($in1); 
   }

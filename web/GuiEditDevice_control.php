@@ -17,10 +17,10 @@
 ## ----- Initialise (standard header for all modules)
   dir(dirname(__FILE__)); set_include_path("./:../lib/:../");
   require_once('webfuncs.inc');
-  include '/opt/nac/lib/session.inc.php';
+  include 'session.inc.php';
 
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3); // 0 to 3 syslog debugging levels
+  $logger->setDebugLevel(1); // 0 to 3 syslog debugging levels
   check_login();             // logged in? User identified?
   #$logger->debug('Start, uid=' .$_SESSION['uid'], 3);
 # --- end of standard header ------
@@ -35,16 +35,32 @@
 
 
 if (isset($_REQUEST['action']) && $_REQUEST['action']=='Update') {
-  $logger->debug("action ". $_REQUEST['action'], 1);
-  #$report=new CallWrapper(new GuiEditDevice($_SESSION['report1_index']));
-  $report=new GuiEditDevice($_SESSION['report1_index']);
+  $logger->debug("action=". $_REQUEST['action'] 
+    .", report1_index=" .$_SESSION['report1_index'] .", action_idx=" .$_REQUEST['action_idx'], 1);
+
+  if (is_numeric($_SESSION['report1_index']) && ($_SESSION['report1_index']>0) ) {
+    #$report=new CallWrapper(new GuiEditDevice($_SESSION['report1_index']));
+    $report=new GuiEditDevice($_SESSION['report1_index']);
+
+  } else if (is_numeric($_REQUEST['action_idx']) && ($_REQUEST['action_idx']>0) ){
+    $report=new GuiEditDevice($_REQUEST['action_idx']);
+
+  } else {
+    throw new InvalidWebInputException("Invalid record index: cannot edit");
+  }
   echo $report->Update();
   echo $report->query();
   echo $report->print_footer();
 }
+
+
 else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Delete') {
   $logger->debug("action ". $_REQUEST['action'], 1);
-  $report=new GuiEditDevice($_SESSION['report1_index']);
+  if (is_numeric($_SESSION['report1_index']) && ($_SESSION['report1_index']>0) ) {
+    $report=new GuiEditDevice($_SESSION['report1_index']);
+  } else {
+    throw new InvalidWebInputException("Invalid record index: cannot delete");
+  }
   echo $report->Delete();
 } 
 
@@ -53,8 +69,8 @@ else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Delete') {
 else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Edit') {
   $logger->debug("action: ". $_REQUEST['action'], 1);
 
-
-  if ( !isset($_REQUEST['action_fieldname']) || !isset($_REQUEST['action_idxname']) || !isset($_REQUEST['action_idx']) ) {
+  #°if ( !isset($_REQUEST['action_fieldname']) || !isset($_REQUEST['action_idxname']) || !isset($_REQUEST['action_idx']) ) {
+  if ( !isset($_REQUEST['action_idx']) ) {
     throw new InvalidWebInputException("Report has no valid action parameters");
   }
   $action_fieldname=$_REQUEST['action_fieldname'];
@@ -62,13 +78,13 @@ else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Edit') {
   $action_idx      =$_REQUEST['action_idx'];
   $logger->debug("GuiList1_control action_idx=$action_idx fieldname=$action_fieldname action_idxname=$action_idxname", 2);
 
+/*
   // Security: is the index really a value that was shown in report1,
   //   or perhaps a value injected by a bad guy?
   //if (! isset($_SESSION['report1_index']))
   //  throw new InvalidWebInputException("Session no longer valid - index invalid");
   //if (! is_numeric($_SESSION['report1_index']))
   //  throw new InvalidWebInputException("Session no longer valid - index not numeric");
-
   $indices=unserialize($_SESSION['report1_indices']);  // recover index values
   if (!is_array($indices)) {
     throw new InvalidWebInputException("Invalid indices: not an array");
@@ -79,13 +95,9 @@ else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Edit') {
     if ( !is_numeric($count)  )
       throw new InvalidWebInputException("Invalid index: not from previous report, idx=$count.");
   }
-
+*/
   $_SESSION['report1_index']=$action_idx; // we're pretty confident, store the index
 
-
-
-###### Update button  ############
-  $q="{$_SESSION['report1_query']} AND {$_REQUEST['action_idxname']}={$_SESSION['report1_index']} LIMIT 1";
   #$report=new CallWrapper(new GuiEditDevice($_SESSION['report1_index']));
   $report=(new GuiEditDevice($_SESSION['report1_index']));
   echo $report->query();

@@ -17,10 +17,10 @@
 ## ----- Initialise (standard header for all modules)
   dir(dirname(__FILE__)); set_include_path("./:../lib/:../");
   require_once('webfuncs.inc');
-  include '/opt/nac/lib/session.inc.php'; // TBD: get rid of absolute path?
+  include 'session.inc.php';
 
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(1); // 0 to 3 syslog debugging levels
+  $logger->setDebugLevel(3); // 0 to 3 syslog debugging levels
   check_login();             // logged in? User identified?
   #$logger->debug('Start, uid=' .$_SESSION['uid'], 3);
 # --- end of standard header ------
@@ -143,9 +143,6 @@ if ( isset($_REQUEST['change']) ) {
      $logger->debug("GuiList1_control.php:default action: " .$_REQUEST['action'], 1);
   else
      $logger->debug("GuiList1_control.php:default action ", 3);
-  #$report=new CallWrapper(new GuiList1($title, true));                  //true=dynamic with filtering
-  #echo $report->query($q, 10, '', $action_menu, $action_fieldname, $idx_fieldname);      // query, limit, no order
-  #echo $report->print_footer();
 
   // Use the default setting in our calling script, or what we get via REQUEST:
     if ( isset($_REQUEST['sortby'])  )

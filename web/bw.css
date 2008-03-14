@@ -84,6 +84,13 @@ table {
 	text-align: left;
 	color: red;
 }
+.UpdateMsgOK {
+	font-size: 17px;
+        font-family: "Courier New", Courier, mono;
+	line-height: 80%;
+	text-align: left;
+	color: green;
+}
 
 
 /* 
@@ -134,8 +141,8 @@ textarea,input,select {
 	font-size: 18px;
         padding-right: 3px;
         padding-left: 25px;
-        padding-top: 27px;
-        height:0px;
+        padding-top: 20px;
+        height:50px;
 }
 table#GuiEditDeviceAdd {
         color : black;
