@@ -49,25 +49,27 @@ else if ($_SESSION['nac_rights']==99) {
 
 // set parameters   fro gui_control.php
 $title="Switch-Port configuration";
-$sortlimit=200;
-$sortby='SwitchName, port.name';
-$searchby='';
+$sortlimit=100;
+#$sortby='SwitchName, port.name';
+$sortby='SwitchName';
+$searchby='SwitchName';
 $searchstring='';
 
 $action_fieldname="Port Index";     $idx_fieldname="port.id";
 
 $q=<<<TXT
 SELECT DISTINCT 
-  CONCAT(switch.name, ' ', port.name) as switchport,
-  default_vlan, 
-  v1.default_name as LastVlanName,  last_activity AS 'Last used',
-  port.comment, 
-  ap1.method as VlanAuth,
-  staticvlan, 
-  port.last_monitored, port.up, 
   switch.name as SwitchName, 
+  port.name as Port  ,
+  v1.default_name as LastVlan,  
+  last_activity AS 'Last used',
+  port.comment AS 'Comment', 
+  ap1.method as VlanAuth,
+  v3.default_name as 'Static Vlan', 
+  v2.default_name AS 'Default Vlan', 
+  port.last_monitored AS 'Last Monitored', 
+  port.up AS 'Port is up', 
   switch.ip as 'Switch IP Addr.', 
-  port.name,  
   $idx_fieldname AS '$action_fieldname' 
   FROM port 
   INNER JOIN switch     ON port.switch = switch.id 
@@ -75,9 +77,12 @@ SELECT DISTINCT
   LEFT  JOIN location   ON patchcable.office = location.id   
   LEFT  JOIN auth_profile ap1 ON ap1.id = port.last_auth_profile
   LEFT  JOIN vlan v1    ON port.last_vlan = v1.id
+  LEFT  JOIN vlan v2    ON port.default_vlan = v2.id
+  LEFT  JOIN vlan v3    ON port.staticvlan = v3.id
 TXT;
 
 # restart_now, auth_profile, staticvlan, port.shutdown,
+#  CONCAT(switch.name, ' ', port.name) as switchport,
 
 require_once "GuiList1_control.php";
 
