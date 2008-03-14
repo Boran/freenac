@@ -33,9 +33,9 @@ set_include_path("./:../lib/:../");
 */
 function __autoload($classname)
 {
-   if (file_exists("../lib/$classname.php"))
+   if (is_readable("../lib/$classname.php"))
       require_once "../lib/$classname.php";
-   else if (file_exists("../enterprise/$classname.php"))
+   else if (is_readable("../enterprise/$classname.php"))
       require_once "../enterprise/$classname.php";
 }
 

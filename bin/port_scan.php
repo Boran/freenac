@@ -966,7 +966,7 @@ function parse_scanfile($scan_file,$list)
    global $flagscannow,$logger;
    $timestamp=date('Y-m-d H:i:s');
    $info=array();
-   if (file_exists($scan_file))
+   if (is_readable($scan_file))
    {
       $file_loaded=file_get_contents(trim($scan_file));
       if (!$file_loaded)

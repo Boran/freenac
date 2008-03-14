@@ -134,7 +134,7 @@ if (!ereg(".*\.inc$",trim($argv[1])))
    exit(1);
 }
 
-if (!file_exists($argv[1]))
+if (!is_readable($argv[1]))
 {
    echo "File ".$argv[1]." doesn't exist\n";
    exit(1);

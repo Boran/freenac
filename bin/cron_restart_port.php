@@ -69,7 +69,7 @@ function delete_pid_file()
 
 $file_name='cron_restart_port.pid';
 #Check for PID file
-if (file_exists($file_name))
+if (is_readable($file_name))
 {
    $pid = file_get_contents($file_name);
    $processes = syscall("ps uax | grep $pid | awk '{print $2}'");
