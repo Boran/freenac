@@ -25,7 +25,7 @@ class GuiEditDevice extends WebCommon
   function __construct($id=0, $rep_name='Edit End-Device Details')
   {
     parent::__construct(false);     // See also WebCommon and Common
-    $this->logger->setDebugLevel(3);
+    $this->logger->setDebugLevel(1);
 
     //if ( ($id===0) || (!is_numeric($id)) ) 
     if ( (!is_numeric($id)) )     // allow 0 as a default, must be a number though
@@ -33,7 +33,6 @@ class GuiEditDevice extends WebCommon
 
     $this->id=$id;                   // remember the record number
     $_SESSION['report1_index']=$id;  // for passing to other scripts
-
     
     $this->debug($_SESSION['login_data'] .":Id=$id:" , 1);
 
@@ -46,35 +45,46 @@ class GuiEditDevice extends WebCommon
 
   public function Delete()
   {
-    $this->debug("Delete()", 3);
+    if (is_numeric($_REQUEST['action_idx']) && ($_REQUEST['action_idx']>0) ){
+      $device=$_REQUEST['action_idx'];
+    } else if (is_numeric($_SESSION['report1_index']) && ($_SESSION['report1_index']>0) ) {
+      $device=$_SESSION['report1_index'];
+    } else {
+      throw new InvalidWebInputShowException("Cannot delete device with invalid index <{$_REQUEST['action_idx']}>");
+    }
+
+    $this->debug("Delete() index {$device}", 3);
     #var_dump($_REQUEST);
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
+
     $conn=$this->getConnection();     //  make sure we have a DB connection
 
     try {
-      $q="DELETE FROM systems WHERE id={$this->id} LIMIT 1";     // only this record
+      $q="DELETE FROM systems WHERE id={$device} LIMIT 1";     // only this record
       $this->debug($q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($q ." :: " .$conn->error);
 
       // Inform the user that is was OK
-      define('HEADER',false); // The header is out
-      echo $this->print_header();
+      //define('HEADER',false); // The header is out
+      #echo $this->print_header();
       $txt=<<<TXT
-<div style='text-align: center;' class='text18'>
-  Delete Successful
-<br><p>>>Go back to the <a href="{$_SESSION['caller']}">End-Device list</a></p>
+<p class='UpdateMsgOK'>Delete Successful</p>
+ <br><p > Go back to the <a href="{$_SESSION['caller']}">End-Device list</a></p>
 </div>
 TXT;
       echo $txt;
-      $this->logit("Delete() of Index {$this->id}");
+      $this->logit("Deleted system with Index {$device}");
+      $this->loggui("Deleted system with Index {$device}");
 
     } catch (Exception $e) {
       throw $e;
     }
   }
+
+
 
   /**
    * Insert a newrecord
@@ -82,22 +92,71 @@ TXT;
   public function UpdateNew()
   {
     $this->debug("UpdateNew()", 3);
-    var_dump($_REQUEST);
+    #var_dump($_REQUEST);
+
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
     $conn=$this->getConnection();     //  make sure we have a DB connection
 
     #echo "<p class='UpdateMsg'>Insert Pending</p>";
     #$this->id
-    $q=<<<TXT
-INSERT INTO systems SET man=$mac, name=$name, comment=$comment 
-TXT;
 
     try {
-      $q='';
+      // Read in request variables. Mac and name are set, others are optional
+      $mac=strtolower($_REQUEST['mac']);  
+      $name=trim($_REQUEST['name']);            // get rid of leading/trailing spaces
+      $mac=$this->sqlescape($mac);     		// TBD: verify syntax/length etc.
+      $name=$this->sqlescape($name);   		
+      $q="INSERT INTO systems SET mac='$mac', name='$name' ";
+
+     if ( isset($_REQUEST['comment']) )
+        $q.=", comment='" .$this->sqlescape($_REQUEST['comment']) ."'";
+     if (( isset($_REQUEST['status']) ) && is_numeric ($_REQUEST['status']) )
+        $q.=", status="  .$_REQUEST['status'] ;
 
 
-      $this->logit("UpdateNew() Index {$this->id} done");
+     if ( ( isset($_REQUEST['vlan']) ) && is_numeric ($_REQUEST['vlan']) ){  // re-verify vlan assignment right
+        // Restrict vlan for superusers?
+        if ( !empty($_SESSION['GuiVlanRights']) && ($_SESSION['nac_rights']==2)) {
+          $this->debug("Web user {$_SESSION['uid']} has restricted vlans: {$_SESSION['nac_rights']}", 1);
+          $vlans_allowed = explode(',', $_SESSION['GuiVlanRights']);
+          if (array_search($_REQUEST['vlan'], $vlans_allowed) ) {
+             $q.=', vlan='  .$_REQUEST['vlan'];
+          }
+          else {
+             $this->logger->logit("Web user {$_SESSION['uid']} is not allowed to assign vlan {$_REQUEST['vlan']} only {$_SESSION['GuiVlanRights']}");
+          }
+        }
+        else {    // no restrictions
+          $this->logger->debug("Web user {$_SESSION['uid']} is allowed to assign any vlan:  vlan idx="  .$_REQUEST['vlan']);
+          $q.=', vlan='  .$_REQUEST['vlan'];
+        }
+     }
+
+      $this->debug("UpdateNew() $q", 3);
+      $res = $conn->query($q);
+      if ($res === FALSE)
+        throw new DatabaseInsertException($conn->error);
+
+      echo "<p class='UpdateMsgOK'>Successful: new end-device $name/$mac added</p>";
+      #echo "<p class='UpdateMsgOK'>Now view/update the end-device details</p>";
+
+      // after inserting, locate that record, and show the Update() screen.
+      $res = $conn->query("SELECT id,name from systems where mac='" .$mac ."'");
+      if ($res === FALSE)
+        throw new DatabaseErrorException($conn->error);
+      while (($row = $res->fetch_assoc()) !== NULL) {
+        $this->id=$row['id'];
+      }
+      $_SESSION['report1_index']=$this->id;  // for passing to other scripts
+
+      $this->loggui("new end-device $name, mac=$mac, index=$this->id added");
+
+      // locate that record, and show the Update() screen.
+      $ref=$this->calling_script. "?action=Edit&action_idx=$this->id";
+      #echo $ref;
+      #$this->debug($ref); 
+      echo "<p class='UpdateMsgOK'>Now review/update the <a href='$ref'>end-device details</a></p>";
 
     } catch (Exception $e) {
       throw $e;
@@ -168,7 +227,8 @@ TXT;
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
 
-      echo "<p class='UpdateMsg'>Update Successful</p>";
+      echo "<p class='UpdateMsgOK'>Update Successful</p>";
+      $this->loggui("end-device $name/$mac updated");
 
     } catch (Exception $e) {
       throw $e;
@@ -181,14 +241,14 @@ TXT;
    */
   public function add()
   {
+    global $js1;
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $this->debug("EditDevice::Add() ", 3);
     #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
     $output ='<form action="GuiEditDevice_control.php" method="POST">';
-    #$output.="<table id='t3' width='760' border='0' class='text13'>";
-    $output.="<table id='GuiEditDeviceAdd'>";
+    $output.= $js1 ."<table id='GuiEditDeviceAdd'>";
 
-    $name='unknown'; $mac='0001.0001.0001'; $comment='New device DATE';
+    $name=''; $mac='0001.0001.0001'; 
     try {
 
         // Name, MAC
@@ -230,6 +290,8 @@ TXT;
    */
   public function query()
   {
+    if ($_SESSION['nac_rights']<2)
+      throw new InsufficientRightsException($_SESSION['nac_rights']);
     $conn=$this->getConnection();     //  make sure we have a DB connection
     #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
     $output ='<form action="GuiEditDevice_control.php" method="POST">';
@@ -259,7 +321,7 @@ TXT;
         // Name
         $output.= '<tr><td width="87">Name:</td><td width="400">' ."\n";
         $output.= '<input name="name" type="text" value="' .stripslashes($row['name']) .'"/>' ."\n";
-        $output.= '</td></tr>'."\n";
+        $output.= '</td><td>Index:' .$row['id'] .'</td>' ."</tr>\n";
         // MAC
         $output.= '<tr><td>MAC:</td><td>'."\n";
         $output.= $row['mac'] .(!is_null($row['vendor'])?' (' .$row['vendor'] .')':'') ."\n";
@@ -309,10 +371,14 @@ TXT;
 
          // Submit
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
-        $output.= '<tr><td>&nbsp;</td><td>' ."\n"
-           . '<input type="submit" name="action" class="bluebox" value="Update" />' .'&nbsp;'
-           . '<input type="submit" name="action" class="bluebox" value="Delete" />' ."\n"
-           . '</td></tr>' ."\n";
+        $output.=<<<TXT
+          <tr><td>&nbsp;</td><td>
+          <input type="submit" name="action" class="bluebox" value="Update" />&nbsp;
+          <input type="submit" name="action" class="bluebox" value="Delete" 
+            onClick="javascript:return confirm('Really DELETE this end-device record?')"
+            />
+          </td></tr>'
+TXT;
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
 

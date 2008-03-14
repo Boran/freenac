@@ -27,16 +27,8 @@ class GuiList1 extends WebCommon
     parent::__construct();     // See also WebCommon and Common
     $this->logger->setDebugLevel(1);  // 3 for max debugging
     $this->dynamic=$dynamic;
-    
-    #$this->debug(" __construct() " .$_SESSION['login_data'] .":$rep_name", 1);
     $this->debug(" __construct() $rep_name", 1);
-
-    $txt=<<<TXT
-<div id="GuiList1Title">
-  <p>{$rep_name} 
-</div>
-TXT;
-    echo $txt;
+    echo "<div id='GuiList1Title'><p>{$rep_name}</div>";
   }
 
 
@@ -110,25 +102,20 @@ EOF;
 
     try {
       $rowcount=0;
-      // ORDER BY
-      // TBD: strip unwanted characters
-      $searchstring=$this->real_escape_string1($searchstring, $conn);
-      $searchby=$this->real_escape_string1($searchby, $conn);
+      $searchstring=$this->sqlescape($searchstring);   // strip/escape unwanted characters
+      $searchby=$this->sqlescape($searchby);
       if ((strlen($searchby)>0) && (strlen($searchstring)>0) ) {
         $q.=" WHERE $searchby LIKE '%$searchstring%' "; 
       } 
-      $this->debug("query searchby=$searchby, searchstring=$searchstring", 3);
 
-      // Sort & limit 
-      // TBD: strip unwanted characters
-      $order=$this->real_escape_string1($order, $conn);
-      $limit=$this->real_escape_string1($limit, $conn);
-      $this->debug("GuiList1.php->query limit=$limit, order=$order", 3);
+      $order=$this->sqlescape($order);
+      $limit=$this->sqlescape($limit);
+      $this->debug("GuiList1.php->query() limit=$limit, order=$order searchby=$searchby, searchstring=$searchstring", 3);
 
       if (strlen($order)>0) $q.=" ORDER BY $order DESC"; 
       if ($limit>0)         $q.=" LIMIT $limit"; 
 
-      $this->debug("query $q", 3);
+      $this->debug("$q", 3);
 
       $res = $conn->query($q);
       if ($res === FALSE)

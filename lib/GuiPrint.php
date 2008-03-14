@@ -91,7 +91,8 @@ TXT;
   function print_footer()            // Override 
   {
     $txt=<<<TXT
-<A HREF='javascript:javascript:history.go(-1)'< Back</A>        <A HREF='javascript:window.print()'>Print</A>
+<A HREF='javascript:javascript:history.go(-1)'< Back</A>        
+<A HREF='javascript:window.print()'>Print</A>
 TXT;
 
   // TBD: why does the second part not work?

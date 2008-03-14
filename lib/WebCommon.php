@@ -24,6 +24,7 @@ class WebCommon extends Common
   {
     parent::__construct();
     $this->calling_script=basename($_SERVER['SCRIPT_FILENAME']);   // TBD: clean?
+    $this->remote_host=validate_webinput($_SERVER['REMOTE_ADDR']);
 
     if (! function_exists('mysqli_connect')) {
       throw new DatabaseErrorException("PHP has not been compiled with mysqli support");
@@ -55,7 +56,41 @@ class WebCommon extends Common
   }
 
 
+
+  public function loggui($msg, $who=0, $priority='info')
+  {
+    $conn=$this->getConnection();     //  make sure we have a DB connection
+
+    if ( (isset($_SESSION['uid'])) && ($who===0) ) {
+      $who=$_SESSION['uid'];
+    }
+    $q="insert into guilog (who, host, datetime, priority, what)
+         values ('$who', '$this->remote_host', NOW(), '$priority', '$msg')";
+      $this->debug($q, 3);
+      $res = $conn->query($q);
+      if ($res === FALSE)
+        throw new DatabaseInsertException("Unable to insert guilog entry:: " .$conn->error);
+  }
+
+
+  public function print_logo()
+  {
+    global  $head_left1;
+    echo $head_left1;
+  }
   public function print_header($print_links=true)
+  {
+    echo $this->print_headerMin();
+    echo $this->print_logo();
+    echo main_menu();     // webfuns.inc
+  }
+  public function print_headerSmall($print_links=true)
+  {
+    $this->print_header($print_links);
+  }
+
+  /* the old one... */
+  public function print_header_old($print_links=true)
   {
     global $header1, $header2, $head_right1, $head_right2;
 
@@ -86,7 +121,7 @@ class WebCommon extends Common
     return $header1;
   }
 
-  public function print_headerSmall($print_links=true)
+  public function print_headerSmall_old($print_links=true)
   {
     global $header1, $header2, $head_right1, $head_right2, $header2_small;
 

@@ -21,9 +21,7 @@
  * This class can be extended with 'common' code to simplify derived classes and ensure consistency.
 */
 class Common {
-   public $conf;
-   public $logger;      // allow access outside derviced classes, ideally would be read-only
-   public $db_conn;
+   public $conf, $logger, $db_conn;      // allow access outside derived classes, ideally would be read-only
    
    /**
    * Get the current instance of our Settings and Logger classes
@@ -57,12 +55,23 @@ class Common {
 
 
   /**
-   * Removing possibly dangerous characters
+   * sqlescape: call real_escape_string1 with DB connection
+   */
+  public function sqlescape ($in_string, $in_removePct=FALSE)
+  {
+    $conn=$this->getConnection();     //  make sure we have a DB connection
+    return $this->real_escape_string1($in_string, $conn, $in_removePct);
+  }
+
+
+  /**
+   * Escape possibly dangerous characters, to prevent SQL injection
+   * Trim leading/trailing spaces too
    * TBD: what about ';'?
    */
   public function real_escape_string1 ($in_string, $in_conn, $in_removePct=FALSE)
   {
-    $this->logger->debug("real_escape_string1", 3);
+    $this->logger->debug("real_escape_string1: in_string=$in_string,", 3);
     $str=$in_string;
 
     if (!is_numeric($str)){
@@ -74,7 +83,8 @@ class Common {
     }
 
     $this->logger->debug("real_escape_string1: ret=$str", 3);
-    return rtrim($str);
+    #return rtrim($str);
+    return trim($str);
   }
 
 }
