@@ -70,7 +70,6 @@ table {
 	white-space:pre;
 	font-size: 13px;
 	color: black;
-        padding-right: -2px;
         padding-left: 0px;
         padding-top: 0px;
         padding-bottom: 0px;
@@ -167,8 +166,10 @@ table#GuiList1Table td {
 	width: 600px;
 	padding: 0px 0;
 	border: 0px solid #fff;
-	margin: 1 auto;
 }
+/*
+	margin: 1 auto;
+ */
 #GuiList1form1 ul {
 	margin: 2px;
 	padding: 2px;
@@ -218,7 +219,7 @@ table#header2_small tr {
 #menu1 h3 {
 	font-size: 16px;
 	padding: 0px; 
-	line-height: 0%
+	line-height: 0%;
 	text-indent: 50px;
 	letter-spacing: 1px;
 	word-spacing: -1px;
@@ -234,6 +235,7 @@ table#header2_small tr {
 
 /*
  * h_emf_pixel_001 http://www.css-menü_menues/horizontal_menue_effekte_mit_farben_pixel_001_003.htm
+	margin: 1 auto;
  *
  */
 
@@ -243,12 +245,11 @@ table#header2_small tr {
 	width: 500px;
 	padding: 3px 0;
 	border: 9px solid #fff;
-	margin: 1 auto;
 }
 #headermenue ul {
 	list-style-type: none;
 	margin: 0px;
-	padding: px;
+	padding: 0px;
 }
 #headermenue li {
 	display: inline;
@@ -331,13 +332,13 @@ color: white;
 /*background-color: #00c;*/
 /*background-color: blue;
 	border-bottom:1px solid #D6D6D6;
- * */
+        cellpadding:0;
+        cellspacing:0;
+ */
 #menu0 {
         width: 500px;
         font-size: 14px;
         border: 9px solid #fff;
-        cellpadding="0";
-        cellspacing="0";
 }
 #menu0 td a {
         margin: 5px;
@@ -413,7 +414,7 @@ div.smenutitle {
  	background-image:url(images/bullet-triangle.png);
 	background-position:left center;	
 	background-repeat:no-repeat;
-	text-ident: 30px;
+	text-indent: 0px;
 }
 /*
 	color: red;
