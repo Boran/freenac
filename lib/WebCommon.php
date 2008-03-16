@@ -78,33 +78,36 @@ class WebCommon extends Common
     global  $head_left1;
     echo $head_left1;
   }
-  public function print_header($print_links=true)
-  {
-    echo $this->print_headerMin();
-    echo $this->print_logo();
-    echo main_menu();     // webfuns.inc
-  }
+  #public function print_header($print_links=true)
+  #{
+  #  echo $this->print_headerMin();
+  #  echo $this->print_logo();
+  #  echo main_menu();     // webfuns.inc
+  #}
   public function print_headerSmall($print_links=true)
   {
     $this->print_header($print_links);
   }
 
-  /* the old one... */
-  public function print_header_old($print_links=true)
+  public function print_header($print_links=true)
   {
     global $header1, $header2, $head_right1, $head_right2;
+    $ret='';
 
     if (defined('HEADER')){   // already displayed?
       $this->debug('print_header: HEADER already true',2);
 
     } else {
       if ($print_links===false) {
-        $lthis->debug('print_header: do not print right links', 3);
+        $this->debug('print_header: do not print right links', 3);
         $head_right1='';
         $head_right2='';
       }
-      $ret= $header1 . $header2;
+      #$ret= $header1 . $header2;
       define('HEADER',true); // The header is out
+      $ret.= $header1;
+      $ret.= $this->print_logo();
+      $ret.= main_menu();     // webfuns.inc
       $this->debug('print_header: done', 3);
       return $ret;
     }
@@ -117,8 +120,10 @@ class WebCommon extends Common
 
     if (defined('HEADER')){   // already displayed?
       $this->debug('print_headerMin: HEADER already true',2);
-    } 
-    return $header1;
+    #} 
+    #else {
+      return $header1;
+    }
   }
 
   public function print_headerSmall_old($print_links=true)
@@ -146,6 +151,7 @@ class WebCommon extends Common
   public function print_footer($print_links=true)
   {
     global $sql_auth, $drupal_auth;
+    $text='';
 
     if (defined('FOOTER')){   // already displayed?
       $this->debug('print_footer: FOOTER already true',2);
@@ -171,20 +177,20 @@ EOF;
 
         $text=<<<EOF
   <div id='user_footer'><p>$userdata</p></div>
+  <a href='./logout.php'>Log out</a>
 EOF;
         if ($print_links===true) {
-          $text.=<<<EOF
-  <div id="headermenue">
-  <ul>
-     <li><A HREF='javascript:javascript:history.go(-1)'< Back</A></li>
-     <li><a href="./index.php">Main Menu</a></li>
-     $logout_button
-  </ul> </div>
-EOF;
-     #<li><a href="./ChooseAccount.php">Change Account</a></li>
+// Stop for now, not needed with the new menus?
+#          $text.=<<<EOF
+#  <div id="headermenue">
+#  <ul>
+#     <li><A HREF='javascript:javascript:history.go(-1)'< Back</A></li>
+#     <li><a href="./index.php">Main Menu</a></li>
+#     $logout_button
+#  </ul> </div>
+#EOF;
         }
-
-          $text.=<<<EOF
+        $text.=<<<EOF
   </tr> </table> </body> </html>
 EOF;
 

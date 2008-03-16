@@ -5,6 +5,8 @@
  *
  * Long description for file:
  * Class to handle User login, authetication, authorisation
+ * for for anoy_auth and ad_auth, alpha code is included for
+ * drupal_auth and sql_auth.
  *
  * @package     FreeNAC
  * @author      Sean Boran (FreeNAC Core Team)
@@ -27,7 +29,6 @@ class GuiUserManager extends WebCommon
     parent::__construct();     // See also WebCommon and Common
     $this->logger->setDebugLevel(1);
     $this->debug(' __construct()', 3);  
-    
   }
 
   public function isValidUserName ($in_user_name)
@@ -42,14 +43,20 @@ class GuiUserManager extends WebCommon
   private function killSession ($userid=0)
   {
     if ($userid > 0) {
+        if (isset($_COOKIE[session_name()])) {  
+          // delete cookie, set timout negative, but not sure if it wroks
+          // Cannot send session cache limiter - headers already sent
+          setcookie(session_name(), '', time()-3600, '/');
+        }
         $_SESSION = array();  // Unset all of the session variables
         if (strlen(session_id()) > 0)  {
           session_destroy();
-          $this->debug("killSession- session_destroy", 3);
+          #$this->debug("killSession- session_destroy", 3);
         }
         #TBD $this->clearLogins($userid);
     }
   }
+
 
   // Generate & remember new session
   private function newSession ($userid=0)
@@ -104,7 +111,6 @@ class GuiUserManager extends WebCommon
         }
 
         foreach ($field_names as $field_name) {
-
           $q=<<<TXT
 SELECT title, name, pv.value 
   FROM $drupal_db.profile_fields pf left join $drupal_db.profile_values pv on pf.fid=pv.fid 
@@ -133,6 +139,7 @@ TXT;
         $_SESSION['uid']=$userid;
         $_SESSION['login_data']=$_SESSION['profile_forename'] 
           .' ' .$_SESSION['profile_familyname'] ;
+        $this->loggui("Web login drupal_auth: uid=$uid, " . $_SESSION['login_data']);
 
 
       } else if ($ad_auth===true) {   // we have a userid from The Apache AD login
@@ -162,30 +169,32 @@ TXT;
               $_SESSION['nac_rights_text']="read-only";
           }
         }
+        $this->loggui("Web login ad_auth: " .$_SESSION['login_data']);
+
       } else if ($anon_auth===true) {   // we know almost nothing
          $_SESSION['login_data']='Anonymous '. $_SERVER['REMOTE_ADDR'];
          $_SESSION['nac_rights_text']="administrator"; // default is full access
          $_SESSION['nac_rights'] = 99;
          $_SESSION['GuiVlanRights']='';
+         $this->loggui("Web login anonymous: uid=$uid, " . $_SESSION['login_data']);
 
       } else {    // should never get her!
-        throw new InvalidLoginException("Neither _auth metho not set");
+        throw new InvalidLoginException("Neither _auth method is set");
       }
       
       if ($this->logger->getDebugLevel()>2) {
-        print_r($_SESSION);
-        #var_dump($_SESSION);
+        var_dump($_SESSION);      // debugging: show user details
       }
     //}
 
   }
 
-
-  // - get db connection
-  // - verify that username and password are valid
-  // - clear out existing login information for user. (if any)
-  // - log user into table (associate SID with user name).
-  //
+  /**
+   * processLogin: allow SQL login: alpha code
+   * - verify that username and password are valid
+   * - clear out existing login information for user. (if any)
+   * - log user into table (associate SID with user name).
+   */
   public function processLogin($in_user_name, $in_user_passwd)
   {
     $this->debug("processLogin", 2);
@@ -210,8 +219,6 @@ TXT;
 
     }
     catch (Exception $e) {
-      #if (isset($conn))
-      #  $conn->close();
       throw $e;
     }
     // our work here is done.  clean up and exit.
@@ -219,11 +226,13 @@ TXT;
   }
 
 
-  // - get db connection
-  // - verify that username and password are valid
-  // - clear out existing login information for user. (if any)
-  // - log user into table (associate SID with user name).
-  //
+  /**
+   * processADLogin: allow anobymous & active directory login
+   * - verify that username and password are valid
+   * - clear out existing login information for user. (if any)
+   * - log user into table (associate SID with user name).
+   * Sql and drupal login are not yet integrated.
+   */
   public function processAdLogin()
   {
     $this->debug("processAdLogin", 2);
@@ -235,8 +244,6 @@ TXT;
       $this->newSession ($userid);
     }
     catch (Exception $e) {
-      #if (isset($conn))
-      #  $conn->close();
       throw $e;
     }
     // our work here is done.  clean up and exit.
@@ -284,7 +291,7 @@ EOQ;
       if ($results === FALSE)
         throw new DatabaseErrorException($conn->error);
 
-      // 4. re-confirm the name and the passwords match, get userid
+      // 4. re-confirm the name/id
       while (($row = $results->fetch_assoc()) !== NULL)
       {
             $userid = $row['id'];
@@ -293,8 +300,6 @@ EOQ;
       $results->close();
 
     } catch (Exception $e) {
-      if ($in_db_conn === NULL and isset($conn))
-        $conn->close();
       throw $e;
     }
 
@@ -310,13 +315,10 @@ EOQ;
     return $userid;
   }
 
-
-  //
-  // - internal arg checking
-  // - get a connection
-  // - get the record for the username.
-  // - verify the password
-  //
+  /**
+   * confirmUser() 
+   * Alpha code for drupal, sql login.
+   */
   private function confirmUser( $in_uname, $in_user_passwd, $in_db_conn = NULL)
   {
     global $drupal_auth, $drupal_db, $sql_auth, $ad_auth;   // config.inc
@@ -401,10 +403,10 @@ EOQ;
   }
 
 
-//
-// - get connection
-// - delete any rows for this user ID
-//
+/**
+ * clearLogins()
+ * Alpha code for drupal or sql login
+ */
   private function clearLogins( $in_userid, $in_db_conn=NULL)
   {
     $this->debug("clearLogins $in_userid", 2);
@@ -438,11 +440,10 @@ EOQ;
 
 
 
-  //
-  // - get connection
-  // - make sure the username does not already exist.
-  // - add record to users table.
-  //
+  /**
+   * createAccount()
+   * Alpha code for create a new User entry for sql_auth
+   */
   public function createAccount ( $in_uname, $in_pw, $in_fname, $in_email, 
 				  $in_year, $in_month, $in_day)
   {
@@ -499,21 +500,7 @@ EOQ;
 
 
 
- // Old
-  public function authUser($username, $password)
-  {
-  	global $connect;
-  	debug2("authUser: name=$username, pass=$password");
-    $q = "SELECT * FROM `users` WHERE name='$username' AND pass='$password'";
-    $r = mysql_query($q, $connect);
-    if (mysql_num_rows($r) == 1) {
-      return TRUE;
-    } else {
-      return FALSE;
-    }
-  }
-}
-
+}      // class
 
 
 ?>

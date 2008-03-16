@@ -34,10 +34,10 @@ class GuiEditDevice extends WebCommon
     $this->id=$id;                   // remember the record number
     $_SESSION['report1_index']=$id;  // for passing to other scripts
     
-    $this->debug($_SESSION['login_data'] .":Id=$id:" , 1);
+    //$this->debug($_SESSION['login_data'] .":Id=$id:" , 1);
 
     // Show Webpage start, is the constructor the right place?
-    echo $this->print_headerSmall(false);
+    echo $this->print_header(false);
     echo "<div id='GuiList1Title'>{$rep_name}</div>";
   }
 
@@ -103,8 +103,8 @@ TXT;
 
     try {
       // Read in request variables. Mac and name are set, others are optional
-      $mac=strtolower($_REQUEST['mac']);  
       $name=trim($_REQUEST['name']);            // get rid of leading/trailing spaces
+      $mac=strtolower($_REQUEST['mac']);        // lower case by convention
       $mac=$this->sqlescape($mac);     		// TBD: verify syntax/length etc.
       $name=$this->sqlescape($name);   		
       $q="INSERT INTO systems SET mac='$mac', name='$name' ";

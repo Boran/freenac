@@ -16,7 +16,6 @@
 
 // Session: stored session data in cookies, ignore URLS
 global $sess_name, $sess_time;
-$logger=Logger::getInstance();
 
 if ( ! session_id() ) {    // is there already a session?
   # Php session handling:
@@ -32,6 +31,8 @@ if ( ! session_id() ) {    // is there already a session?
 }
 
   $_SESSION['created'] = TRUE;
+  $logger=Logger::getInstance();
+
   if (!isset($_SESSION['login_data'])){
     $_SESSION['login_data']='Not logged in';     // global
   }

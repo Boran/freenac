@@ -21,12 +21,11 @@ class GuiLogtail extends WebCommon {
 
   function __construct($filename, $length=10, $pattern="vmpsd|postconnect")
   {
+    global $ad_auth;
     parent::__construct();     // See also WebCommon and Common
     $this->logger->setDebugLevel(3);
 
 
-    if ($ad_auth===true)
-    {
        if ($_SESSION['nac_rights']>=1) {
          echo $this->logtail($filename, $length, $pattern);
        }
@@ -36,10 +35,6 @@ class GuiLogtail extends WebCommon {
           .">.</p>";
          $this->logger->logit("ACCESS DENIED: verify the nac_rights for username: <" .$_SESSION['username'] .">.</p>");
        }
-    }
-    else {       // TBD: test if ad_auth=false
-       echo $this->logtail($filename, $length, $pattern);
-    }
 
     echo $this->print_footer();
 
