@@ -73,8 +73,8 @@ else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Edit') {
   if ( !isset($_REQUEST['action_idx']) ) {
     throw new InvalidWebInputException("Report has no valid action parameters");
   }
-  $action_fieldname=$_REQUEST['action_fieldname'];
-  $action_idxname  =$_REQUEST['action_idxname'];
+  if (isset($_REQUEST['action_idxname']) $action_idxname  =$_REQUEST['action_idxname'];
+  if (isset($_REQUEST['action_fieldname']) $action_fieldname  =$_REQUEST['action_fieldname'];
   $action_idx      =$_REQUEST['action_idx'];
   $logger->debug("GuiList1_control action_idx=$action_idx fieldname=$action_fieldname action_idxname=$action_idxname", 2);
 
@@ -112,7 +112,6 @@ else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Add') {
     // send request to verify and add new device
     $report=new GuiEditDevice(0, "Update new End-Device " .$_REQUEST['name']);
     echo $report->UpdateNew();
-    #echo $report->query();
     echo $report->print_footer();
 
   }

@@ -62,8 +62,10 @@ $searchby='';
 $searchstring='';
 $action_fieldname="";     $idx_fieldname="";
 
-$sw=validate_webinput($_REQUEST['sw']);
-
+if (isset($_REQUEST['sw']))
+  $sw=validate_webinput($_REQUEST['sw']);
+else
+  $sw='';
 
 // Do the work: generate a webpage
 

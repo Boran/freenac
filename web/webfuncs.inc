@@ -589,8 +589,9 @@ dump_array($_GET);
 function check_login() {
   $logger=Logger::getInstance();
 
-  if (!isset ($_SESSION['uid']) || !$_SESSION['uid']) {
+  if (!isset ($_SESSION['uid']) || !$_SESSION['uid']) {  // have we a session?
     $usermgr = new GuiUserManager();
+    //$usermgr->logger->setDebugLevel(3);    // enable for debugging
     $usermgr->processAdLogin();
 
     #echo print_headerSmall();
@@ -710,18 +711,23 @@ EOF;
 function main_menu()
 {
   global $head_left1;
+  #$logger->debug("main_menu()");
 
    $text=<<<EOF
+
 <script type="text/javascript"> <!--
 function showHideLayers() {
   var i,p,v,obj,args=showHideLayers.arguments;
   for (i=0; i<(args.length-2); i+=3)
-  with (document) if (getElementById && ((obj=getElementById(args[i]))!=null)) { v=args[i+2];
-    if (obj.style) { obj=obj.style; v=(v=='show')?'visible':(v=='hide')?'hidden':v; }
-    obj.visibility=v; }
+  with (document) if (getElementById && ((obj=getElementById(args[i]))!=null)) { 
+    v=args[i+2];
+    if (obj.style) { 
+      obj=obj.style; v=(v=='show')?'visible':(v=='hide')?'hidden':v; 
+    }
+    obj.visibility=v; 
+  }
 }
 //--> </script>
-
 
 <table id="menu0">
 <tbody>

@@ -24,8 +24,8 @@ date_default_timezone_set('CET');
 
   // Which method should be used for WebGUI authentication?
   // only ad_auth and anon_auth work at this stage.
-  $ad_auth=false;       # apache does the domain login for us
-  $anon_auth=true;     # No auth all aal, rely on Apache IP access control, or Firewall!
+  $ad_auth=true;       # apache does the domain login for us
+  $anon_auth=false;     # No auth all aal, rely on Apache IP access control, or Firewall!
 
   // SQL & drupal auth: alpha stuff
   $sql_auth=false;       # lookup users from mysql

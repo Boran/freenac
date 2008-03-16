@@ -20,18 +20,13 @@
   require_once('webfuncs.inc');
   include 'session.inc.php'; // resume or create session
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3); // 0 to 3 syslog debugging levels
+  $logger->setDebugLevel(1); // 0 to 3 syslog debugging levels
   check_login();             // logged in? User identified?
-  #$logger->debug('Start, uid=' .$_SESSION['uid'], 3);
 # --- end of standard header ------
 
-
-
 ### --------- main() -------------
-  $report=new WebCommon(false);  
+  $report=new WebCommon(true);       // with header
   $report->logger->setDebugLevel(1);
-  echo $report->print_headerMin();
-  echo main_menu();
   #echo main_menu_simple();   // TBD: show the old menu if there is no java script?
   echo <<<EOF
   <img src='./images/logo500.png' border='0' style="padding-left: 30px;"/>

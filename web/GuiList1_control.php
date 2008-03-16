@@ -20,7 +20,7 @@
   include 'session.inc.php';
 
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3); // 0 to 3 syslog debugging levels
+  $logger->setDebugLevel(2); // 0 to 3 syslog debugging levels
   check_login();             // logged in? User identified?
   #$logger->debug('Start, uid=' .$_SESSION['uid'], 3);
 # --- end of standard header ------
@@ -62,7 +62,7 @@ if ( isset($_REQUEST['change']) ) {
     $logger->debug('No change submitted: order or limit invalid', 1);
     #$report=new CallWrapper(GuiList1($title, false));   // very verbose!
     $report=(GuiList1($title, false)); 
-    echo "<hr><font class=text16red><p>No change selected: order or limit invalid.</p></font>";
+    echo "<hr><class=UpdateMsg><p>No change selected: order or limit invalid.</p>";
     echo $report->print_footer();
 
   } else {
