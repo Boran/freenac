@@ -54,22 +54,35 @@ $sortby='outlet';
 $searchby='';
 $searchstring='';
 
-$action_fieldname="Port Index";     $idx_fieldname="p.id";
+$action_fieldname="Patch Index";     $idx_fieldname="p.id";
 
 $q=<<<TXT
 SELECT 
-  rack, rack_location, outlet, other as rack_outlet,
-  office, location.name as OfficeLocation, type, cabletype.name as cable_name,
-  port, p.comment, lastchange, expiry,
-  modifiedby, CONCAT(users.GivenName, ' ', users.Surname) as ChangedBy,
+  rack as Rack, 
+  rack_location As 'R-location', 
+  other as 'R-outlet',
+  outlet as 'Outlet/Stecker', 
+  location.name as 'Office Location', 
+  cabletype.name as 'Cable type',
+  switch.name AS Switch,
+  port.name AS PortName,
+  port.comment AS 'Port Comment',
+  p.comment AS 'Patch Comment', 
+  expiry, lastchange, 
+  CONCAT(users.GivenName, ' ', users.Surname) as ChangedBy,
+  port as 'Port index',
+  office as 'Location index',
   $idx_fieldname AS '$action_fieldname' 
   FROM patchcable p
   LEFT JOIN cabletype ON p.type = cabletype.id    
   LEFT JOIN users    ON p.modifiedby = users.id
   LEFT JOIN location ON p.office = location.id
   LEFT JOIN port     ON p.port=port.id
+  LEFT JOIN switch   ON port.switch=switch.id
 TXT;
-
+/*
+  CONCAT(switch.name, ' ', port.name) as SwitchPort,
+*/
 
 require_once "GuiList1_control.php";
 

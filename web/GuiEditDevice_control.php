@@ -73,8 +73,8 @@ else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Edit') {
   if ( !isset($_REQUEST['action_idx']) ) {
     throw new InvalidWebInputException("Report has no valid action parameters");
   }
-  if (isset($_REQUEST['action_idxname']) $action_idxname  =$_REQUEST['action_idxname'];
-  if (isset($_REQUEST['action_fieldname']) $action_fieldname  =$_REQUEST['action_fieldname'];
+  if (isset($_REQUEST['action_idxname']))   $action_idxname  =$_REQUEST['action_idxname'];
+  if (isset($_REQUEST['action_fieldname'])) $action_fieldname  =$_REQUEST['action_fieldname'];
   $action_idx      =$_REQUEST['action_idx'];
   $logger->debug("GuiList1_control action_idx=$action_idx fieldname=$action_fieldname action_idxname=$action_idxname", 2);
 
