@@ -176,7 +176,7 @@ TXT;
          $_SESSION['nac_rights_text']="administrator"; // default is full access
          $_SESSION['nac_rights'] = 99;
          $_SESSION['GuiVlanRights']='';
-         $this->loggui("Web login anonymous: uid=$uid, " . $_SESSION['login_data']);
+         $this->loggui("Web login anonymous: uid=$userid, " . $_SESSION['login_data']);
 
       } else {    // should never get her!
         throw new InvalidLoginException("Neither _auth method is set");
