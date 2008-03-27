@@ -58,6 +58,7 @@ $q=<<<TXT
 SELECT 
   sys.name as Systemname, 
   sys.mac as 'MAC Address', 
+  e.vendor as 'MAC Vendor',
   status.value as Status, 
   sys.lastseen, 
   $idx_fieldname AS '$action_fieldname', 
@@ -90,6 +91,7 @@ SELECT
       LEFT JOIN sys_os3 as sos3 ON sos3.id=sys.os3
       LEFT JOIN sys_class as sclass ON sclass.id=sys.class
       LEFT JOIN sys_class2 as sclass2 ON sclass2.id=sys.class2
+      LEFT JOIN ethernet e ON e.mac=replace(substring(sys.mac,1,7),'.','')
 TXT;
 
 
