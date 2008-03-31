@@ -120,7 +120,7 @@ function cbFmtPercentage($aVal) {
   }
 		
   // create the graph
-	if ($graphtype == 'bar') {
+	if ($graphtype == 'bar' && isset($data) ) {
 		$graph = new Graph(800,400);
 
 		// Create the graph. 
@@ -143,7 +143,7 @@ function cbFmtPercentage($aVal) {
 		$graph->Add($bar1);
 
 	} 
-        else if ($graphtype == 'pie') {
+        else if ($graphtype == 'pie' && isset($data) ) {
 	  	   $graph = new Graph(500,500);
 		   $graph = new PieGraph(800,400);//,$filename,60);
 		   $graph->SetShadow();
@@ -165,7 +165,10 @@ function cbFmtPercentage($aVal) {
 		   $graph->Add($p1);
 	};
 
-	$graph->Stroke();
+        if ( (($graphtype == 'pie') || ($graphtype == 'bar') )
+            && isset($data) ) {
+	  $graph->Stroke();
+        }
 
 
 

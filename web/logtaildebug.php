@@ -28,6 +28,10 @@
 
 
   //new GuiLogtail($conf->web_logtail_file,$conf->web_logtail_length);
-  new GuiLogtail('/var/log/debug', $conf->web_logtail_length, '');
+  if (isset($conf->web_logdebug_file)) {
+    new GuiLogtail($conf->web_logdebug_file, $conf->web_logtail_length, '');
+  } else {
+    new GuiLogtail('/var/log/debug', $conf->web_logtail_length, '');
+  }
 
 ?>

@@ -342,6 +342,7 @@ public function print_switch_sel($sw)
 WHERE  (TO_DAYS(LastSeen)>=TO_DAYS(CURDATE())-" .$this->conf->web_lastdays .") AND port.switch != ''
 ORDER BY switch.name;";
 
+  $this->debug($q, 3);
   $res = $conn->query($q);
   $html="<select name=sw>\n";
   if ($res === FALSE)
@@ -459,7 +460,7 @@ public function print_stats($q)
   $conn=$this->getConnection();     //  make sure we have a DB connection
   $ret='';
   $total=0;
-  //$this->debug($q);
+  $this->debug($q, 3);
   $res = $conn->query($q);
   if ($res === FALSE)
        throw new DatabaseErrorException($q .'; ' .$conn->error);

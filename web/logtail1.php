@@ -27,6 +27,11 @@
 ## end of standardc header ------
 
 
-  new GuiLogtail($conf->web_logtail_file, $conf->web_logtail_length);
+  if (isset($conf->web_logtail_file)) {
+    new GuiLogtail($conf->web_logtail_file, $conf->web_logtail_length);
+  } else {
+    new GuiLogtail('/var/log/messages', $conf->web_logtail_length, '');
+  }
+
 
 ?>
