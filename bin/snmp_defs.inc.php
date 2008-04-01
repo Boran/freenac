@@ -900,7 +900,7 @@ function walk_macs($switch,$vlanid,$snmp_ro)
     debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_bridge");
     $bridges = snmprealwalk($switch,$snmp_ro_vlan,$snmp_bridge);
 
-   if (count($bridges) == 0) { return($mac); };
+   if ( (count($bridges) == 0) || (!is_array($bridges)) ) { return($mac); };
 
    foreach($bridges as $oid => $bridgeid) 
    {

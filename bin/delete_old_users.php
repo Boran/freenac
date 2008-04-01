@@ -1,5 +1,5 @@
 #!/usr/bin/php
-<?
+<?php
 
 require_once('funcs.inc.php');
 

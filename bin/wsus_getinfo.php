@@ -155,9 +155,6 @@ function wsus_dump_computertarget()
 {
    message("Function wsus_dump_computertarget",1);
    db_connect();
-   $query='delete from nac_wsuscomputertarget'; //Delete everything we previosuly had.
-   message("Executing: ".$query,2);
-   execute_query($query);
    if (dbwsus_connect())
    {
       #This query is for WSUS 2.X
@@ -175,7 +172,7 @@ function wsus_dump_computertarget()
          message("Converted $old_date into ".$row[BiosReleaseDate]." for ".$row[FullDomainName],1);
          $row[OSLocale]=substr($row[OSLocale],0,2);
          $osid=wsus_get_osid($row[OSMajorVersion],$row[OSMinorVersion],$row[OSBuildNumber],$row[OSServicePackMajorNumber],$row[OSServicePackMinorNumber],$row[ProcessorArchitecture]);
-         $query=sprintf("insert into nac_wsuscomputertarget (TargetID, IPAddress, FullDomainName, OSid, OSLocale, ComputerMake, ComputerModel, BiosVersion, BiosName, BiosReleaseDate) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');", validate($row[TargetID]), validate($row[IPAddress]), validate($row[FullDomainName]), validate($osid), validate($row[OSLocale]), validate($row[ComputerMake]), validate($row[ComputerModel]), validate($row[BiosVersion]), validate($row[BiosName]), validate($row[BiosReleaseDate]));
+         $query=sprintf("insert into nac_wsuscomputertarget (TargetID, IPAddress, FullDomainName, OSid, OSLocale, ComputerMake, ComputerModel, BiosVersion, BiosName, BiosReleaseDate) values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s') on duplicate key update datetime=NOW();", validate($row[TargetID]), validate($row[IPAddress]), validate($row[FullDomainName]), validate($osid), validate($row[OSLocale]), validate($row[ComputerMake]), validate($row[ComputerModel]), validate($row[BiosVersion]), validate($row[BiosName]), validate($row[BiosReleaseDate]));
          message("Executing: ".$query,2);
          execute_query($query);
       }
@@ -381,13 +378,13 @@ function wsus_dump_updates()
       if ($ms_res)
       {
          db_connect();
-         $query='delete from nac_wsusupdate;';
+         /*$query='delete from nac_wsusupdate;';
          message("Executing: ".$query,2);
-         execute_query($query);
+         execute_query($query);*/
          foreach($ms_res as $row)
          {
             $updateid=mssql_guid_string($row[UpdateID]);
-            $query=sprintf("insert into nac_wsusupdate values('%s','%s','%s','%s');",validate($row[LocalID]),validate($updateid),validate($row[Title]),validate($row[Article]));
+            $query=sprintf("insert into nac_wsusupdate values('%s','%s','%s','%s') on duplicate key update UpdateID='%s';",validate($row[LocalID]),validate($updateid),validate($row[Title]),validate($row[Article]),validate($updateid));
             message("Executing: ".$query,2);
             execute_query($query);
          }

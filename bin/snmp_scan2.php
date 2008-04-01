@@ -1,5 +1,5 @@
 #!/usr/bin/php
-<?
+<?php
 /**
  * snmp_scan2.php
  *
