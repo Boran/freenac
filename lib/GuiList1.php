@@ -99,7 +99,7 @@ EOF;
    *   query($q, $limit, $order, $action_menu, $action_fieldname, $idx_name, $searchstring, $searchby, $action_confirm)
    *   The (my)SQL query is built as:
    *      $q WHERE $searchby LIKE '%$searchstring%' ORDER BY $order DESC LIMIT $limit
-   *   iaction_fieldname is the Title for the index column called idx_name
+   *   action_fieldname is the Title for the index column called idx_name
    *   Buttons in column 1:
    *     action_menu/action_confirm= array of Action button names & confirmation dialogs
    */

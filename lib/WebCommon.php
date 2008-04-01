@@ -107,7 +107,7 @@ class WebCommon extends Common
       define('HEADER',true); // The header is out
       $ret.= $header1;
       $ret.= $this->print_logo();
-      $ret.= main_menu();     // webfuns.inc
+      $ret.= main_menu();     // webfuncs.inc
       $this->debug('print_header: done', 3);
       return $ret;
     }
