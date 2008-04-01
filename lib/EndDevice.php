@@ -393,7 +393,8 @@ EOF;
       array_shift($backtrace);	//Remove call to check_calling_method from the backtrace;
       $ok=0;
       #Are we calling from a child of EndDevice which uses CallWrapper?
-      if (($backtrace[1]['class']) && ( (strcasecmp(get_parent_class($this),'EndDevice')) == 0 ) && (strcasecmp($backtrace[3]['class'],'Callwrapper') ==0 ))
+      if ( isset($backtrace[1]['class']) && isset($backtrace[3]['class']) 
+      && ( (strcasecmp(get_parent_class($this),'EndDevice')) == 0 ) && (strcasecmp($backtrace[3]['class'],'Callwrapper') ==0 ))
       {
          #If so, do the necessary corrections to our backtrace
          $temp=array_shift($backtrace);

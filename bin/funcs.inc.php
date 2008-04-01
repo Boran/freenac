@@ -312,7 +312,11 @@ function log2db($level, $msg)
      if (strlen($msg)>0 ) {
        db_connect();                 // just in case its not connected
        #$query="INSERT DELAYED INTO naclog "
-       $query="insert into naclog set what='".mysql_real_escape_string($msg)."', host='".mysql_real_escape_string($_SERVER['HOSTNAME'])."', priority='".$level."'";
+       if (isset($_SERVER['HOSTNAME']))
+          $host=$_SERVER['HOSTNAME'];
+       else
+          $host='';
+       $query="insert into naclog set what='".mysql_real_escape_string($msg)."', host='$host', priority='".$level."'";
        #$query="INSERT INTO naclog "
        #  . "SET what='" . mysql_real_escape_string($msg )  . "', "
        #  . "host='"     . mysql_real_escape_string($_SERVER["HOSTNAME"]) . "', "
