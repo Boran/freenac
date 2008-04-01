@@ -36,15 +36,18 @@
 ## session must also be set there
 if ( !isset($title) || !isset($action_menu) || !isset($q) ) {
     // TBD: use an exception
-    $logger->debug('Report has no valid parameters', 1);
+    $logger->debug('Report has invalid title, query or action_menu parameters', 1);
     $report=new GuiList1("Report", false); 
     echo "<hr><font class=text16red><p>Report has no valid parameters.</p></font>";
     echo $report->print_footer();
 }
 
 
-## $action_fieldname should also be set if needed
+global $logger, $q;
+
+// ensure defaults are set by the calling script
 $action_fieldname = isset($action_fieldname) ? $action_fieldname : '';
+$action_confirm = isset($action_confirm) ? $action_confirm : array(''); 
 $idx_fieldname    = isset($idx_fieldname) ? $idx_fieldname : $action_fieldname;
 
 
@@ -53,15 +56,13 @@ if ( isset($_REQUEST['change']) ) {
   $logger->debug("REQUEST: change", 1);
   #$logger->debug(var_dump($_REQUEST), 3);
 
-  global $logger, $q;
-
   if ( ( !isset($_REQUEST['sortby']) || !isset($_REQUEST['sortlimit']) )
        || empty($_REQUEST['sortby']) || empty($_REQUEST['sortlimit'])
        )  { // show an error message
 
     $logger->debug('No change submitted: order or limit invalid', 1);
     #$report=new CallWrapper(GuiList1($title, false));   // very verbose!
-    $report=(GuiList1($title, false)); 
+    $report=(GuiList1($title, false, 3)); 
     echo "<hr><class=UpdateMsg><p>No change selected: order or limit invalid.</p>";
     echo $report->print_footer();
 
@@ -78,10 +79,10 @@ if ( isset($_REQUEST['change']) ) {
       ."searchby=$searchby, searchstring=$searchstring", 1);
 
     #$report=new CallWrapper(new GuiList1($title, true));                //true=dynamic with filtering
-    $report=(new GuiList1($title, true));                //true=dynamic with filtering
+    $report=(new GuiList1($title, true, 1));                //true=dynamic with filtering
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
-       $searchstring, $searchby);   // run query, generate report
+       $searchstring, $searchby, $action_confirm);   // run query, generate report
 
     echo $report->print_footer();
   }
@@ -156,7 +157,7 @@ if ( isset($_REQUEST['change']) ) {
     $logger->debug("GuiList1_control.php: sortby=$sortby, sortlimit=$sortlimit, "
       ."searchby=$searchby, searchstring=$searchstring", 1);
     #$report=new CallWrapper(new GuiList1($title, true));                //true=dynamic with filtering
-    $report=(new GuiList1($title, true));                //true=dynamic with filtering
+    $report=(new GuiList1($title, true, 2));                //true=dynamic with filtering
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
        $searchstring, $searchby);   // run query, generate report

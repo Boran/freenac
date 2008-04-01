@@ -5,7 +5,11 @@
  *
  * Long description for file:
  * Class to Display a generic Query, with sorting and active buttons
- * See also GuiEditDevice_control.php, which manages the Buttons and POST/Submits.
+ * USAGE:
+ *   See also GuiEditDevice_control.php, which manages the Buttons and POST/Submits.
+ *   The Constructor create the basic empty report with tailes. The Query()
+ *   builts the SQL statement, executes and sends back results.
+ *   Features common to other WebGUI parts are outsourced to the parent class WebCommon
  *
  * @package     FreeNAC
  * @author      Sean Boran (FreeNAC Core Team)
@@ -22,10 +26,10 @@ class GuiList1 extends WebCommon
   private $dynamic;           // See also WebCommon and Common
 
 
-  function __construct($rep_name='', $dynamic=false)
+  function __construct($rep_name='', $dynamic=false , $debuglevel=1)
   {
     parent::__construct();     // See also WebCommon and Common
-    $this->logger->setDebugLevel(1);  // 3 for max debugging
+    $this->logger->setDebugLevel($debuglevel);  // 3 for max debugging
     $this->dynamic=$dynamic;
     $this->debug(" __construct() $rep_name", 1);
     echo "<div id='GuiList1Title'><p>{$rep_name}</div>";
@@ -91,9 +95,17 @@ EOF;
 
   /**
    * Generic query report
+   * Parameters: 
+   *   query($q, $limit, $order, $action_menu, $action_fieldname, $idx_name, $searchstring, $searchby, $action_confirm)
+   *   The (my)SQL query is built as:
+   *      $q WHERE $searchby LIKE '%$searchstring%' ORDER BY $order DESC LIMIT $limit
+   *   iaction_fieldname is the Title for the index column called idx_name
+   *   Buttons in column 1:
+   *     action_menu/action_confirm= array of Action button names & confirmation dialogs
    */
   public function query($q, $limit=0, $order='', $action_menu, 
-    $action_fieldname='', $idx_name, $searchstring='', $searchby='') 
+    $action_fieldname='', $idx_name, $searchstring='', $searchby='',
+    $action_confirm=array('') ) 
   {
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $_SESSION['report1_query']=$q;    // save for Report2, for re-use
@@ -102,7 +114,7 @@ EOF;
 
     try {
       $rowcount=0;
-      $searchby=preg_replace('/^\./', '', $searchby);  // kill leadeing dot, if any
+      $searchby=preg_replace('/^\./', '', $searchby);  // kill leading dot, if any
       $order   =preg_replace('/^\./', '', $order);    
       if ((strlen($searchby)>0) && (strlen($searchstring)>0) ) {
         $searchby=$this->sqlescape($searchby);
@@ -143,8 +155,7 @@ EOF;
         $output.= ($shade) ? "<tr class='light'>" : "<tr class='dark'>";
 
         if ( is_array($action_menu) ) {
-          // add a field for menu icons?
-          if ( strlen($action_fieldname) >0 )
+          if ( strlen($action_fieldname) >0 ) // add a field for menu icons?
             $row_id=$row[$action_fieldname];
 
           #Old, URL method
@@ -152,13 +163,20 @@ EOF;
           #$output.="<td>{$action_menu}</td>";      
 
           $output.='<td>';
-            foreach ($action_menu as $menu_item) {
+          foreach ($action_menu as $key => $menu_item) {
+            
+            // add a Confirmation dialog to this action button?
+            if (isset($action_confirm[$key]) && strlen($action_confirm[$key]) > 0)   // Get the confirmation dialog text.
+              $confirm="onClick=\"javascript:return confirm('" .$action_confirm[$key] ."')\"";
+            else
+              $confirm='';
+ 
             $output.=<<<EOF
  <form name='Action1' action='{$this->calling_script}' method='post'>
      <input type=hidden name='action_idxname'   value='{$idx_name}' />
      <input type=hidden name='action_fieldname' value='{$action_fieldname}' />
      <input type=hidden name='action_idx'       value='{$row_id}' />
-     <input class="greybox" type='submit' name='action' value='{$menu_item}'/>
+     <input class="greybox" type='submit' name='action' value='{$menu_item}' $confirm/>
  </form>
 EOF;
           } 
