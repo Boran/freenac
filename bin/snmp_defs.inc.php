@@ -142,7 +142,8 @@ function turn_on_port($switch,$port,$port_index=false)
             return false;
          }
       }
-      $oid=$snmp_port['ad_status'].'.'.$port_index;
+      #$oid=$snmp_port['ad_status'].'.'.$port_index;
+      $oid='1.3.6.1.2.1.2.2.1.7.'.$port_index;
       $logger->debug("Setting $oid to 1 in $switch (Turning on)",3);
       if (!snmpset($switch,$snmp_rw,$oid,'i',1))
       {
@@ -179,7 +180,8 @@ function turn_off_port($switch, $port, $port_index=false)
             return false;
          }
       }
-      $oid=$snmp_port['ad_status'].'.'.$port_index;
+      #$oid=$snmp_port['ad_status'].'.'.$port_index;
+      $oid='1.3.6.1.2.1.2.2.1.7.'.$port_index;
       $logger->debug("Setting $oid to 2 in $switch (Turning off)",3);
       if (!snmpset($switch,$snmp_rw,$oid,'i',2))
       {
@@ -339,9 +341,11 @@ function snmp_restart_port($port, $switch) {
 */
 function snmp_restart_port_id($port_id)
 {
+   global $logger;
    if (is_numeric($port_id) && ($port_id>0))
    {
       $query="select p.name as port, s.ip as switch from port p inner join switch s on p.switch=s.id where p.id='$port_id' limit 1;";
+      $logger->debug($query,3);
       $result=mysql_fetch_one($query);
       if ($result)
       {
@@ -408,12 +412,16 @@ function is_mac_on_port($mac,$switch,$port,$vlan)
 
 function ports_on_switch($switch)
 {
-   global $logger, $snmp_rw, $snmp_if;
+   global $logger, $snmp_rw, $snmp_if, $snmp_ifaces;
+   $oid = '1.3.6.1.2.1.31.1.1.1.1';
    if ($switch)
    {
       $logger->debug("Retrieving ports on $switch",2);
-      $logger->debug("Sending {$snmp_if['name']} to $switch",3);
-      $ports_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_if['name']);        //Get the list of ports on the switch
+      #$logger->debug("Sending {$snmp_if['name']} to $switch",3);
+      #$ports_on_switch=@snmprealwalk($switch,$snmp_rw,$snmp_if['name']);        //Get the list of ports on the switch
+
+      $logger->debug("Sending $oid to $switch",3);
+      $ports_on_switch=@snmprealwalk($switch,$snmp_rw,$oid);        //Get the list of ports on the switch
       if (empty($ports_on_switch))
       {
          $logger->logit("Couldn't establish communication with $switch with the defined parameters.");
@@ -900,7 +908,7 @@ function walk_macs($switch,$vlanid,$snmp_ro)
     debug2("snmprealwalk $switch $snmp_ro_vlan $snmp_bridge");
     $bridges = snmprealwalk($switch,$snmp_ro_vlan,$snmp_bridge);
 
-   if ( (count($bridges) == 0) || (!is_array($bridges)) ) { return($mac); };
+   if (count($bridges) == 0) { return($mac); };
 
    foreach($bridges as $oid => $bridgeid) 
    {
