@@ -146,7 +146,6 @@ final class Logger
       else
       {
          $this->stderr=false;
-         $this->openFacility(); #Open logging facilities
       }
    }
 
@@ -164,7 +163,6 @@ final class Logger
       else
       {
          $this->stdout=false;
-         $this->openFacility(); #Open logging facilities
       }
    }
 
@@ -179,7 +177,6 @@ final class Logger
       {   
          closelog();
          $this->identifier=$name;
-         $this->openFacility();
          return true;
       }
       else 
@@ -256,6 +253,7 @@ final class Logger
             }
             else
             {  
+               echo "Facility: ".$this->facility;
                fputs(STDERR, $message);   
                ob_flush();
             }
@@ -392,6 +390,44 @@ final class Logger
    }
 
    /**
+   * Wrapper around the logit method.
+   * This method logs by default to the stdout stream defined by the chosen facility
+   * @param mixed $error        The error message to display
+   * @return boolean            True if successful, false otherwise
+   */
+   public function showMessage($message=NULL)
+   {
+      if (strlen($message) > 0)
+      {
+         $this->setLogToStdOut(true);
+         $this->logit($message);
+         $this->setLogToStdOut(false);
+         return true;
+      }
+      else
+         return false;
+   }
+
+   /**
+   * Wrapper around the logit method.
+   * This method logs by default to the stderr stream defined by the chosen facility
+   * @param mixed $error	The error message to display
+   * @return boolean		True if successful, false otherwise
+   */
+   public function showError($error=NULL)
+   {
+      if (strlen($error) > 0)
+      {
+         $this->setLogToStdErr(true);
+         $this->logit($error, LOG_ERR);
+         $this->setLogToStdErr(false);
+         return true;
+      }
+      else
+         return false;
+   }
+
+   /**
    * Open logging facility specified for the user
    * @param integer $facility	Facility to open. Default is LOG_DAEMON
    * @return boolean		True if successful, false otherwise
@@ -442,7 +478,7 @@ final class Logger
       }
       else
       {
-         $this->logit("Value passed to openFacility is not an integer",LOG_WARNING);
+         $this->logit("Value passed to openFacility is not recognized",LOG_WARNING);
          return false;
       }
    }
