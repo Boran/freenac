@@ -56,7 +56,7 @@ if [ -s $tempfile2 ] ; then
   echo "Column1= count/sec, Column2=date, Column3=vmps server" >> $tempfile2
 
   logger -t vmps_authentic_statistics < $tempfile2
-  MAIL_RECIPIENT=`./config_var.php mail_user`
+  MAIL_RECIPIENT=`/opt/nac/bin/config_var.php mail_user`
   if [ -n "$MAIL_RECIPIENT" ]
   then
      mailx -s "`uname -n` $subject" "$MAIL_RECIPIENT" < $tempfile2

@@ -25,7 +25,7 @@ if [ -s $tempfile2 ] ; then
   # Log events to vmpslog table, so GUI can see it.
   #cat $tempfile2| /opt/nac/bin/vmps_log
 
-  MAIL_RECIPIENT=`./config_var.php mail_user`
+  MAIL_RECIPIENT=`/opt/nac/bin/config_var.php mail_user`
   if [ -n "$MAIL_RECIPIENT" ]
   then
      mailx -s "`uname -n` $subject" "$MAIL_RECIPIENT" < $tempfile2

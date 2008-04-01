@@ -31,7 +31,7 @@ if [ -s $tempfile2 ] ; then
   echo " " >> $tempfile2
   echo "This email was generated from the root cron on `uname -n` by $0" >> $tempfile2
 
-  MAIL_RECIPIENT=`./config_var.php mail_user`
+  MAIL_RECIPIENT=`/opt/nac/bin/config_var.php mail_user`
   if [ -n "$MAIL_RECIPIENT" ]
   then
      mailx -s "`uname -n` $subject" "$MAIL_RECIPIENT" < $tempfile2

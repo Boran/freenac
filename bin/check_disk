@@ -22,7 +22,7 @@
 #DEBUG=1
 
 # Email addressess to notify
-MAIL_RECIPIENT=`./config_var.php mail_user`
+MAIL_RECIPIENT=`/opt/nac/bin/config_var.php mail_user`
 if [ -n "$MAIL_RECIPIENT" ]
 then
   admin="$MAIL_RECIPIENT"
