@@ -22,7 +22,14 @@
 #DEBUG=1
 
 # Email addressess to notify
-admin=root
+MAIL_RECIPIENT=`./config_var.php mail_user`
+if [ -n "$MAIL_RECIPIENT" ]
+then
+  admin="$MAIL_RECIPIENT"
+else
+  echo "No mail_user value has been defined in the config table"
+  exit 1;
+fi
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 

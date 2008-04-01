@@ -55,8 +55,17 @@ if [ -s $tempfile2 ] ; then
   echo "It reports when there were more than 10 Vmps authentications in one second." >> $tempfile2
   echo "Column1= count/sec, Column2=date, Column3=vmps server" >> $tempfile2
 
-  #mailx -s "`uname -n` $subject" root < $tempfile2
   logger -t vmps_authentic_statistics < $tempfile2
+  MAIL_RECIPIENT=`./config_var.php mail_user`
+  if [ -n "$MAIL_RECIPIENT" ]
+  then
+     mailx -s "`uname -n` $subject" "$MAIL_RECIPIENT" < $tempfile2
+  else
+     echo "No mail_user value has been defined in the config table, dumping report on screen"
+     cat $tempfile2
+     exit 1;
+  fi
+
 fi
 
 rm $tempfile2 >/dev/null

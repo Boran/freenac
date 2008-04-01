@@ -45,6 +45,15 @@ then
   /etc/init.d/mysql start  
   message="MySQL socket disappeared, it has been restarted";
   logger $message -t check_mysql;
-  echo $message | mail -s "MySQL socket" root;
+  MAIL_RECIPIENT=`./config_var.php mail_user`
+  if [ -n "$MAIL_RECIPIENT" ]
+  then
+     echo $message | mail -s "MySQL socket" $MAIL_RECIPIENT;
+  else
+     echo "No mail_user value has been defined in the config table, dumping message on screen"
+     echo $message
+     exit 1;
+  fi
+
 fi
 

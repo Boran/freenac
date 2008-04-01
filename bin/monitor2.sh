@@ -31,7 +31,15 @@ if [ -s $tempfile2 ] ; then
   echo " " >> $tempfile2
   echo "This email was generated from the root cron on `uname -n` by $0" >> $tempfile2
 
-  mailx -s "`uname -n` $subject" root < $tempfile2
+  MAIL_RECIPIENT=`./config_var.php mail_user`
+  if [ -n "$MAIL_RECIPIENT" ]
+  then
+     mailx -s "`uname -n` $subject" "$MAIL_RECIPIENT" < $tempfile2
+  else
+     echo "No mail_user value has been defined in the config table, dumping report on screen"
+     cat $tempfile2
+     exit 1;
+  fi
 fi
 
 rm $tempfile2 >/dev/null
