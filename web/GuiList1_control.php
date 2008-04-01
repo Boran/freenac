@@ -160,7 +160,7 @@ if ( isset($_REQUEST['change']) ) {
     $report=(new GuiList1($title, true, 2));                //true=dynamic with filtering
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
-       $searchstring, $searchby);   // run query, generate report
+       $searchstring, $searchby, $action_confirm);   // run query, generate report
 
     echo $report->print_footer();
 }
