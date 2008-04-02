@@ -253,7 +253,6 @@ final class Logger
             }
             else
             {  
-               echo "Facility: ".$this->facility;
                fputs(STDERR, $message);   
                ob_flush();
             }

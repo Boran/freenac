@@ -534,7 +534,7 @@ function array_find_key($str,$array,$token,$number)
          return false;
       foreach($array as $k => $v)
       {
-         if (strcasecmp(str_get_last($k,$token,$number),str_get_last($str,$token,$number))==0)
+         if (strcasecmp(str_get_last($k,$token,$number),".$str")==0)
          {
             return $v;
          }
