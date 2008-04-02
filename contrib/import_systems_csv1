@@ -30,10 +30,11 @@
  *
  */
 
-chdir(dirname(__FILE__));
-set_include_path("./:../");
 
 require_once "../bin/funcs.inc.php";
+
+chdir(dirname(__FILE__));
+set_include_path("./:../");
 
 function validate($string)
 {
