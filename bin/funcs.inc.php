@@ -532,9 +532,14 @@ function array_find_key($str,$array,$token,$number)
    {
       if ( ! is_array($array))
          return false;
+      #What if we have a string without tokens? 
+      #Add the token to the beginning of the string
+      #so we cover that case without affecting the strings
+      #containing the token 
+      $str = "$token$str";
       foreach($array as $k => $v)
       {
-         if (strcasecmp(str_get_last($k,$token,$number),".$str")==0)
+         if (strcasecmp(str_get_last($k,$token,$number),str_get_last($str,$token,$number))==0)
          {
             return $v;
          }
