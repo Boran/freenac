@@ -213,7 +213,7 @@ TXT;
           }
         }
         else {    // no restrictions
-          $this->logit("Web user {$_SESSION['uid']} is allowed to assign any vlan", 1);
+          $this->debug("Web user {$_SESSION['uid']} is allowed to assign any vlan", 2);
           $q.=', vlan='  .$_REQUEST['vlan'];
         }
 

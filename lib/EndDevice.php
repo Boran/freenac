@@ -167,8 +167,9 @@ EOF;
       } 
       else 
       {
-         # Default is not to expire 
-         $this->logger->logit("check_for_expired option is not enabled");
+         # Default is not to expire, do on debug1 to flood logs less
+         #$this->logger->logit("check_for_expired option is not enabled");
+         $this->logger->debug("check_for_expired option is not enabled");
          return false;
       }
    }
