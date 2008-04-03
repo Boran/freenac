@@ -186,10 +186,14 @@ foreach ($switch_ports as $switch => $properties)
       else if ($properties['auth_profile'][$i] == '2')
       {
          #Check if the port is static. If it is, program it, otherwise, don't do anything (CatOS issues)?
+         # Look for a SNMP OID key [OID.x.y.1]=value that ends in .1 and get the value after it
          if (array_find_key($port_index, $vm_type, '.', 1) == '1')
          {
             set_port_as_dynamic($switch, $port, $port_index);
             $dont_restart++;
+         }
+         else {
+           $logger->debug('Port is already dynamic, do not reprogram', 2);
          }
       }
 
