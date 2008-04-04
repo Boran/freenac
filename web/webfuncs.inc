@@ -130,22 +130,34 @@ $header1=<<<TEXT
 	</head>
 TEXT;
 
+//  if (trim(document.getElementById('name').value)== \'\') {
 $js1=<<<TEXT
-<script language="JavaScript">
+<script type="text/javascript"> 
+// TBD: Both of these are stil early prototypes,,,,
+//
+// Alert if field n on form f is less than l chars
+function checkLen(f,len)
+{
+  //alert(document.formadd.name.value.trim());
+  var myform="formadd";  // hard coded to formadd for now; f.form does not work
+  if (eval("document." +myform +"." +f.name +".value.trim().length") <len) {
+    alert('The value must contain at least ' +len +' characters');
+  }
+}
 function checkForm()
 {
         var cname, cmac;
-        with(window.document.msgform) {
-                cname    = name;
+        with(document.formadd) {
+                cname  = name;
                 cmac   = mac;
         }
 
-        if(trim(cname.value) == \'\') {
-                alert(\'Please enter a name\');
+        if(trim(cname.value).length == 0) {
+                alert('Please enter a name');
                 cname.focus();
                 return false;
-        } else if(trim(cmac.value) == \'\') {
-                alert(\'Please enter a mac\');
+        } else if(trim(cmac.value).length == 0) {
+                alert('Please enter a mac');
                 cmac.focus();
                 return false;
         } else {
@@ -157,9 +169,10 @@ function checkForm()
 /* Strip whitespace from the beginning and end of a string
 Input : a string
 */
-function trim(str)
+//function trim(str)
+String.prototype.trim = function()
 {
-        return str.replace(/^\s+|\s+$/g,\'\');
+  return this.replace(/^\s+|\s+$/g, '');
 }
 </script>
 TEXT;
@@ -710,11 +723,11 @@ EOF;
 */
 function main_menu()
 {
-  global $head_left1;
   #$logger->debug("main_menu()");
+  #$text="{$_SESSION['nac_rights']}";
+  $text='';
 
-   $text=<<<EOF
-
+  $text.=<<<EOF
 <script type="text/javascript"> <!--
 function showHideLayers() {
   var i,p,v,obj,args=showHideLayers.arguments;
@@ -741,10 +754,20 @@ function showHideLayers() {
     <a href="unknowns.php" title="List unknown end devices and print/edit/delete them">Find unknowns</a><br/>
     <a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a><br/>
     <a href="listall.php"  title="List end devices with lots of detail">Detailed list</a><br/>
+EOF;
+
+   if ($_SESSION['nac_rights'] > 1)    // edit/admin
+     $text.=<<<EOF
     <a href="GuiEditDevice_control.php?action=Add"  title="Add a new End-Device/PC to the Database">Add new End-Device</a><br/>
+EOF;
+
+   $text.=<<<EOF
   </div>
 </div></td>
+EOF;
 
+  if ($_SESSION['nac_rights'] > 1)    // edit/admin
+   $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_stats1','','show')"
   onmouseout ="showHideLayers('smenu_stats1','','hide')">
@@ -756,7 +779,10 @@ function showHideLayers() {
      <a href="graphswitchall.php" title="Graphs cables/ports recently used for all switches">Switch port diagram: all switches</a><br/>
   </div>
 </div></td>
+EOF;
 
+  #if ($_SESSION['nac_rights']>1)  // hide Monitoring in Read-Only
+   $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_config','','show')"
   onmouseout ="showHideLayers('smenu_config','','hide')">
@@ -776,8 +802,10 @@ function showHideLayers() {
             <a href="class2.php">Class2</a></li>
 </div>
 </div></td>
+EOF;
 
-
+  #if ($_SESSION['nac_rights']>1)  // hide Monitoring in Read-Only
+   $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_mon','','show')"
   onmouseout ="showHideLayers('smenu_mon','','hide')">
@@ -790,8 +818,9 @@ function showHideLayers() {
             <a href="logtaildebug.php">Syslog Debug Log</a><br/>
 </div>
 </div></td>
+EOF;
 
-
+   $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_help','','show')"
   onmouseout ="showHideLayers('smenu_help','','hide')">
@@ -811,8 +840,8 @@ function showHideLayers() {
 </tr>
 </tbody>
 </table>
-
 EOF;
+
    return $text;
 }
 
