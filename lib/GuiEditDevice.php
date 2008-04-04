@@ -245,8 +245,8 @@ TXT;
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $this->debug("EditDevice::Add() ", 3);
     #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
-    $output ='<form action="GuiEditDevice_control.php" method="POST">';
-    $output.= $js1 ."<table id='GuiEditDeviceAdd'>";
+    $output ='<form name="formadd" action="GuiEditDevice_control.php" method="POST">';
+    $output.= "\n$js1\n <table id='GuiEditDeviceAdd'>";
 
     $name=''; $mac='0001.0001.0001'; 
     try {
@@ -254,10 +254,10 @@ TXT;
         // Name, MAC
         $output.=<<<TXT
         <tr><td width="87" title="What name is to be used by FreeNAC to reference this device?">Name:</td>
-            <td width="400"> <input name="name" type="text" value="{$name}" />
+            <td width="400"> <input name="name" type="text" value="{$name}" onBlur="checkLen(this,1)">
         </td></tr>
         <tr><td width="87"  title="Enter a valid 12 digit hex MAC address, in the format xxxx.yyyy.zzzz ">MAC:</td>
-            <td width="400"> <input name="mac" type="text" value="{$mac} "/>
+            <td width="400"> <input name="mac" type="text" value="{$mac}" onBlur="checkLen(this,14) "/>
         </td></tr>
 TXT;
         // Status
@@ -269,7 +269,7 @@ TXT;
 
       $output.=<<<TXT
         <tr><td></td><td>
-        <input type="submit" class="bluebox" name="action" value="Add" onclick="return checkForm();"
+        <input type="submit" class="bluebox" name="action" value="Add" onclick="return checkForm()"
 		title="Click to add a new device with the above details"/>
 	</td>
         </form>
