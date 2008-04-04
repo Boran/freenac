@@ -19,8 +19,8 @@ date_default_timezone_set('CET');
 
 
   $sess_name='freenac';
-  #$sess_time=3600;       // 3600=60min=1h
-  $sess_time=60;    // testing: 1 min
+  $sess_time=3600;       // 3600=60min=1h
+  #$sess_time=60;    // testing: 1 min
 
   // Which method should be used for WebGUI authentication?
   // only ad_auth and anon_auth work at this stage.
