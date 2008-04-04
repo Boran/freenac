@@ -37,6 +37,11 @@ vmpsd_external.php.*: Debug(1|2)
 postconnect.php.*: Debug1
 ping_switch.php.*: Debug1
 
+
+## Web interface
+session_start.* headers already sent
+
+
 # FreeRadius
 # See all 802.1x requests/Answers?
 rad_recv: Access-Request
@@ -49,4 +54,8 @@ Reply-Message = "(vmps) returns: MAC address allowed"
 #Debug: +(rlm_eap|TLS_|eaptls_|mschap2|radius_xlat|rlm_mschap)
 #Info: rlm_eap_mschapv2
 
+
+## Ignore Wsuse/Epo stuff until Wolfram is finished
+wsus_sync.php
+epo_sync.php
 
