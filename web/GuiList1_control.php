@@ -47,7 +47,7 @@ global $logger, $q;
 
 // ensure defaults are set by the calling script
 $action_fieldname = isset($action_fieldname) ? $action_fieldname : '';
-$action_confirm = isset($action_confirm) ? $action_confirm : array(''); 
+$action_confirm   = isset($action_confirm) ? $action_confirm : array(''); 
 $idx_fieldname    = isset($idx_fieldname) ? $idx_fieldname : $action_fieldname;
 
 
@@ -69,6 +69,8 @@ if ( isset($_REQUEST['change']) ) {
   } else {
     if ( isset($_REQUEST['sortby'])  )
       $sortby   =$_REQUEST['sortby'];    // inputs validated in Report1->query
+    if ( isset($_REQUEST['order_dir'])  )
+      $order_dir=$_REQUEST['order_dir'];
     if ( isset($_REQUEST['sortlimit'])  )
       $sortlimit=$_REQUEST['sortlimit'];
     if ( isset($_REQUEST['searchby']) && isset($_REQUEST['searchstring']) ) {
@@ -82,7 +84,7 @@ if ( isset($_REQUEST['change']) ) {
     $report=(new GuiList1($title, true, 1));                //true=dynamic with filtering
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
-       $searchstring, $searchby, $action_confirm);   // run query, generate report
+       $searchstring, $searchby, $action_confirm, $order_dir);   // run query, generate report
 
     echo $report->print_footer();
   }
@@ -150,6 +152,8 @@ if ( isset($_REQUEST['change']) ) {
       $sortby   =$_REQUEST['sortby'];    // inputs validated in Report1->query
     if ( isset($_REQUEST['sortlimit'])  )
       $sortlimit=$_REQUEST['sortlimit'];
+    if ( isset($_REQUEST['order_dir'])  )
+      $order_dir=$_REQUEST['order_dir'];
     if ( isset($_REQUEST['searchby']) && isset($_REQUEST['searchstring']) ) {
       $searchby   =$_REQUEST['searchby'];    // Column title, but what about name?
       $searchstring=$_REQUEST['searchstring'];
@@ -160,7 +164,7 @@ if ( isset($_REQUEST['change']) ) {
     $report=(new GuiList1($title, true, 2));                //true=dynamic with filtering
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
-       $searchstring, $searchby, $action_confirm);   // run query, generate report
+       $searchstring, $searchby, $action_confirm, $order_dir);   // run query, generate report
 
     echo $report->print_footer();
 }

@@ -98,14 +98,14 @@ EOF;
    * Parameters: 
    *   query($q, $limit, $order, $action_menu, $action_fieldname, $idx_name, $searchstring, $searchby, $action_confirm)
    *   The (my)SQL query is built as:
-   *      $q WHERE $searchby LIKE '%$searchstring%' ORDER BY $order DESC LIMIT $limit
+   *      $q WHERE $searchby LIKE '%$searchstring%' ORDER BY $order $order_dir LIMIT $limit
    *   action_fieldname is the Title for the index column called idx_name
    *   Buttons in column 1:
    *     action_menu/action_confirm= array of Action button names & confirmation dialogs
    */
   public function query($q, $limit=0, $order='', $action_menu, 
     $action_fieldname='', $idx_name, $searchstring='', $searchby='',
-    $action_confirm=array('') ) 
+    $action_confirm=array(''), $order_dir='DESC') 
   {
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $_SESSION['report1_query']=$q;    // save for Report2, for re-use
@@ -123,10 +123,11 @@ EOF;
       } 
 
       $order=$this->sqlescape($order);
+      $order_dir=$this->sqlescape($order_dir);
       $limit=$this->sqlescape($limit);
       $this->debug("GuiList1.php->query() limit=$limit, order=$order searchby=$searchby, searchstring=$searchstring", 3);
 
-      if (strlen($order)>0) $q.=" ORDER BY $order DESC"; 
+      if (strlen($order)>0) $q.=" ORDER BY $order $order_dir"; 
       if ($limit>0)         $q.=" LIMIT $limit"; 
 
       $this->debug("$q", 3);

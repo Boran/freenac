@@ -51,6 +51,7 @@ else if ($_SESSION['nac_rights']==99) {
 $title="Vlan configuration";
 $sortlimit=200;
 $sortby='default_name';
+$order_dir='ASC';
 $searchby='';
 $searchstring='';
 
@@ -58,8 +59,10 @@ $action_fieldname="Index Number";     $idx_fieldname="id";
 
 $q=<<<TXT
 SELECT
-  default_id AS 'Vlan number', default_name AS 'Vlan Name',   
-  vlan_description as 'GUI Description', vlan_group AS 'Group',
+  default_name AS 'Vlan Name',   
+  default_id AS 'Vlan number', 
+  vlan_description as 'GUI Description', 
+  vlan_group AS 'Group',
   $idx_fieldname AS '$action_fieldname' 
   FROM vlan
 TXT;

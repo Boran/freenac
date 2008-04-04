@@ -51,6 +51,7 @@ else if ($_SESSION['nac_rights']==99) {
 $title="Global config";
 $sortlimit=200;
 $sortby='name';
+$order_dir='ASC';
 $searchby='';
 $searchstring='';
 
@@ -59,12 +60,17 @@ $action_fieldname="Setting name";     $idx_fieldname="name";
 $q=<<<TXT
 SELECT
   $idx_fieldname AS '$action_fieldname', 
-  config.type, config.value, 
+  config.value AS 'Setting value', 
   config.comment, config.LastChange, 
-  CONCAT(users.GivenName, ' ', users.Surname) as user
+  CONCAT(users.GivenName, ' ', users.Surname) as 'Changed by',
+  config.type AS Type,
+  config.id AS Idx
   FROM config
   LEFT JOIN users on config.who=users.id
 TXT;
+/*
+  config.id as Index
+*/
 
 
 require_once "GuiList1_control.php";
