@@ -45,6 +45,11 @@ class GuiEditDevice extends WebCommon
 
   public function Delete()
   {
+    $this->debug("Delete() index {$device}", 3);
+    #var_dump($_REQUEST);
+    if ($_SESSION['nac_rights']<2)
+      throw new InsufficientRightsException($_SESSION['nac_rights']);
+
     if (is_numeric($_REQUEST['action_idx']) && ($_REQUEST['action_idx']>0) ){
       $device=$_REQUEST['action_idx'];
     } else if (is_numeric($_SESSION['report1_index']) && ($_SESSION['report1_index']>0) ) {
@@ -53,13 +58,7 @@ class GuiEditDevice extends WebCommon
       throw new InvalidWebInputShowException("Cannot delete device with invalid index <{$_REQUEST['action_idx']}>");
     }
 
-    $this->debug("Delete() index {$device}", 3);
-    #var_dump($_REQUEST);
-    if ($_SESSION['nac_rights']<2)
-      throw new InsufficientRightsException($_SESSION['nac_rights']);
-
     $conn=$this->getConnection();     //  make sure we have a DB connection
-
     try {
       $q="DELETE FROM systems WHERE id={$device} LIMIT 1";     // only this record
       $this->debug($q, 3);
@@ -176,10 +175,10 @@ TXT;
     #var_dump($_REQUEST);
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
+
     $conn=$this->getConnection();     //  make sure we have a DB connection
 
     try {
-      
       $q='';
         $q='UPDATE systems SET ';
         // got name?
@@ -242,6 +241,9 @@ TXT;
   public function add()
   {
     global $js1;
+    if ($_SESSION['nac_rights']<2)    // must have edit rights
+      throw new InsufficientRightsException($_SESSION['nac_rights']);
+
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $this->debug("EditDevice::Add() ", 3);
     #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
@@ -257,7 +259,7 @@ TXT;
             <td width="400"> <input name="name" type="text" value="{$name}" onBlur="checkLen(this,1)">
         </td></tr>
         <tr><td width="87"  title="Enter a valid 12 digit hex MAC address, in the format xxxx.yyyy.zzzz ">MAC:</td>
-            <td width="400"> <input name="mac" type="text" value="{$mac}" onBlur="checkLen(this,14) "/>
+            <td width="400"> <input name="mac" type="text" value="{$mac}" onBlur="checkLen(this,14) ">
         </td></tr>
 TXT;
         // Status
@@ -323,12 +325,12 @@ TXT;
         $output.= '<input name="name" type="text" value="' .stripslashes($row['name']) .'"/>' ."\n";
         $output.= '</td><td>Index:' .$row['id'] .'</td>' ."</tr>\n";
         // MAC
-        $output.= '<tr><td>MAC:</td><td>'."\n";
+        $output.= '<tr><td>MAC:</td><td>' ."\n";
         $output.= $row['mac'] .(!is_null($row['vendor'])?' (' .$row['vendor'] .')':'') ."\n";
         $output.= '</td></tr>'."\n";
-        $output.= '<input type="hidden" name="mac" value="'.$row['mac'].'" />'."\n";
+        $output.= '<input type="hidden" name="mac" value="' .$row['mac'] .'" />' ."\n";
         // Status
-        $output.=  '<tr><td>Status:</td><td>'."\n";
+        $output.=  '<tr><td>Status:</td><td>' ."\n";
         $output.=  $this->get_statusdropdown($row['status']) . '</td></tr>'."\n";
 
         // VLAN, last vlan/date
