@@ -51,24 +51,39 @@ else if ($_SESSION['nac_rights']==99) {
 $title="User List";
 $sortlimit=200;
 $sortby='Surname';
+$order_dir='ASC';
 $searchby='';
 $searchstring='';
 
-$action_fieldname="Index";     $idx_fieldname="id";
+$action_fieldname="Index";     $idx_fieldname="users.id";
 
 $q=<<<TXT
 SELECT 
-  CONCAT(Surname, ', ', GivenName, ', ', username, ', ', Department) as  GivenNameSurname,
-  username, GivenName, Surname, 
+  CONCAT(Surname, ', ', GivenName, ', ', username, ', ', Department) as 'Full Name',
+  username AS Username, 
+  comment AS Comment, 
+  guirights.value AS 'Gui: rights',
+  GuiVlanRights AS 'Gui: vlan restrictions',
+  TelephoneNumber AS Telephone, Mobile, 
+  CONCAT(building.name, ', ', location.name) as Location,
+  LastSeenDirectory, 
+  GivenName AS 'First Name', Surname AS 'Second Name', 
   Department, rfc822mailbox, 
-  HouseIdentifier, PhysicalDeliveryOfficeName, TelephoneNumber, Mobile, 
-  LastSeenDirectory, nac_rights, manual_direx_sync, 
-  comment, GuiVlanRights, location,
+  manual_direx_sync, 
   $idx_fieldname AS '$action_fieldname' 
   FROM users
+  LEFT JOIN guirights ON users.nac_rights = guirights.code 
+  LEFT JOIN location ON users.location = location.id 
+  LEFT JOIN building ON location.building_id = building.id
 TXT;
 
-# restart_now, auth_profile, staticvlan, port.shutdown,
+/*
+ TBD: location joins
+  location,
+  HouseIdentifier AS Location1, 
+  PhysicalDeliveryOfficeName AS Location2, 
+*/
+
 
 require_once "GuiList1_control.php";
 

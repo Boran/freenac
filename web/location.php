@@ -51,6 +51,7 @@ else if ($_SESSION['nac_rights']==99) {
 $title="Lookups: Location";
 $sortlimit=200;
 $sortby='building.name, l.name';
+$order_dir='ASC';
 $searchby='';
 $searchstring='';
 
@@ -58,8 +59,9 @@ $action_fieldname="Index";     $idx_fieldname="l.id";
 
 $q=<<<TXT
 SELECT 
-  CONCAT(building.name, ' ', l.name) as LocationAndBuilding,
-  building.name as BuildingName, l.name as LocationName,
+  CONCAT(building.name, ' ', l.name) as 'Full Location',
+  building.name as Building, 
+  l.name as Location,
   $idx_fieldname AS '$action_fieldname' 
   FROM location l
   INNER JOIN building on l.building_id = building.id  

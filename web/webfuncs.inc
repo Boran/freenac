@@ -819,11 +819,11 @@ EOF;
   onmouseout ="showHideLayers('smenu_mon','','hide')">
   <a >Monitoring</a>
 <div class="smenu" id="smenu_mon">
-            <a href="phpsysinfo/">Server information</a><br/>
-            <a href="loggui.php">GUI change log</a><br/>
             <a href="logserver.php">Server summary log</a><br/>
+            <a href="loggui.php">GUI change log</a><br/>
             <a href="logtail1.php">Syslog Message log</a><br/>
             <a href="logtaildebug.php">Syslog Debug Log</a><br/>
+            <a href="phpsysinfo/">Server status</a><br/>
 </div>
 </div></td>
 EOF;

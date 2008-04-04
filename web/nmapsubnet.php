@@ -51,6 +51,7 @@ else if ($_SESSION['nac_rights']==99) {
 $title="Network Scan rules for nmap";
 $sortlimit=200;
 $sortby='ip_address';
+$order_dir='ASC';
 $searchby='';
 $searchstring='';
 
@@ -58,10 +59,10 @@ $action_fieldname="Index";     $idx_fieldname="id";
 
 $q=<<<TXT
 SELECT
-  ip_address,
-  ip_netmask,
-  scan,
-  dontscan,
+  ip_address AS 'IP Address',
+  ip_netmask AS 'Netmask',
+  scan AS 'Nmap scan allowed?',
+  dontscan AS 'Addresses not to scan',
   $idx_fieldname AS '$action_fieldname' 
   FROM subnets
 TXT;

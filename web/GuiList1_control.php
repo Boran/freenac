@@ -49,6 +49,7 @@ global $logger, $q;
 $action_fieldname = isset($action_fieldname) ? $action_fieldname : '';
 $action_confirm   = isset($action_confirm) ? $action_confirm : array(''); 
 $idx_fieldname    = isset($idx_fieldname) ? $idx_fieldname : $action_fieldname;
+$order_dir        = isset($order_dir) ? $order_dir : 'DESC';
 
 
 ###### Standard CHANGE (limit|sort) button ############

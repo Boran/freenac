@@ -51,6 +51,7 @@ else if ($_SESSION['nac_rights']==99) {
 $title="Device Class2";
 $sortlimit=200;
 $sortby='value';
+$order_dir='ASC';
 $searchby='';
 $searchstring='';
 
@@ -58,7 +59,7 @@ $action_fieldname="Index";     $idx_fieldname="id";
 
 $q=<<<TXT
 SELECT
-  value,
+  value AS Name,
   $idx_fieldname AS '$action_fieldname' 
   FROM sys_class2
 TXT;
