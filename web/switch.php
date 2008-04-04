@@ -59,20 +59,24 @@ $action_fieldname="Switch Index";     $idx_fieldname="switch.id";
 
 $q=<<<TXT
 SELECT 
-  switch.name, 
-  comment, 
-  ip, 
-  location, location.name as LocationName,
-  building.name as building, 
-  swgroup, notify, 
-  scan, 
-  hw, sw,
+  switch.name AS 'Switch name', 
+  comment AS 'Comment', 
+  building.name as Building, 
+  location.name as Location,
+  scan AS 'Layer 2 passive scan?', 
+  swgroup, 
+  hw AS Hardware, sw AS Firmware,
+  notify AS 'Emails to notify when unknowns detected', 
+  v1.default_name AS 'Restricted vlan?',
+  ip AS 'IP Address', 
   $idx_fieldname AS '$action_fieldname' 
   FROM switch 
   LEFT JOIN location ON switch.location = location.id 
   LEFT JOIN building ON location.building_id = building.id
+  LEFT JOIN vlan v1  ON switch.vlan_id = v1.id
 TXT;
 
+# location
 
 require_once "GuiList1_control.php";
 
