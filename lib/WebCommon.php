@@ -75,15 +75,9 @@ class WebCommon extends Common
 
   public function print_logo()
   {
-    global  $head_left1;
-    echo $head_left1;
+    global $head_left1;
+    return $head_left1 . "\n";
   }
-  #public function print_header($print_links=true)
-  #{
-  #  echo $this->print_headerMin();
-  #  echo $this->print_logo();
-  #  echo main_menu();     // webfuns.inc
-  #}
   public function print_headerSmall($print_links=true)
   {
     $this->print_header($print_links);
@@ -91,26 +85,21 @@ class WebCommon extends Common
 
   public function print_header($print_links=true)
   {
-    global $header1, $header2, $head_right1, $head_right2;
+    global $header1;
     $ret='';
 
     if (defined('HEADER')){   // already displayed?
-      $this->debug('print_header: HEADER already true',2);
+      $this->debug('print_header: HEADER already true', 3);
 
     } else {
-      if ($print_links===false) {
-        $this->debug('print_header: do not print right links', 3);
-        $head_right1='';
-        $head_right2='';
-      }
-      #$ret= $header1 . $header2;
       define('HEADER',true); // The header is out
-      $ret.= $header1;
-      $ret.= $this->print_logo();
+      $ret.= $header1 ."\n";
+      #$ret.= $_SESSION['nac_rights'];
+      $ret.= $this->print_logo() ."\n";
       $ret.= main_menu();     // webfuncs.inc
       $this->debug('print_header: done', 3);
-      return $ret;
     }
+    return $ret;
   }
 
 
