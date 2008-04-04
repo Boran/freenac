@@ -197,6 +197,14 @@ $header2_small=<<<TEXT
 </table>
 TEXT;
 		
+/*
+ * Popul a JavaScript alert window 
+ */
+function jalert($str='') 
+{
+  return "<script type='text/javascript'>alert('" .$str ."')</script>";
+}
+
 // Obsolete: use WebCommon class
 function print_header($print_links=true){
    global $header1, $header2, $head_right1, $head_right2;	
@@ -835,12 +843,11 @@ EOF;
 </div>
 </div></td>
 
-<td><a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a><td>
-
 </tr>
 </tbody>
 </table>
 EOF;
+#<td><a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a><td>
 
    return $text;
 }
