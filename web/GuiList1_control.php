@@ -37,7 +37,7 @@
 if ( !isset($title) || !isset($action_menu) || !isset($q) ) {
     // TBD: use an exception
     $logger->debug('Report has invalid title, query or action_menu parameters', 1);
-    $report=new GuiList1("Report", false); 
+    $report=new GuiList1("Report"); 
     echo "<hr><font class=text16red><p>Report has no valid parameters.</p></font>";
     echo $report->print_footer();
 }
@@ -50,6 +50,7 @@ $action_fieldname = isset($action_fieldname) ? $action_fieldname : '';
 $action_confirm   = isset($action_confirm) ? $action_confirm : array(''); 
 $idx_fieldname    = isset($idx_fieldname) ? $idx_fieldname : $action_fieldname;
 $order_dir        = isset($order_dir) ? $order_dir : 'DESC';
+#$searchstring     = isset($searchstring) ? $searchstring : '';
 
 
 ###### Standard CHANGE (limit|sort) button ############
@@ -57,17 +58,6 @@ if ( isset($_REQUEST['change']) ) {
   $logger->debug("REQUEST: change", 1);
   #$logger->debug(var_dump($_REQUEST), 3);
 
-  if ( ( !isset($_REQUEST['sortby']) || !isset($_REQUEST['sortlimit']) )
-       || empty($_REQUEST['sortby']) || empty($_REQUEST['sortlimit'])
-       )  { // show an error message
-
-    $logger->debug('No change submitted: order or limit invalid', 1);
-    #$report=new CallWrapper(GuiList1($title, false));   // very verbose!
-    $report=(GuiList1($title, false, 3)); 
-    echo "<hr><class=UpdateMsg><p>No change selected: order or limit invalid.</p>";
-    echo $report->print_footer();
-
-  } else {
     if ( isset($_REQUEST['sortby'])  )
       $sortby   =$_REQUEST['sortby'];    // inputs validated in Report1->query
     if ( isset($_REQUEST['order_dir'])  )
@@ -79,16 +69,15 @@ if ( isset($_REQUEST['change']) ) {
       $searchstring=$_REQUEST['searchstring'];
     } 
     $logger->debug("GuiList1_control.php: sortby=$sortby, sortlimit=$sortlimit, "
-      ."searchby=$searchby, searchstring=$searchstring", 1);
+      ."searchby=$searchby, searchstring=$searchstring order_dir=$order_dir", 2);
 
     #$report=new CallWrapper(new GuiList1($title, true));                //true=dynamic with filtering
-    $report=(new GuiList1($title, true, 1));                //true=dynamic with filtering
+    $report=new GuiList1($title, true, 1);                //true=dynamic with filtering, debug level
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
        $searchstring, $searchby, $action_confirm, $order_dir);   // run query, generate report
 
     echo $report->print_footer();
-  }
 
 
 ###### CUSTOM: Print button  ############
@@ -162,7 +151,7 @@ if ( isset($_REQUEST['change']) ) {
     $logger->debug("GuiList1_control.php: sortby=$sortby, sortlimit=$sortlimit, "
       ."searchby=$searchby, searchstring=$searchstring", 1);
     #$report=new CallWrapper(new GuiList1($title, true));                //true=dynamic with filtering
-    $report=(new GuiList1($title, true, 2));                //true=dynamic with filtering
+    $report=new GuiList1($title, true, 3);                //true=dynamic with filtering, debug level
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
        $searchstring, $searchby, $action_confirm, $order_dir);   // run query, generate report
