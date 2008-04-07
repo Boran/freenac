@@ -25,8 +25,7 @@
 # --- end of standard header ------
 
 ### --------- main() -------------
-  $report=new WebCommon(true);       // with header
-  $report->logger->setDebugLevel(1);
+  $report=new WebCommon(true, 3);       // with header, debubg level
   #echo main_menu_simple();   // TBD: show the old menu if there is no java script?
   echo <<<EOF
   <img src='./images/logo500.png' border='0' style="padding-left: 30px;"/>

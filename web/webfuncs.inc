@@ -731,6 +731,14 @@ EOF;
 */
 function main_menu()
 {
+  global $logger, $_SESSION;
+  if (isset($_SESSION['nac_rights']) && ($_SESSION['nac_rights']>1)) {
+    $edit_mode=true;
+  } else {
+    $edit_mode=false;
+    $logger->debug("main_menu() nac_rights not set, or <2", 2);
+  }
+  #var_dump($_SESSION);
   #$logger->debug("main_menu()");
   #$text="{$_SESSION['nac_rights']}";
   $text='';
@@ -761,10 +769,11 @@ function showHideLayers() {
   <div class="smenu" id="smenu_device1">
     <a href="unknowns.php" title="List unknown end devices and print/edit/delete them">Find unknowns</a><br/>
     <a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a><br/>
-    <a href="listall.php"  title="List end devices with lots of detail">Detailed list</a><br/>
+    <a href="listall.php" title="List end devices with lots of detail">Detailed list</a><br/>
+    <a href="mydevs.php"  title="List My end devices: attributed to My username">My Devices</a><br/>
 EOF;
 
-   if ($_SESSION['nac_rights'] > 1)    // edit/admin
+   if ($edit_mode)    // edit/admin
      $text.=<<<EOF
     <a href="GuiEditDevice_control.php?action=Add"  title="Add a new End-Device/PC to the Database">Add new End-Device</a><br/>
 EOF;
@@ -774,8 +783,8 @@ EOF;
 </div></td>
 EOF;
 
-  if ($_SESSION['nac_rights'] > 1)    // edit/admin
-   $text.=<<<EOF
+   if ($edit_mode)    // edit/admin
+     $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_stats1','','show')"
   onmouseout ="showHideLayers('smenu_stats1','','hide')">
@@ -789,7 +798,6 @@ EOF;
 </div></td>
 EOF;
 
-  #if ($_SESSION['nac_rights']>1)  // hide Monitoring in Read-Only
    $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_config','','show')"
@@ -812,7 +820,6 @@ EOF;
 </div></td>
 EOF;
 
-  #if ($_SESSION['nac_rights']>1)  // hide Monitoring in Read-Only
    $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_mon','','show')"
