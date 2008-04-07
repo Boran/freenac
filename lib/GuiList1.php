@@ -49,27 +49,9 @@ class GuiList1 extends WebCommon
     // Use GET rather than post?
     //<form name="GuiList1" action="{$this->calling_script}" method="GET">
     $output=<<<EOF
-    <form name="GuiList1" action="{$this->calling_script}" method="post">
+    \n<form name="GuiList1" action="{$this->calling_script}" method="post">
     <div id="GuiList1form1">
-    <ul>
-       <li>Max. records:<input type='text' value='$limit' name='sortlimit' size='11' maxlength='20' /></li>
-
-       <li>Sort order: <SELECT NAME=sortby>\n
 EOF;
-       foreach ($fields as $field) {
-         if ($order=="$field->table.$field->orgname") {  // select the current order
-           $output.="<OPTION SELECTED VALUE='" .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>\n";
-         } else {
-           $output.="<OPTION VALUE='"          .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>\n";
-         }
-       }
-
-       $text=<<<EOF
-       </SELECT></li>
-    </ul>
-EOF;
-       $output.= $text;
-
        // Search fields
        $text=<<<EOF
     <ul>
@@ -89,13 +71,18 @@ EOF;
        // Change button
        $text=<<<EOF
        </SELECT> </li>
-       <li><input class="bluebox" type='submit' name='change' value='Change'/></li>
-       </ul></div>
-       </form>
+       <li><input class="bluebox" type='submit' name='change' value='Change' /></li>
+       </ul>
+    <ul>
+       <li>Max. records:<input type='text' value='$limit' name='sortlimit' size='11' maxlength='20' /></li>
+    </ul>
+       </div></form>
 EOF;
+       //<li><input class="bluebox" type='submit' name='change' value='Change'/></li>
        $output.= $text;
        return($output);
   }
+
 
 
   /**
@@ -130,7 +117,7 @@ EOF;
       $order=$this->sqlescape($order);
       $order_dir=$this->sqlescape($order_dir);
       $limit=$this->sqlescape($limit);
-      $this->debug("GuiList1.php->query() limit=$limit, order=$order searchby=$searchby, searchstring=$searchstring", 3);
+      $this->debug("GuiList1.php->query() limit=$limit, order=$order searchby=$searchby, searchstring=$searchstring", 2);
 
       if (strlen($order)>0) $q.=" ORDER BY $order $order_dir"; 
       if ($limit>0)         $q.=" LIMIT $limit"; 
@@ -145,10 +132,18 @@ EOF;
         $output.="<th>Action</th>";         // field for menu icons
 
       // Title: Grab the list of field names
+      $new_order_dir = $order_dir=='DESC' ? 'ASC' : 'DESC';   // next click reverse order
       $fields=$res->fetch_fields();
       foreach ($fields as $field) {
-        $output.="<th>". $field->name . "</th>";
+        # Simple titles:
+        #$output.="<th>". $field->name . "</th>";
         # other attributes: table, max_length, flags, type
+        // Titles with clickable sort links:
+        $output.=<<<TXT
+<th  class='light'>
+<a href="{$this->calling_script}?sortlimit={$limit}&sortby={$field->table}.{$field->orgname}&order_dir={$new_order_dir}&searchstring=$searchstring&searchby=$searchby&change=Change"  title="Sort by this column">$field->name</a>
+</th>
+TXT;
       } 
       $output.= "<tr>";
 
@@ -202,7 +197,8 @@ EOF;
 
       // Inform the user if no data was returned
       if ( ($rowcount)==0 ) {
-        $output.= "<br/><tr><td colspan='4' align='center' class='text16red'>The report is empty</td></tr><tr></tr><br/>";
+        #$output.= "<br/><tr><td colspan='4' align='center' class='text16red'>The report is empty</td></tr><tr></tr><br/>";
+        $output= "<table id='GuiList1Table'><tr><td colspan='4' align='center' class='text16red'>The report is empty</td></tr><br/>";
 
       } else {
         // There is data, show the Limit/sortOrder menus
