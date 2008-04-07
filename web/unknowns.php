@@ -35,8 +35,12 @@
 $title="List of Unknown End-devices";
 $sortlimit=50;
 $sortby='sys.LastSeen';
-$searchby='Status';
-$searchstring='0';
+#$searchby='Status';
+#$searchstring='0';
+$searchby='status.value';
+$searchstring='unknown';
+$order_dir='DESC';
+
 
 // 1. Check rights
 if ($_SESSION['nac_rights']<1) {
@@ -63,18 +67,20 @@ SELECT
   sys.mac as 'MAC Address', 
   e.vendor as 'MAC Vendor',
   status.value as Status, 
-  sys.lastseen, 
-  $idx_fieldname AS '$action_fieldname', 
+  sys.lastseen as 'Last seen layer2', 
+  sys.r_ip AS 'Last IP Address', sys.r_timestamp AS 'Last time IP seen',
   vlan.default_name as Vlan, lvlan.default_name as LastVlan, 
-  sys.inventory, sys.description, sys.comment, 
-  b.name as building, loc.name as office, 
-  p.name as port, pcloc.name as PortLocation, p.comment as PortComment,
-  swi.name as Switch, swloc.name as SwitchLocation,
+  sys.comment AS Comment, 
+  b.name as Building, loc.name as Location, 
+  swi.name as Switch, 
+  p.name as Port, 
+  swloc.name as 'Switch Location',
+  pcloc.name as 'Port Location', p.comment as 'Port Comment',
   usr.username as Username, 
-  usr.surname AS Firstname, usr.givenname AS FamilyName, usr.department, 
-  usr.telephonenumber as UserTelephone,
-  sys.os4 as OS4,
-  sys.r_ip AS 'Last IP Address', sys.r_timestamp AS 'Last time IP seen'
+  usr.surname AS 'First name', usr.givenname AS 'Family name', usr.department AS 'Dept.', 
+  usr.telephonenumber as Telephone,
+  sys.inventory As Inventory, 
+  $idx_fieldname AS '$action_fieldname'
     FROM systems as sys LEFT JOIN vlan as vlan ON vlan.id=sys.vlan
       LEFT JOIN vlan as lvlan ON lvlan.id=sys.lastvlan
       LEFT JOIN vstatus as status ON status.id=status
@@ -96,7 +102,9 @@ SELECT
       LEFT JOIN sys_class2 as sclass2 ON sclass2.id=sys.class2
       LEFT JOIN ethernet e ON e.mac=replace(substring(sys.mac,1,7),'.','')
 TXT;
-
+/*
+  sys.os4 as OS4,
+*/
 
 require_once "GuiList1_control.php";
 

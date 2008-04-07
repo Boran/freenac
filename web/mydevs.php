@@ -58,13 +58,14 @@ else if ($_SESSION['nac_rights']==99) {
 $title="End-devices attributed to " .$_SESSION['login_data'] 
   ." (" .$_SESSION['username'] .")";
 $sortlimit=50;
-$sortby='sys.name';
+$sortby='sys.name';   
 # WHERE sys.uid=$_SESSION['uid']
-$searchby='sys.uid';
-$searchstring=$_SESSION['uid'];
+#$searchby='sys.uid';
+#$searchstring=$_SESSION['uid'];
+$searchby='usr.username';   // usr.username as Username,
+$searchstring=$_SESSION['username'];
+$order_dir='DESC';
 
-
-#$action_fieldname="MAC Addr."; $idx_fieldname="sys.mac";
 $action_fieldname="Index";     $idx_fieldname="sys.id";
 $q=<<<TXT
 SELECT
@@ -83,8 +84,7 @@ SELECT
   sos.value as OSName, sos1.value as OS1, sos2.value as OS2, sos3.value as OS3,
   sys.os4 as OS4,
   sys.class, sclass.value as ClassName, sys.class2, sclass2.value as ClassName2,
-  sys.changedate,
-  cusr.username as ChangeUser,
+  usr.username as Username,
   $idx_fieldname AS '$action_fieldname'
   FROM systems as sys LEFT JOIN vlan as vlan ON vlan.id=sys.vlan
       LEFT JOIN vlan as lvlan ON lvlan.id=sys.lastvlan
@@ -108,10 +108,11 @@ SELECT
 TXT;
 
 /*
-  usr.username as Username,
   usr.surname, usr.givenname, usr.department, usr.rfc822mailbox as EMail,
   usrloc.name as UserLocation, usr.telephonenumber as UserTelephone, usr.mobile,
   usr.lastseendirectory as UserLastSeenDirectory,
+  sys.changedate as 'Change Date',
+  cusr.username as 'Change User',
 */
 require_once "GuiList1_control.php";
 
