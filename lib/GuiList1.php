@@ -31,7 +31,7 @@ class GuiList1 extends WebCommon
     parent::__construct();     // See also WebCommon and Common
     $this->logger->setDebugLevel($debuglevel);  // 3 for max debugging
     $this->dynamic=$dynamic;
-    $this->debug(" __construct() $rep_name", 1);
+    $this->debug(" __construct() $rep_name, debug=" .$debuglevel, 1);
     echo "<div id='GuiList1Title'><p>{$rep_name}</div>";
   }
 
@@ -44,19 +44,23 @@ class GuiList1 extends WebCommon
     // Only create the sorting menu if this is a 'dynamic report'
     if (! $this->dynamic ) return;
 
+    $this->debug("print_report_menu limit=$limit, order=$order, searchby=$searchby, searchstring=$searchstring" ,2);
+
+    // Use GET rather than post?
+    //<form name="GuiList1" action="{$this->calling_script}" method="GET">
     $output=<<<EOF
     <form name="GuiList1" action="{$this->calling_script}" method="post">
     <div id="GuiList1form1">
     <ul>
        <li>Max. records:<input type='text' value='$limit' name='sortlimit' size='11' maxlength='20' /></li>
 
-       <li>Sort order: <SELECT NAME=sortby>
+       <li>Sort order: <SELECT NAME=sortby>\n
 EOF;
        foreach ($fields as $field) {
-         if ($order==$field->name) {
-           $output.="<OPTION SELECTED VALUE='" .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>";
+         if ($order=="$field->table.$field->orgname") {  // select the current order
+           $output.="<OPTION SELECTED VALUE='" .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>\n";
          } else {
-           $output.="<OPTION VALUE='"          .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>";
+           $output.="<OPTION VALUE='"          .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>\n";
          }
        }
 
@@ -65,19 +69,20 @@ EOF;
     </ul>
 EOF;
        $output.= $text;
+
        // Search fields
        $text=<<<EOF
     <ul>
        <li>Search:<input type='text' value='$searchstring' 
            name='searchstring' size='19' maxlength='20' /></li>
-       <li>Search Field:<SELECT NAME=searchby>
+       <li>Search Field:<SELECT NAME=searchby>\n
 EOF;
        $output.= $text;
        foreach ($fields as $field) {
          if ($searchby=="$field->table.$field->orgname") {
-           $output.="<OPTION SELECTED VALUE='" .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>";
+           $output.="<OPTION SELECTED VALUE='" .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>\n";
          } else {
-           $output.="<OPTION VALUE='"          .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>";
+           $output.="<OPTION VALUE='"          .$field->table ."." .$field->orgname . "'>" . $field->name ."</OPTION>\n";
          }
        }
 
