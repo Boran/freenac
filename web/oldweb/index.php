@@ -1,10 +1,10 @@
 <?php
 
 dir(dirname(__FILE__));
-set_include_path("./:../");
+set_include_path("./:../../:../");
 
 // include configuration
-require_once('../etc/config.inc');
+require_once('../../etc/config.inc');
 // include functions
 require_once('webfuncs.inc');
 
@@ -24,7 +24,7 @@ function main_menu()
          </ul>
 	 <h2>Monitoring</h2>
 	<ul>
-		<li><a href="phpsysinfo/">System information</a>
+		<li><a href="../phpsysinfo/">System information</a>
 		<li><a href="logtail.php">Log file</a>
 	</ul>
 EOF;

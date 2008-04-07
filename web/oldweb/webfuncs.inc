@@ -22,8 +22,8 @@
 
 chdir(dirname(__FILE__));
 set_include_path("./");
-require_once "../etc/config.inc";
-require_once "../bin/funcs.inc.php";
+require_once "../../etc/config.inc";
+require_once "../../bin/funcs.inc.php";
 /* funcs.inc
 function db_connect($username,$password)
 {
@@ -262,7 +262,7 @@ function main_stuff()
    $text=<<<EOF
    <table class="bw" border="0" align="center" width="500">
    <tr height="80">
-      <td valign="center"><a href="./index.html"><img src="./images/logo_small.png" border="0" /></a></td>
+      <td valign="center"><a href="./index.html"><img src="../images/logo_small.png" border="0" /></a></td>
       <td align="right">
          <a href="http://www.freenac.net">FreeNAC website</a><br />
          <a href="http://www.freenac.net/en/usersguide">Users Guide</a><br />
