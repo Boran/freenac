@@ -19,10 +19,10 @@ class WebCommon extends Common
 {
   protected $calling_script;
 
-
-  function __construct($show_header=true)
+  function __construct($show_header=true, $debuglevel=1)
   {
     parent::__construct();
+    $this->logger->setDebugLevel($debuglevel);  // 3 for max debugging
     $this->calling_script=basename($_SERVER['SCRIPT_FILENAME']);   // TBD: clean?
     $this->remote_host=validate_webinput($_SERVER['REMOTE_ADDR']);
 
@@ -112,27 +112,6 @@ class WebCommon extends Common
     #} 
     #else {
       return $header1;
-    }
-  }
-
-  public function print_headerSmall_old($print_links=true)
-  {
-    global $header1, $header2, $head_right1, $head_right2, $header2_small;
-
-    if (defined('HEADER')){   // already displayed?
-      $this->debug('print_headerSmall: HEADER already true',2);
-    } 
-    else {
-      if ($print_links===false) {
-        $this->debug('print_headerSmall: do not print right links', 3);
-        $head_right1='';
-        $head_right2='';
-      }
-      #$ret= $header1 . $header2;
-      $ret= $header1 . $header2_small;
-      define('HEADER',true); // The header is out
-      $this->debug('print_headerSmall done', 3);
-      return $ret;
     }
   }
 
