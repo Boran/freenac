@@ -348,6 +348,30 @@ function print_dot_sel()
 
 
 /**
+ * Set the restart flag for a port
+ */
+public function port_restart_request($port) 
+{
+  $conn=$this->getConnection();     //  make sure we have a DB connection
+
+  // TBD: could really look up the port/switch name for nicer logging?
+
+  if (isset($port) && is_numeric($port) && $port>1 ) {
+
+    $this->debug("port_restart_request $port", 1);
+    $this->loggui("Port index $port restart requested");
+    $q="UPDATE port set restart_now=1 WHERE id=$port LIMIT 1";
+      $this->debug($q, 3);
+      $res = $conn->query($q);
+    if ($res === FALSE)
+      throw new DatabaseErrorException($conn->error);
+
+  } else {
+    $this->logit("port_restart_request invalid port index=<$port>");
+  }
+}
+
+/**
  * Look up the first switch or patch location for a port
  */
 public function get_location($port) 
