@@ -151,7 +151,7 @@ if ( isset($_REQUEST['change']) ) {
     $logger->debug("GuiList1_control.php: sortby=$sortby, sortlimit=$sortlimit, "
       ."searchby=$searchby, searchstring=$searchstring", 1);
     #$report=new CallWrapper(new GuiList1($title, true));                //true=dynamic with filtering
-    $report=new GuiList1($title, true, 3);                //true=dynamic with filtering, debug level
+    $report=new GuiList1($title, true, 2);                //true=dynamic with filtering, debug level
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
        $searchstring, $searchby, $action_confirm, $order_dir);   // run query, generate report
