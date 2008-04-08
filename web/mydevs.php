@@ -31,10 +31,10 @@
 ### --------- main() -------------
 
 if (!isset ($_SESSION['uid']) || !is_numeric($_SESSION['uid'])) {
-  throw new Exception('Unknown user ID');
+  throw new InvalidLoginException('Unknown user ID: are you logged in correctly? ');
 }
 if (!isset ($_SESSION['username']) || !$_SESSION['username']) {
-  throw new Exception('Unknown user ID');
+  throw new InvalidLoginException('Unknown username: are you logged in correctly? ');
 }
   
 
