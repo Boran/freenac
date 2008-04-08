@@ -18,7 +18,7 @@
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3);
+  $logger->setDebugLevel(1);
 
   ## Loggin in? User identified?
   include 'session.inc.php';
@@ -92,24 +92,14 @@ if (isset($_REQUEST['action']) && $_REQUEST['action']=='Restart') {
   if ($_SESSION['nac_rights']<2)   // must have edit rights
     throw new InsufficientRightsException($_SESSION['nac_rights']);
 
-  $logger->setDebugLevel(1);
   // have we a valid port index to restart?
   if (isset($_REQUEST['action_idx']) && is_numeric($_REQUEST['action_idx'])
     && $_REQUEST['action_idx']>1 ) {
 
-    // TBD: could really look up the port/switch name for nicer logging?
-    $logger->debug("Port restart: " .$_REQUEST['action_idx'], 1);
-    $report2=new WebCommon(false); // no title
-    $conn=$report2->getConnection();     //  make sure we have a DB connection
-    $q2="UPDATE port set restart_now=1 WHERE id=" .$_REQUEST['action_idx'] ." LIMIT 1";
-      $logger->debug($q2, 3);
-      $res = $conn->query($q);
-      if ($res === FALSE)
-        throw new DatabaseErrorException($conn->error);
-      $report2->loggui("Port index " .$_REQUEST['action_idx'] ." restart requested");
-
-      #echo "<p class='UpdateMsgOK'>Port will be restarted within one minute</p>";
-      echo jalert('The Switch Port will be restarted within one minute');
+    // Set a flag to restart the port
+    $report2=new WebCommon(false, 1); // no title, debuglevel
+    $report2->port_restart_request($_REQUEST['action_idx']);
+    echo jalert('The Switch Port will be restarted within one minute');
   }
 
 }
