@@ -18,7 +18,7 @@
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3);
+  $logger->setDebugLevel(1);
 
   ## Loggin in? User identified?
   include 'session.inc.php';
@@ -35,7 +35,7 @@ $title="Server Activity";
 $sortlimit=200;
 #$sortby='sys.name';
 $sortby='datetime';
-$searchby='';
+$searchby='Message';
 $searchstring='';
 
 // 1. Check rights
