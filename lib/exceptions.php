@@ -43,30 +43,6 @@ function DENY($why='') {
 
 /**
  * This Exception may be thrown at any point in the decision process to
- * indicate that the current request should be denied and furthermore, the
- * current system should be killed
- * This class extends the {@link Exception} class.
- */
-class KillException extends Exception
-{
-   # constructor  	
-   function __construct() {
-      parent::__construct("KILL"); 
-   }
-}
-
-/**
- * This function is some syntactic sugar to throw a KillException from the 
- * policy class 
- * @throws	KillException
- */
-function KILL() {
-   throw new KillException;
-}
-
-
-/**
- * This Exception may be thrown at any point in the decision process to
  * indicate that the current request should be allowed into a given VLAN
  * This class extends the {@link Exception} class.
  */
@@ -77,11 +53,29 @@ class AllowException extends Exception
 
    # Constructor to set this VLAN  	
    function __construct($vlan) {
-      $this->decidedVlan = $vlan;
-      if (is_integer($vlan))
-         parent::__construct("ALLOW ".vlanId2Name($vlan)); 
+      if ( ! isset($vlan) )
+         throw new DenyException('AllowException called without a vlan');
+      if ( is_integer($vlan) )
+      {
+         # Get the vlan mapping
+         if ( ! $lookup = vlanId2Name($vlan) )
+         {
+            throw new DenyException("AllowException could not map vlan number $vlan to a name");
+         }
+         else
+         {
+            $this->decidedVlan = $lookup;
+         }
+      }
       else
-         parent::__construct("ALLOW $vlan");
+      {
+         #Do we have only spaces?
+         $vlan = trim($vlan);
+         if ( empty($vlan) )
+            throw new DenyException('AllowException called without a vlan');
+         $this->decidedVlan = $vlan;
+      }
+      parent::__construct("ALLOW {$this->decidedVlan}"); 
    }
 
    public function getDecidedVlan() {
@@ -95,15 +89,8 @@ class AllowException extends Exception
  * @param int $vlan	Vlan ID of the VLAN we want to assign
  * @throws	AllowException
  */
-function ALLOW($vlan = -1) 
+function ALLOW($vlan) 
 {
-   if ($vlan == -1) 
-   {
-      /**
-      * @todo Get the default vlan logic straight
-      */
-      $vlan = $defaultvlan;
-   }
    throw new AllowException($vlan);
 }
 ?>
