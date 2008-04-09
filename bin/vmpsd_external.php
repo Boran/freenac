@@ -191,16 +191,8 @@ while ($in && $out)
       }
       catch (AllowException $e) 
       {
-         if (is_integer($e->getDecidedVlan()))
-         {
-            fputs($out, "ALLOW ".vlanId2name($e->getDecidedVlan())."\n");
-            reportException($e);
-         }
-         else
-         {
-            fputs($out, "ALLOW {$e->getDecidedVlan()}\n");
-            reportException($e);
-         }
+         fputs($out, "ALLOW ".$e->getDecidedVlan()."\n");
+         reportException($e);
       }
       catch (Exception $e) 
       {
