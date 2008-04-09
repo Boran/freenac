@@ -159,17 +159,21 @@ function getwinsfromip($ip)
 function vlanId2Name($vlanID) {
    // Todo: Proper Error Handling, and use better Database abstraction
    $vlan_name = NULL;
-   if (is_numeric($vlanID))
+   if (is_integer($vlanID))
    {
       $vlan_name=v_sql_1_select("select default_name from vlan where id='$vlanID' limit 1");
-      if ($vlan_name)
+      if ($vlan_name !== false)
+      {
          return $vlan_name;
+      }
       else
-         return '--NONE--';
+      {
+         return false;
+      }
    }
    else
    {
-      return '--NONE--';
+      return false;
    }
 }
 
@@ -630,7 +634,7 @@ function v_sql_1_update($query) {
 * @return mixed         Result of the query if successful, or error otherwise
 */
 function v_sql_1_select($query) {
-  if (!$query)
+  if (!isset($query))
      return false;
   #logit($query);
   global $connect;
@@ -640,11 +644,13 @@ function v_sql_1_select($query) {
   $res = mysql_query($query, $connect);
   if (!$res) { 
     logit('Invalid query: ' . mysql_error()); 
-
+    return false;
   } else if (mysql_num_rows($res)==1) {
     list($result)=mysql_fetch_array($res, MYSQL_NUM);
+    return($result);
   }
-  return($result);
+  else
+     return false;
 }
 
 
