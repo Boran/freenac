@@ -84,8 +84,8 @@ class BasicPolicy extends Policy {
 		{
                    # Same as "unknown": use default, but alert
                    $text="Note: Unmanaged device {$REQUEST->host->getMAC()}({$REQUEST->host->getHostName()}) on port {$REQUEST->switch_port->getPortInfo()}, switch {$REQUEST->switch_port->getSwitchInfo()}";
-                   $this->logger->logit($string,LOG_WARNING);
-                   log2db('info',$string);
+                   $this->logger->logit($text,LOG_WARNING);
+                   log2db('info',$text);
                 } 
 
 		#UNKNOWN AND UNMANAGED SYSTEMS
