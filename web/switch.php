@@ -64,6 +64,8 @@ SELECT
   building.name as Building, 
   location.name as Location,
   scan AS 'Layer 2 passive scan?', 
+  last_monitored AS 'Last Monitored',
+  up AS 'Up?',
   swgroup, 
   hw AS Hardware, sw AS Firmware,
   notify AS 'Emails to notify when unknowns detected', 
