@@ -65,7 +65,7 @@ class WebCommon extends Common
       $who=$_SESSION['uid'];
     }
     $q="insert into guilog (who, host, datetime, priority, what)
-         values ('$who', '$this->remote_host', NOW(), '$priority', '$msg')";
+         values ('$who', '$this->remote_host', NOW(), '$priority', 'Web: $msg')";
       $this->debug($q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
@@ -370,6 +370,31 @@ public function port_restart_request($port)
     $this->logit("port_restart_request invalid port index=<$port>");
   }
 }
+
+/**
+ * Delete a port
+ */
+public function port_delete($port)
+{
+  $conn=$this->getConnection();     //  make sure we have a DB connection
+
+  // TBD: could really look up the port/switch name for nicer logging?
+  if (isset($port) && is_numeric($port) && $port>1 ) {
+
+    $this->debug("port_delete $port", 1);
+    $q="DELETE from port WHERE id=$port LIMIT 1";
+      $this->debug($q, 3);
+      $res = $conn->query($q);
+    if ($res === FALSE)
+      throw new DatabaseErrorException($conn->error);
+
+    $this->loggui("Port $port deleted ");
+    $this->logit("Port $port deleted ");
+  } else {
+    $this->logit("port_delete invalid port=$port");
+  }
+}
+
 
 /**
  * Look up the first switch or patch location for a port

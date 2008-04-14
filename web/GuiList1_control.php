@@ -80,8 +80,8 @@ if ( isset($_REQUEST['change']) ) {
     echo $report->print_footer();
 
 
-###### CUSTOM: Print button  ############
-} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Print') { 
+###### CUSTOM: View button  ############
+} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='View') { 
   $logger->debug("GuiList1_control action: ". $_REQUEST['action'], 1);
 
   if ( !isset($_REQUEST['action_fieldname']) || !isset($_REQUEST['action_idxname']) || !isset($_REQUEST['action_idx']) ) {
@@ -112,22 +112,23 @@ if ( isset($_REQUEST['change']) ) {
   echo $report->print_footer();     
 
 
+$_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
 
 ###### CUSTOM buttons  ############
-} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Edit') {
-  $logger->debug("action: ". $_REQUEST['action'], 1);
-  $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
-  include "GuiEditDevice_control.php";
+#} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Edit') {
+#  $logger->debug("GuiList1_control REQUEST action: ". $_REQUEST['action'], 1);
+#  $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
+#  include "GuiEditDevice_control.php";
 
-} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Update') {
-  $logger->debug("action: ". $_REQUEST['action'], 1);
-  $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
-  include "GuiEditDevice_control.php";
+#} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Update') {
+#  $logger->debug("action: ". $_REQUEST['action'], 1);
+#  $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
+#  include "GuiEditDevice_control.php";
 
-} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Delete') {
-  $logger->debug("action: ". $_REQUEST['action'], 1);
-  $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
-  include "GuiEditDevice_control.php";
+#} else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Delete') {
+#  $logger->debug("action: ". $_REQUEST['action'], 1);
+#  $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
+#  include "GuiEditDevice_control.php";
 
 
 ###### Default page: menu ############

@@ -29,11 +29,17 @@
 
 
 ### --------- main() -------------
+$_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
+
 $title="List of End-devices: detailed list";
 $sortlimit=50;
 $sortby='sys.LastSeen';
 $searchby='sys.name';
 $searchstring='';
+
+// Clean inputs from the web, (security). Use _REQUEST to 
+// allow both GET (automation) or POST (interactive GUIs)
+   $_REQUEST=array_map('validate_webinput',$_REQUEST);
 
 
 // 1. Check rights
@@ -41,15 +47,15 @@ if ($_SESSION['nac_rights']<1) {
   throw new InsufficientRightsException($_SESSION['nac_rights']);
 }
 else if ($_SESSION['nac_rights']==1) {
-  $action_menu=array('Print');   // no options
+  $action_menu=array('View');   // no options
   $action_confirm=array('');     // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('Print','Edit');   // 'buttons' in action column
+  $action_menu=array('View','Edit');   // 'buttons' in action column
   $action_confirm=array('', '');        // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==99) {
-  $action_menu=array('Print', 'Edit', 'Delete');   // 'buttons' in action column
+  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
   $action_confirm=array('', '', 'Really DELETE the record of this End-Device?');  // Confirm Deletes
 }
 
@@ -100,7 +106,30 @@ SELECT
       LEFT JOIN sys_class2 as sclass2 ON sclass2.id=sys.class2
 TXT;
 
-require_once "GuiList1_control.php";
+
+// Actions handled by GuiEditDevice class
+if (isset($_REQUEST['action']) && (
+       ($_REQUEST['action'] == 'Update')
+    || ($_REQUEST['action'] == 'Delete')
+    || ($_REQUEST['action'] == 'Edit')
+    || ($_REQUEST['action'] == 'Add')
+  ) ) {
+
+  if (isset($_REQUEST['action_idx']) )
+    $action_idx=$_REQUEST['action_idx'];
+  else
+    $action_idx=0;
+
+  $logger->debug("listall > GuiEditDevice idx=$action_idx, action=". $_REQUEST['action'], 1);
+  $report=new GuiEditDevice($_REQUEST['action'], $action_idx, 2);  // last param=debug
+  $report->handle_request();
+  $logger->debug("after new GuiEditDevice", 3);
+
+// Default & Actions handled by GuiList1 class: execute query
+} else {  
+  require_once "GuiList1_control.php";
+}
+
 
 
 ?>

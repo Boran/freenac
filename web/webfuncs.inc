@@ -669,7 +669,7 @@ function main_menu_simple()
             <li><a href="unknowns.php" title="List unknown end devices and print/edit/delete them">Find unknowns</a></li>
             <li><a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a></li>
             <li><a href="listall.php"  title="List end devices with lots of detail">Detailed list</a></li>
-            <li><a href="GuiEditDevice_control.php"  title="Add a new end device to the database">Add end-device</a></li>
+            <li><a href="deviceadd.php" title="Add a new end device to the database">Add end-device</a></li>
          </ul>
 
          <h3>Reporting</h3>
@@ -775,7 +775,7 @@ EOF;
 
    if ($edit_mode)    // edit/admin
      $text.=<<<EOF
-    <a href="GuiEditDevice_control.php?action=Add"  title="Add a new End-Device/PC to the Database">Add new End-Device</a><br/>
+    <a href="deviceadd.php?action=Add"  title="Add a new End-Device/PC to the Database">Add new End-Device</a><br/>
 EOF;
 
    $text.=<<<EOF

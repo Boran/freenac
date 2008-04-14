@@ -39,13 +39,13 @@ else if ($_SESSION['nac_rights']==1) {
   $action_menu='';   // no options
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('Restart');   // Allow port restart
-  $action_confirm=array('');       // no confirmation popups
+  $action_menu=array('View','Restart', 'Delete');   // Allow port restart
+  $action_confirm=array('','', 'Really remove this port?');       // no confirmation popups
 
 }
 else if ($_SESSION['nac_rights']==99) {
-  $action_menu=array('Restart');   // Allow port restart
-  $action_confirm=array('');       // no confirmation popups
+  $action_menu=array('View','Restart', 'Delete');   // Allow port restart
+  $action_confirm=array('','', 'Really remove this port?');       // no confirmation popups
 }
 
 // set parameters   fro gui_control.php
@@ -100,6 +100,21 @@ if (isset($_REQUEST['action']) && $_REQUEST['action']=='Restart') {
     $report2=new WebCommon(false, 1); // no title, debuglevel
     $report2->port_restart_request($_REQUEST['action_idx']);
     echo jalert('The Switch Port will be restarted within one minute');
+  }
+
+}
+else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Delete') {
+  $logger->debug("Port action: ". $_REQUEST['action'] ." idx=" .$_REQUEST['action_idx'], 1);
+  if ($_SESSION['nac_rights']<2)   // must have edit rights
+    throw new InsufficientRightsException($_SESSION['nac_rights']);
+
+  // have we a valid port index to restart?
+  if (isset($_REQUEST['action_idx']) && is_numeric($_REQUEST['action_idx'])
+    && $_REQUEST['action_idx']>1 ) {
+
+    $report2=new WebCommon(false, 1); // no title, debuglevel
+    $report2->port_delete($_REQUEST['action_idx']);
+    #echo jalert('The Switch Port will be restarted within one minute');
   }
 
 }

@@ -19,56 +19,105 @@
 
 class GuiEditDevice extends WebCommon
 {
-  private $id;      // See also WebCommon and Common
+  private $id, $action;      // See also WebCommon and Common
 
 
-  function __construct($id=0, $rep_name='Edit End-Device Details')
+  function __construct($action, $id=0, $debug_level=1)
   {
     parent::__construct(false);     // See also WebCommon and Common
-    $this->logger->setDebugLevel(1);
+    $this->logger->setDebugLevel($debug_level);
+    $this->debug("GuiEditDevice__construct id=$id, debug=$debug_level, action=$action", 2);
 
-    //if ( ($id===0) || (!is_numeric($id)) ) 
-    if ( (!is_numeric($id)) )     // allow 0 as a default, must be a number though
-       throw new InvalidWebInputException("invalid record index");
+    // 1. verify/clean 'id'
+    #if ( !is_int($id) )     // must be a number
+    if ( !is_numeric($id) )     // must be a number
+       throw new InvalidWebInputException("invalid index: <$id> is not an integer");
+    //if ( $id===0 )              
+    //   throw new InvalidWebInputException(""GuiEditDevice__construct invalid index: zero");
 
+    #if (isset($_REQUEST['action_idx'])) $logger->debug("action_idx=" .$_REQUEST['action_idx'], 2);
     $this->id=$id;                   // remember the record number
-    $_SESSION['report1_index']=$id;  // for passing to other scripts
+    $_SESSION['report1_index']=$id;  // for passing to other scripts: no longer used?
     
-    //$this->debug($_SESSION['login_data'] .":Id=$id:" , 1);
+    // 2. verify/clean 'action'
+    // Now, have we a REQUEST action to carry out?
+    if ( !isset($action) ) {
+       throw new InvalidWebInputException("No action ");
+    }
+    $this->action=validate_webinput($action);
 
-    // Show Webpage start, is the constructor the right place?
-    echo $this->print_header(false);
-    echo "<div id='GuiList1Title'>{$rep_name}</div>";
   }
 
+
+  protected function print_title($title)
+  {
+    echo $this->print_header();
+    echo "<div id='GuiList1Title'>{$title}</div>";
+    //$this->debug($_SESSION['login_data'] .":Id=$id:" , 1);
+  }
+
+
+  public function handle_request()
+  {
+    $action=$this->action;
+    #global $_SESSION, $_REQUEST;
+    #$_REQUEST=array_map('validate_webinput',$_REQUEST);
+    $this->debug("handle_request() $action", 2);
+
+    if (isset($action)) {
+      if ($action==='Update') {
+        $this->print_title('Update End-Device Details');
+        #$logger->debug("action=$action, report1_index=" .$_SESSION['report1_index'], 1);
+        echo $this->Update();
+        echo $this->query();
+        echo $this->print_footer();
+
+      } else if ($action==='Edit') {
+        $this->print_title('Edit End-Device Details');
+        echo $this->query();
+        echo $this->print_footer();
+
+       
+      } else if ($action==='Add') {
+        if (isset($_REQUEST['name']) && isset($_REQUEST['mac']) ) {
+          $this->print_title('New End-Device');  // Add step2
+          echo $this->UpdateNew();
+        } else {        // Add Step1
+          $this->print_title('Add new End-Device');
+          echo $this->Add();
+        }
+        echo $this->print_footer();
+       
+      } else if ($action==='Delete') {
+        $this->print_title('Edit End-Device Details');
+        $this->Delete();
+       
+      } else {
+        // do nothing, action does not concern us.
+      }
+    }
+  }
 
 
   public function Delete()
   {
-    $this->debug("Delete() index {$device}", 3);
-    #var_dump($_REQUEST);
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
+    if ( $this->id===0 )              
+      throw new InvalidWebInputException("Delete() invalid index: zero");
 
-    if (is_numeric($_REQUEST['action_idx']) && ($_REQUEST['action_idx']>0) ){
-      $device=$_REQUEST['action_idx'];
-    } else if (is_numeric($_SESSION['report1_index']) && ($_SESSION['report1_index']>0) ) {
-      $device=$_SESSION['report1_index'];
-    } else {
-      throw new InvalidWebInputShowException("Cannot delete device with invalid index <{$_REQUEST['action_idx']}>");
-    }
+    #var_dump($_REQUEST);
+    $device=$this->id;    // rely on the constructor to clean & ensure a valid id
+    $this->debug("Delete() index {$device}", 3);
 
     $conn=$this->getConnection();     //  make sure we have a DB connection
-    try {
-      $q="DELETE FROM systems WHERE id={$device} LIMIT 1";     // only this record
+    $q="DELETE FROM systems WHERE id={$device} LIMIT 1";     // only this record
       $this->debug($q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($q ." :: " .$conn->error);
 
       // Inform the user that is was OK
-      //define('HEADER',false); // The header is out
-      #echo $this->print_header();
       $txt=<<<TXT
 <p class='UpdateMsgOK'>Delete Successful</p>
  <br><p > Go back to the <a href="{$_SESSION['caller']}">End-Device list</a></p>
@@ -78,9 +127,6 @@ TXT;
       $this->logit("Deleted system with Index {$device}");
       $this->loggui("Deleted system with Index {$device}");
 
-    } catch (Exception $e) {
-      throw $e;
-    }
   }
 
 
@@ -102,6 +148,7 @@ TXT;
 
     try {
       // Read in request variables. Mac and name are set, others are optional
+      // TBD: call validate_input?
       $name=trim($_REQUEST['name']);            // get rid of leading/trailing spaces
       $mac=strtolower($_REQUEST['mac']);        // lower case by convention
       $mac=$this->sqlescape($mac);     		// TBD: verify syntax/length etc.
@@ -171,12 +218,20 @@ TXT;
   public function Update()
   {
     $this->debug("Update()", 3);
-    #echo "<p class='UpdateMsg'>Update Pending</p>";
     #var_dump($_REQUEST);
     if ($_SESSION['nac_rights']<2)
-      throw new InsufficientRightsException($_SESSION['nac_rights']);
-
+      throw new InsufficientRightsException('Update() ' .$_SESSION['nac_rights']);
     $conn=$this->getConnection();     //  make sure we have a DB connection
+
+    // Clean inputs from the web, (security). Use _REQUEST to
+    // allow both GET (automation) or POST (interactive GUIs)
+    $_REQUEST=array_map('validate_webinput',$_REQUEST);
+    if (!isset($_REQUEST['action_idx']) )
+      throw new InvalidWebInputException("Update() action_idx not set");
+    if ( !is_numeric($_REQUEST['action_idx']) || $_REQUEST['action_idx']==0)     // must be a number>0
+       throw new InvalidWebInputException("invalid index: is not an integer");
+
+    $this->id=$_REQUEST['action_idx'];
 
     try {
       $q='';
@@ -188,17 +243,18 @@ TXT;
         $q.=($_REQUEST['username']!='' ? ', uid='.$_REQUEST['username'].' ' : '');
         $q.=($_REQUEST['office']!='' ? ', office='.$_REQUEST['office'].'' : '');
         $q.=($_REQUEST['comment']!='' ? ', comment=\''.$_REQUEST['comment'].'\'' : '');
-               /*    // TBD: DNS Alias & DHCP
-                   if ($conf->web_showdns) {
-                        // TODO : validate DNS aliases
-                        $q.=", dns_alias='".$_REQUEST['dns_alias']."'";
-                   };
-                        // TODO : validate dhcp_ip as ip address
-                   if ($conf->web_showdhcp) {
-                        if (($_REQUEST['dhcp_fix'] == 'dhcp_fix') && ($_REQUEST['dhcp_ip'] != '')) {
-                                 $q.=", dhcp_fix=1, dhcp_ip='".$_REQUEST['dhcp_ip']."'";
-                        };
-                   }; */
+
+        // TBD: DNS Alias & DHCP
+        if ($this->conf->web_showdns) {
+          // TODO : validate DNS aliases
+          $q.=", dns_alias='".$_REQUEST['dns_alias']."'";
+        }
+        if ($this->conf->web_showdhcp) {
+          // TODO : validate dhcp_ip as ip address
+          if (($_REQUEST['dhcp_fix'] == 'dhcp_fix') && ($_REQUEST['dhcp_ip'] != '')) {
+            $q.=", dhcp_fix=1, dhcp_ip='".$_REQUEST['dhcp_ip']."'";
+          }
+        }
 
         // Restrict vlan for superusers?
         if ( !empty($_SESSION['GuiVlanRights']) && ($_SESSION['nac_rights']==2)) {
@@ -246,8 +302,8 @@ TXT;
 
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $this->debug("EditDevice::Add() ", 3);
-    #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
-    $output ='<form name="formadd" action="GuiEditDevice_control.php" method="POST">';
+    #$output ='<form name="formadd" action="GuiEditDevice_control.php" method="POST">';
+    $output ='<form name="formadd" action="' .$_SERVER['PHP_SELF'] .'" method="POST">';
     $output.= "\n$js1\n <table id='GuiEditDeviceAdd'>";
 
     $name=''; $mac='0001.0001.0001'; 
@@ -289,14 +345,16 @@ TXT;
 
   /**
    * Display a device record, allow changes.
+   * NExt Step is Either Update or Delete
    */
   public function query()
   {
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
     $conn=$this->getConnection();     //  make sure we have a DB connection
-    #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
-    $output ='<form action="GuiEditDevice_control.php" method="POST">';
+    #$output ='<form action="GuiEditDevice_control.php" method="POST">';
+    $output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
+    #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="GET">'; /i/debugging
     $output.="<table id='t3' width='760' border='0' class='text13'>";
 
 $q=<<<TXT
@@ -390,8 +448,10 @@ TXT;
 
       include('EditDevice_more.inc.php');    // needs cleaning up: more read-only stuff
 
-      $output.= '<!input type="hidden" name="action" value="update" />'
-        . '<input type="hidden" name="id" value="' .$row['id'] .'" /></form>';
+      #$output.= '<!input type="hidden" name="action" value="update" />'
+      $output.= ''
+        . '<input type="hidden" name="action_idx" value="' .$this->id .'" /></form>';
+        #. '<input type="hidden" name="id" value="' .$row['id'] .'" /></form>';
 
 
     } catch (Exception $e) {
