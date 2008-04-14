@@ -87,4 +87,35 @@ class Common {
     return trim($str);
   }
 
+/**
+ * Write key events to naclog which is visible from the GUI
+ * To view recent entries:
+ *   select * from naclog ORDER BY datetime DESC LIMIT 5;
+ * @param mixed $level   Level of severity of the message
+ * @param mixed $msg     Message to log
+*/
+function log2db($level='info', $msg='')
+{
+     $conn=$this->getConnection();     //  make sure we have a DB connection
+
+     $msg=rtrim($msg);
+
+       if (isset($_SERVER['HOSTNAME']))
+          $host=$_SERVER['HOSTNAME'];
+       else if (isset($_ENV['HOSTNAME']))
+          $host=$_ENV['HOSTNAME'];     
+       //else do uname -n?     
+       else
+          $host='';
+          
+       $q="insert into naclog set what='" .sqlescape($msg)
+         ."', host='$host', priority='$level'";
+         $this->debug($q, 3);
+         $res = $conn->query($q);
+       if ($res === FALSE)
+          throw new DatabaseErrorException($conn->error);
+         
+       return true;
+}
+
 }
