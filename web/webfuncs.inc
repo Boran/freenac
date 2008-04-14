@@ -773,7 +773,7 @@ function showHideLayers() {
     <a href="mydevs.php"  title="List My end devices: attributed to My username">My Devices</a><br/>
 EOF;
 
-   if ($edit_mode)    // edit/admin
+//   if ($edit_mode)    // edit/admin
      $text.=<<<EOF
     <a href="deviceadd.php?action=Add"  title="Add a new End-Device/PC to the Database">Add new End-Device</a><br/>
 EOF;

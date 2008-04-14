@@ -30,7 +30,6 @@
 
 ### --------- main() -------------
 $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
-
 $title="List of End-devices: detailed list";
 $sortlimit=50;
 $sortby='sys.LastSeen';
@@ -51,15 +50,16 @@ else if ($_SESSION['nac_rights']==1) {
   $action_confirm=array('');     // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('View','Edit');   // 'buttons' in action column
+  $action_menu=array('View','Edit', 'Restart Port');   // 'buttons' in action column
   $action_confirm=array('', '');        // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==99) {
-  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
-  $action_confirm=array('', '', 'Really DELETE the record of this End-Device?');  // Confirm Deletes
+  $action_menu=array('View', 'Edit', 'Restart Port', 'Delete');   // 'buttons' in action column
+  $action_confirm=array('', '', '', 'Really DELETE the record of this End-Device?');  // Confirm Deletes
 }
 
 #$action_fieldname="MAC Addr."; $idx_fieldname="sys.mac";
+$_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
 $action_fieldname="Index";     $idx_fieldname="sys.id";
 $q=<<<TXT
 SELECT
@@ -113,6 +113,7 @@ if (isset($_REQUEST['action']) && (
     || ($_REQUEST['action'] == 'Delete')
     || ($_REQUEST['action'] == 'Edit')
     || ($_REQUEST['action'] == 'Add')
+    || ($_REQUEST['action'] == 'Restart Port')
   ) ) {
 
   if (isset($_REQUEST['action_idx']) )

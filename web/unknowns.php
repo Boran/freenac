@@ -31,7 +31,9 @@
 ### --------- main() -------------
 
 
-// set parameters   fro gui_control.php
+$_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
+
+// set parameters   for gui_control.php
 $title="List of Unknown End-devices";
 $sortlimit=50;
 $sortby='sys.LastSeen';
@@ -45,19 +47,20 @@ $order_dir='DESC';
 // 1. Check rights
 if ($_SESSION['nac_rights']<1) {
   throw new InsufficientRightsException($_SESSION['nac_rights']);
-} 
+}
 else if ($_SESSION['nac_rights']==1) {
   $action_menu=array('View');   // no options
   $action_confirm=array('');     // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('View','Edit');   // 'buttons' in action column
+  $action_menu=array('View','Edit', 'Restart Port');   // 'buttons' in action column
   $action_confirm=array('', '');        // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==99) {
-  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
-  $action_confirm=array('', '', 'Really DELETE the record of this End-Device?');  // Confirm Deletes
+  $action_menu=array('View', 'Edit', 'Restart Port', 'Delete');   // 'buttons' in action column
+  $action_confirm=array('', '', '', 'Really DELETE the record of this End-Device?');  // Confirm Deletes
 }
+
 
 ## A smaller and quicker query:
 $action_fieldname="Index";     $idx_fieldname="sys.id";
@@ -113,6 +116,8 @@ if (isset($_REQUEST['action']) && (
     || ($_REQUEST['action'] == 'Delete')
     || ($_REQUEST['action'] == 'Edit')
     || ($_REQUEST['action'] == 'Add')
+    || ($_REQUEST['action'] == 'Restart Port')
+
   ) ) {
 
   if (isset($_REQUEST['action_idx']) )

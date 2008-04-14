@@ -100,6 +100,8 @@ if (isset($_REQUEST['action']) && $_REQUEST['action']=='Restart') {
     $report2=new WebCommon(false, 1); // no title, debuglevel
     $report2->port_restart_request($_REQUEST['action_idx']);
     echo jalert('The Switch Port will be restarted within one minute');
+    echo jalert("The Switch Port " .$_REQUEST['action_idx'] ." will be restarted within one minute");
+
   }
 
 }

@@ -365,9 +365,11 @@ public function port_restart_request($port)
       $res = $conn->query($q);
     if ($res === FALSE)
       throw new DatabaseErrorException($conn->error);
+    return true;
 
   } else {
     $this->logit("port_restart_request invalid port index=<$port>");
+    return false;
   }
 }
 

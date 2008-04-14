@@ -92,11 +92,55 @@ class GuiEditDevice extends WebCommon
         $this->print_title('Edit End-Device Details');
         $this->Delete();
        
+      } else if ($action==='Restart Port') {
+        $this->print_title('Restart port request');
+        $this->RestartPort();
+        echo $this->print_footer();
+       
       } else {
         // do nothing, action does not concern us.
       }
     }
   }
+
+
+  public function RestartPort()
+  {
+    if ($_SESSION['nac_rights']<2)
+      throw new InsufficientRightsException($_SESSION['nac_rights']);
+    if ( $this->id===0 )              
+      throw new InvalidWebInputException("RestartPort() invalid index: zero");
+
+    $conn=$this->getConnection();     //  make sure we have a DB connection
+    $device=$this->id;    // rely on the constructor to clean & ensure a valid id
+    $port_index=0;
+    $this->debug("RestartPort() device index {$device}", 2);
+
+    $q="SELECT LastPort FROM systems WHERE id={$device} LIMIT 1";     // only this record
+      $this->debug($q, 3);
+      $res = $conn->query($q);
+      if ($res === FALSE)
+        throw new DatabaseErrorException($q ." :: " .$conn->error);
+      while (($row = $res->fetch_assoc()) !== NULL) {
+        $port_index=$row['LastPort'];
+      }
+
+
+    if ( $this->port_restart_request($port_index) ) {
+      $txt=<<<TXT
+      <p class='UpdateMsgOK'>The Switch Port ${port_index} will be restarted within one minute</p>
+      <p>To followup, <a href='logserver.php'>view the serverlog</a> for a confirmation, or go
+      <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>,  </div>
+TXT;
+    } else {
+      $txt=<<<TXT
+      <p class='UpdateMsg'>The Switch Port  canot be restarted as it is invalid.</p>
+      <p>Please go <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>,  </div>
+TXT;
+    }
+    echo $txt;
+  }
+
 
 
   public function Delete()
@@ -106,11 +150,11 @@ class GuiEditDevice extends WebCommon
     if ( $this->id===0 )              
       throw new InvalidWebInputException("Delete() invalid index: zero");
 
+    $conn=$this->getConnection();     //  make sure we have a DB connection
     #var_dump($_REQUEST);
     $device=$this->id;    // rely on the constructor to clean & ensure a valid id
     $this->debug("Delete() index {$device}", 3);
 
-    $conn=$this->getConnection();     //  make sure we have a DB connection
     $q="DELETE FROM systems WHERE id={$device} LIMIT 1";     // only this record
       $this->debug($q, 3);
       $res = $conn->query($q);
@@ -345,7 +389,7 @@ TXT;
 
   /**
    * Display a device record, allow changes.
-   * NExt Step is Either Update or Delete
+   * Next Step is Either Update, Delete, or Restart Port
    */
   public function query()
   {
@@ -405,9 +449,13 @@ TXT;
         $output.= '<tr><td>Location:</td><td>' ."\n"
           . $this->get_officedropdown($row['office'])
           . '</td></tr>' ."\n";
-        $output.= '<tr><td>Switch:</td><td>'."\n"
-          . $row['switch'].', port= '.$row['port'].', location= '.$row['location'] ."\n"
-          . '</td></tr>' ."\n";
+
+        $output.=<<<TXT
+         <tr><td>Switch:</td>
+           <td>{$row['switch']}, port= {$row['port']}, location= {$row['location']} </td>
+           <td><input type="submit" name="action" class="bluebox" value="Restart Port" /> </td>
+         </tr> 
+TXT;
         $output.= '<tr><td>Comment:</td><td>'."\n"
           . '<input name="comment" type="text" size=40 value="' .stripslashes($row['comment']) .'"/>' ."\n"
           . '</td><td>Last IP:' .(is_null($row['lastip']) ? 'NONE' : $row['lastip'])

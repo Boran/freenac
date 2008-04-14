@@ -47,14 +47,15 @@ else if ($_SESSION['nac_rights']==1) {
   $action_confirm=array('');     // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('View','Edit');   // 'buttons' in action column
+  $action_menu=array('View','Edit', 'Restart Port');   // 'buttons' in action column
   $action_confirm=array('', '');        // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==99) {
-  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
-  $action_confirm=array('', '', 'Really DELETE the record of this End-Device?');  // Confirm Deletes
+  $action_menu=array('View', 'Edit', 'Restart Port', 'Delete');   // 'buttons' in action column
+  $action_confirm=array('', '', '', 'Really DELETE the record of this End-Device?');  // Confirm Deletes
 }
 
+$_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
 $title="End-devices attributed to " .$_SESSION['login_data'] 
   ." (" .$_SESSION['username'] .")";
 $sortlimit=50;
@@ -115,12 +116,14 @@ TXT;
   cusr.username as 'Change User',
 */
 
+
 // Actions handled by GuiEditDevice class
 if (isset($_REQUEST['action']) && (
        ($_REQUEST['action'] == 'Update')
     || ($_REQUEST['action'] == 'Delete')
     || ($_REQUEST['action'] == 'Edit')
     || ($_REQUEST['action'] == 'Add')
+    || ($_REQUEST['action'] == 'Restart Port')
   ) ) {
 
   if (isset($_REQUEST['action_idx']) )
