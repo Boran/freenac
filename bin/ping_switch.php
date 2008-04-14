@@ -172,7 +172,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
       
       # Get port status
       $status = 0;
-      $port_status = array_find_value($port_index, $status_of_ports, '.', 1);
+      $port_status = array_find_key($port_index, $status_of_ports, '.', 1);
       if (strpos($port_status,'1'))
          $status=1;
       else if (strpos($port_status,'2'))
