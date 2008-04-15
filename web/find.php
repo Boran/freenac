@@ -65,9 +65,14 @@ SELECT
   sys.name as Systemname, 
   sys.mac as 'MAC Address', 
   status.value as Status, 
-  sys.lastseen AS 'Last seen layer2',
+
   vlan.default_name as Vlan, lvlan.default_name as LastVlan, 
-  sys.r_ip AS 'Last IP Address', sys.r_timestamp AS 'Last time IP seen',
+
+  sys.lastseen AS 'LastSeen Layer2',
+  sys.r_ip AS 'LastSeen Layer3 IP Addr.',
+  sys.r_timestamp 'Last IP: time',
+  sys.last_hostname AS 'Last IP: DNS name',
+
   sys.comment, 
   b.name as building, loc.name as office, 
   swi.name as Switch,
