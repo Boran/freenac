@@ -71,7 +71,8 @@ SELECT switch.id, ip, switch.name, location, location.name as LocationName,
 INSERT INTO switch
     (ip,name,location,comment,swgroup,notify,scan,vlan_id)
   VALUES
-    (:ip,name,:location,:comment,:swgroup,:notify,:scan,:vlan_id) 
+    (:ip,:name,:location,:comment,:swgroup,:notify,:scan,:vlan_id)
+
 UPDATE switch s
   SET s.name=:name, s.comment=:comment, s.swgroup=:swgroup, s.notify=:notify, 
   s.location=:location, s.scan=:scan, s.vlan_id=:vlan_id
