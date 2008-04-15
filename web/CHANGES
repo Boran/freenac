@@ -1,0 +1,15 @@
+=== CHANGE log for the new Web interface ===
+
+For detail changes, see the Subversion (SVN) commit log.
+
+08.Mar.2008/Sean Boran - first release: see README.webnew
+  See also the forum topic with initial issues http://freenac.net/phpBB2/viewtopic.php?t=332
+
+15.Apr.2007/SVN 1406
+  Many changes this first month, summary:
+  Allow devices to be added/deleted/edited, ports to be restarted and deleted.
+  Syslog can be views, and all tables, at least in "readonly".
+  Fix many pending bugs (show stoppers).
+  GUI has now reached a "usable" state.
+
+
