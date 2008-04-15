@@ -144,3 +144,20 @@ v3.0.0.154/15.Jan.08/SB: Oops, the read-only mode wasn't quite readonly!
 v3.0.0.155/28.Jan.08/SB:
   Edit > Naming: DNS parameters were not being saved (change systems update query)
   Add mask for IP address in format xxx.xxx.xxx.xxx
+  
+v3.0.0.156/15.Mar.08/SB:  
+	Users: Seperate search fields - less confusion
+	Switch - locations lookup was limited to 22
+  Ports/Switches: show id	column
+	Switch: add new Switch: name was being forgotten.
+	Locations: sort by building, then name.
+	Check for gui_disable_ports_list config option.
+	  The idea is that the network admin does NOT want FreeNAC to control centrain ports.
+	  So, he/she sets a comment on a port, which is then discovered
+	  and written into the ports table via snmp_scan. If the port comments contains one of
+	  a special list of string, the port may not be edited or restarted by FreeNAC.
+	  So, lets say we want to block ports with either the words "reserved" or "blocked"
+	  in the port comment:
+		insert into config set name='gui_disable_ports_list', value='reserved,forbidden', type='string', comment='GUI: disable editing ports with a comment containing one of these comma seperated values';	
+	When checking for guidomain, log more details to the server log.	
+		
