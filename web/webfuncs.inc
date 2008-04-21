@@ -198,7 +198,7 @@ $header2_small=<<<TEXT
 TEXT;
 		
 /*
- * Popul a JavaScript alert window 
+ * Popup a JavaScript alert window 
  */
 function jalert($str='') 
 {
