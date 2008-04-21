@@ -39,8 +39,8 @@ else if ($_SESSION['nac_rights']==1) {
   $action_menu='';   // no options
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('View','Restart', 'Delete');   // Allow port restart
-  $action_confirm=array('','', 'Really remove this port?');       // no confirmation popups
+  $action_menu=array('View','Restart');   // Allow port restart
+  $action_confirm=array('','');       // no confirmation popups
 
 }
 else if ($_SESSION['nac_rights']==99) {
@@ -48,7 +48,7 @@ else if ($_SESSION['nac_rights']==99) {
   $action_confirm=array('','', 'Really remove this port?');       // no confirmation popups
 }
 
-// set parameters   fro gui_control.php
+// set parameters  for gui_control.php
 $title="Switch-Port configuration";
 $sortlimit=100;
 #$sortby='SwitchName, port.name';
@@ -90,18 +90,43 @@ require_once "GuiList1_control.php";
 if (isset($_REQUEST['action']) && $_REQUEST['action']=='Restart') {
   $logger->debug("Port action: ". $_REQUEST['action'] ." idx=" .$_REQUEST['action_idx'], 1);
   if ($_SESSION['nac_rights']<2)   // must have edit rights
-    throw new InsufficientRightsException($_SESSION['nac_rights']);
+    throw new InsufficientRightsExceptionPrompt("Rights=" .$_SESSION['nac_rights']);
 
   // have we a valid port index to restart?
   if (isset($_REQUEST['action_idx']) && is_numeric($_REQUEST['action_idx'])
     && $_REQUEST['action_idx']>1 ) {
 
     // Set a flag to restart the port
-    $report2=new WebCommon(false, 1); // no title, debuglevel
-    $report2->port_restart_request($_REQUEST['action_idx']);
-    echo jalert('The Switch Port will be restarted within one minute');
-    echo jalert("The Switch Port " .$_REQUEST['action_idx'] ." will be restarted within one minute");
+    $report2=new WebCommon(false, $logger->getDebugLevel()); // no title, debuglevel
+    $logger->debug("port restart (rights=" .$_SESSION['nac_rights'] ."), gui_disable_ports_list=" 
+      .$conf->gui_disable_ports_list, 3);
 
+    if ( ($_SESSION['nac_rights']==2) && strlen($conf->gui_disable_ports_list)>1 ) {   //  are certain ports restricted?
+
+      $port_comment=$report2->get_port_comment($_REQUEST['action_idx']);
+      $logger->debug("port restart, check comment=<$port_comment> against gui_disable_ports_list=" 
+	.$conf->gui_disable_ports_list, 2);
+
+      $r_list=explode(',', $conf->gui_disable_ports_list);
+      foreach ($r_list as $reserved_word) {
+        if (stristr($port_comment, $reserved_word) ) {
+          $logger->debug("check port comment matches against <" .$reserved_word ."> - do not restart", 1);
+          echo jalert("This port may not be modified or restarted, it is reserved. ");
+          throw new InsufficientRightsExceptionPrompt("This port may not be modified, reserved. " 
+	    .' [Port comment contains:' .$conf->gui_disable_ports_list .']');
+        } else {
+          $logger->debug("check port comment=$port_comment against " .$reserved_word, 3);
+        }
+      }
+    }
+    else {
+      $logger->debug("port restart: no need to check port comment", 3);
+    }
+    $report2->port_restart_request($_REQUEST['action_idx']);
+    echo jalert("The Switch Port " .$_REQUEST['action_idx'] ." will be restarted within one minute");
+  }
+  else {
+    throw new InsufficientRightsException("Invalid port index");
   }
 
 }
@@ -114,7 +139,7 @@ else if (isset($_REQUEST['action']) && $_REQUEST['action']=='Delete') {
   if (isset($_REQUEST['action_idx']) && is_numeric($_REQUEST['action_idx'])
     && $_REQUEST['action_idx']>1 ) {
 
-    $report2=new WebCommon(false, 1); // no title, debuglevel
+    $report2=new WebCommon(false, 2); // no title, debuglevel
     $report2->port_delete($_REQUEST['action_idx']);
     #echo jalert('The Switch Port will be restarted within one minute');
   }

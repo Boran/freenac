@@ -348,6 +348,32 @@ function print_dot_sel()
 
 
 /**
+ * Get port comment
+ */
+public function get_port_comment($port) 
+{
+  $conn=$this->getConnection();     //  make sure we have a DB connection
+  // TBD: could really look up the port/switch name for nicer logging?
+  if (isset($port) && is_numeric($port) && $port>1 ) {
+
+    $this->debug("get_port_comment $port", 1);
+    $q="SELECT comment from port WHERE id=$port LIMIT 1";
+      $this->debug($q, 3);
+      $res = $conn->query($q);
+    if ($res === FALSE)
+      throw new DatabaseErrorException($conn->error);
+    while (($row = $res->fetch_assoc()) !== NULL) {
+      return ($row['comment']);
+    }
+
+  } else {
+    $this->logit("get_port_comment invalid port index=<$port>");
+    // return nothing
+  }
+}
+
+
+/**
  * Set the restart flag for a port
  */
 public function port_restart_request($port) 

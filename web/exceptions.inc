@@ -29,20 +29,6 @@ set_exception_handler('exception_handler');
 function error_page($msg)
 {
   #echo print_header();
-/*  echo <<<XX
-  <table width='80%' border='0' align='center' >
-  <tr>
-    <td align='center'>
-      <p>$msg</p>
-      <font color='red'><b>
-      We are sorry, but an error has occurred while executing the application. <br/> 
-      The system administrators have been notified.
-      </font></b>
-      <p> Please go back to the <a href='./index.php' >Main Menu</a> and start again, or try again later.  </p>
-    </td>
-  </tr>
-  </table>
-XX; */
   echo <<<XX
   <p class='UpdateMsg'>$msg</p>
   <p>Please go <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>, or the 
@@ -138,6 +124,15 @@ class InsufficientRightsException extends Exception
       .' from ' .$_SERVER['REMOTE_ADDR']);
     $_SESSION['exception']=true;    // indicate that we've handled it
     parent::__construct("Insufficient rights: ". $_SESSION['login_data']); 
+  }
+}
+class InsufficientRightsExceptionPrompt extends InsufficientRightsException
+{
+  function __construct($in1='') {
+    error_page("Insufficients rights: $in1");
+    logit('InsufficientRightsExceptionPrompt: ' .$in1);
+    $_SESSION['exception']=true;    // indicate that we've handled it
+    parent::__construct($in1); 
   }
 }
 class InvalidLoginException extends Exception
