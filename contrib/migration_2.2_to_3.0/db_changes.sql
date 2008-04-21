@@ -210,6 +210,20 @@ alter table subnets change column scan scan tinyint(4) default '0';
 alter table switch add column vlan_id int default null;
 alter table systems add column group_id int default null;
 
+
+alter table switch modify column location int(11) default '1';
+alter table switch modify column comment varchar(50) default 'NULL';
+alter table switch modify column ap tinyint(4) default '0';
+alter table switch modify column scan tinyint(1) default '0';
+alter table switch modify column vlan_id int(11) default '0';
+alter table switch add column scan3 tinyint(1) default '0';
+
+alter table port modify column default_vlan int(11) default '0';
+alter table port modify column last_vlan int(11) default '0';
+alter table port modify column auth_profile int(11) unsigned default '0';
+alter table port modify column restart_now int(11) default '0';
+alter table port modify column shutdown int(11) default '0';
+
 -- Permisions on new tables
 grant select, update, insert, delete on opennac.epo_versions to inventwrite@'localhost';
 grant select, update, insert, delete on opennac.epo_systems to inventwrite@'localhost';
