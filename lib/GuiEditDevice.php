@@ -522,7 +522,7 @@ function get_vlandropdown($s)
 
    else if ($_SESSION['nac_rights'] ==2 ) {   // edit: user list
      $ret='<select name="vlan">';
-     $q="select id, default_name from vlan WHERE ";
+     $q="select id, default_name from vlan ";
 
      // if GuiVlanRights is set, only show those Vlans
          if ( ! empty($_SESSION['GuiVlanRights']) ) {
@@ -533,14 +533,14 @@ function get_vlandropdown($s)
           
            if ( $number_vlans == 0 ) {
              echo "<option value=\"\">No vlans defined</option>";
-             $q .= "id='';";
+             $q .= " WHERE id='';";
            }
            else {
              for ($i = 0; $i < $number_vlans; $i++) {
                if ( $i < ($number_vlans - 1) )
-                 $q .= "id = '{$vlans_to_show[$i]}' OR ";
+                 $q .= " WHERE id = '{$vlans_to_show[$i]}' OR ";
                else
-                 $q .= "id = '{$vlans_to_show[$i]}'";
+                 $q .= " WHERE id = '{$vlans_to_show[$i]}'";
              }
            }
 
