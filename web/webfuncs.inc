@@ -835,12 +835,23 @@ EOF;
 </div></td>
 EOF;
 
+
    $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_help','','show')"
   onmouseout ="showHideLayers('smenu_help','','hide')">
   <a >Help</a>
 <div class="smenu" id="smenu_help">
+EOF;
+
+   $local_doc="mysite.html";
+   if (file_exists("/opt/nac/web/" .$local_doc)) {
+     $logger->debug("main_menu() Local doc $local_doc found", 2);
+     $text.=<<<EOF
+     <a href="$local_doc">MySite notes</a><br/>
+EOF;
+   }
+   $text.=<<<EOF
   <a href="http://freenac.net/en/community?q=en/usersguide">Users Guide</a><br/>
   <a href="http://freenac.net/en/community?q=en/installguide">Install Guide</a><br/>
   <a href="http://freenac.net/en/community?q=en/techguide">Technical Guide</a><br/>
