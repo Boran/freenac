@@ -187,7 +187,7 @@ $header2=<<<TEXT
   </table>
   <p/>
 TEXT;
-// TBD: why will it not table the width from table#header2_small in bw.css?
+// TBD: why will it not take the width from table#header2_small in bw.css?
 $header2_small=<<<TEXT
 <table id="header2_small" width="500">
   <tr height="80"> 
@@ -731,7 +731,7 @@ EOF;
 */
 function main_menu()
 {
-  global $logger, $_SESSION;
+  global $logger, $_SESSION, $anon_auth;
   if (isset($_SESSION['nac_rights']) && ($_SESSION['nac_rights']>1)) {
     $edit_mode=true;
   } else {
@@ -770,6 +770,9 @@ function showHideLayers() {
     <a href="unknowns.php" title="List unknown end devices and print/edit/delete them">Find unknowns</a><br/>
     <a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a><br/>
     <a href="listall.php" title="List end devices with lots of detail">Detailed list</a><br/>
+EOF;
+   if ($anon_auth===false)    // Only for individual user logins
+     $text.=<<<EOF
     <a href="mydevs.php"  title="List My end devices: attributed to My username">My Devices</a><br/>
 EOF;
 
