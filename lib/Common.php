@@ -55,6 +55,14 @@ class Common {
 
 
   /**
+   * htmlescape: escape date before outputting to a Browser
+   */
+  public function htmlescape($in_string)
+  {
+    return htmlentities($in_string, ENT_QUOTES, 'UTF-8');
+  }
+
+  /**
    * sqlescape: call real_escape_string1 with DB connection
    */
   public function sqlescape ($in_string, $in_removePct=FALSE)

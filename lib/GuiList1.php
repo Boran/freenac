@@ -186,7 +186,9 @@ EOF;
 
         foreach ($fields as $field) {
           $fname=$field->name;
-          $output.= "<td align='center'>" . $row[$fname] . "</td>";
+          #$output.= "<td align='center'>" . $row[$fname] . "</td>";
+          ## Escape HTML charaacters in data, as it will either disappear or cause strange behaviour
+          $output.= "<td align='center'>" . $this->htmlescape($row[$fname]) . "</td>";
         } 
         $output.= "</tr>";
         $shade = !$shade;  // toggle shading for the next line
