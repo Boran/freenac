@@ -29,7 +29,7 @@ $query = "SELECT count(*) FROM stats WHERE datetime >= DATE_SUB(NOW(), INTERVAL 
 $logger->debug($query,3);
 $today_records = v_sql_1_select($query);
 # Do we have records from today?
-if ($today_records && ($today_records == 0))
+if ( $today_records == 0 )
 {
    #Get number of active systems within last 24 hours
    $query="select id, health, status from systems where date_sub(CURDATE(),interval 1 day) <= LastSeen;";
@@ -171,6 +171,12 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
    $logger->debug(print_r($health,true),3);
    #Subject of the email
    $subject = "Summary of connections during ".date('F Y');
+   if ( ! is_array($month_stats) )
+   {
+      $logger->logit("Couldn't retrieve information associated to this month", LOG_ERR);
+      $logger->mailit("ERROR","Couldn't retrieve information associated to this month");
+      exit(1);
+   }
    #And now build the texts to send
    foreach ($month_stats as $k => $v)
    {
