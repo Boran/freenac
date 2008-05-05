@@ -63,7 +63,8 @@ TXT;
         $rowcount++;
         foreach ($fields as $field) {
           $fname=$field->name;
-          $output.="<tr><td>$fname</td><td>{$row[$fname]}</td></tr>";
+          #$output.="<tr><td>$fname</td><td>{$row[$fname]}</td></tr>";
+          $output.="<tr><td>$fname</td><td>" .$this->htmlescape($row[$fname]) ."</td></tr>";
         } 
       }
 
