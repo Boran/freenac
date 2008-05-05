@@ -82,12 +82,12 @@ final class Logger
    /**
    * Open logging facilities and start output buffering
    */
-   private function __construct()  
+   private function __construct($facility=LOG_DAEMON)  
    {
       define_syslog_variables();
       ob_start();
       $this->identifier=basename($_SERVER['SCRIPT_FILENAME']); #Get script's name as identifier
-      $this->openFacility();   		#Open logging facilities
+      $this->openFacility($facility);   		#Open logging facilities
    }
 
    /**
@@ -198,10 +198,10 @@ final class Logger
    * Get instance of this class
    * @return object	Current instance
    */
-   public static function getInstance()
+   public static function getInstance($facility=LOG_DAEMON)
    {
       if (empty(self::$instance))               //Is there an instance of this class?
-         self::$instance=new Logger();		//No, then create it
+         self::$instance=new Logger($facility);		//No, then create it
       return self::$instance;                   //Yes, return it
    }
 
