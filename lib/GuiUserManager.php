@@ -165,7 +165,7 @@ TXT;
               $_SESSION['nac_rights_text']="administrator";
             else if ($_SESSION['nac_rights'] == 2)
               $_SESSION['nac_rights_text']="edit";
-            else if ($_SESSION['nac_rights'] == 2)
+            else if ($_SESSION['nac_rights'] == 4)
               $_SESSION['nac_rights_text']="Helpdesk";
             else
               $_SESSION['nac_rights_text']="read-only";
