@@ -24,11 +24,11 @@ class GuiUserManager extends WebCommon
   private $props=array();      // See also WebCommon and Common
 
 
-  function __construct()
+  function __construct($debuglevel=1)
   {
     parent::__construct();     // See also WebCommon and Common
-    $this->logger->setDebugLevel(1);
-    $this->debug(' __construct()', 3);  
+    $this->logger->setDebugLevel($debuglevel);  // 3 for max debugging
+    $this->debug(" __construct(), debug=" .$debuglevel, 1);
   }
 
   public function isValidUserName ($in_user_name)
@@ -165,6 +165,8 @@ TXT;
               $_SESSION['nac_rights_text']="administrator";
             else if ($_SESSION['nac_rights'] == 2)
               $_SESSION['nac_rights_text']="edit";
+            else if ($_SESSION['nac_rights'] == 2)
+              $_SESSION['nac_rights_text']="Helpdesk";
             else
               $_SESSION['nac_rights_text']="read-only";
           }
