@@ -18,7 +18,7 @@
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3);
+  $logger->setDebugLevel(1);
 
   ## Loggin in? User identified?
   include 'session.inc.php';
@@ -69,6 +69,11 @@ SELECT
   building.name as Building, 
   location.name as Location,
   scan AS 'Layer 2 passive scan?', 
+TXT;
+if ($conf->enable_layer3_switches==true)  
+  $q.= " scan3 AS 'Layer 3 scan?', ";
+
+$q.=<<<TXT
   last_monitored AS 'Last Monitored',
   up AS 'Up?',
   swgroup, 
