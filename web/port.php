@@ -50,7 +50,7 @@ else if ($_SESSION['nac_rights']==99) {
 
 // set parameters  for gui_control.php
 $title="Switch-Port configuration";
-$sortlimit=100;
+$sortlimit=200;
 #$sortby='SwitchName, port.name';
 $sortby='SwitchName';
 $searchby='SwitchName';

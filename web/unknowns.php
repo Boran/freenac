@@ -35,7 +35,7 @@ $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
 
 // set parameters   for gui_control.php
 $title="List of Unknown End-devices";
-$sortlimit=50;
+$sortlimit=200;
 $sortby='sys.LastSeen';
 #$searchby='Status';
 #$searchstring='0';

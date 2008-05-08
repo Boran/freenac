@@ -58,7 +58,7 @@ else if ($_SESSION['nac_rights']==99) {
 $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
 $title="End-devices attributed to " .$_SESSION['login_data'] 
   ." (" .$_SESSION['username'] .")";
-$sortlimit=50;
+$sortlimit=100;
 $sortby='sys.name';   
 # WHERE sys.uid=$_SESSION['uid']
 #$searchby='sys.uid';

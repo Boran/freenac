@@ -31,7 +31,7 @@
 ### --------- main() -------------
 $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
 $title="List of End-devices: detailed list";
-$sortlimit=50;
+$sortlimit=100;
 $sortby='sys.LastSeen';
 $searchby='sys.name';
 $searchstring='';
