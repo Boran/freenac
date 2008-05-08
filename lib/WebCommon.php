@@ -92,6 +92,11 @@ class WebCommon extends Common
       $this->debug('print_header: HEADER already true', 3);
 
     } else {
+      if (! isset($_SESSION['nac_rights']) || ($_SESSION['nac_rights']=='')) {
+        $this->debug("print_header() nac_rights not set: ignore, do not show menu/headers", 2);
+        return;
+      }
+
       define('HEADER',true); // The header is out
       $ret.= $header1 ."\n";
       #$ret.= $_SESSION['nac_rights'];
