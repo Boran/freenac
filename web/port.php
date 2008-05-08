@@ -41,11 +41,16 @@ else if ($_SESSION['nac_rights']==1) {
 else if ($_SESSION['nac_rights']==2) {
   $action_menu=array('View','Restart');   // Allow port restart
   $action_confirm=array('','');       // no confirmation popups
-
+}
+else if ($_SESSION['nac_rights']==4) {
+  $action_menu=array('View','Restart');   // Allow port restart
+  $action_confirm=array('','');       // no confirmation popups
 }
 else if ($_SESSION['nac_rights']==99) {
   $action_menu=array('View','Restart', 'Delete');   // Allow port restart
   $action_confirm=array('','', 'Really remove this port?');       // no confirmation popups
+} else {
+  throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }
 
 // set parameters  for gui_control.php

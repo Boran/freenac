@@ -46,6 +46,8 @@ else if ($_SESSION['nac_rights']==2) {
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
   //$action_menu=array('Print', 'Edit', 'Delete');   // 'buttons' in action column
+} else {
+  throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }
 
 

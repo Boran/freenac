@@ -18,7 +18,7 @@
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
   $logger=Logger::getInstance();
-  $logger->setDebugLevel(3);
+  $logger->setDebugLevel(1);
 
   ## Loggin in? User identified?
   include 'session.inc.php';
@@ -42,9 +42,15 @@ else if ($_SESSION['nac_rights']==2) {
   $action_menu='';
   //$action_menu=array('Print','Edit');   // 'buttons' in action column
 }
+else if ($_SESSION['nac_rights']==4) {
+  $action_menu='';
+  //$action_menu=array('Print','Edit');   // 'buttons' in action column
+}
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
   //$action_menu=array('Print', 'Edit', 'Delete');   // 'buttons' in action column
+} else {
+  throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }
 
 // set parameters   fro gui_control.php

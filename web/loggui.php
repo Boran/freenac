@@ -33,7 +33,7 @@
 
 // set parameters   fro gui_control.php
 $title="Web and Windows GUI log";
-$sortlimit=300;
+$sortlimit=400;
 #$sortby='sys.name';
 $sortby='datetime';
 $searchby='';
@@ -50,9 +50,15 @@ else if ($_SESSION['nac_rights']==2) {
   $action_menu='';
   //$action_menu=array('Print','Edit');   // 'buttons' in action column
 }
+else if ($_SESSION['nac_rights']==4) {
+  $action_menu='';
+  //$action_menu=array('Print','Edit');   // 'buttons' in action column
+}
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
   //$action_menu=array('Print', 'Edit', 'Delete');   // 'buttons' in action column
+} else {
+  throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }
 
 ## A smaller and quicker query:

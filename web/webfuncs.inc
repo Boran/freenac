@@ -611,8 +611,7 @@ function check_login() {
   $logger=Logger::getInstance();
 
   if (!isset ($_SESSION['uid']) || !$_SESSION['uid']) {  // have we a session?
-    $usermgr = new GuiUserManager();
-    //$usermgr->logger->setDebugLevel(3);    // enable for debugging
+    $usermgr = new GuiUserManager(1);       // 0 to 3 debugging levels
     $usermgr->processAdLogin();
 
     #echo print_headerSmall();
@@ -627,8 +626,7 @@ function check_login() {
   if (!isset($_SESSION['user_agent'])) {
     $_SESSION['user_agent'] = md5($_SERVER['HTTP_USER_AGENT']. UA_SALT);
 
-  } else if ($_SESSION['user_agent'] !=
-    md5($_SERVER['HTTP_USER_AGENT']. UA_SALT)) {
+  } else if ($_SESSION['user_agent'] != md5($_SERVER['HTTP_USER_AGENT']. UA_SALT)) {
 
     echo print_headerSmall();
     echo "<font class=text16red>ACCESS DENIED: possible security violation</font><br/><br/>";
@@ -639,18 +637,19 @@ function check_login() {
 
   // is there a valid session at all?
   if  (session_name()=='')  {
-    $logger->debug("empty session_name ");
+    $logger->debug("empty session_name ",3);
   }
   if  (session_id()=='')  {
-    $logger->debug("empty session_id ");
+    $logger->debug("empty session_id ",3);
   }
   if ( !isset($_SESSION))  {
-    $logger->debug("_SESSION not set");
+    $logger->debug("_SESSION not set",3);
   }
   #if ( (session_name()=='') || (!isset($_SESSION)) || (session_id()=="") ) {
   #  $logger->debug("empty session uid=" . $_SESSION['uid']);
     #TBD header('Location: ./logout.php');
   #}
+  $logger->debug("check_login(): done",3);
 }
 
 
@@ -732,6 +731,17 @@ EOF;
 function main_menu()
 {
   global $logger, $_SESSION, $anon_auth;
+  if (! isset($_SESSION['nac_rights']) || ($_SESSION['nac_rights']=='')) {
+    $logger->debug("main_menu() nac_rights not set: ignore & do not show menu", 2);
+    return;
+  } 
+
+  if (isset($_SESSION['nac_rights']) && ($_SESSION['nac_rights']==4)) {
+    $helpdesk_mode=true;
+    $logger->debug("main_menu() helpdesk_mode=true", 2);
+  } else {
+    $helpdesk_mode=false;
+  }
   if (isset($_SESSION['nac_rights']) && ($_SESSION['nac_rights']>1)) {
     $edit_mode=true;
   } else {
@@ -739,8 +749,10 @@ function main_menu()
     $logger->debug("main_menu() nac_rights not set, or <2", 2);
   }
   #var_dump($_SESSION);
-  #$logger->debug("main_menu()");
-  #$text="{$_SESSION['nac_rights']}";
+  $logger->debug("main_menu() nac_rights={$_SESSION['nac_rights']}");
+
+
+
   $text='';
 
   $text.=<<<EOF
@@ -771,7 +783,7 @@ function showHideLayers() {
     <a href="find.php"  title="List end devices recently seen and print/edit/delete them">Find recent </a><br/>
     <a href="listall.php" title="List end devices with lots of detail">Detailed list</a><br/>
 EOF;
-   if ($anon_auth===false)    // Only for individual user logins
+   if (!($anon_auth || $helpdesk_mode) )    // Only for individual user logins
      $text.=<<<EOF
     <a href="mydevs.php"  title="List My end devices: attributed to My username">My Devices</a><br/>
 EOF;
@@ -786,7 +798,7 @@ EOF;
 </div></td>
 EOF;
 
-   if ($edit_mode)    // edit/admin
+   if (($edit_mode) and (! $helpdesk_mode))    // edit/admin
      $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_stats1','','show')"
@@ -823,6 +835,7 @@ EOF;
 </div></td>
 EOF;
 
+   if ( ! $helpdesk_mode )    // helpdesk_mode: keep menus minimal
    $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_mon','','show')"
@@ -839,6 +852,7 @@ EOF;
 EOF;
 
 
+   if ( ! $helpdesk_mode )  {  // helpdesk_mode: keep menus minimal
    $text.=<<<EOF
 <td><div class="smenutitle"
   onmouseover="showHideLayers('smenu_help','','show')"
@@ -863,7 +877,10 @@ EOF;
   <a href="http://freenac.net/en/community">FreeNAC Website</a><br/>
 </div>
 </div></td>
+EOF;
+ } 		// helpdesk_mode
 
+   $text.=<<<EOF
 </tr>
 </tbody>
 </table>

@@ -40,11 +40,15 @@ else if ($_SESSION['nac_rights']==1) {
 }
 else if ($_SESSION['nac_rights']==2) {
   $action_menu='';
-  //$action_menu=array('Print','Edit');   // 'buttons' in action column
+}
+else if ($_SESSION['nac_rights']==4) {
+  $action_menu='';
 }
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
   //$action_menu=array('Print', 'Edit', 'Delete');   // 'buttons' in action column
+} else {
+  throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }
 
 // set parameters   fro gui_control.php

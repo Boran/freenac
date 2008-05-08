@@ -24,8 +24,13 @@
   include 'session.inc.php'; // resume or create session
   check_login();             // logged in? User identified?
   #$logger->debug('Start, uid=' .$_SESSION['uid'], 3);
-## end of standardc header ------
+## end of standard header ------
 
+
+// 1. Check rights
+if ($_SESSION['nac_rights']<1) {
+  throw new InsufficientRightsException($_SESSION['nac_rights']);
+}
 
   if (isset($conf->web_logtail_file)) {
     new GuiLogtail($conf->web_logtail_file, $conf->web_logtail_length);
