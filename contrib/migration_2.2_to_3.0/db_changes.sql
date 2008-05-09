@@ -169,6 +169,7 @@ UPDATE config SET comment='Enable the use of a default vlan index per port - 0/1
 ALTER TABLE switch ADD COLUMN last_monitored datetime COMMENT "Last time the switch was polled";
 ALTER TABLE switch ADD COLUMN up int COMMENT "Monitor: switch is reachable(1) or down?";
 ALTER TABLE switch ADD COLUMN scan3 tinyint(1) default '0';
+ALTER TABLE switch ADD COLUMN vlan_id int default '0';
 
 -- New fields needed for status and programming of port settings
 ALTER TABLE port ADD COLUMN last_monitored datetime COMMENT "Last time the port was monitored";
