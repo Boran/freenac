@@ -160,4 +160,7 @@ v3.0.0.156/15.Mar.08/SB:
 	  in the port comment:
 		insert into config set name='gui_disable_ports_list', value='reserved,forbidden', type='string', comment='GUI: disable editing ports with a comment containing one of these comma seperated values';	
 	When checking for guidomain, log more details to the server log.	
-		
+
+v3.0.0.157/9.May.08/SB:
+  Add helpdesk rols to Admin > Users.
+  Improve detection of logged on Domain.
