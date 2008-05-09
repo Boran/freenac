@@ -59,17 +59,16 @@ $mysql_write2=true;                    # Just test or actually write DB changes?
 db_connect();
 global $connect;
 
-
-if ( !$conf->core_routers ) {   // no results, error?
-   $logger->logit("no routers specified in core_routers variable in the config table");
-   log2db('info',"no routers specified in core_routers variable in the config table");
+if ( !$conf->core_routers && !$conf->enable_layer3_switches ) {   // no results, error?
+   $logger->logit("no routers specified in core_routers variable in the config table or no switches have been set to layer 3 scanning");
+   log2db('info',"no routers specified in core_routers variable in the config table or no switches have been set to layer 3 scanning");
    exit(1);
 }
 
 
 // Get the mac addresses of all unknown devices
 // for use the autoupdating of DNS names, see below
-if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
+if ( isset($conf->router_mac_ip_update_from_dns) ) {   // feature enabled?
 
   #$sql="SELECT mac FROM systems WHERE name='unknown'";
   $sql="SELECT mac FROM systems WHERE status='0'";
@@ -91,7 +90,39 @@ if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
 if (!empty($router_ro))
    $snmp_ro=$router_ro;
 // Connect to each router and download its ARP table
-foreach (split(' ', $conf->core_routers) as $router) {
+$systems = array();
+$systems = split(' ', $conf->core_routers);
+
+if ( $conf->enable_layer3_switches )
+{
+   $query = "SELECT ip FROM switch WHERE scan3='1';";
+   $logger->debug($query,3);
+   $res = mysql_query($query);
+   if ( ! $res )
+   {
+      $logger->logit(mysql_error(),LOG_ERR);
+   }
+   else
+   {
+      if ( mysql_num_rows($res) != 0 )
+      {
+         $systems = array();
+         while ($row=mysql_fetch_array($res,MYSQL_ASSOC))
+         {
+            $systems[] = $row['ip'];
+         }
+      }
+   }
+}
+
+if ( count($systems) == 0)
+{
+   $logger->logit("No routers or switches found to scan",LOG_ERR);
+   log2db('info',"No routers or switches found to scan with router_mac_ip");
+   exit(1);
+}
+
+foreach ($systems as $router) {
   $count_updates=0;
   $logger->debug("Connecting to ".$router, 2);
   // query interface list and split into an array
