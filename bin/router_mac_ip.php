@@ -68,7 +68,7 @@ if ( !$conf->core_routers && !$conf->enable_layer3_switches ) {   // no results,
 
 // Get the mac addresses of all unknown devices
 // for use the autoupdating of DNS names, see below
-if ( isset($conf->router_mac_ip_update_from_dns) ) {   // feature enabled?
+if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
 
   #$sql="SELECT mac FROM systems WHERE name='unknown'";
   $sql="SELECT mac FROM systems WHERE status='0'";
@@ -93,7 +93,7 @@ if (!empty($router_ro))
 $systems = array();
 $systems = split(' ', $conf->core_routers);
 
-if ( $conf->enable_layer3_switches )
+if ( $conf->enable_layer3_switches === true )
 {
    $query = "SELECT ip FROM switch WHERE scan3='1';";
    $logger->debug($query,3);
@@ -110,6 +110,7 @@ if ( $conf->enable_layer3_switches )
          while ($row=mysql_fetch_array($res,MYSQL_ASSOC))
          {
             $systems[] = $row['ip'];
+            $logger->logit("Adding router {$row['ip']} from the switch table for scanning");
          }
       }
    }
