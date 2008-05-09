@@ -155,7 +155,11 @@ INSERT INTO `config` SET TYPE='string', NAME='entityname', VALUE='ACME', COMMENT
 INSERT INTO `config` SET TYPE='string', NAME='unknown', VALUE='%unknown%', COMMENT='Mask for unknown machines in the database' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
 INSERT INTO `config` SET TYPE='boolean', NAME='xls_output', VALUE='false', COMMENT='Enable XLS export from web interface' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
 INSERT INTO `config` SET TYPE='integer', NAME='delete_users_threshold', VALUE='360', COMMENT='Delete users not seen in the central directory for more than XX days' ON DUPLICATE KEY UPDATE COMMENT=COMMENT;
-INSERT INTO `config` SET TYPE='boolean', NAME='router_mac_ip_update_from_nmb', VALUE='false', COMMENT='Auto-update system names from WINS for \'unknowns\'? Note: DNS has still priority';
+INSERT INTO `config` SET TYPE='boolean', NAME='enable_layer3_switches', VALUE='true', COMMENT='Query switches on layer 3 with router_mac_ip, if their scan3 flag is set';
+INSERT INTO `config` SET TYPE='string', NAME='gui_disable_ports_list', VALUE='reserved,forbidden', COMMENT='GUI: disable editing ports with a comment containing one of these comma separated values';
+
+INSERT INTO `guirights` SET code='4', value='helpdesk';
+
 
 UPDATE config SET comment='Global default vlan index for unknowns. Set to 0 for default deny' WHERE name='default_vlan';
 UPDATE config SET comment='Vlan index for unknowns when auto added to the DB, normally=default_vlan' WHERE name='set_vlan_for_unknowns';
@@ -164,6 +168,7 @@ UPDATE config SET comment='Enable the use of a default vlan index per port - 0/1
 -- New fields needed for switch monitoring
 ALTER TABLE switch ADD COLUMN last_monitored datetime COMMENT "Last time the switch was polled";
 ALTER TABLE switch ADD COLUMN up int COMMENT "Monitor: switch is reachable(1) or down?";
+ALTER TABLE switch ADD COLUMN scan3 tinyint(1) default '0';
 
 -- New fields needed for status and programming of port settings
 ALTER TABLE port ADD COLUMN last_monitored datetime COMMENT "Last time the port was monitored";
@@ -173,12 +178,13 @@ ALTER TABLE port ADD COLUMN staticvlan int COMMENT "If static, program this vlan
 ALTER TABLE port ADD COLUMN shutdown int COMMENT "Shutdown the port(1)?";
 
 -- Systems table, new fields
-ALTER TABLE systems ADD COLUMN dns_alias varchar(200) COMMENT "CSV: for static DNS IP mgt";
-ALTER TABLE systems ADD COLUMN health int COMMENT "Lookup into health table";
-ALTER TABLE systems ADD COLUMN last_hostname varchar(100) COMMENT "DNS or DHCP name + domain";
-ALTER TABLE systems ADD COLUMN last_nbtname varchar(100) COMMENT "NetBIOS name";
-ALTER TABLE systems ADD COLUMN last_uid int COMMENT "Last user logged on to PC";
-ALTER TABLE systems ADD COLUMN email_on_connect varchar(100) COMMENT "Email address to alert";
+ALTER TABLE systems ADD COLUMN dns_alias varchar(200) default null COMMENT "CSV: for static DNS IP mgt";
+ALTER TABLE systems ADD COLUMN health int default null COMMENT "Lookup into health table";
+ALTER TABLE systems ADD COLUMN last_hostname varchar(100) default null COMMENT "DNS or DHCP name + domain";
+ALTER TABLE systems ADD COLUMN last_nbtname varchar(100) default null COMMENT "NetBIOS name";
+ALTER TABLE systems ADD COLUMN last_uid int default null COMMENT "Last user logged on to PC";
+ALTER TABLE systems ADD COLUMN email_on_connect varchar(100) default null COMMENT "Email address to alert";
+ALTER TABLE systems ADD COLUMN group_id int default NULL;
 -- DB fixes
 alter table systems change column description description varchar(100) default null comment "v3: not used";
 alter table systems change column uid uid int(11) default null;
@@ -186,13 +192,14 @@ alter table systems change column ChangeDate ChangeDate varchar(100) default nul
 alter table systems change column ChangeUser ChangeUser int(11) default null;
 alter table systems change column LastPort LastPort int(11) default null;
 alter table systems change column LastVlan LastVlan int(11) default null;
-alter table systems change column os os int(11) unsigned default null;
-alter table systems change column os1 os1 int(10) unsigned default null;
-alter table systems change column os2 os2 int(10) unsigned default null;
-alter table systems change column os3 os3 int(10) unsigned default null;
+alter table systems change column os os int(11) unsigned not null;
+alter table systems change column os1 os1 int(10) unsigned not null;
+alter table systems change column os2 os2 int(10) unsigned not null;
+alter table systems change column os3 os3 int(10) unsigned not null;
 alter table systems change column os4 os4 varchar(64) default null;
-alter table systems change column class class int(11) unsigned default null;
-alter table systems change column class2 class2 int(11) unsigned default null;
+alter table systems change column class class int(11) unsigned not null;
+alter table systems change column class2 class2 int(11) unsigned not null;
+
 alter table switch change column ip ip varchar(20) default null;
 alter table switch change column location location int(11) default null;
 alter table switch change column `comment` `comment` varchar(50) default null;
@@ -208,7 +215,6 @@ alter table patchcable change column `comment` `comment` varchar(30) default nul
 alter table services change column description description varchar(255) default null;
 alter table subnets change column scan scan tinyint(4) default '0';
 alter table switch add column vlan_id int default null;
-alter table systems add column group_id int default null;
 
 
 alter table switch modify column location int(11) default '1';
