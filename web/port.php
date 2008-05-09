@@ -106,7 +106,7 @@ if (isset($_REQUEST['action']) && $_REQUEST['action']=='Restart') {
     $logger->debug("port restart (rights=" .$_SESSION['nac_rights'] ."), gui_disable_ports_list=" 
       .$conf->gui_disable_ports_list, 3);
 
-    if ( ($_SESSION['nac_rights']==2) && strlen($conf->gui_disable_ports_list)>1 ) {   //  are certain ports restricted?
+    if ( ($_SESSION['nac_rights']==4) && strlen($conf->gui_disable_ports_list)>1 ) {   //  are certain ports restricted for helpdesk?
 
       $port_comment=$report2->get_port_comment($_REQUEST['action_idx']);
       $logger->debug("port restart, check comment=<$port_comment> against gui_disable_ports_list=" 
