@@ -164,3 +164,12 @@ v3.0.0.156/15.Mar.08/SB:
 v3.0.0.157/9.May.08/SB:
   Add helpdesk rols to Admin > Users.
   Improve detection of logged on Domain.
+
+v3.0.0.158/9.May.08/SB:  
+  Add 'scan3' field to the Switch.
+  WARNING: If you don't have this field in your Database, the GUI will not load.
+  To add it manually
+  mysql opennac
+  alter table switch add column scan3 tinyint(1) DEFAULT 0;  
+  
+  Add "hubs" to Reports. Re-enable domain exceptions.
