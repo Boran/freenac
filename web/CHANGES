@@ -12,4 +12,9 @@ For detail changes, see the Subversion (SVN) commit log.
   Fix many pending bugs (show stoppers).
   GUI has now reached a "usable" state.
 
+08.May.2007/SVN 1435
+  Add 'helpdesk' role (nac_rights=4) with minimal menus
+  Fix initial menu display, e.g. report menu was not always hidden for edit mode.
+  Increase number of rows displayed.
+  Start on new search page: search.php
 
