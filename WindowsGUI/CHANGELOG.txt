@@ -162,9 +162,8 @@ v3.0.0.156/15.Mar.08/SB:
 	When checking for guidomain, log more details to the server log.	
 
 v3.0.0.157/9.May.08/SB:
-  Add helpdesk rols to Admin > Users.
+  Add helpdesk roles to Admin > Users.
   Improve detection of logged on Domain.
-
 v3.0.0.158/9.May.08/SB:  
   Add 'scan3' field to the Switch.
   WARNING: If you don't have this field in your Database, the GUI will not load.
@@ -173,3 +172,11 @@ v3.0.0.158/9.May.08/SB:
   alter table switch add column scan3 tinyint(1) DEFAULT 0;  
   
   Add "hubs" to Reports. Re-enable domain exceptions.
+  
+v3.0.0.159/13.May.08/SB:  
+  Add Customisation of the Grid layouts:
+  New Load/Save (grid) Layouts to the admin menu. If vmps.ini exists after connection,
+  load the grid layouts in it.
+  To use: delete vmps.ini if there is one in your vmps folder. Start vmps.exe. Customise the grids
+  the way you want (make columns visible, change width, orders etc.). Then do Admin > Save Layout.
+  This save the layouts to vmps.ini and this will be loaded automaticallly each time.
