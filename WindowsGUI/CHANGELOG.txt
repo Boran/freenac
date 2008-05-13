@@ -175,8 +175,8 @@ v3.0.0.158/9.May.08/SB:
   
 v3.0.0.159/13.May.08/SB:  
   Add Customisation of the Grid layouts:
-  New Load/Save (grid) Layouts to the admin menu. If vmps.ini exists after connection,
+  New Load/Save (grid) Layouts to the admin menu. If USERNAME.ini exists after connection,
   load the grid layouts in it.
-  To use: delete vmps.ini if there is one in your vmps folder. Start vmps.exe. Customise the grids
+  To use: delete [USERNAME].ini if there is one in your vmps folder. Start vmps.exe. Customise the grids
   the way you want (make columns visible, change width, orders etc.). Then do Admin > Save Layout.
-  This save the layouts to vmps.ini and this will be loaded automaticallly each time.
+  This save the layouts to USERNAME.ini and will be loaded automaticallly each time.
