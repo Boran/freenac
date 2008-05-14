@@ -50,6 +50,7 @@ $action_fieldname = isset($action_fieldname) ? $action_fieldname : '';
 $action_confirm   = isset($action_confirm) ? $action_confirm : array(''); 
 $idx_fieldname    = isset($idx_fieldname) ? $idx_fieldname : $action_fieldname;
 $order_dir        = isset($order_dir) ? $order_dir : 'DESC';
+$order_op         = isset($order_op ) ? $order_op  : 'LIKE';
 #$searchstring     = isset($searchstring) ? $searchstring : '';
 
 
@@ -75,7 +76,7 @@ if ( isset($_REQUEST['change']) ) {
     $report=new GuiList1($title, true, 1);                //true=dynamic with filtering, debug level
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
-       $searchstring, $searchby, $action_confirm, $order_dir);   // run query, generate report
+       $searchstring, $searchby, $action_confirm, $order_dir, $order_op);   // run query, generate report
 
     echo $report->print_footer();
 
@@ -155,7 +156,7 @@ $_SESSION['caller']=basename($_SERVER['SCRIPT_FILENAME']);
     $report=new GuiList1($title, true, 2);                //true=dynamic with filtering, debug level
     echo $report->query($q, $sortlimit, $sortby, 
        $action_menu, $action_fieldname, $idx_fieldname,
-       $searchstring, $searchby, $action_confirm, $order_dir);   // run query, generate report
+       $searchstring, $searchby, $action_confirm, $order_dir, $order_op);   // run query, generate report
 
     echo $report->print_footer();
 }

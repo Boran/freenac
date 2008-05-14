@@ -97,7 +97,7 @@ EOF;
    */
   public function query($q, $limit=0, $order='', $action_menu, 
     $action_fieldname='', $idx_name, $searchstring='', $searchby='',
-    $action_confirm=array(''), $order_dir='DESC') 
+    $action_confirm=array(''), $order_dir='DESC', $like='LIKE') 
   {
     $conn=$this->getConnection();     //  make sure we have a DB connection
     $_SESSION['report1_query']=$q;    // save for Report2, for re-use
@@ -111,7 +111,12 @@ EOF;
       if ((strlen($searchby)>0) && (strlen($searchstring)>0) ) {
         $searchby=$this->sqlescape($searchby);
         $searchstring=$this->sqlescape($searchstring);   // strip/escape unwanted characters
-        $q.=" WHERE $searchby LIKE '%$searchstring%' "; 
+        if ($like == 'LIKE') 
+          $q.=" WHERE $searchby LIKE '%$searchstring%' "; 
+        else if ($like == '=') 
+          $q.=" WHERE $searchby='$searchstring' "; 
+        else
+          $q.=" WHERE $searchby LIKE '%$searchstring%' "; 
       } 
 
       $order=$this->sqlescape($order);
