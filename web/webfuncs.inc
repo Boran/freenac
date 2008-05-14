@@ -791,6 +791,8 @@ EOF;
 //   if ($edit_mode)    // edit/admin
      $text.=<<<EOF
     <a href="deviceadd.php?action=Add"  title="Add a new End-Device/PC to the Database">Add new End-Device</a><br/>
+    <a href="search.php"  title="Search for a precise MAC address">Beta: Search for exact MAC address</a><br/>
+    <a href="mydevnow.php"  title="Search your IP address">Beta: Search for your current IP </a><br/>
 EOF;
 
    $text.=<<<EOF
