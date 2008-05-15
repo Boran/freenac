@@ -1,14 +1,26 @@
-#!/bin/perl
+#!/usr/bin/perl
 #
-# gather1.pl
-# Test script: what can we query remotely to ID a windows box?
-# First argument is the IP
-# 2006: Quick hack. S.Boran/FreeNAC
+#
+# contrib/gather1.pl
+#
+# Sean Boran, sometime in 2007
+#
+#  what can we query remotely to ID a windows box?
+#  First argument is the IP
+#
+# You'll need the NBName package, e.g. on Ubuntu:
+# apt-get install libnet-nbname-perl
+#
+###########################################################
+
+
+$verbose=0;            ## 1=humanreadable, 0=CSV for parsing
+
 
 # TBD: check that we do have an argumentr
-#$ip="193.5.227.11"; 
-$ip=$ARGV[0];
-print "Query=$ip: ";
+$ip=$ARGV[0];         #  e.g. 10.10.10.11
+
+if ($verbose==1) {print "Query=$ip: ";} else {print "$ip,";}
 
 use Net::NBName;
 my $nb = Net::NBName->new;
@@ -27,9 +39,19 @@ my $ns = $nb->node_status($ip);
                        }
                    }
                    $mac_address = $ns->mac_address;
-                   print "mac=$mac_address domain=$domain\\$machine user=$user";
+                   if ($verbose==1) {
+                     print "mac=$mac_address domain=$domain\\$machine user=$user\n";
+                   } else {
+                     print "$mac_address,$domain\\$machine,$user";
+                   }
+
+         } else {
+           if ($verbose==1) {
+             print "details=unknown\n";
+           } else {
+             print ",,";
+           }
          }
-         print "\n";
 
 
 
