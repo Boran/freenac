@@ -203,10 +203,10 @@ foreach ($systems as $router) {
           // if this mac has no associated name i.e. 'unknown', try to update its 'name'
           if ( $conf->router_mac_ip_update_from_dns ) {   // feature enabled?
             if (in_array($mac,$uk_mac)) {
-              $logger->debug("router_mac_ip_update_from_dns FQDN=$fqdn IP=$ip MAC=$mac", 1);
+              $logger->debug("router_mac_ip_update_from_dns FQDN=$fqdn IP=$ip MAC=$mac", 3);
               if((strlen($hostname_only)>0) && ($hostname_only != 'unknown')) { // We got the host name, now update it
                 $query2=", name='$hostname_only' ";
-                $logger->logit("Change name of $mac to its DNS name $hostname_only");
+                $logger->debug("Update name of $mac to DNS name $hostname_only", 2);
               }
             }
           }
