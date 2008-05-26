@@ -180,3 +180,10 @@ v3.0.0.159/13.May.08/SB:
   To use: delete [USERNAME].ini if there is one in your vmps folder. Start vmps.exe. Customise the grids
   the way you want (make columns visible, change width, orders etc.). Then do Admin > Save Layout.
   This save the layouts to USERNAME.ini and will be loaded automaticallly each time.
+  
+v3.0.0.160/21.May.08/SB:  
+  Add Helpdesk query button to Users page
+  ------------- Release FreeNAC v3.0.2 --------------
+
+  
+  
