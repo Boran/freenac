@@ -1,0 +1,479 @@
+
+======== Summary of Queries used in the Delphi Gui ==========================
+This is not a list of migration instructions, but a current list of queries used in
+the version of freenac indicated by the directory name. 
+
+--quConfig
+SELECT
+  config.id, config.type, config.name, config.value, 
+  config.comment, config.LastChange, config.who,
+  CONCAT(users.GivenName, ' ', users.Surname) as user
+  FROM config
+  LEFT JOIN users on config.who=users.id
+  ORDER BY name
+
+
+-- quPorts    
+SELECT DISTINCT port.id, switch, switch.ip as switchip, switch.name as SwitchName, 
+  default_vlan, last_vlan, v1.default_name as LastVlanName, 
+  port.name,  restart_now, port.comment, last_activity, 
+  ap1.method as VlanAuth,
+  auth_profile, staticvlan, 
+  port.last_monitored, port.up, port.shutdown,
+  CONCAT(switch.name, ' ', port.name) as switchport  
+  FROM port 
+  INNER JOIN switch     ON port.switch = switch.id 
+  LEFT  JOIN patchcable ON patchcable.port = port.id 
+  LEFT  JOIN location   ON patchcable.office = location.id   
+  LEFT  JOIN auth_profile ap1 ON ap1.id = port.last_auth_profile
+  LEFT  JOIN vlan v1    ON port.last_vlan = v1.id
+  ORDER BY SwitchName, port.name  
+      
+  LIMIT 3;
+  #Causes duplicates:
+  #CONCAT(patchcable.outlet, ' Office:', location.name, ', Note:',patchcable.comment) as PatchOfficeList  
+   
+UPDATE port
+  SET switch=:switch, default_vlan=:default_vlan,  name=:name, comment=:comment,
+      shutdown=:shutdown, restart_now=:restart_now, staticvlan=:staticvlan,
+      auth_profile=:auth_profile
+  WHERE id=:Old_id
+  
+  
+#Refresh SQL: 
+SELECT DISTINCT port.id AS _0, switch as _1, port.default_vlan AS _4,
+  port.name AS _5, port.restart_now AS _6, port.comment AS _7, 
+  port.last_vlan AS _8, port.last_activity AS _9 
+  FROM port
+  INNER JOIN switch     ON port.switch = switch.id 
+  LEFT  JOIN patchcable ON patchcable.port = port.id 
+  LEFT  JOIN location   ON patchcable.office = location.id    
+  WHERE port.id = :Old_1 
+    
+#SQLinsert:  
+INSERT INTO port
+    (switch,name,default_vlan,shutdown,restart_now,staticvlan,auth_profile,comment)
+  VALUES
+    (:switch,:name,:default_vlan,:shutdown,:restart_now,:staticvlan,:auth_profile,:comment)    
+
+#SQLdelete
+DELETE FROM port
+WHERE
+  id = :Old_1 
+
+  
+-- quSwitch
+SELECT switch.id, ip, switch.name, location, location.name as LocationName,
+  building.name as building, comment, swgroup, notify, vlan_id,
+  scan, scan3, hw, sw, last_monitored, up 
+  FROM switch 
+  LEFT JOIN location ON switch.location = location.id 
+  LEFT JOIN building ON location.building_id = building.id
+
+INSERT INTO switch
+    (ip,name,location,comment,swgroup,notify,scan,scan3,vlan_id)
+  VALUES
+    (:ip,:name,:location,:comment,:swgroup,:notify,:scan,:scan3,:vlan_id)
+
+UPDATE switch s
+  SET s.name=:name, s.comment=:comment, s.swgroup=:swgroup, s.notify=:notify, 
+  s.location=:location, s.scan=:scan, s.scan3=:scan3, s.vlan_id=:vlan_id
+  WHERE s.id=:Old_id
+  [The location updating is provided by a LookupCombox in Delphi]    
+  
+DELETE FROM switch
+  WHERE id=:Old_id
+
+
+  
+  
+-- quUsers
+SELECT id, username, GivenName, Surname, 
+  CONCAT(Surname, ', ', GivenName, ', ', username, ', ', Department) as  GivenNameSurname,
+  Department, rfc822mailbox, 
+  HouseIdentifier, PhysicalDeliveryOfficeName, TelephoneNumber, Mobile, 
+  LastSeenDirectory, nac_rights, manual_direx_sync, 
+  comment, GuiVlanRights, location
+  FROM users ORDER BY Surname, GivenName 
+  limit 1;  
+
+UPDATE users
+  SET username=:username, GivenName=:GivenName, Surname=:Surname, 
+  Department=:Department, rfc822mailbox=:rfc822mailbox, 
+  HouseIdentifier=:HouseIdentifier, PhysicalDeliveryOfficeName=:PhysicalDeliveryOfficeName, 
+  TelephoneNumber=:TelephoneNumber, Mobile=:Mobile, 
+  nac_rights=:nac_rights, manual_direx_sync=:manual_direx_sync, 
+  comment=:comment, location=:location
+  WHERE id=:Old_id  
+  
+#SQLrefresh:
+SELECT users.id AS _0, username AS _1, users.GivenName AS _2, users.Department AS _5, users.rfc822mailbox AS _6, users.HouseIdentifier AS _7, users.PhysicalDeliveryOfficeName AS _8, users.TelephoneNumber AS _9, users.Mobile AS _10, users.nac_rights AS _12, users.manual_direx_sync AS _13, users.comment AS _14, users.GuiVlanRights AS _15, users.Surname AS _3, users.LastSeenDirectory AS _11, users.location AS _16 FROM users
+WHERE users.id = :Old_1
+
+#SQLinsert:  
+INSERT INTO users    (username,GivenName,Surname,Department,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,TelephoneNumber,Mobile,nac_rights,manual_direx_sync,comment,location)
+  VALUES  (:username,:GivenName,:Surname,:Department,:rfc822mailbox,:HouseIdentifier,:PhysicalDeliveryOfficeName,:TelephoneNumber,:Mobile,:nac_rights,:manual_direx_sync,:comment,:location)
+
+INSERT INTO users    (username,GivenName,Surname,Department,rfc822mailbox,HouseIdentifier,PhysicalDeliveryOfficeName,TelephoneNumber,Mobile,nac_rights,manual_direx_sync,comment,location)
+  VALUES  (:username,:GivenName,:Surname,:Department,:rfc822mailbox,:HouseIdentifier,:PhysicalDeliveryOfficeName,:TelephoneNumber,:Mobile,:nac_rights,:manual_direx_sync,:comment,:location)
+      
+
+
+
+  
+-- quUserLookup   
+SELECT LastSeenDirectory, Surname, GivenName, Department, 
+   rfc822mailbox, HouseIdentifier, PhysicalDeliveryOfficeName, TelephoneNumber, 
+   Mobile, comment, location from users 
+   
+   
+
+-- quVlan
+SELECT id, default_id, default_name,   
+  vlan_description, vlan_group FROM vlan ORDER BY default_name 
+
+-- quVlanswitch  
+SELECT 
+  vid, swid, vlan_id, vlan_name,
+  vlan.default_name, switch.name
+  FROM vlanswitch   
+  INNER JOIN vlan   ON vlanswitch.vid = vlan.id   
+  INNER JOIN switch ON vlanswitch.swid = switch.id    
+SELECT 
+  vid, swid, vlan_id, vlan_name,
+  FROM vlanswitch    
+  
+  
+    
+    
+-- quSystems 
+SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_connect,
+  health.value AS HealthStatus, dhcp_fix, dhcp_ip, dns_alias,
+  v1.default_id as vlan_default_id, v1.id as vlanid,  v2.default_name as LastVlan,
+  v1.default_name as vlanname, v1.vlan_group as vlangroup, v1.vlan_description,
+  s.status, vstatus.value as statusname,
+  s.name, s.inventory, s.comment, 
+  s.mac, ChangeDate, LastSeen, building.name as building,
+  s.office, port.name as port, s.LastPort as portid, l2.name as PortLocation, port.comment as PortComment,
+  switch.ip as switch, switch.name as SwitchName, l3.name as SwitchLocation, switch.comment as SwitchComment,
+  CONCAT(patchcable.outlet, ', ', l2.name, ', ', patchcable.comment) as PatchCable, 
+  s.history,
+  users1.username as user_name,      users1.TelephoneNumber as UserTel,  
+  users1.Surname as UserSurname,     users1.GivenName as UserForename,    users1.Department as UserDept,
+  users1.rfc822mailbox as UserEmail, users1.HouseIdentifier as UserHouse, users1.PhysicalDeliveryOfficeName as UserOffice,
+  users1.Mobile as UserMobileTel,    users1.LastSeenDirectory as UserLastSeenDirex, 
+  users2.username as ChangeUser, 
+  CONCAT(users2.Surname, ' ', users2.GivenName, ' ', users1.Department) as ChangeUserFullName,
+  s.os, os.value as OsName, os1, os1.value as os1name, os2, os2.value as os2name, 
+  os3, os3.value as os3name, s.os4,
+  class, class2, cl1.value as ClassName, cl2.value as Class2Name,
+  scannow, s.expiry, r_ip, r_timestamp, r_ping_timestamp    
+  FROM systems s
+  LEFT JOIN vlan v1      on s.vlan = v1.id 
+  LEFT JOIN vlan v2      on s.LastVlan = v2.id   
+  LEFT JOIN vstatus      on s.status = vstatus.id
+  LEFT JOIN health       on s.health = health.id    
+  LEFT JOIN users users1 on s.uid = users1.id  
+  LEFT JOIN users users2 on s.ChangeUser = users2.id   
+  LEFT JOIN location l1  ON s.office = l1.id 
+  LEFT JOIN building     ON l1.building_id = building.id  
+  LEFT JOIN port         ON s.LastPort=port.id  
+  LEFT JOIN patchcable   ON patchcable.port = port.id   
+  LEFT JOIN location l2  ON patchcable.office = l2.id    
+  LEFT JOIN switch       ON port.switch = switch.id
+  LEFT JOIN location l3  ON switch.location = l3.id  
+  LEFT JOIN sys_os   os  ON s.os = os.id 
+  LEFT JOIN sys_os1  os1 ON s.os1 = os1.id   
+  LEFT JOIN sys_os2  os2 ON s.os2 = os2.id 
+  LEFT JOIN sys_os3  os3 ON s.os3 = os3.id       
+  LEFT JOIN sys_class  cl1 ON s.class  = cl1.id        
+  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id
+  limit 1 \G;  
+  
+# New 3.11.07
+SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_connect,
+  health.value AS HealthStatus, dhcp_fix, dhcp_ip, dns_alias,
+  v1.default_id as vlan_default_id, v1.id as vlanid,  v2.default_name as LastVlan,
+  v1.default_name as vlanname, v1.vlan_group as vlangroup, v1.vlan_description,
+  s.status, vstatus.value as statusname,
+  s.name, s.inventory, s.comment, 
+  s.mac, ChangeDate, LastSeen, building.name as building,
+  s.office, port.name as port, s.LastPort as portid, port.comment as PortComment,
+  switch.ip as switch, switch.name as SwitchName, l3.name as SwitchLocation, 
+  switch.swgroup, switch.comment as SwitchComment,
+  (SELECT CONCAT(patchcable.outlet, ', ', patchcable.comment) from patchcable WHERE patchcable.port = port.id LIMIT 1) as PatchCable,
+  s.history,
+  users1.username as user_name,      users1.TelephoneNumber as UserTel,  
+  users1.Surname as UserSurname,     users1.GivenName as UserForename,    users1.Department as UserDept,
+  users1.rfc822mailbox as UserEmail, users1.HouseIdentifier as UserHouse, users1.PhysicalDeliveryOfficeName as UserOffice,
+  users1.Mobile as UserMobileTel,    users1.LastSeenDirectory as UserLastSeenDirex, 
+  users2.username as ChangeUser, 
+  CONCAT(users2.Surname, ' ', users2.GivenName, ' ', users1.Department) as ChangeUserFullName,
+  s.os, os.value as OsName, os1, os1.value as os1name, os2, os2.value as os2name, 
+  os3, os3.value as os3name, s.os4,
+  class, class2, cl1.value as ClassName, cl2.value as Class2Name,
+  scannow, s.expiry, r_ip, r_timestamp, r_ping_timestamp    
+  FROM systems s
+  LEFT JOIN vlan v1      on s.vlan = v1.id 
+  LEFT JOIN vlan v2      on s.LastVlan = v2.id   
+  LEFT JOIN vstatus      on s.status = vstatus.id
+  LEFT JOIN health       on s.health = health.id    
+  LEFT JOIN users users1 on s.uid = users1.id  
+  LEFT JOIN users users2 on s.ChangeUser = users2.id   
+  LEFT JOIN location l1  ON s.office = l1.id 
+  LEFT JOIN building     ON l1.building_id = building.id  
+  LEFT JOIN port         ON s.LastPort=port.id    
+  LEFT JOIN switch       ON port.switch = switch.id
+  LEFT JOIN location l3  ON switch.location = l3.id  
+  LEFT JOIN sys_os   os  ON s.os = os.id 
+  LEFT JOIN sys_os1  os1 ON s.os1 = os1.id   
+  LEFT JOIN sys_os2  os2 ON s.os2 = os2.id 
+  LEFT JOIN sys_os3  os3 ON s.os3 = os3.id       
+  LEFT JOIN sys_class  cl1 ON s.class  = cl1.id        
+  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id
+  
+  
+  
+# 14.12.07
+SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_connect,
+  health.value AS HealthStatus, dhcp_fix, dhcp_ip, dns_alias,
+  v1.default_id as vlan_default_id, v1.id as vlanid,  v2.default_name as LastVlan,
+  v1.default_name as vlanname, v1.vlan_group as vlangroup, v1.vlan_description,
+  s.status, vstatus.value as statusname,
+  s.name, s.inventory, s.comment, 
+  s.mac, ChangeDate, LastSeen, building.name as building,
+  s.office, port.name as port, s.LastPort as portid, l2.name as PortLocation, port.comment as PortComment,
+  switch.ip as switch, switch.name as SwitchName, l3.name as SwitchLocation, 
+  switch.swgroup, switch.comment as SwitchComment,
+  CONCAT(patchcable.outlet, ', ', l2.name, ', ', patchcable.comment) as PatchCable, 
+  s.history,
+  users1.username as user_name,      users1.TelephoneNumber as UserTel,  
+  users1.Surname as UserSurname,     users1.GivenName as UserForename,    users1.Department as UserDept,
+  users1.rfc822mailbox as UserEmail, users1.HouseIdentifier as UserHouse, users1.PhysicalDeliveryOfficeName as UserOffice,
+  users1.Mobile as UserMobileTel,    users1.LastSeenDirectory as UserLastSeenDirex, 
+  users2.username as ChangeUser, 
+  CONCAT(users2.Surname, ' ', users2.GivenName, ' ', users1.Department) as ChangeUserFullName,
+  s.os, os.value as OsName, os1, os1.value as os1name, os2, os2.value as os2name, 
+  os3, os3.value as os3name, s.os4,
+  class, class2, cl1.value as ClassName, cl2.value as Class2Name,
+  scannow, s.expiry, r_ip, r_timestamp, r_ping_timestamp    
+  FROM systems s
+  LEFT JOIN vlan v1      on s.vlan = v1.id 
+  LEFT JOIN vlan v2      on s.LastVlan = v2.id   
+  LEFT JOIN vstatus      on s.status = vstatus.id
+  LEFT JOIN health       on s.health = health.id    
+  LEFT JOIN users users1 on s.uid = users1.id  
+  LEFT JOIN users users2 on s.ChangeUser = users2.id   
+  LEFT JOIN location l1  ON s.office = l1.id 
+  LEFT JOIN building     ON l1.building_id = building.id  
+  LEFT JOIN port         ON s.LastPort=port.id  
+  LEFT JOIN patchcable   ON patchcable.port = port.id   
+  LEFT JOIN location l2  ON patchcable.office = l2.id    
+  LEFT JOIN switch       ON port.switch = switch.id
+  LEFT JOIN location l3  ON switch.location = l3.id  
+  LEFT JOIN sys_os   os  ON s.os = os.id 
+  LEFT JOIN sys_os1  os1 ON s.os1 = os1.id   
+  LEFT JOIN sys_os2  os2 ON s.os2 = os2.id 
+  LEFT JOIN sys_os3  os3 ON s.os3 = os3.id       
+  LEFT JOIN sys_class  cl1 ON s.class  = cl1.id        
+  LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id
+  limit 1 \G;    
+     
+  
+UPDATE `systems` SET
+  uid=:uid, vlan=:vlan, status=:status, name=:name, inventory=:inventory, comment=:comment,
+  mac=:mac, office=:office, history=:history, os=:os, os1=:os1, os2=:os2, os3=:os3, os4=:os4,
+  class=:class, expiry=:expiry, class2=:class,
+  dhcp_ip=:dhcp_ip, dhcp_fix=:dhcp_fix, dns_alias=:dns_alias
+WHERE  
+  `id` = :Old_1
+
+INSERT INTO systems
+  (name,mac,status)
+VALUES
+  (:name,:mac,:status) 
+ 
+DELETE FROM systems
+  WHERE id = :Old_1  
+  
+      
+    
+-- quCable    PatchCables
+SELECT p.id, rack, rack_location, outlet, other as rack_outlet,
+  office, location.name as OfficeLocation, type, cabletype.name as cable_name,
+  port, p.comment, lastchange, expiry,
+  modifiedby, CONCAT(users.GivenName, ' ', users.Surname) as ChangedBy
+  FROM patchcable p
+  LEFT JOIN cabletype ON p.type = cabletype.id    
+  LEFT JOIN users    ON p.modifiedby = users.id
+  LEFT JOIN location ON p.office = location.id
+  LEFT JOIN port     ON p.port=port.id
+  ORDER BY outlet
+  LIMIT 4;  
+  #LEFT JOIN switch   ON port.switch = switch.id
+ 
+  
+UPDATE patchcable
+  SET rack=:rack, rack_location=:rack_location, outlet=:outlet, port=:port, modifiedby=:modifiedby,
+  other=:rack_outlet, office=:office, type=:type, comment=:comment, lastchange=:lastchange 
+  WHERE id=:Old_id      
+      
+  --- Notes on old & new field names:
+  nach_port=port 
+  nach_other=other  
+  von_he_dosen=rack_location 
+  von_office=office 
+  von_geb_sch=rack  
+  von_dose=outlet   
+  nach_network=type
+  visum=modifiedby   
+  bis_wann=expiry    
+  Deleted:   von_user  nach_switch
+
+
+
+quHistory [guilog]
+SELECT
+  datetime, priority, what, host, who,
+  CONCAT(users.GivenName, ' ', users.Surname) as user
+  FROM guilog
+  LEFT JOIN users on guilog.who=users.id
+  ORDER BY datetime DESC LIMIT 0,500
+  
+#SQLrefresh:
+SELECT
+  datetime, priority, what, host, who,
+  CONCAT(users.GivenName, ' ', users.Surname) as user
+  FROM guilog
+  LEFT JOIN users on guilog.who=users.id
+  ORDER BY datetime DESC LIMIT 0,500
+  
+  
+
+--- quLocation
+SELECT l.id, l.building_id, building.name as BuildingName, l.name as LocationName,
+  CONCAT(building.name, ' ', l.name) as LocationAndBuilding
+  FROM location l
+  INNER JOIN building on l.building_id = building.id  
+  ORDER BY building.name, l.name
+
+UPDATE location 
+  SET building_id=:building_id, name=:LocationName  WHERE id=:Old_id
+
+UPDATE switch s
+  SET s.name=:name, s.comment=:comment, s.swgroup=:swgroup, s.notify=:notify, 
+  s.location=:location
+  WHERE s.id=:Old_id   
+  [The location updating is provided by a LookupCombox in Delphi]  
+    
+#DeleteSQL:     
+DELETE FROM location
+  WHERE id = :Old_1  
+  
+#RefreshSQL: 
+SELECT l.id AS _0, l.building_id AS _1, building.name AS _2, l.name AS _3
+  FROM location l
+  INNER JOIN building on l.building_id = building.id  
+  WHERE l.id = :Old_1 
+  
+#InsertSQL:   
+INSERT INTO location (name,building_id)
+  VALUES             (:LocationName,:building_id)    
+    
+  
+  
+--- Wsus queries
+List the installed updates on a determined computer (sid=95):
+select u.title from nac_wsusupdate u inner join nac_wsusupdatestatuspercomputer uspc on uspc.updateid=u.localupdateid inner join nac_wsuscomputertarget ct on ct.TargetID=uspc.targetID inner join systems s on ct.sid=s.id and s.id=95;
+
+Characteristics of a determined system:
+select ct.ipaddress, ct.fulldomainname, om.OSLongName, ct.OsLocale as language, ct.ComputerMake, ct.ComputerModel, ct.BiosName from nac_wsuscomputertarget ct inner join nac_wsusosmap om on om.OSid=ct.OSid inner join systems s on ct.sid=s.id and s.id=95;
+
+
+    
+# End-devices not check by Wsus for more than 7 days, buut that were on the network in the last month.
+select ct.fulldomainname, ct.LastSyncTime, s.LastSeen as LastSeenLayer2, ct.ipaddress, om.OSLongName, ct.ComputerMake, ct.ComputerModel  from nac_wsuscomputertarget ct inner join nac_wsusosmap om on om.OSid=ct.OSid inner join systems s on ct.sid=s.id WHERE (TO_DAYS(LastSyncTime) < TO_DAYS(NOW())-7) AND (TO_DAYS(LastSeen) > TO_DAYS(NOW())-30) ORDER BY LastSyncTime
+  
+    SQL.Add('select ct.ipaddress, ct.fulldomainname, ct.LastSyncTime, ct.datetime, om.OSLongName, om.OSBuildNumber, ct.OsLocale as language, ct.ComputerMake, ct.ComputerModel, ct.BiosName ');
+New:
+     SQL.Add('select ct.ipaddress, ct.fulldomainname, ct.LastSyncTime, ct.datetime, om.OSLongName, om.OSBuildNumber, ct.OsLocale as language, ct.ComputerMake, ct.ComputerModel, ct.BiosName ');
+        
+    SQL.Add(' from nac_wsuscomputertarget ct inner join nac_wsusosmap om on om.OSid=ct.OSid inner join systems s on ct.sid=s.id and s.id='''
+      +dm0.quSystems.FieldByName('id').AsString
+      +'''');
+ 
+ 
+     SQL.Add('select ct.fulldomainname, ct.LastSyncTime as LastWsusCheck, s.LastSeen as LastSeenLayer2, ct.ipaddress, om.OSLongName, ct.ComputerMake, ct.ComputerModel  '
+      +' from nac_wsuscomputertarget ct inner join nac_wsusosmap om on om.OSid=ct.OSid inner join systems s on ct.sid=s.id '
+      +' WHERE (TO_DAYS(LastSyncTime) < TO_DAYS(NOW())-7) AND (TO_DAYS(LastSeen) > TO_DAYS(NOW())-30) ORDER BY LastSyncTime');
+
+    
+           
+     
+___  EPO ________________________  
+    SQL.Add('SELECT * from epo_systems WHERE sid='''
+      +dm0.quSystems.FieldByName('id').AsString   +''''); 
+      
+      lav3.Caption:='Last epo contact: '+FieldByName('lastepocontact').AsString;
+      lav1.Caption:='Engine Version: ' +FieldByName('virusenginever').AsString +' (newest=' +str1 +')';
+      lav2.Caption:='DAT Version:    '   +FieldByName('virusdatver').AsString +' (newest=' +str2 +')';
+      lav0.Caption:='Last FreeNAC/Epo sync: ' +FieldByName('lastsync').AsString;
+      lav4.Caption:='Computer Name: ' +FieldByName('nodename').AsString;
+      lav5.Caption:='DNS/IP Name:   ' +FieldByName('domainname').AsString;
+      lav6.Caption:='IP Address:    ' +FieldByName('ip').AsString;
+      lav7.Caption:='Last User:     ' +FieldByName('username').AsString;
+      lav10.Caption:='MB free disk: ' +FieldByName('freediskspace').AsString;
+
+      lav8.Caption:='from ePO: '      +FieldByName('username').AsString;
+      lav9.Caption:=FieldByName('nodename').AsString +', ' +FieldByName('ip').AsString;
+      
+
+New:      
+    SQL.Add('SELECT CONCAT_WS('',  '', ostype, osservicepackver, osbuildnum, LastUpdate) as '
+      +'os_version from epo_systems WHERE sid='''
+      +dm0.quSystems.FieldByName('id').AsString  +'''');
+            
+Report      
+     SQL.Add('SELECT nodename as ''Hostname'', domainname as ''Domain'', ip as ''IP Address'', ');
+     SQL.Add('lastepocontact as ''Last EPO contact'', agentversion as ''Agent Version'', virusver as ''Virus Scanner Version'', ');
+     SQL.Add('virushotfix as ''Virus Scanner Hotfix'', virusenginever as ''Engine Version'', virusdatver as ''DAT Version'', ');
+     SQL.Add('concat_ws('','', ostype, osversion, osservicepackver, osbuildnum) as ''Operating System'',  ');
+     SQL.Add('freediskspace as ''Mbyte left on root device'',  username as ''Last User'',  ');
+     SQL.Add('(SELECT LastSeen from systems where systems.id=sid) AS ''LastSeen'' from epo_systems ');
+     SQL.Add('WHERE (TO_DAYS(lastepocontact) < TO_DAYS(NOW())-7) order by LastSeen DESC');
+    
+
+_____________________________ NOTES _________
+
+procedure TfmInventory.gridPatchesDBTableView1CustomDrawCell(
+  Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  AColumnIndex, patchtype: integer;
+begin
+  with Sender do begin
+    AColumnIndex := gridPatchesDBTableView1TypeIndex.Index;
+    if VarIsNull(DataController.Values[AViewInfo.GridRecord.Index,AColumnIndex]) then begin
+      exit;
+    end else begin
+      patchtype:=DataController.Values[AViewInfo.GridRecord.Index,AColumnIndex];
+
+
+ ---Filter cxgrid	     ---
+  general filter: 
+     DataController.Filter.Active=true,	
+     DataController.Filter.PercentWildCardd=*    
+                          .Options.fcoCaseInsensitive=true
+                          .Options.AutoDataSetFilter=true  (overview)
+     DataController.Options.dcoAnsiSort=true       
+  FilterRow.Visible=true    Enable filter row at the top.
+  OptionsCustomize.ColumnHiding=true
+  OptionsCustomize.ColumnsQuickCustomization:=true
+  OptionsData.Editing=false           READONLY for reports /grid level
+      Options.Editing=false           READONLY on the field level
+  OptionsView.GroupByBox=false  
+       ColumnAutoWidth=true    
+       Navigator=true                 
+  NavigatorButtons.Edit.Enabled=true
+                        Visible=true
+
