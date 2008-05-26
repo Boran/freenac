@@ -8,6 +8,10 @@ This reports, but does not commit any changes.
 History of this Branch 3.0
 ===========================
 
+Version 3.02 create on 2008.05.26 from revision 1448 from SVN
+
+Contains several buf fixes, and improved and enhanced WebGui, new features added to the Web GUI (layer 3 scanning of switches)
+
 Version 3.01 created on 2008.01.21 from revision 1233 from SVN 
 
 Contains several bux fixes to version 3.0 as well as some changes to the Web GUI. See the detailed changelog for more information
