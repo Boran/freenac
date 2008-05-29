@@ -16,7 +16,6 @@ alter table switch modify column ap tinyint(4) default '0';
 alter table switch modify column scan tinyint(1) default '0';
 alter table switch modify column vlan_id int(11) default '0';
 alter table switch add column scan3 tinyint(1) default '0';
-ALTER TABLE switch ADD COLUMN vlan_id int default '0';
 --- Modifications to the port table ---
 alter table port modify column default_vlan int(11) default '0';
 alter table port modify column last_vlan int(11) default '0';
