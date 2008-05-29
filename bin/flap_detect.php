@@ -9,6 +9,9 @@
  *     and systems and send a detailed email to the switch notify person
  *     and conf->email_user, restart the port, and block a system, depending on the 
  *     vlan/system count.
+ *     Note: make sure you run this 7x24, since its measures the delta between calls.
+ *           so if it does not run from 22:00 to 06:00 for example, it may give a
+ *           false alert at 06:00.
  * program output: Send email alerts
  *
  * PHP version 5
@@ -30,13 +33,22 @@ $subject="FreeNAC port flapping";
 require_once "funcs.inc.php";               # Load settings & common functions
 require_once "snmp_defs.inc.php";
 
-$logger->setDebugLevel(1);
-$logger->setLogToStdOut();
+$logger->setDebugLevel(0);    # Default 0, 3 for maximum debugging
+#$logger->setLogToStdOut();
 
 $tmp1="$argv[0].tmp1";
 $message="";
 $logs="";
 
+## Count the number of VMPS authentications per switch-port
+## Example:
+#tail -2000 /var/log/messages | egrep 'vmpsd: (ALLOW|DENY)'|awk '{print $11, $12, $  13}'|sort | uniq -c
+#      1 192.168.245.106 port Fa0/1
+#      5 192.168.245.159 port 2/3
+#      1 192.168.245.159 port 2/35
+#      4 192.168.245.159 port 2/36
+#      2 192.168.245.159 port 2/37
+#      7 192.168.245.159 port 2/40
 # testing:
 #$tail="tail -500 /var/log/messages > $tmp1";
 $tail="/opt/nac/bin/logtail /var/log/messages /var/log/.messages.flap_detect > $tmp1";
@@ -61,11 +73,11 @@ function react($cnt, $switch, $port)
   $email_alert=true;
   db_connect();
 
-  msg("Flapping count=$cnt, switch=$switch $port \n");
+  msg("Flapping count=$cnt, switch=$switch $port\n");
   #$query="SELECT location,comment, (SELECT name FROM switch WHERE ip=switch), (SELECT notify FROM switch WHERE ip=switch) FROM inventory.port "
   #  . "WHERE switch='$switch' AND name='$port'";
   $query="select l.name, s.comment, s.name, s.notify from port p inner join switch s on p.switch=s.id and s.ip='$switch' and p.name='$port' inner join location l on l.id=s.location;";
-    #$logger->logit( $query);
+    $logger->debug($query, 2);
     $res = mysql_query($query);
     if (!$res) 
     { 
@@ -74,8 +86,8 @@ function react($cnt, $switch, $port)
     }
   $row=mysql_fetch_array($res, MYSQL_NUM);
 
-  msg("Location: $row[0] Description: $row[1]\n");
-  msg("Notify for $row[2]: $row[3]\n\n");
+  msg("Location: $row[0], Description: $row[1]\n");
+  msg("Email notify for $row[2]: $row[3]\n\n");
   $email_user=$row[3];
   $email_subject="$subject $row[2] port $port, Office $row[0]";
 
@@ -92,15 +104,12 @@ function react($cnt, $switch, $port)
       $regs=array();         
       #if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)", $line, $regs) ) {
       if (ereg("(.*) vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch $switch port $port", $line, $regs) ) {
-        #$logger->logit( "FOUND: {$regs[0]}\n");
         #$logger->logit( "FOUND: {$regs[1]} {$regs[2]} $regs[3]\n");
         $success=$regs[2];
         $mac=$regs[3];     $vlan=$regs[4];
         $details="$regs[1]";
         $mac2="$mac[0]$mac[1]$mac[2]$mac[3].$mac[4]$mac[5]$mac[6]$mac[7].$mac[8]$mac[9]$mac[10]$mac[11]";
-        #debug2("mac=$mac2 vlan=$vlan switch=$switch port=$port");
-        #$logger->logit("$regs[1] mac=$mac2 vlan=$vlan switch=$switch port=$port\n");
-        #$logger->logit("$regs[1] $mac2 vlan=$vlan\n");
+        $logger->debug("vmpsd log matches: details=$details mac=$mac2 vlan=$vlan (switch=$switch port=$port)", 2);
 
         #msg("$regs[1] $mac2 vlan=$vlan\n\n");
         $logs .= "$regs[1] $mac2 vlan=$vlan\n\n";
@@ -131,6 +140,7 @@ function react($cnt, $switch, $port)
   msg("System details:\n");
   foreach ($arr2 as $mac => $vlan) {
       $query="select s.name,s.comment,s.description,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
+        $logger->debug($query, 2);
         $res = mysql_query($query);
         if (!$res) 
         {
@@ -150,7 +160,7 @@ function react($cnt, $switch, $port)
     #msg("\nACTION: Only one system $mac stormed on this port, DECISION: automatically restart port\n\n\n");
     ## TBD: we could query the auth table for others, and use that to count vlans & decide?
     snmp_restart_port($port, $switch);
-    log2db('warn', "$email_subject: automatically restart port since $mac constantly re-authenticating");
+    log2db('warn', "$email_subject: automatically restart port since $mac frequently re-authenticating");
     
 
   } else if ( count($arr1) < 2 ) {   // only one vlan
@@ -176,7 +186,7 @@ function react($cnt, $switch, $port)
 
   foreach ($arr2 as $mac => $vlan) {
     if ($vlan != $best_vlan ) {
-       $query="select s.name,s.comment,s.description,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
+       $query="select s.name,s.comment,s.description AS obsolete1,l.name,s.r_ip,CONCAT(u.Givenname,' ',u.Surname,' ',u.Department,' ',u.Mobile) from systems s inner join users u on u.id=s.uid and s.mac='$mac' left join location l on l.id=s.office;";
         $res = mysql_query($query);
         if (!$res) 
         {
@@ -184,8 +194,7 @@ function react($cnt, $switch, $port)
            exit(1);
         }
       $row=mysql_fetch_array($res, MYSQL_NUM);
-      #$logger->logit("Problem: $row[0] $mac $row[4], User=$row[2], Office=$row[3] $row[2], $row[5]\n");
-      #msg("Problem: $row[0] $mac $row[4], User=$row[2], Office=$row[3] $row[2], $row[5]\n");
+      $logger->debug("Problem: $row[0] $mac $row[4], Office=$row[3] r_ip=$row[4], user=$row[5]", 2);
       msg("Problem: $row[0] $mac, $row[5]\n");
 
       // Lookup vlan groups
@@ -277,6 +286,7 @@ function react($cnt, $switch, $port)
           msg("\n\nThis alert was generated by: $argv[0]");
           if (strlen($conf->mail_user)>1) {
              debug1("Email alert to $email_user, {$conf->mail_user}");
+             #$logger->mailit($email_subject, $message,"$email_user,{$conf->mail_user}");
              $logger->mailit($email_subject, $message,"$email_user,{$conf->mail_user}");
 	  } else {
              debug1("Email alert to $email_user");
@@ -325,16 +335,26 @@ function react($cnt, $switch, $port)
   $answer=explode("\n", syscall("$cmd")); 
   #$logger->logit($cmd);
   for ($j = 0; $j < count($answer); $j++){
+      if ( empty($answer[$j]) )
+        continue;
       #$logger->logit("$answer[$j]\n");
-      #debug2($answer[$j]);
+      debug("answer=" .$answer[$j], 3);
 
       # 2 192.168.245.85 port Fa0/4
-      if (preg_match("/\s+(\d+) ([1-9\.]+) port (.*)/", $answer[$j], $matches)) {
-        debug2("count=$matches[1], switch=$matches[2], port=$matches[3]\n");
+      #if (preg_match("/\s+(\d+) ([1-9\.]+) port (.*)/", $answer[$j], $matches)) {
+      if (preg_match("/\s+(\d+) ([0-9\.]+) port (.*)$/", $answer[$j], $matches)) {
+
+        debug("match: count=$matches[1], switch=$matches[2], port=$matches[3]\n", 3);
         if ((int) $matches[1] > (int) $conf->flap_limit) {
           ## so now trawl the log entries in detail
+          $message='';      # empty the buffer
           react($matches[1], $matches[2], $matches[3]);
+
+        } else {
+          debug("OK: count below threshold " .$conf->flap_limit, 3);
         }
+      } else {
+        debug("answer not matched", 3);
       }
   }
 
