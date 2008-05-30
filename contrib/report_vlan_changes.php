@@ -39,6 +39,7 @@
 chdir(dirname(__FILE__));
 set_include_path("./:../");
 require_once "../bin/funcs.inc.php";
+chdir(dirname(__FILE__));
 
 $logger->setDebugLevel(0);
 $logger->setLogToStdOut(true);
