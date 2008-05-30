@@ -36,9 +36,9 @@
  * @link                                http://www.freenac.net
  *
  */
+chdir(dirname(__FILE__));
 set_include_path("./:../");
 require_once "../bin/funcs.inc.php";
-chdir(dirname(__FILE__));
 
 $logger->setDebugLevel(0);
 $logger->setLogToStdOut(true);
@@ -315,5 +315,6 @@ else
 
 $logger->debug("Sending report");
 if ( strlen($report_vlan_changes) > 0 )
-   $logger->mailit('VLAN changes as reported by report_vlan_changes.php', $report_vlan_changes);
+   #$logger->mailit('VLAN changes as reported by report_vlan_changes.php', $report_vlan_changes);
+   echo "$report_vlan_changes";
 ?>
