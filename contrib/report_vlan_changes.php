@@ -86,9 +86,11 @@ if ( count($systems_read) > 0 )
 $query =<<<EOF
 SELECT s.id, s.mac, s.name, u.username as changeuser,
        s.vlan,s.lastvlan,s.changedate,s.lastseen 
-       FROM systems s LEFT JOIN users u ON s.ChangeUser=u.id 
+       FROM systems s INNER JOIN port p ON s.lastport=p.id
+       LEFT JOIN users u ON s.ChangeUser=u.id 
        WHERE s.lastseen IS NOT NULL AND (s.status='1' or s.status='3') 
-       AND  DATE_SUB(CURDATE(), INTERVAL 1 DAY) <= s.LastSeen;
+       AND DATE_SUB(CURDATE(), INTERVAL 1 DAY) <= s.LastSeen
+       AND p.last_auth_profile='2';
 EOF;
 $logger->debug($query, 3);
 $res = mysql_query($query);
