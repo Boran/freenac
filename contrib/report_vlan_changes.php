@@ -315,6 +315,5 @@ else
 
 $logger->debug("Sending report");
 if ( strlen($report_vlan_changes) > 0 )
-   #$logger->mailit('VLAN changes as reported by report_vlan_changes.php', $report_vlan_changes);
-   echo "$report_vlan_changes";
+   $logger->mailit('VLAN changes as reported by report_vlan_changes.php', $report_vlan_changes);
 ?>
