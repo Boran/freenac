@@ -598,7 +598,9 @@ function add_entry($data)	//A new host in our network that needs to be added to 
    if ((!isset($data))||(!is_array($data)))
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
    $timestamp=date('Y-m-d H:i:s');
+   ## Interested only in systems whose IP address has been assignated in the last 3 hours.
    $res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);");
+   #$res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 24 HOUR);");
    $result=mysql_fetch_array($res,MYSQL_ASSOC);
    $sid=$result['id'];
    
@@ -649,6 +651,7 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
    }
    $logger->debug("Total number of hosts to scan: ".$list['counter']);
    $scan.=$hosts;		//Now our command line is complete
+   $logger->debug("scan=" .$scan, 3);
    syscall($scan);		//Scan
    return($list);
 }
@@ -702,7 +705,8 @@ function get_ips()	//This function will get some ips to scan
    $counter=0;
    if (($argc==2)&&($argv[1]=="--scannow"))
    {
-      $query="select id,r_ip,name from systems where scannow=1 and r_ip!='NULL' and r_ip!='' and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
+      $query="select id,r_ip,name from systems where scannow=1 and r_ip is not NULL and r_ip!='' and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
+      $logger->debug($query,3);
       $res=execute_query($query);
       check_and_abort("No systems have the flag \"scannow\" in the systems table\n",$res); 
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
@@ -735,7 +739,7 @@ function get_ips()	//This function will get some ips to scan
       {
          $device=validate($argv[$i]);
          if ($i==1)
-            $query="select id, r_ip,name from systems where r_ip!='NULL' and r_ip='$device'";
+            $query="select id, r_ip,name from systems where r_ip is not NULL and r_ip='$device'";
          else
             $query.=" or r_ip='$device'";
       }
@@ -780,11 +784,13 @@ function get_ips()	//This function will get some ips to scan
    }   
    else if ($argc==1)
    {
-      #$query="select lastseen,r_ip,mac,name from systems where r_ip!='NULL' and status=1 and lastseen!='NULL';";
+      #$query="select lastseen,r_ip,mac,name from systems where r_ip is not NULL and status=1 and lastseen!='NULL';";
       if ($conf->scan_unmanaged)
-         $query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip!='NULL' and status=1 or status=3 and lastseen!='NULL' and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
+         #$query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip is not NULL and status=1 or status=3 and lastseen is not NULL and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
+         $query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip is not NULL and (status=1 or status=3)  and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR) ORDER BY r_ip";
       else
-         $query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip!='NULL' and status=1 and lastseen!='NULL' and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
+         $query="select id,lastseen,r_ip,mac,name from systems where r_ip!='' and r_ip is not NULL and status=1 and lastseen is not null and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
+
       $res=execute_query($query);
       check_and_abort("No ip addresses to scan found in systems table.\n",$res);
       while ($result=mysql_fetch_array($res,MYSQL_ASSOC))
@@ -809,7 +815,7 @@ function get_ips()	//This function will get some ips to scan
    $devices['counter']=$counter;
    $devices['ip']=array_unique($devices['ip']);
    //We got some ips, let's see which ones are candidates to be scanned according to the info provided in the nac_netsallowed table
-   $query='select ip_address,ip_netmask,dontscan from subnets where scan=1;'; 
+   $query='select ip_address,ip_netmask,dontscan from subnets where scan=1 ORDER BY ip_address'; 
    $res1=execute_query($query);
    if ($res1)
    {
@@ -872,7 +878,8 @@ function get_ips()	//This function will get some ips to scan
             {
                $lastseen=$devices['lastseen'][$l];
                $diff=(int)date_diff($lastseen,$timestamp,$what_units_time);
-               if (($diff) && ($diff<=$time_threshold))
+               #if ( ($diff) && ($diff<=$time_threshold) )
+               if ( ($diff === 0) || ($diff <= $time_threshold) )
                {
 	          for ($k=0;$k<=$counter;$k++)
                   {
@@ -995,7 +1002,9 @@ function parse_scanfile($scan_file,$list)
                   else
                      $query.=" or ip='".$list['ip'][$i]."'";
                }
+               ## Interested only in systems whose IP address has been assigned in the last 3 hours.
                $query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
+               #$query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 24 HOUR);";
                $res=execute_query($query);
                if ($res)
                   while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
