@@ -256,7 +256,7 @@ if (is_array($switches))
          //In some switches, the string 'WS' is not found. This string tells us what the hardware is
          //If we don't find the hardware, at least let's update the software we found
          $logger->debug("($switchid) $switchip : HW = $hw / SW = $sw");
-         $query = "UPDATE switch SET hw='$hw',sw='$sw' WHERE id=$switchid;";
+         $query = "UPDATE switch SET last_monitored=now(), hw='$hw',sw='$sw' WHERE id=$switchid;";
          $success=mysql_query($query);
          if (! $success)
          {
@@ -290,7 +290,8 @@ if (is_array($switches))
                         $sid = mac_exist($mac['mac']);
                         if ($sid) 
                         {
-                           $query = "UPDATE systems SET LastPort='$portid', LastSeen=NOW() WHERE id=$sid;";
+                           #$query = "UPDATE systems SET LastPort='$portid', LastSeen=NOW() WHERE id=$sid;";
+                           $query = "UPDATE systems SET LastPort='$portid', lastvlan='" .get_vlanid($vlanid) ."', LastSeen=NOW() WHERE id=$sid;";
                            $logger->debug("($switchid) ". $switchrow['name'] ." - ".$mac['port']." - ".$mac['mac']." - update host ");
                         } 
                         else
