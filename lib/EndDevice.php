@@ -100,6 +100,12 @@ EOF;
 	    $this->db_row['in_db']=false;
             $this->db_row['health']=UNKNOWN;
 	 }
+         
+         # Save the result of vmpsd_external
+         if ( $object instanceof SyslogRequest )
+         {
+            $this->db_row['vmpsd_external_result'] = $object->vtp;    
+         }
 
          # This bit will be used for hub detection, if enabled
          if ($this->conf->detect_hubs && ($object instanceof VMPSRequest))
@@ -511,20 +517,36 @@ EOF;
    * Insert an EndDevice if it is not in the DB
    * @return boolean	True if something was inserted into the DB, false otherwise
    */
-   public function insertIfUnknown()
+   public function insertIfUnknown($vlan_to_assign = 0)
    {
-      if ($this->check_calling_method() && !$this->inDB() && $this->port_id)
+      if ($this->check_calling_method() && !$this->inDB() && $this->port_id )
       {
-         #Normal case
-         $query=<<<EOF
-            INSERT INTO systems SET lastseen=NOW(), 
-            status='{$this->conf->set_status_for_unknowns}', 
-            name='unknown', vlan='{$this->conf->set_vlan_for_unknowns}',
-            lastport='{$this->port_id}', 
-            office='{$this->office_id}', 
-            description='{$this->conf->default_user_unknown}', uid='1', 
-            health='{$this->health}', mac='{$this->mac}';
+         if ( is_int($vlan_to_assign) && ($vlan_to_assign > 0) && (strcmp($this->vmpsd_external_result,"ALLOW")===0) )
+            # A vlan has been specified as a parameter to this function, and the system has been authorized, yet it's not in the db
+            $query=<<<EOF
+               INSERT INTO systems SET lastseen=NOW(), 
+               status='1', 
+               name='unknown', 
+               vlan='$vlan_to_assign', 
+               lastvlan='$vlan_to_assign',
+               lastport='{$this->port_id}', 
+               office='{$this->office_id}', 
+               description='{$this->conf->default_user_unknown}', uid='1', 
+               health='{$this->health}', mac='{$this->mac}';
 EOF;
+         else
+            #Normal case
+            $query=<<<EOF
+               INSERT INTO systems SET lastseen=NOW(), 
+               status='{$this->conf->set_status_for_unknowns}', 
+               name='unknown', 
+               vlan='{$this->conf->set_vlan_for_unknowns}',
+               lastport='{$this->port_id}', 
+               office='{$this->office_id}', 
+               description='{$this->conf->default_user_unknown}', uid='1', 
+               health='{$this->health}', mac='{$this->mac}';
+EOF;
+         
          $this->logger->debug($query,3);
          $res=mysql_query($query);
 	 if ($res)
