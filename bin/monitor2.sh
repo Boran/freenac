@@ -12,7 +12,7 @@
 # 
 # 
 
-subject="FreeNAC warning: switch communication"
+subject="FreeNAC notice: switch communication"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 tempfile2=/tmp/monitor2.$$
 
@@ -34,7 +34,7 @@ if [ -s $tempfile2 ] ; then
   MAIL_RECIPIENT=`/opt/nac/bin/config_var.php mail_user`
   if [ -n "$MAIL_RECIPIENT" ]
   then
-     mailx -s "`uname -n` $subject" "$MAIL_RECIPIENT" < $tempfile2
+     mailx -s "$subject (`uname -n`)" "$MAIL_RECIPIENT" < $tempfile2
   else
      echo "No mail_user value has been defined in the config table, dumping report on screen"
      cat $tempfile2
