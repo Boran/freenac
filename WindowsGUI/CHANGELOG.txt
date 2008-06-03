@@ -185,5 +185,9 @@ v3.0.0.160/21.May.08/SB:
   Add Helpdesk query button to Users page
   ------------- Release FreeNAC v3.0.2 --------------
 
-  
+v3.0.0.161/03.Jun.08/SB:  
+  Edit > Last Update: The user name and date was not being saved correctly.
+    Also, after changing the record, hit refresh to update the visual of this info.
+    (quSystems2 Query and Update SQL were fixed)
+    
   
