@@ -119,12 +119,15 @@ if ( count($systems) > 0 )
 
 ## Report when a system has been placed in a different vlan to the one assigned to it
 $lastvlan_differs_from_vlan = array();
+$now = date('Y-m-d H:i:s');
 
 foreach ( $systems as $system )
 {
    ## For systems that have been placed in a different vlan than the one they normally use,
    ## report only systems that are only on dynamic ports, since they will appear in the logs
-   if ( ( $system['last_auth_profile'] == 2 ) && ( $system['lastvlan'] != $system['vlan'] ) )
+   ## and that have been placed in that vlan in the last hour
+   if ( ( $system['last_auth_profile'] == 2 ) && ( $system['lastvlan'] != $system['vlan'] ) && 
+	( $now !== false ) && (time_diff($system['lastseen'],$now)<=3600) )
    {
       $lastvlan_differs_from_vlan[] = $system;
    }
@@ -135,30 +138,6 @@ if ( count($lastvlan_differs_from_vlan) > 0 )
    $logger->debug("There are some systems whose lastvlan differs from their assigned vlan");
    $logger->debug("LASTVLAN != VLAN\n", 3);
    $logger->debug(print_r($lastvlan_differs_from_vlan, true), 3);
-}
-
-#Lookup vlan names
-$logger->debug("Retrieving vlan names to generate report");
-$vlan_names = NULL;
-$query = "SELECT id, default_name FROM vlan";
-$res = mysql_query($query);
-if ( ! $res )
-{
-   $logger->logit(mysql_error(), LOG_ERR);
-}
-else
-{
-   while ( $row = mysql_fetch_array($res, MYSQL_ASSOC) )
-   {
-      $vlan_names[$row['id']] = $row['default_name'];
-   }
-}
-
-if ( count($vlan_names) > 0 )
-{
-   $logger->debug("Vlan names successfully retrieved");
-   $logger->debug("VLANS READ FROM DATABASE\n", 3);
-   $logger->debug(print_r($vlan_names, true), 3);
 }
 
 ##Report systems whose vlan has changed
@@ -194,6 +173,33 @@ if ( is_array($systems_read) )
             break;
          }
       }
+   }
+}
+
+if ( (count($vlan_changed)>0) || (count($lastvlan_differs_from_vlan)>0) )
+{
+   #Lookup vlan names
+   $logger->debug("Retrieving vlan names to generate report");
+   $vlan_names = NULL;
+   $query = "SELECT id, default_name FROM vlan";
+   $res = mysql_query($query);
+   if ( ! $res )
+   {
+      $logger->logit(mysql_error(), LOG_ERR);
+   }
+   else
+   {
+      while ( $row = mysql_fetch_array($res, MYSQL_ASSOC) )
+      {
+         $vlan_names[$row['id']] = $row['default_name'];
+      }
+   }
+
+   if ( count($vlan_names) > 0 )
+   {
+      $logger->debug("Vlan names successfully retrieved");
+      $logger->debug("VLANS READ FROM DATABASE\n", 3);
+      $logger->debug(print_r($vlan_names, true), 3);
    }
 }
 
@@ -317,7 +323,9 @@ if ( $file )
 else
    $logger->logit("Error while trying to write data to file", LOG_ERR);
 
-$logger->debug("Sending report");
 if ( strlen($report_vlan_changes) > 0 )
+{
+   $logger->debug("Sending report");
    $logger->mailit('VLAN changes as reported by report_vlan_changes.php', $report_vlan_changes);
+}
 ?>
