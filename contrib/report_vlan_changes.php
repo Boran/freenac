@@ -279,7 +279,7 @@ if ($counter > 0)
 
 if ( count($lastvlan_differs_from_vlan) > 0 )
 {
-   $report_vlan_changes .= "In the last 24 hours, the following systems have been placed in a vlan which is different from the one assigned to them (lastvlan != vlan).\n\n";
+   $report_vlan_changes .= "In the last hour, the following systems have been placed in a vlan which is different from the one assigned to them (lastvlan != vlan).\n\n";
    foreach ( $lastvlan_differs_from_vlan as $system )
    {
       ##Transform the vlan id in vlan name
