@@ -189,5 +189,6 @@ v3.0.0.161/03.Jun.08/SB:
   Edit > Last Update: The user name and date was not being saved correctly.
     Also, after changing the record, hit refresh to update the visual of this info.
     (quSystems2 Query and Update SQL were fixed)
-    
+v3.0.0.162/10.Jun.08/SB:     
+  Switch > IP address could not be edited.
   
