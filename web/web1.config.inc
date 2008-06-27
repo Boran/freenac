@@ -26,6 +26,7 @@ date_default_timezone_set('CET');
   // only ad_auth and anon_auth work at this stage.
   $ad_auth=true;       # apache does the domain login for us
   $anon_auth=false;     # No auth all aal, rely on Apache IP access control, or Firewall!
+  $zend_auth=false;     # 
 
   // SQL & drupal auth: alpha stuff
   $sql_auth=false;       # lookup users from mysql
