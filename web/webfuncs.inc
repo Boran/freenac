@@ -730,7 +730,8 @@ EOF;
 */
 function main_menu()
 {
-  global $logger, $_SESSION, $anon_auth;
+  global $logger, $_SESSION, $anon_auth, $conf;
+
   if (! isset($_SESSION['nac_rights']) || ($_SESSION['nac_rights']=='')) {
     $logger->debug("main_menu() nac_rights not set: ignore & do not show menu", 2);
     return;
@@ -811,6 +812,8 @@ EOF;
      <a href="hubs.php" title="List ports with more than one end-device">Hub finder</a><br/>
      <a href="graphswitch.php" title="Graphs cables/ports recently used for one switch">Switch port diagram: single switch</a><br/>
      <a href="graphswitchall.php" title="Graphs cables/ports recently used for all switches">Switch port diagram: all switches</a><br/>
+
+     <a href="report_listports22.php" title="List all systems scanned with port 22 open">Beta: Discovered SSH servers</a><br/>
   </div>
 </div></td>
 EOF;
@@ -831,6 +834,14 @@ EOF;
             <a href="user.php">Users</a><br/>
             <a href="location.php">Locations</a><br/>
             <a href="nmapsubnet.php">Subnets </a><br/>
+EOF;
+
+   if ( $conf->web_showdns==1 )    // helpdesk_mode: keep menus minimal
+     $text.=<<<EOF
+            <a href="ip.php">Beta: IP Management - DNS</a><br/>
+EOF;
+
+   $text.=<<<EOF
             <a href="class1.php">Device Class1</a><br/>
             <a href="class2.php">Class2</a></li>
 </div>
