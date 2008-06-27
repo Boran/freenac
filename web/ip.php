@@ -53,7 +53,7 @@ else if ($_SESSION['nac_rights']==99) {
 }
 
 // set parameters   fro gui_control.php
-$title="IP Address management (beta: Test data from the Seclab)";
+$title="IP Address management - for DNS";
 $sortlimit=200;
 $sortby='address';
 $order_dir='ASC';
@@ -70,6 +70,7 @@ SELECT
   ip.source AS 'IP Source', 
   ip.comment as 'IP Comment',
   s.name AS 'Sys Name', s.r_ip AS 'Sys Last IP',
+  s.r_timestamp as 'Sys Timstamp',
   ip.system AS 'Sys Idx', 
   subnets.ip_address AS 'Subnet',
   subnets.ip_netmask AS 'Mask',
