@@ -842,6 +842,7 @@ EOF;
 EOF;
 
    $text.=<<<EOF
+            <a href="ethernet.php">Ethernet vendor prefixes</a><br/>
             <a href="class1.php">Device Class1</a><br/>
             <a href="class2.php">Class2</a></li>
 </div>
