@@ -39,15 +39,15 @@ else if ($_SESSION['nac_rights']==1) {
   $action_menu=array('View');   // no options
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('Print','Edit');   // 'buttons' in action column
+  $action_menu=array('View','Edit');   // 'buttons' in action column
 }
 else if ($_SESSION['nac_rights']==4) {
   $action_menu='';
-  $action_menu=array('Print','Edit');   // 'buttons' in action column
+  $action_menu=array('View','Edit');   // 'buttons' in action column
 }
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
-  $action_menu=array('Print', 'Edit', 'Delete');   // 'buttons' in action column
+  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
 } else {
   throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }
@@ -67,6 +67,7 @@ $q=<<<TXT
 SELECT
   INET_NTOA(ip.address) AS 'IP Address',
   ip.status, 
+  ip.dns_update AS 'Dns update', 
   ip.source AS 'IP Source', 
   ip.comment as 'IP Comment',
   s.name AS 'Sys Name', s.r_ip AS 'Sys Last IP',
