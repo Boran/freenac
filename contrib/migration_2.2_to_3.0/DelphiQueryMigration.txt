@@ -229,9 +229,10 @@ SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_conn
   LEFT JOIN sys_class  cl1 ON s.class  = cl1.id        
   LEFT JOIN sys_class2 cl2 ON s.class2 = cl2.id
   
+
   
   
-# 14.12.07
+# 14.12.07, 3.6.08
 SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_connect,
   health.value AS HealthStatus, dhcp_fix, dhcp_ip, dns_alias,
   v1.default_id as vlan_default_id, v1.id as vlanid,  v2.default_name as LastVlan,
@@ -248,12 +249,13 @@ SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_conn
   users1.Surname as UserSurname,     users1.GivenName as UserForename,    users1.Department as UserDept,
   users1.rfc822mailbox as UserEmail, users1.HouseIdentifier as UserHouse, users1.PhysicalDeliveryOfficeName as UserOffice,
   users1.Mobile as UserMobileTel,    users1.LastSeenDirectory as UserLastSeenDirex, 
-  users2.username as ChangeUser, 
+  ChangeUser, users2.username as ChangeUserName, 
   CONCAT(users2.Surname, ' ', users2.GivenName, ' ', users1.Department) as ChangeUserFullName,
   s.os, os.value as OsName, os1, os1.value as os1name, os2, os2.value as os2name, 
   os3, os3.value as os3name, s.os4,
   class, class2, cl1.value as ClassName, cl2.value as Class2Name,
-  scannow, s.expiry, r_ip, r_timestamp, r_ping_timestamp    
+  scannow, s.expiry, r_ip, r_timestamp, r_ping_timestamp  
+    
   FROM systems s
   LEFT JOIN vlan v1      on s.vlan = v1.id 
   LEFT JOIN vlan v2      on s.LastVlan = v2.id   
@@ -280,7 +282,7 @@ SELECT s.id, s.uid, vlan, s.last_hostname, last_nbtname, last_uid, email_on_conn
 UPDATE `systems` SET
   uid=:uid, vlan=:vlan, status=:status, name=:name, inventory=:inventory, comment=:comment,
   mac=:mac, office=:office, history=:history, os=:os, os1=:os1, os2=:os2, os3=:os3, os4=:os4,
-  class=:class, expiry=:expiry, class2=:class,
+  class=:class, expiry=:expiry, class2=:class, ChangeUser=:ChangeUser, ChangeDate=:ChangeDate,
   dhcp_ip=:dhcp_ip, dhcp_fix=:dhcp_fix, dns_alias=:dns_alias
 WHERE  
   `id` = :Old_1
