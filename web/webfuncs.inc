@@ -133,7 +133,7 @@ TEXT;
 //  if (trim(document.getElementById('name').value)== \'\') {
 $js1=<<<TEXT
 <script type="text/javascript"> 
-// TBD: Both of these are stil early prototypes,,,,
+// TBD: Both of these are still early prototypes,,,,
 //
 // Alert if field n on form f is less than l chars
 function checkLen(f,len)
@@ -888,7 +888,7 @@ EOF;
   <a href="http://freenac.net/en/community?q=en/techguide">Technical Guide</a><br/>
   <a href="http://freenac.net/en/community?q=en/support/faqs">FAQ</a><br/>
   <a href="http://freenac.net/phpBB2/">FreeNAC Forum</a><br/>
-  <a href="http://freenac.net/en/community">FreeNAC Website</a><br/>
+  <a href="http://freenac.net/">FreeNAC Website</a><br/>
 </div>
 </div></td>
 EOF;

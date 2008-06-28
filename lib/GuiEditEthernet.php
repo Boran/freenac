@@ -4,7 +4,7 @@
  * GuiEditEthernet.php
  *
  * Long description for file:
- * Allow End-Device records to edited, deleted or inserted.
+ * Allow records to edited, deleted or inserted.
  * Specific to the FreeNAC DB schema.
  *
  * @package     FreeNAC
@@ -80,7 +80,7 @@ class GuiEditEthernet extends WebCommon
 
        
       } else if ($action==='Add') {
-        if (isset($_REQUEST['name']) && isset($_REQUEST['mac']) ) {
+        if (isset($_REQUEST['vendor']) && isset($_REQUEST['mac']) ) {
           $this->print_title("New {$this->module} record");  // Add step2
           echo $this->UpdateNew();
         } else {        // Add Step1
@@ -115,7 +115,7 @@ class GuiEditEthernet extends WebCommon
     $this->debug("Delete() index {$device}", 3);
 
     //$q="DELETE FROM ethernet WHERE id={$device} LIMIT 1";     // only this record
-    $q="DELETE FROM ethernet WHERE mac={$device} LIMIT 1";     // only this record
+    $q="DELETE FROM ethernet WHERE mac='{$device}' LIMIT 1";     // only this record
       $this->debug($q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
@@ -124,12 +124,12 @@ class GuiEditEthernet extends WebCommon
       // Inform the user that is was OK
       $txt=<<<TXT
 <p class='UpdateMsgOK'>Delete Successful</p>
- <br><p > Go back to the <a href="{$_SESSION['caller']}">End-Device list</a></p>
+ <br><p > Go back to the <a href="{$_SESSION['caller']}">{$this->module} list</a></p>
 </div>
 TXT;
       echo $txt;
-      $this->logit("Deleted {$this->module} with Index {$device}");
-      $this->loggui("Deleted {$this->module} with Index {$device}");
+      $this->logit("Deleted {$this->module} with Mac Prefix {$device}");
+      $this->loggui("Deleted {$this->module} with Mac Prefix {$device}");
 
   }
 
@@ -161,7 +161,7 @@ TXT;
       if ($res === FALSE)
         throw new DatabaseInsertException($conn->error);
 
-      echo "<p class='UpdateMsgOK'>Successful: new {$this->module} $vendor/$mac added</p>";
+      echo "<p class='UpdateMsgOK'>Successful: new {$this->module} $name/$mac added</p>";
 
       // after inserting, locate that record, and show the Update() screen.
       $res = $conn->query("SELECT mac,vendor from ethernet where mac='" .$mac ."'");
@@ -172,7 +172,7 @@ TXT;
         $this->id=$row['mac'];
       }
 
-      $this->loggui("new {$this->module} $vendor, mac=$mac added");
+      $this->loggui("new {$this->module} $name, mac=$mac added");
 
       // locate that record, and show the Update() screen.
       $ref=$this->calling_script. "?action=Edit&action_idx=$this->id";
@@ -243,7 +243,7 @@ TXT;
       throw new InsufficientRightsException($_SESSION['nac_rights']);
 
     $conn=$this->getConnection();     //  make sure we have a DB connection
-    $this->debug("EditEthernet::Add() ", 3);
+    $this->debug("Add() ", 3);
     $output ='<form name="formadd" action="' .$_SERVER['PHP_SELF'] .'" method="POST">';
     $output.= "\n$js1\n <table id='GuiEditDeviceAdd'>";
 
@@ -256,7 +256,7 @@ TXT;
             <td width="400"> <input name="vendor" type="text" value="{$vendor}" onBlur="checkLen(this,1)">
         </td></tr>
         <tr><td width="87"  title="Enter a valid 4 digit hex MAC prefix, in the format xxxx ">MAC prefix:</td>
-            <td width="400"> <input name="mac" type="text" value="{$mac}" onBlur="checkLen(this,14) ">
+            <td width="400"> <input name="mac" type="text" value="{$mac}" onBlur="checkLen(this,4) ">
         </td></tr>
 TXT;
         // Status

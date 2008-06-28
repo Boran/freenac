@@ -45,7 +45,7 @@ else if ($_SESSION['nac_rights']==4) {
   $action_menu=array('View','Edit');   // 'buttons' in action column
 }
 else if ($_SESSION['nac_rights']==99) {
-  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
+  $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
 } else {
   throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }
