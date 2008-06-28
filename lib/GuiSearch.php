@@ -21,7 +21,7 @@ class GuiSearch extends WebCommon
   {
     parent::__construct(false);     // See also WebCommon and Common
     $this->logger->setDebugLevel($debug_level);
-    $this->debug("GuiSearch__construct id=$id, debug=$debug_level, action=$action", 2);
+    $this->debug("GuiSearch__construct, debug=$debug_level, action=$action", 2);
 
     // verify/clean 'action'
     // Now, have we a REQUEST action to carry out?
@@ -70,7 +70,8 @@ class GuiSearch extends WebCommon
     // Clean inputs from the web, (security). Use _REQUEST to
     // allow both GET (automation) or POST (interactive GUIs)
     $_REQUEST=array_map('validate_webinput',$_REQUEST);
-    $cur_mac=$this->htmlescape($_REQUEST['searchstring']);
+    if (isset($_REQUEST['searchstring']))
+      $cur_mac=$this->htmlescape($_REQUEST['searchstring']);
     $cur_mac= empty($cur_mac) ? '0006.5bdd.a929' : $cur_mac;
 
     $output=<<<TXT
@@ -80,7 +81,7 @@ class GuiSearch extends WebCommon
   <td width="400"> <input name="searchstring" type="text" value="{$cur_mac}"/></td>
 </tr>
 <tr>
-  <td><input type="submit" name="action" class="bluebox" value="Search" 
+  <td><input type="submit" name="action" class="bluebox" value="Find" 
    title='Find devices with this mac, which can be in 3 formats XXX.XXX.XXX XXXXXXXXXXXX or XX:XX:XX:XX:XX:XX'/> </td>
 </tr>
 </form>
