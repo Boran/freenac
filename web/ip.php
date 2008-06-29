@@ -42,6 +42,8 @@ else if ($_SESSION['nac_rights']==2) {
   // TBD: testingDA only:
   $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
   //$action_menu=array('View','Edit');   // 'buttons' in action column
+  $action_confirm=array('', '', '', 'Really DELETE the record for this IP?');  // Confirm Deletes
+
 }
 else if ($_SESSION['nac_rights']==4) {
   $action_menu='';
@@ -50,6 +52,8 @@ else if ($_SESSION['nac_rights']==4) {
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
   $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
+  $action_confirm=array('', '', '', 'Really DELETE the record for this IP?');  // Confirm Deletes
+
 } else {
   throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }

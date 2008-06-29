@@ -78,12 +78,15 @@ class GuiEditIp extends WebCommon
 
        
       } else if ($action==='Add') {
-        if (isset($_REQUEST['vendor']) && isset($_REQUEST['mac']) ) {
-          $this->print_title("New {$this->module} record");  // Add step2
+        if (isset($_REQUEST['address']) && isset($_REQUEST['comment']) ) {
+	  // Add step2
+          $this->print_title("New {$this->module} record");  
           echo $this->UpdateNew();
+
         } else {        // Add Step1
           $this->print_title("Add new {$this->module}");
-          echo $this->Add();
+          #echo $this->Add();
+          echo $this->query(false);    // update_mode=false
         }
         echo $this->print_footer();
        
@@ -150,24 +153,19 @@ TXT;
       // TBD: call validate_input?
       $q="INSERT INTO ip SET  ";
 
-      if (( isset($_REQUEST['address']) ) && is_numeric ($_REQUEST['address']) ) {
-        $q.=", address="  .$_REQUEST['address'] ;
+      if ( ! isset($_REQUEST['address']) )  
+        throw new DatabaseInsertException("- No address value");
+      //if ( ! is_numeric($_REQUEST['address']) ) 
+      //  throw new DatabaseInsertException("- Address is not numeric");
+
         $address=$_REQUEST['address'];
-      } else {
-        throw new DatabaseInsertException("No address.");
-      }
-      if (( isset($_REQUEST['subnet']) ) && is_numeric ($_REQUEST['subnet']) )
-        $q.=", subnet="  .$_REQUEST['subnet'] ;
-      if (( isset($_REQUEST['status']) ) && is_numeric ($_REQUEST['status']) )
-        $q.=", status="  .$_REQUEST['status'] ;
-      if ( isset($_REQUEST['comment']) )
-        $q.=", comment='" .$this->sqlescape($_REQUEST['comment']) ."'";
-      if (( isset($_REQUEST['system']) ) && is_numeric ($_REQUEST['system']) )
-        $q.=", system="  .$_REQUEST['system'] ;
-      if ( isset($_REQUEST['source']) )
-        $q.=", source='" .$this->sqlescape($_REQUEST['source']) ."'";
-      if (( isset($_REQUEST['dns_update']) ) && is_numeric ($_REQUEST['dns_update']) )
-        $q.=", dns_update="  .$_REQUEST['dns_update'] ;
+        $q.=" address=INET_ATON('{$_REQUEST['address']}') ";
+        if (isset($_REQUEST['subnet']))  $q.=", subnet={$_REQUEST['subnet']} ";
+        if (isset($_REQUEST['status']))  $q.=", status={$_REQUEST['status']} ";
+        if (isset($_REQUEST['comment'])) $q.=", comment='{$_REQUEST['comment']}' ";
+        if (isset($_REQUEST['system']))  $q.=", system={$_REQUEST['system']} ";
+        if (isset($_REQUEST['source']))  $q.=", source='{$_REQUEST['source']}' ";
+        if (isset($_REQUEST['dns_update'])) $q.=", dns_update={$_REQUEST['dns_update']} ";
 
 
       $this->debug("UpdateNew() $q", 3);
@@ -185,13 +183,12 @@ TXT;
         $this->id=$row['id'];
       }
 
-      $this->loggui("new {$this->module} $name, address=$address added");
+      $this->loggui("new {$this->module} id={$row['id']} address=$address added");
 
       // locate that record, and show the Update() screen.
-      $ref=$this->calling_script. "?action=Edit&action_idx=$this->id";
-      #echo $ref;
-      #$this->debug($ref); 
-      echo "<p class='UpdateMsgOK'>Now review/update the <a href='$ref'>{$this->module} details</a></p>";
+      $ref0=$this->calling_script;
+      $ref1=$ref0. "?action=Edit&action_idx=$this->id";
+      echo "<br><p>Now review/update the <a href='{$ref1}'>{$this->module} details</a> or go back to the <a href='{$ref0}'>{$this->module} list</a></p>";
 
     } catch (Exception $e) {
       throw $e;
@@ -273,7 +270,7 @@ TXT;
     $comment='Added from WebGUI'; 
     try {
 
-        // Name, MAC
+        // Name
         $output.=<<<TXT
         <tr><td width="87"  title="Enter a valid IP address, in the format W.X.Y.Z ">IP Address:</td>
             <td width="400"> <input name="address" type="text" value="" onBlur="checkLen(this,4) ">
@@ -308,7 +305,7 @@ TXT;
    * Display a record, allow changes.
    * Next Step is Either Update, Delete, or Restart Port
    */
-  public function query()
+  public function query($update_mode=TRUE)
   {
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
@@ -318,21 +315,35 @@ TXT;
     #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="GET">'; //debugging
     $output.="<table id='t3' width='760' border='0' class='text13'>";
 
-$q=<<<TXT
+    try {
+
+      if ($update_mode) {
+        $q=<<<TXT
 SELECT id,INET_NTOA(address) AS address,subnet,status,comment,system,source,dns_update from ip
   WHERE id='{$this->id}'
   LIMIT 1
 TXT;
+        $this->debug("Editip::query() $q", 3);
+        $res = $conn->query($q);
+        if ($res === FALSE)
+          throw new DatabaseErrorException($conn->error);
 
-    try {
-      $this->debug("Editip::query() $q", 3);
-      $res = $conn->query($q);
-      if ($res === FALSE)
-        throw new DatabaseErrorException($conn->error);
+        // Title: Grab the list of field names
+        #$fields=$res->fetch_fields();
+        #while (($row = $res->fetch_assoc()) !== NULL) {
+        $row = $res->fetch_assoc();
 
-      // Title: Grab the list of field names
-      $fields=$res->fetch_fields();
-      while (($row = $res->fetch_assoc()) !== NULL) {
+      } else { 
+        // add mode, only show defaults 
+        $row['address']='';
+        $row['comment']='';
+        $row['subnet']=0;
+        $row['id']=0;
+        $row['source']='';
+        $row['system']=0;
+      }
+
+      # Display the record:
         #$this->debug(var_dump($row), 3);
         $output.= '<tr><td width="87">IP Address:</td><td width="400">' ."\n";
         $output.= '<input name="address" type="text" value="' .stripslashes($row['address']) .'"/>' ."\n";
@@ -359,18 +370,26 @@ TXT;
 
         // Submit
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
-        $output.=<<<TXT
-          <tr><td>&nbsp;</td><td>
+        $output.= '<tr><td>&nbsp;</td><td>' ."\n";
+        if ($update_mode) {
+          $output.=<<<TXT
           <input type="submit" name="action" class="bluebox" value="Update" />&nbsp;
           <input type="submit" name="action" class="bluebox" value="Delete" 
             onClick="javascript:return confirm('Really DELETE this record?')"
             />
-          </td></tr>'
 TXT;
-        $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
+        } else { 
+          // add mode, only show defaults 
+          $output.=<<<TXT
+        <input type="submit" class="bluebox" name="action" value="Add" onclick="return checkForm()"
+                title="Click to add a new {$this->module} with the above details"/>
+TXT;
+	}
+
+        $output.= '</td></tr> <tr><td>&nbsp;</td><td></td></tr>' ."\n";
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
 
-      }
+      #}
       // close the table
       $output.= '</table> ';
 
