@@ -39,7 +39,9 @@ else if ($_SESSION['nac_rights']==1) {
   $action_menu=array('View');   // no options
 }
 else if ($_SESSION['nac_rights']==2) {
-  $action_menu=array('View','Edit');   // 'buttons' in action column
+  // TBD: testingDA only:
+  $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
+  //$action_menu=array('View','Edit');   // 'buttons' in action column
 }
 else if ($_SESSION['nac_rights']==4) {
   $action_menu='';
@@ -47,7 +49,7 @@ else if ($_SESSION['nac_rights']==4) {
 }
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
-  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
+  $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
 } else {
   throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
 }
@@ -98,7 +100,7 @@ if (isset($_REQUEST['action']) && (
     $action_idx=0;
 
   $logger->debug("Ip > GuiEditIp idx=$action_idx, action=". $_REQUEST['action'], 1);
-  $report=new GuiEditIp($_REQUEST['action'], $action_idx, 2);  // last param=debug
+  $report=new GuiEditIp($_REQUEST['action'], $action_idx, 3);  // last param=debug
   $report->handle_request();
   $logger->debug("after new GuiEditDevice", 3);
 
