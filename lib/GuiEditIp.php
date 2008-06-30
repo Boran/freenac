@@ -234,15 +234,21 @@ TXT;
         $output.=  '<tr><td title="Which Subnet does this below to?">Subnet:</td><td>'."\n";
         $output.=  $this->get_subnetdropdown($row['subnet']) . '</td></tr>'."\n";
 
+        // System
+        $output.=  '<tr><td title="What End-Device is this IP address linked to?">End-Device:</td><td>' ."\n";
+        $output.=  $this->get_systemdropdown($row['system']) . '</td></tr>'."\n";
+
+        $output.= '<tr><td width="87" title="Update dns?">Dns update:</td><td width="400">' ."\n";
+        $output.= '<input name="dns_update" type="text" value="' .stripslashes($row['dns_update']) .'"/>' ."\n";
+
+        $output.= '<tr><td width="87" title="Status?">Status:</td><td width="400">' ."\n";
+        $output.= '<input name="system" type="text" value="' .stripslashes($row['system']) .'"/>' ."\n";
+
         $output.= '<tr><td width="87" title="Comment?">IP Comment:</td><td width="400">' ."\n";
         $output.= '<input name="comment" type="text" value="' .stripslashes($row['comment']) .'"/>' ."\n";
 
         $output.= '<tr><td width="87" title="Optional: source of imported data">IP Source:</td><td width="400">' ."\n";
         $output.= '<input name="source" type="text" value="' .stripslashes($row['source']) .'"/>' ."\n";
-
-        // System
-        $output.=  '<tr><td title="What End-Device is this IP address linked to?">End-Device:</td><td>' ."\n";
-        $output.=  $this->get_systemdropdown($row['system']) . '</td></tr>'."\n";
 
         // Status
         //$output.=  '<tr><td>Status:</td><td>' ."\n";

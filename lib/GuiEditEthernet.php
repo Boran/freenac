@@ -142,7 +142,7 @@ TXT;
     // allow both GET (automation) or POST (interactive GUIs)
     $_REQUEST=array_map('validate_webinput',$_REQUEST);
     if (!isset($_REQUEST['action_idx']) )
-      throw new InvalidWebInputException("Update() action_idx not set");
+      throw new InvalidWebInputException("InsertOrUpdate() action_idx not set");
     #if ( !is_numeric($_REQUEST['action_idx']) || $_REQUEST['action_idx']==0)     // must be a number>0
     #   throw new InvalidWebInputException("invalid index: is not an integer");
     #$mac=$this->sqlescape($name);
