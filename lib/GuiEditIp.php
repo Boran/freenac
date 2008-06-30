@@ -68,12 +68,12 @@ class GuiEditIp extends WebCommon
         $this->print_title("Update {$this->module} Details");
         #$logger->debug("action=$action, report1_index=" .$_SESSION['report1_index'], 1);
         echo $this->Update();
-        echo $this->query();
+        echo $this->query();          // Show update form
         echo $this->print_footer();
 
       } else if ($action==='Edit') {
         $this->print_title("Edit {$this->module} Details");
-        echo $this->query();
+        echo $this->query();          // Show update form
         echo $this->print_footer();
 
        
@@ -85,8 +85,7 @@ class GuiEditIp extends WebCommon
 
         } else {        // Add Step1
           $this->print_title("Add new {$this->module}");
-          #echo $this->Add();
-          echo $this->query(false);    // update_mode=false
+          echo $this->query(false);    // Show Add form: update_mode=false
         }
         echo $this->print_footer();
        
@@ -158,8 +157,8 @@ TXT;
       //if ( ! is_numeric($_REQUEST['address']) ) 
       //  throw new DatabaseInsertException("- Address is not numeric");
 
-        $address=$_REQUEST['address'];
-        $q.=" address=INET_ATON('{$_REQUEST['address']}') ";
+        $address=trim($_REQUEST['address']);
+        $q.=" address=INET_ATON('{$address}') ";
         if (isset($_REQUEST['subnet']))  $q.=", subnet={$_REQUEST['subnet']} ";
         if (isset($_REQUEST['status']))  $q.=", status={$_REQUEST['status']} ";
         if (isset($_REQUEST['comment'])) $q.=", comment='{$_REQUEST['comment']}' ";
@@ -176,14 +175,18 @@ TXT;
       echo "<p class='UpdateMsgOK'>Successful: new {$this->module} with address=$address added</p>";
 
       // after inserting, locate that record, and show the Update() screen.
-      $res = $conn->query("SELECT address,id from ip where address='" .$address ."'");
+      $q = "SELECT address,id from ip where address=INET_ATON('$address') LIMIT 1";
+      #$q = "SELECT address,id from ip where address='" .ip2long($address) ."'";
+      $this->debug("UpdateNew() $q", 3);
+      $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
       while (($row = $res->fetch_assoc()) !== NULL) {
         $this->id=$row['id'];
+        //echo "<p class='UpdateMsgOK'>Index={$this->id}</p>";
       }
 
-      $this->loggui("new {$this->module} id={$row['id']} address=$address added");
+      $this->loggui("new {$this->module}, id={$this->id}, address=$address added");
 
       // locate that record, and show the Update() screen.
       $ref0=$this->calling_script;
@@ -253,67 +256,22 @@ TXT;
   }
 
 
-  /**
-   * Add a new 
-   */
-  public function add()
-  {
-    global $js1;
-    if ($_SESSION['nac_rights']<2)    // must have edit rights
-      throw new InsufficientRightsException($_SESSION['nac_rights']);
-
-    $conn=$this->getConnection();     //  make sure we have a DB connection
-    $this->debug("Add() ", 3);
-    $output ='<form name="formadd" action="' .$_SERVER['PHP_SELF'] .'" method="POST">';
-    $output.= "\n$js1\n <table id='GuiEditDeviceAdd'>";
-
-    $comment='Added from WebGUI'; 
-    try {
-
-        // Name
-        $output.=<<<TXT
-        <tr><td width="87"  title="Enter a valid IP address, in the format W.X.Y.Z ">IP Address:</td>
-            <td width="400"> <input name="address" type="text" value="" onBlur="checkLen(this,4) ">
-        </td></tr>
-        <tr><td width="87" title="Comment?">Comment:</td>
-            <td width="400"> <input name="comment" type="text" value="{$comment}" onBlur="checkLen(this,0)">
-        </td></tr>
-TXT;
-        // Subnet
-        $output.=  '<tr><td title="Which Subnet does this below to?">Subnet:</td><td>'."\n";
-        $output.=  $this->get_subnetdropdown(1) . '</td></tr>'."\n";
-
-      $output.=<<<TXT
-        <tr><td></td><td>
-        <input type="submit" class="bluebox" name="action" value="Add" onclick="return checkForm()"
-		title="Click to add a new {$this->module} with the above details"/>
-	</td>
-        </form>
-	</table>
-TXT;
-
-    } catch (Exception $e) {
-      throw $e;
-    }
-    return($output);
-  }                               // function
-
-
-
 
   /**
-   * Display a record, allow changes.
+   * Add or display a record, allow changes.
    * Next Step is Either Update, Delete, or Restart Port
    */
   public function query($update_mode=TRUE)
   {
+    global $js1;
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
     $conn=$this->getConnection();     //  make sure we have a DB connection
-    #$output ='<form action="GuiEditDevice_control.php" method="POST">';
-    $output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
+
+    $output ='<form name="formadd" action="' .$_SERVER['PHP_SELF'] .'" method="POST">';
     #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="GET">'; //debugging
-    $output.="<table id='t3' width='760' border='0' class='text13'>";
+    #$output.="<table id='t3' width='760' border='0' class='text13'>";
+    $output.= "\n$js1\n <table id='GuiEditDeviceAdd'>";
 
     try {
 
@@ -323,7 +281,7 @@ SELECT id,INET_NTOA(address) AS address,subnet,status,comment,system,source,dns_
   WHERE id='{$this->id}'
   LIMIT 1
 TXT;
-        $this->debug("Editip::query() $q", 3);
+        $this->debug("Editip::query() update_mode=query, $q", 3);
         $res = $conn->query($q);
         if ($res === FALSE)
           throw new DatabaseErrorException($conn->error);
@@ -334,9 +292,10 @@ TXT;
         $row = $res->fetch_assoc();
 
       } else { 
+        $this->debug("Editip::query() update_mode=add, $q", 3);
         // add mode, only show defaults 
         $row['address']='';
-        $row['comment']='';
+        $row['comment']='';   // TBD: Added on YY by XX
         $row['subnet']=0;
         $row['id']=0;
         $row['source']='';
@@ -345,23 +304,22 @@ TXT;
 
       # Display the record:
         #$this->debug(var_dump($row), 3);
-        $output.= '<tr><td width="87">IP Address:</td><td width="400">' ."\n";
-        $output.= '<input name="address" type="text" value="' .stripslashes($row['address']) .'"/>' ."\n";
+        $output.= '<tr><td width="87" title="Enter a valid IP address, in the format W.X.Y.Z ">IP Address:</td><td width="400">' ."\n";
+        $output.= '<input name="address" type="text" value="' .stripslashes($row['address']) .'" onBlur="checkLen(this,7)"/>' ."\n";
         $output.= '</td><td>Index:' .$row['id'] .'</td>' ."</tr>\n";
 
         // Subnet
-        $output.=  '<tr><td>Subnet:</td><td>' ."\n";
+        $output.=  '<tr><td title="Which Subnet does this below to?">Subnet:</td><td>'."\n";
         $output.=  $this->get_subnetdropdown($row['subnet']) . '</td></tr>'."\n";
 
-        $output.= '<tr><td width="87">IP Comment:</td><td width="400">' ."\n";
+        $output.= '<tr><td width="87" title="Comment?">IP Comment:</td><td width="400">' ."\n";
         $output.= '<input name="comment" type="text" value="' .stripslashes($row['comment']) .'"/>' ."\n";
 
-        $output.= '<tr><td width="87">IP Source:</td><td width="400">' ."\n";
+        $output.= '<tr><td width="87" title="Optional: source of imported data">IP Source:</td><td width="400">' ."\n";
         $output.= '<input name="source" type="text" value="' .stripslashes($row['source']) .'"/>' ."\n";
 
-
         // System
-        $output.=  '<tr><td>End-Device:</td><td>' ."\n";
+        $output.=  '<tr><td title="What End-Device is this IP address linked to?">End-Device:</td><td>' ."\n";
         $output.=  $this->get_systemdropdown($row['system']) . '</td></tr>'."\n";
 
         // Status

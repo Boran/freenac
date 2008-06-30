@@ -42,7 +42,7 @@ else if ($_SESSION['nac_rights']==2) {
   // TBD: testingDA only:
   $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
   //$action_menu=array('View','Edit');   // 'buttons' in action column
-  $action_confirm=array('', '', '', 'Really DELETE the record for this IP?');  // Confirm Deletes
+  $action_confirm=array('', '', 'Really DELETE the record for this IP?');  // Confirm Deletes
 
 }
 else if ($_SESSION['nac_rights']==4) {
@@ -52,7 +52,7 @@ else if ($_SESSION['nac_rights']==4) {
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
   $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
-  $action_confirm=array('', '', '', 'Really DELETE the record for this IP?');  // Confirm Deletes
+  $action_confirm=array('', '', 'Really DELETE the record for this IP?');  // Confirm Deletes
 
 } else {
   throw new InsufficientRightsException("Unknown nac_rights: ".$_SESSION['nac_rights']);
@@ -106,7 +106,7 @@ if (isset($_REQUEST['action']) && (
   $logger->debug("Ip > GuiEditIp idx=$action_idx, action=". $_REQUEST['action'], 1);
   $report=new GuiEditIp($_REQUEST['action'], $action_idx, 3);  // last param=debug
   $report->handle_request();
-  $logger->debug("after new GuiEditDevice", 3);
+  $logger->debug("after new GuiEditIp", 3);
 
 // Default & Actions handled by GuiList1 class: execute query
 } else {
