@@ -3,7 +3,7 @@
  * 
  * GuiEditIp.php
  *
- * Long description for file:
+ * Long description for file: ip table
  * Allow records to edited, deleted or inserted.
  * Specific to the FreeNAC DB schema.
  *
@@ -19,7 +19,7 @@
 
 class GuiEditIp extends WebCommon
 {
-  private $id, $action, $module;      // See also WebCommon and Common
+  private $id, $action;      // See also WebCommon and Common
 
 
   function __construct($action, $id=0, $debug_level=1)
@@ -34,9 +34,9 @@ class GuiEditIp extends WebCommon
     //if ( $id===0 )              
     //   throw new InvalidWebInputException(""GuiEditDevice__construct invalid index: zero");
 
-    #if (isset($_REQUEST['action_idx'])) $logger->debug("action_idx=" .$_REQUEST['action_idx'], 2);
     $this->id=$id;                   // remember the record number
-    $this->module='ip';
+    $this->module='IP';              // identify module, in Webcommon
+    $this->table='ip';               // identify SQL table, in Webcommon
     
     // 2. verify/clean 'action'
     // Now, have we a REQUEST action to carry out?
@@ -45,14 +45,6 @@ class GuiEditIp extends WebCommon
     }
     $this->action=validate_webinput($action);
 
-  }
-
-
-  protected function print_title($title)
-  {
-    echo $this->print_header();
-    echo "<div id='GuiList1Title'>{$title}</div>";
-    //$this->debug($_SESSION['login_data'] .":Id=$id:" , 1);
   }
 
 
@@ -65,33 +57,31 @@ class GuiEditIp extends WebCommon
 
     if (isset($action)) {
       if ($action==='Update') {
-        $this->print_title("Update {$this->module} Details");
-        #$logger->debug("action=$action, report1_index=" .$_SESSION['report1_index'], 1);
-        echo $this->Update();
-        echo $this->query();          // Show update form
+        echo $this->print_title("Update {$this->module} Details");
+        echo $this->InsertOrUpdate();
+        echo $this->edit_record();          // Show update form
         echo $this->print_footer();
 
       } else if ($action==='Edit') {
-        $this->print_title("Edit {$this->module} Details");
-        echo $this->query();          // Show update form
+        echo $this->print_title("Edit {$this->module} Details");
+        echo $this->edit_record();          // Show update form
         echo $this->print_footer();
-
        
       } else if ($action==='Add') {
+
         if (isset($_REQUEST['address']) && isset($_REQUEST['comment']) ) {
 	  // Add step2
-          $this->print_title("New {$this->module} record");  
-          echo $this->UpdateNew();
+          echo $this->print_title("New {$this->module} record");  
+          echo $this->InsertOrUpdate(FALSE);  // Add mode
 
         } else {        // Add Step1
-          $this->print_title("Add new {$this->module}");
-          echo $this->query(false);    // Show Add form: update_mode=false
+          echo $this->print_title("Add new {$this->module}");
+          echo $this->edit_record(false);    // Show Add form: update_mode=false
         }
         echo $this->print_footer();
        
       } else if ($action==='Delete') {
-        $this->print_title("Delete {$this->module} ");
-        $this->Delete();
+        echo $this->Delete($this->table, $this->id);
        
       } else {
         // do nothing, action does not concern us.
@@ -101,113 +91,14 @@ class GuiEditIp extends WebCommon
 
 
 
-
-  public function Delete()
-  {
-    if ($_SESSION['nac_rights']<2)
-      throw new InsufficientRightsException($_SESSION['nac_rights']);
-    if ( $this->id===0 )              
-      throw new InvalidWebInputException("Delete() invalid index: zero");
-
-    $conn=$this->getConnection();     //  make sure we have a DB connection
-    #var_dump($_REQUEST);
-    $device=$this->id;    // rely on the constructor to clean & ensure a valid id
-    $this->debug("Delete() index {$device}", 3);
-
-    //$q="DELETE FROM ip WHERE id={$device} LIMIT 1";     // only this record
-    $q="DELETE FROM ip WHERE id='{$device}' LIMIT 1";     // only this record
-      $this->debug($q, 3);
-      $res = $conn->query($q);
-      if ($res === FALSE)
-        throw new DatabaseErrorException($q ." :: " .$conn->error);
-
-      // Inform the user that is was OK
-      $txt=<<<TXT
-<p class='UpdateMsgOK'>Delete Successful</p>
- <br><p > Go back to the <a href="{$_SESSION['caller']}">{$this->module} list</a></p>
-</div>
-TXT;
-      echo $txt;
-      $this->logit("Deleted {$this->module} with Id {$device}");
-      $this->loggui("Deleted {$this->module} with Id {$device}");
-
-  }
-
-
-
   /**
-   * Insert a newrecord
+   * Insert or Update a record
    */
-  public function UpdateNew()
+  public function InsertOrUpdate($update_mode=TRUE)
   {
-    $this->debug("UpdateNew()", 3);
+    $this->debug("InsertOrUpdate() update_mode=$update_mode", 2);
     #var_dump($_REQUEST);
 
-    if ($_SESSION['nac_rights']<2)
-      throw new InsufficientRightsException($_SESSION['nac_rights']);
-    $conn=$this->getConnection();     //  make sure we have a DB connection
-
-    try {
-      // Read in request variables. Mac and name are set, others are optional
-      // TBD: call validate_input?
-      $q="INSERT INTO ip SET  ";
-
-      if ( ! isset($_REQUEST['address']) )  
-        throw new DatabaseInsertException("- No address value");
-      //if ( ! is_numeric($_REQUEST['address']) ) 
-      //  throw new DatabaseInsertException("- Address is not numeric");
-
-        $address=trim($_REQUEST['address']);
-        $q.=" address=INET_ATON('{$address}') ";
-        if (isset($_REQUEST['subnet']))  $q.=", subnet={$_REQUEST['subnet']} ";
-        if (isset($_REQUEST['status']))  $q.=", status={$_REQUEST['status']} ";
-        if (isset($_REQUEST['comment'])) $q.=", comment='{$_REQUEST['comment']}' ";
-        if (isset($_REQUEST['system']))  $q.=", system={$_REQUEST['system']} ";
-        if (isset($_REQUEST['source']))  $q.=", source='{$_REQUEST['source']}' ";
-        if (isset($_REQUEST['dns_update'])) $q.=", dns_update={$_REQUEST['dns_update']} ";
-
-
-      $this->debug("UpdateNew() $q", 3);
-      $res = $conn->query($q);
-      if ($res === FALSE)
-        throw new DatabaseInsertException($conn->error);
-
-      echo "<p class='UpdateMsgOK'>Successful: new {$this->module} with address=$address added</p>";
-
-      // after inserting, locate that record, and show the Update() screen.
-      $q = "SELECT address,id from ip where address=INET_ATON('$address') LIMIT 1";
-      #$q = "SELECT address,id from ip where address='" .ip2long($address) ."'";
-      $this->debug("UpdateNew() $q", 3);
-      $res = $conn->query($q);
-      if ($res === FALSE)
-        throw new DatabaseErrorException($conn->error);
-      while (($row = $res->fetch_assoc()) !== NULL) {
-        $this->id=$row['id'];
-        //echo "<p class='UpdateMsgOK'>Index={$this->id}</p>";
-      }
-
-      $this->loggui("new {$this->module}, id={$this->id}, address=$address added");
-
-      // locate that record, and show the Update() screen.
-      $ref0=$this->calling_script;
-      $ref1=$ref0. "?action=Edit&action_idx=$this->id";
-      echo "<br><p>Now review/update the <a href='{$ref1}'>{$this->module} details</a> or go back to the <a href='{$ref0}'>{$this->module} list</a></p>";
-
-    } catch (Exception $e) {
-      throw $e;
-    }
-
- }
-
-
-
-  /**
-   * Update a record
-   */
-  public function Update()
-  {
-    $this->debug("Update()", 3);
-    #var_dump($_REQUEST);
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException('Update() ' .$_SESSION['nac_rights']);
     $conn=$this->getConnection();     //  make sure we have a DB connection
@@ -216,39 +107,72 @@ TXT;
     // allow both GET (automation) or POST (interactive GUIs)
     $_REQUEST=array_map('validate_webinput',$_REQUEST);
     if (!isset($_REQUEST['action_idx']) )
-      throw new InvalidWebInputException("Update() action_idx not set");
-    #if ( !is_numeric($_REQUEST['action_idx']) || $_REQUEST['action_idx']==0)     // must be a number>0
+      throw new InvalidWebInputException("InsertOrUpdate() action_idx not set");
+    #if ( !is_numeric($_REQUEST['action_idx']) || $_REQUEST['action_idx']==0) 
     #   throw new InvalidWebInputException("invalid index: is not an integer");
+    #$mac=$this->sqlescape($name);
 
-    $this->debug("Update() action_idx={$_REQUEST['action_idx']}", 3);
-    $this->id=$_REQUEST['action_idx'];
+    if ( ! isset($_REQUEST['address']) )
+      throw new DatabaseInsertException("- No address value");
+    //if ( ! is_numeric($_REQUEST['address']) )
+    //  throw new DatabaseInsertException("- Address is not numeric");
+
+    $q='';
+    if ($update_mode==TRUE) {
+      $this->debug("Update() action_idx={$_REQUEST['action_idx']}", 3);
+      $this->id=$_REQUEST['action_idx'];
+      $q="UPDATE {$this->table} SET ";
+
+    } else {
+      $q="INSERT INTO {$this->table} SET ";
+    }
 
     try {
-      $q='';
-        $q='UPDATE ip SET ';
-        $q.=" address=INET_ATON('{$_REQUEST['address']}') ";
+      $address=trim($_REQUEST['address']);
+        $q.=" address=INET_ATON('{$address}') ";
         if (isset($_REQUEST['subnet']))  $q.=", subnet={$_REQUEST['subnet']} ";
-        if (isset($_REQUEST['status']))  $q.=", status={$_REQUEST['status']} ";
-        if (isset($_REQUEST['comment'])) $q.=", comment='{$_REQUEST['comment']}' ";
         if (isset($_REQUEST['system']))  $q.=", system={$_REQUEST['system']} ";
+        if (isset($_REQUEST['status']))  $q.=", status={$_REQUEST['status']} ";
+        if (isset($_REQUEST['comment'])) $q.=", comment='{$_REQUEST['comment']}' "; //string
         if (isset($_REQUEST['source']))  $q.=", source='{$_REQUEST['source']}' ";
         if (isset($_REQUEST['dns_update'])) $q.=", dns_update={$_REQUEST['dns_update']} ";
 
+      if ($update_mode==TRUE) {
         $q.=" WHERE id={$this->id} LIMIT 1";     // only this record
+      }
 
-      $this->debug("Update() " .$q, 3);
+      $this->debug("InsertOrUpdate() Query=" .$q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
 
-      #echo "<p class='UpdateMsgOK'>Update Successful</p>";
- $txt=<<<TXT
-<p class='UpdateMsgOK'>Update Successful</p>
- <br><p> Go back to the <a href="{$_SESSION['caller']}">{$this->module} list</a></p>
-TXT;
-      echo $txt;
+      if ($update_mode==TRUE) {
+        echo "<p class='UpdateMsgOK'>Update Successful</p>";
+        $this->loggui("{$this->module} " .$_REQUEST['vendor'] ."/" .$_REQUEST['mac'] ." updated");
 
-      $this->loggui("{$this->module} index {$this->id}  updated");
+        // Show follow up instructions/links
+        echo "<br><p>Next: make more changes below, or go back to the <a href='{$this->calling_script}'>{$this->module} list</a></p>";
+
+      } else {
+        echo "<p class='UpdateMsgOK'>Successful: new {$this->module} with address=$address added</p>";
+
+        // after inserting, locate that record, and show the Update() screen.
+        $q = "SELECT address,id from ip where address=INET_ATON('$address') LIMIT 1";
+        #$q = "SELECT address,id from ip where address='" .ip2long($address) ."'";
+        $this->debug("InsertOrUpdate() $q", 3);
+        $res = $conn->query($q);
+        if ($res === FALSE)
+          throw new DatabaseErrorException($conn->error);
+        while (($row = $res->fetch_assoc()) !== NULL) {
+          $this->id=$row['id'];
+          //echo "<p class='UpdateMsgOK'>Index={$this->id}</p>";
+        }
+        $this->loggui("new {$this->module}, id={$this->id}, address=$address added");
+
+        // Show follow up instructions/links
+        $ref1=$this->calling_script. "?action=Edit&action_idx=$this->id";
+        echo "<br><p>Now review/update the <a href='{$ref1}'>{$this->module} details</a> or go back to the <a href='{$this->calling_script}'>{$this->module} list</a></p>";
+      }
 
     } catch (Exception $e) {
       throw $e;
@@ -261,7 +185,7 @@ TXT;
    * Add or display a record, allow changes.
    * Next Step is Either Update, Delete, or Restart Port
    */
-  public function query($update_mode=TRUE)
+  public function edit_record($update_mode=TRUE)
   {
     global $js1;
     if ($_SESSION['nac_rights']<2)
@@ -270,18 +194,16 @@ TXT;
 
     $output ='<form name="formadd" action="' .$_SERVER['PHP_SELF'] .'" method="POST">';
     #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="GET">'; //debugging
-    #$output.="<table id='t3' width='760' border='0' class='text13'>";
     $output.= "\n$js1\n <table id='GuiEditDeviceAdd'>";
 
     try {
-
       if ($update_mode) {
         $q=<<<TXT
 SELECT id,INET_NTOA(address) AS address,subnet,status,comment,system,source,dns_update from ip
   WHERE id='{$this->id}'
   LIMIT 1
 TXT;
-        $this->debug("Editip::query() update_mode=query, $q", 3);
+        $this->debug("edit_record() update_mode=query, $q", 3);
         $res = $conn->query($q);
         if ($res === FALSE)
           throw new DatabaseErrorException($conn->error);
@@ -292,7 +214,7 @@ TXT;
         $row = $res->fetch_assoc();
 
       } else { 
-        $this->debug("Editip::query() update_mode=add, $q", 3);
+        $this->debug("edit_record() update_mode=add, $q", 3);
         // add mode, only show defaults 
         $row['address']='';
         $row['comment']='';   // TBD: Added on YY by XX
@@ -347,7 +269,6 @@ TXT;
         $output.= '</td></tr> <tr><td>&nbsp;</td><td></td></tr>' ."\n";
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
 
-      #}
       // close the table
       $output.= '</table> ';
 
@@ -399,7 +320,7 @@ function get_statusdropdown($s)
    return $ret;
 }
 
-function get_systemdropdown($s)       //TBD: return mask too
+function get_systemdropdown($s)       // Show a list of Dend-Devices
 {
    $conn=$this->getConnection();     //  make sure we have a DB connection
 
