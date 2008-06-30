@@ -17,13 +17,16 @@
  */
 class WebCommon extends Common 
 {
-  protected $calling_script;
+  // see also Variables inherited from Common
+  protected $calling_script, $calling_href, $module, $table;   
 
   function __construct($show_header=true, $debuglevel=1)
   {
     parent::__construct();
+    $this->calling_script=basename($_SERVER['SCRIPT_FILENAME']);   // TBD: clean unneeded, trust apache?
+    $this->calling_href=$_SESSION['caller'];
+    $this->module='WebCommon';
     $this->logger->setDebugLevel($debuglevel);  // 3 for max debugging
-    $this->calling_script=basename($_SERVER['SCRIPT_FILENAME']);   // TBD: clean?
     $this->remote_host=validate_webinput($_SERVER['REMOTE_ADDR']);
 
     if (! function_exists('mysqli_connect')) {
@@ -188,7 +191,56 @@ EOF;
   }
 
 
-// ------------ funnions common to the FreeNAC DB scheam, to be reused where possible in the
+
+  public function print_title($title)
+  {
+    $ret= $this->print_header();
+    $ret.= "<div id='GuiList1Title'>{$title}</div>";
+    $this->debug("print_title($title)" , 3);
+    return $ret;
+  }
+
+
+  /**
+   * Delete a record from the WebGUI
+   */
+  public function Delete($table, $id)
+  {
+    global $_SESSION, $_REQUEST;
+
+    if ($_SESSION['nac_rights']<2)
+      throw new InsufficientRightsException($_SESSION['nac_rights']);
+    if ( $id===0 )
+      throw new InvalidWebInputException("Delete() invalid index: zero");
+    if ( strlen($table)===0 )
+      throw new InvalidWebInputException("Delete() no table name.");
+    
+    $ret = $this->print_title("Delete {$this->module} record");
+
+    #var_dump($_REQUEST);
+    $conn=$this->getConnection();     //  make sure we have a DB connection
+    $this->debug("Delete() index {$id}", 3);
+
+    $q="DELETE FROM {$table} WHERE id='{$id}' LIMIT 1";     // only this record
+      $this->debug($q, 3);
+      $res = $conn->query($q);
+      if ($res === FALSE)
+        throw new DatabaseErrorException($q ." :: " .$conn->error);
+
+    // Inform the user that is was OK
+      $txt=<<<TXT
+<p class='UpdateMsgOK'>Delete of entry with index=$id Successful</p>
+ <br><p>Go back to the <a href="{$this->calling_href}">{$this->module} list</a></p>
+</div>
+TXT;
+    $ret.= $txt;
+    $this->logit("Deleted {$this->module}: table=$table, Id={$id}");
+    $this->loggui("Deleted {$this->module}: table=$table, Id={$id}");
+    return $ret;
+  }
+
+
+// ------------ functions common to the FreeNAC DB scheam, to be reused where possible in the
 // ------------ Web GUI
 
 /**

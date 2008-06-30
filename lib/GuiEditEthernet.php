@@ -3,7 +3,7 @@
  * 
  * GuiEditEthernet.php
  *
- * Long description for file:
+ * Long description for file: ethernet table
  * Allow records to edited, deleted or inserted.
  * Specific to the FreeNAC DB schema.
  *
@@ -19,8 +19,7 @@
 
 class GuiEditEthernet extends WebCommon
 {
-  private $id, $action, $module;      // See also WebCommon and Common
-
+  private $id, $action;      // See also WebCommon and Common
 
   function __construct($action, $id=0, $debug_level=1)
   {
@@ -28,18 +27,18 @@ class GuiEditEthernet extends WebCommon
     $this->logger->setDebugLevel($debug_level);
     $this->debug("__construct id=$id, debug=$debug_level, action=$action", 2);
 
+    // The Ethernet table has no 'id' column, unfortunately. But we 
+    // leave the relevant code here for this to be fixed later..
     // 1. verify/clean 'id'
-    #if ( !is_int($id) )     // must be a number
     //if ( !is_numeric($id) )     // must be a number
     //   throw new InvalidWebInputException("invalid index: <$id> is not an integer");
     //if ( $id===0 )              
     //   throw new InvalidWebInputException(""GuiEditDevice__construct invalid index: zero");
 
-    #if (isset($_REQUEST['action_idx'])) $logger->debug("action_idx=" .$_REQUEST['action_idx'], 2);
     $this->id=$id;                   // remember the record number
-    $this->module='ethernet';
-    //$_SESSION['report1_index']=$id;  // for passing to other scripts: no longer used?
-    
+    $this->module='Ethernet';              // identify module, in Webcommon
+    $this->table='ethernet';               // identify SQL table, in Webcommon
+
     // 2. verify/clean 'action'
     // Now, have we a REQUEST action to carry out?
     if ( !isset($action) ) {
@@ -47,14 +46,6 @@ class GuiEditEthernet extends WebCommon
     }
     $this->action=validate_webinput($action);
 
-  }
-
-
-  protected function print_title($title)
-  {
-    echo $this->print_header();
-    echo "<div id='GuiList1Title'>{$title}</div>";
-    //$this->debug($_SESSION['login_data'] .":Id=$id:" , 1);
   }
 
 
@@ -67,31 +58,30 @@ class GuiEditEthernet extends WebCommon
 
     if (isset($action)) {
       if ($action==='Update') {
-        $this->print_title("Update {$this->module} Details");
+        echo $this->print_title("Update {$this->module} Details");
         #$logger->debug("action=$action, report1_index=" .$_SESSION['report1_index'], 1);
-        echo $this->Update();
-        echo $this->query();
+        echo $this->InsertOrUpdate();
+        echo $this->edit_record();          // Show update form
         echo $this->print_footer();
 
       } else if ($action==='Edit') {
-        $this->print_title("Edit {$this->module} Details");
-        echo $this->query();
+        echo $this->print_title("Edit {$this->module} Details");
+        echo $this->edit_record();          // Show update form
         echo $this->print_footer();
-
        
       } else if ($action==='Add') {
+
         if (isset($_REQUEST['vendor']) && isset($_REQUEST['mac']) ) {
-          $this->print_title("New {$this->module} record");  // Add step2
-          echo $this->UpdateNew();
+          echo $this->print_title("New {$this->module} record");  // Add step2
+          echo $this->InsertOrUpdate(FALSE);  // Add mode
         } else {        // Add Step1
-          $this->print_title("Add new {$this->module}");
-          echo $this->Add();
+          echo $this->print_title("New {$this->module} record");
+          echo $this->edit_record(false);    // Show Add form: update_mode=false
         }
         echo $this->print_footer();
        
       } else if ($action==='Delete') {
-        $this->print_title("Delete {$this->module} ");
-        $this->Delete();
+        echo $this->Delete();
        
       } else {
         // do nothing, action does not concern us.
@@ -100,100 +90,49 @@ class GuiEditEthernet extends WebCommon
   }
 
 
-
-
-  public function Delete()
+  /**
+   * Delete()  // Override the Webcommon functiion since we do not have
+   * an id column.
+   */
+  public function Delete()  
   {
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
     if ( $this->id===0 )              
       throw new InvalidWebInputException("Delete() invalid index: zero");
 
+    $ret = $this->print_title("Delete {$this->module} record");
     $conn=$this->getConnection();     //  make sure we have a DB connection
     #var_dump($_REQUEST);
-    $device=$this->id;    // rely on the constructor to clean & ensure a valid id
-    $this->debug("Delete() index {$device}", 3);
+    $id=$this->id;
+    $this->debug("Delete() index {$id}", 3);
 
-    //$q="DELETE FROM ethernet WHERE id={$device} LIMIT 1";     // only this record
-    $q="DELETE FROM ethernet WHERE mac='{$device}' LIMIT 1";     // only this record
+    $q="DELETE FROM {$this->table} WHERE mac='{$id}' LIMIT 1";     // only this record
       $this->debug($q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($q ." :: " .$conn->error);
 
-      // Inform the user that is was OK
-      $txt=<<<TXT
+    // Inform the user that is was OK
+    $txt=<<<TXT
 <p class='UpdateMsgOK'>Delete Successful</p>
- <br><p > Go back to the <a href="{$_SESSION['caller']}">{$this->module} list</a></p>
+ <br><p>Go back to the <a href="{$this->calling_href}">{$this->module} list</a></p>
 </div>
 TXT;
-      echo $txt;
-      $this->logit("Deleted {$this->module} with Mac Prefix {$device}");
-      $this->loggui("Deleted {$this->module} with Mac Prefix {$device}");
-
+      $ret.= $txt;
+      $this->logit("Deleted {$this->module} with Mac Prefix {$id}");
+      $this->loggui("Deleted {$this->module} with Mac Prefix {$id}");
+    return $ret;
   }
-
-
-
-  /**
-   * Insert a newrecord
-   */
-  public function UpdateNew()
-  {
-    $this->debug("UpdateNew()", 3);
-    #var_dump($_REQUEST);
-
-    if ($_SESSION['nac_rights']<2)
-      throw new InsufficientRightsException($_SESSION['nac_rights']);
-    $conn=$this->getConnection();     //  make sure we have a DB connection
-
-    try {
-      // Read in request variables. Mac and name are set, others are optional
-      // TBD: call validate_input?
-      $name=trim($_REQUEST['vendor']);            // get rid of leading/trailing spaces
-      $mac=strtolower($_REQUEST['mac']);        // lower case by convention
-      $mac=$this->sqlescape($mac);     		// TBD: verify syntax/length etc.
-      $name=$this->sqlescape($name);   		
-      $q="INSERT INTO ethernet SET mac='$mac', vendor='$name' ";
-
-      $this->debug("UpdateNew() $q", 3);
-      $res = $conn->query($q);
-      if ($res === FALSE)
-        throw new DatabaseInsertException($conn->error);
-
-      echo "<p class='UpdateMsgOK'>Successful: new {$this->module} $name/$mac added</p>";
-
-      // after inserting, locate that record, and show the Update() screen.
-      $res = $conn->query("SELECT mac,vendor from ethernet where mac='" .$mac ."'");
-      if ($res === FALSE)
-        throw new DatabaseErrorException($conn->error);
-      while (($row = $res->fetch_assoc()) !== NULL) {
-        //$this->id=$row['id'];
-        $this->id=$row['mac'];
-      }
-
-      $this->loggui("new {$this->module} $name, mac=$mac added");
-
-      // locate that record, and show the Update() screen.
-      $ref=$this->calling_script. "?action=Edit&action_idx=$this->id";
-      #echo $ref;
-      #$this->debug($ref); 
-      echo "<p class='UpdateMsgOK'>Now review/update the <a href='$ref'>{$this->module} details</a></p>";
-
-    } catch (Exception $e) {
-      throw $e;
-    }
-
- }
-
 
 
   /**
    * Update a record
    */
-  public function Update()
+  public function InsertOrUpdate($update_mode=TRUE)
   {
-    $this->debug("Update()", 3);
+    $this->debug("InsertOrUpdate() update_mode=$update_mode", 2);
+
     #var_dump($_REQUEST);
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException('Update() ' .$_SESSION['nac_rights']);
@@ -206,26 +145,55 @@ TXT;
       throw new InvalidWebInputException("Update() action_idx not set");
     #if ( !is_numeric($_REQUEST['action_idx']) || $_REQUEST['action_idx']==0)     // must be a number>0
     #   throw new InvalidWebInputException("invalid index: is not an integer");
+    #$mac=$this->sqlescape($name);
 
-    $this->debug("Update() action_idx={$_REQUEST['action_idx']}", 3);
-    $this->id=$_REQUEST['action_idx'];
+    $q='';
+    if ($update_mode==TRUE) {
+      $this->debug("Update() action_idx={$_REQUEST['action_idx']}", 3);
+      $this->id=$_REQUEST['action_idx'];
+      $q="UPDATE {$this->table} SET ";
+
+    } else {
+      $q="INSERT INTO {$this->table} SET ";
+    }
 
     try {
-      $q='';
-        $q='UPDATE ethernet SET ';
-        $q.=($_REQUEST['mac']!='' ? 'mac=\'' .$_REQUEST['mac'] .'\' ' : '');
-        $q.=", vendor='" .$_REQUEST['vendor'] ."'";
-;
+      $q.=($_REQUEST['mac']!='' ? 'mac=\'' .strtoupper($_REQUEST['mac']) .'\' ' : '');
+      if (isset($_REQUEST['vendor'])) $q.=", vendor='{$_REQUEST['vendor']}' "; //string
+
+      if ($update_mode==TRUE) {
         //$q.=" WHERE id={$this->id} LIMIT 1";     // only this record
         $q.=" WHERE mac='{$this->id}' LIMIT 1";     // only this record
+      }
 
-      $this->debug("Update() " .$q, 3);
+      $this->debug("InsertOrUpdate() Query=" .$q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
 
       echo "<p class='UpdateMsgOK'>Update Successful</p>";
-      $this->loggui("{$this->module} " .$_REQUEST['vendor'] ."/" .$_REQUEST['mac'] ." updated");
+      if ($update_mode==TRUE) {
+        $this->loggui("{$this->module} " .$_REQUEST['vendor'] ."/" .$_REQUEST['mac'] ." updated");
+
+      } else {
+        // after inserting, locate that record, and show the Update() screen.
+        #$res = $conn->query("SELECT mac,vendor from ethernet where mac='" .$mac ."'");
+        #if ($res === FALSE)
+        #  throw new DatabaseErrorException($conn->error);
+        #while (($row = $res->fetch_assoc()) !== NULL) {
+        #  //$this->id=$row['id'];
+        #}
+        $this->id=$_REQUEST['mac'];
+
+        $this->loggui("{$this->module} " .$_REQUEST['vendor'] ."/" .$_REQUEST['mac'] ." added");
+
+      }
+
+      // locate that record, and show the Update() screen.
+        $ref0=$this->calling_script;
+        $ref1=$ref0. "?action=Edit&action_idx=$this->id";
+        echo "<br><p>Now review/update the <a href='{$ref1}'>{$this->module} details</a> or go back to the <a href='{$ref0}'>{$this->module} list</a></p>";
+
 
     } catch (Exception $e) {
       throw $e;
@@ -234,109 +202,74 @@ TXT;
 
 
   /**
-   * Add a new 
-   */
-  public function add()
-  {
-    global $js1;
-    if ($_SESSION['nac_rights']<2)    // must have edit rights
-      throw new InsufficientRightsException($_SESSION['nac_rights']);
-
-    $conn=$this->getConnection();     //  make sure we have a DB connection
-    $this->debug("Add() ", 3);
-    $output ='<form name="formadd" action="' .$_SERVER['PHP_SELF'] .'" method="POST">';
-    $output.= "\n$js1\n <table id='GuiEditDeviceAdd'>";
-
-    $vendor=''; $mac='0001'; 
-    try {
-
-        // Name, MAC
-        $output.=<<<TXT
-        <tr><td width="87" title="What name of the Vendor?">Vendor:</td>
-            <td width="400"> <input name="vendor" type="text" value="{$vendor}" onBlur="checkLen(this,1)">
-        </td></tr>
-        <tr><td width="87"  title="Enter a valid 4 digit hex MAC prefix, in the format xxxx ">MAC prefix:</td>
-            <td width="400"> <input name="mac" type="text" value="{$mac}" onBlur="checkLen(this,4) ">
-        </td></tr>
-TXT;
-        // Status
-        //$output.=  '<tr><td title="Is the new device to be allowed on the network">Status:</td><td>'."\n";
-        //$output.=  $this->get_statusdropdown(1) . '</td></tr>'."\n";
-
-      $output.=<<<TXT
-        <tr><td></td><td>
-        <input type="submit" class="bluebox" name="action" value="Add" onclick="return checkForm()"
-		title="Click to add a new {$this->module} with the above details"/>
-	</td>
-        </form>
-	</table>
-TXT;
-
-    } catch (Exception $e) {
-      throw $e;
-    }
-    return($output);
-  }                               // function
-
-
-
-
-  /**
    * Display a record, allow changes.
    * Next Step is Either Update, Delete, or Restart Port
    */
-  public function query()
+  public function edit_record($update_mode=TRUE)
   {
+    global $js1;
+
     if ($_SESSION['nac_rights']<2)
       throw new InsufficientRightsException($_SESSION['nac_rights']);
     $conn=$this->getConnection();     //  make sure we have a DB connection
-    #$output ='<form action="GuiEditDevice_control.php" method="POST">';
-    $output ='<form action="'.$_SERVER['PHP_SELF'].'" method="POST">';
-    #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="GET">'; //debugging
-    $output.="<table id='t3' width='760' border='0' class='text13'>";
 
-$q=<<<TXT
+    $output ='<form name="formadd" action="' .$_SERVER['PHP_SELF'] .'" method="POST">';
+    #$output ='<form action="'.$_SERVER['PHP_SELF'].'" method="GET">'; //debugging
+    $output.= "\n$js1\n <table id='GuiEditDeviceAdd'>";
+
+    try {
+      if ($update_mode) {
+        $q=<<<TXT
 SELECT mac,vendor from ethernet
   WHERE mac='{$this->id}'
   LIMIT 1
 TXT;
+        $this->debug("edit_record() update_mode=query, $q", 3);
+        $res = $conn->query($q);
+        if ($res === FALSE)
+          throw new DatabaseErrorException($conn->error);
 
-    try {
-      $this->debug("EditEthernet::query() $q", 3);
-      $res = $conn->query($q);
-      if ($res === FALSE)
-        throw new DatabaseErrorException($conn->error);
+        // Title: Grab the list of field names
+        #$fields=$res->fetch_fields();
+        $row = $res->fetch_assoc();
 
-      // Title: Grab the list of field names
-      $fields=$res->fetch_fields();
-      while (($row = $res->fetch_assoc()) !== NULL) {
+      } else {
+        $this->debug("edit_record() update_mode=add, $q", 3); // add mode, only show defaults
+        $row['mac']='F00001';    // a default not used?
+        $row['vendor']='';       // TBD: default?
+      }
+
+      # Display the record:
         #$this->debug(var_dump($row), 3);
-        $output.= '<tr><td width="87">Vendor:</td><td width="400">' ."\n";
+        $output.= '<tr><td width="87" title="What is name of the Vendor?">Vendor:</td><td width="400">' ."\n";
         $output.= '<input name="vendor" type="text" value="' .stripslashes($row['vendor']) .'"/>' ."\n";
         //$output.= '</td><td>Index:' .$row['id'] .'</td>' ."</tr>\n";
         // MAC
-        $output.= '<tr><td>MAC:</td><td>' ."\n";
-        $output.= $row['mac']  ."\n";
+        $output.= '<tr><td title="Enter a valid 6 digit hex MAC prefix, in the format xxxxxx ">MAC prefix:</td><td>' ."\n";
+        $output.= '<input name="mac"  type="text" value="' .$row['mac'] .'" />' ."\n";
         $output.= '</td></tr>'."\n";
-        $output.= '<input type="hidden" name="mac" value="' .$row['mac'] .'" />' ."\n";
-        // Status
-        //$output.=  '<tr><td>Status:</td><td>' ."\n";
-        //$output.=  $this->get_statusdropdown($row['status']) . '</td></tr>'."\n";
 
         // Submit
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
-        $output.=<<<TXT
-          <tr><td>&nbsp;</td><td>
+        $output.= '<tr><td>&nbsp;</td><td>' ."\n";
+        if ($update_mode) {
+          $output.=<<<TXT
           <input type="submit" name="action" class="bluebox" value="Update" />&nbsp;
-          <input type="submit" name="action" class="bluebox" value="Delete" 
+          <input type="submit" name="action" class="bluebox" value="Delete"
             onClick="javascript:return confirm('Really DELETE this record?')"
             />
-          </td></tr>'
 TXT;
-        $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
+        } else {
+          // add mode, only show defaults
+          $output.=<<<TXT
+        <input type="submit" class="bluebox" name="action" value="Add" onclick="return checkForm()"
+                title="Click to add a new {$this->module} with the above details"/>
+TXT;
+        }
+
+        $output.= '</td></tr> <tr><td>&nbsp;</td><td></td></tr>' ."\n";
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
 
-      }
       // close the table
       $output.= '</table> ';
 
