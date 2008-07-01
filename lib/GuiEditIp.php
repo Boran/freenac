@@ -158,7 +158,7 @@ class GuiEditIp extends WebCommon
 
       if ($update_mode==TRUE) {
         echo "<p class='UpdateMsgOK'>Update Successful</p>";
-        $this->loggui("{$this->module} " .$_REQUEST['vendor'] ."/" .$_REQUEST['mac'] ." updated");
+        $this->loggui("{$this->module} id=" .$_REQUEST['id'] .", system id=" .$_REQUEST['system'] ." updated");
 
         // Show follow up instructions/links
         echo "<br><p>Next: make more changes below, or go back to the <a href='{$this->calling_script}'>{$this->module} list</a></p>";

@@ -120,25 +120,36 @@ if (isset($_REQUEST['action']) && (
 
 
 } else if (isset($_REQUEST['action']) && (
-       ($_REQUEST['action'] == 'UpdateDNS')
-  ) ) {
+       ($_REQUEST['action'] == 'UpdateDNS')) ) {
+
   $logger->debug("Ip > GuiUpdateDns action=". $_REQUEST['action'], 1);
-  $report=new GuiUpdateDns(3);  // last param=debug
+  $report=new GuiUpdateDns("Update changed DNS records", 3);  // last param=debug
   $report->UpdateDns();
   $logger->debug("after new GuiUpdateDns", 3);
 
+} else if (isset($_REQUEST['action']) && (
+       ($_REQUEST['action'] == 'UpdateDNS-All')) ) {
+  $report=new GuiUpdateDns("Update ALL entries in the DNS zone", 3);  // last param=debug
+  $report->UpdateDnsAll();
+
+} else if (isset($_REQUEST['action']) && (
+       ($_REQUEST['action'] == 'ViewDNS')) ) {
+  $report=new GuiUpdateDns("View all records in the domain domain", 3);  // last param=debug
+  $report->ViewDNS();
+
 
 } else {
-  // Default & Actions handled by GuiList1 class: execute query
-  #require_once "GuiList1_control.php";
+  // Default Actions 
 
     $report=new GuiList1($title, true, 1);                //true=dynamic with filtering, debug level
     $add="<form name='Add' action='ip.php' method='post'> <input class='bluebox' type='submit' name='action' value='Add' />";
     $dns="<form name='UpdateDNS' action='ip.php' method='post'> <input class='bluebox' type='submit' name='action' value='UpdateDNS' />";
-    echo "<div align='center'>$add $dns<hr></div>";
+    $dns2="<form name='UpdateDNS-All' action='ip.php' method='post'> <input class='bluebox' type='submit' name='action' value='UpdateDNS-All' />";
+    $dns3="<form name='ViewDNS' action='ip.php' method='post'> <input class='bluebox' type='submit' name='action' value='ViewDNS' />";
+    echo "<div align='center'>$add $dns $dns2 $dns3<hr></div>";
     echo $report->query($q, $sortlimit, $sortby,
        $action_menu, $action_fieldname, $idx_fieldname,
-       $searchstring, $searchby, $action_confirm, $order_dir, $order_op);   // run query, generate report
+       $searchstring, $searchby, $action_confirm, $order_dir);   // run query, generate report
 
     echo $report->print_footer();
 

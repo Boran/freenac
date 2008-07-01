@@ -39,34 +39,56 @@ class GuiUpdateDns extends WebCommon
 {
   private $id, $action;      // See also WebCommon and Common
 
-  function __construct($debug_level=1)
+  function __construct($title="Updating DNS", $debug_level=1)
   {
     parent::__construct(false);     // See also WebCommon and Common
     $this->logger->setDebugLevel($debug_level);
-    $this->debug("__construct id=$id, debug=$debug_level, action=$action", 2);
+    $this->debug("__construct debug=$debug_level", 2);
 
-    echo "<hr><h3 text-align='centre'>Updating DNS </h3>";
+    $this->module='GuiUpdateDns';              // identify module, in Webcommon
+    $this->table='ip';               // identify SQL table, in Webcommon
+    echo $this->print_header1();
+    echo "<hr><p class='text18'>$title</p>";
   }
 
   protected function sanitize_name($name) {
-        // make sure there are only DNS-ok characters
-        // currently ugly/basic - need to be improved
-        $name =  ltrim(rtrim($name,' '),' ');
-        $name = str_replace(' ', '-', $name);
-        return($name);
+    // make sure there are only DNS-ok characters
+    // currently ugly/basic - need to be improved
+    $name = ltrim(rtrim($name,' '),' ');
+    $name = str_replace(' ', '-', $name);
+    if ($position=strpos($name, ".")) { // strip away a domain name, if there is one
+      $name = substr($name, 0, $position);
+    }
+    return($name);
   }
 
-  public function UpdateDns()
+
+  public function ViewDNS()
   {
-    if ($_SESSION['nac_rights'] < 2)    // TBD: change to 99 for production
-      throw new InsufficientRightsException('UpdateDns() ' .$_SESSION['nac_rights']);
+    $cmd="nslookup -type=axfr {$this->conf->dns_domain} {$this->conf->ddns_server}";
+    $res=syscall($cmd);
+    echo "<br>$cmd<pre class='logtext'>$res</pre>";
+    echo "<hr><p>Go back to the <a href='{$this->calling_href}'>previous page</a></p>";
+  }
 
 
-    $conn=$this->getConnection();     //  make sure we have a DB connection
+  public function UpdateDnsAll()
+  {
+    $this->UpdateDns(TRUE);
+  }
+
+
+  public function UpdateDns($ddns_update_all=FALSE)
+  {
+    // ddns_update_all: True= all hosts, false= hosts with lastchange>lastupdate
 
     // settings TBD: query from $conf later
-    $nsupdate="nsupdate -v -t 10 ";    // -d = debug, 10 sec timeout, use tcp
-    $ddns_update_all=TRUE; /* True= all hosts, false= hosts with lastchange>lastupdate */
+    #$nsupdate="nsupdate -v -t 10 ";    // -d = debug, 10 sec timeout, use tcp
+    $nsupdate="nsupdate -d -v -t 10 ";    // -d = debug, 10 sec timeout, use tcp
+
+    if ($_SESSION['nac_rights'] < 2)    // TBD: change to 99 for production
+      throw new InsufficientRightsException('UpdateDns() ' .$_SESSION['nac_rights']);
+    $conn=$this->getConnection();     //  make sure we have a DB connection
 
     /** A Records **/
     $query = "SELECT ip.id as id, INET_NTOA(ip.address) as ip, systems.name as name FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.status=1 AND ip.system != 0 ";
@@ -78,13 +100,16 @@ class GuiUpdateDns extends WebCommon
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
 
-     $dns_ina='';      // collect the update commands
-     while (($host = $res->fetch_assoc()) !== NULL) {
+
+    $dns_ina='';      // collect the update commands
+    $host_count=0;
+    while (($host = $res->fetch_assoc()) !== NULL) {
 
          if (($host['name'] == 'unknown') || ($host['ip'] == '') || ($host['name'] == '')) { 
             echo "Skipping invalid host={$host['name']}, ip={$host['ip']} <br>";
             next;
          }
+         $host_count++;
          echo "Analysing host={$host['name']}, ip={$host['ip']} <br>";
 
 	 $dns_name = $this->sanitize_name($host['name']) ."." .$this->conf->dns_domain .".";
@@ -99,8 +124,12 @@ class GuiUpdateDns extends WebCommon
             $res2 = $conn->query($upd_clear);
             if ($res2 === FALSE)
               throw new DatabaseErrorException($conn->error);
-      };
+    };
 
+    if ($host_count==0) {
+      echo "<br>There are no new changes, no DNS updates pending.";
+      
+    } else {
       $dns_update = "server {$this->conf->ddns_server}\r\n";
       //$dns_update .= "zone $dns_domain\r\n"; Zone must be in name
       $dns_update .= $dns_ina;
@@ -112,22 +141,46 @@ class GuiUpdateDns extends WebCommon
         $dns_update .= "answer\n";    
       #}
       $dns_update .= "send\n";
-      echo "<br>The update request is:<pre>$dns_update</pre>";
+      echo "<br>The update request [$nsupdate] is:<pre class='text13'>$dns_update</pre>";
 
-    //if ($this->logger->getDebugLevel()=0) {
-      $fp = popen("$nsupdate",'w');
+/*    $fp = popen($nsupdate,'w');
       if( ! $fp ){
         print "<h3>Error while sending to: $nsupdate</h3>\n";
         return false;
       }
       fwrite($fp,$dns_update);
       pclose($fp);
-      echo "<p>Update completed</p>";
+*/
+ 
+      $des= array( 0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+                   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+                   2 => array("pipe", "w")   // stderr
+      );
+      $fp = proc_open($nsupdate, $des, $pipes);
+      if (is_resource($fp) ) {
+        fwrite($pipes[0], $dns_update);    // send dns updates
+        fclose($pipes[0]);
+        #fflush($pipes[0]);
+        #usleep(100);  // # wait till something happens
 
-    //} else {
-    //  print "<h3>Debug only: </h3>\n";
-    //  echo "<p>no commands actually sent to DNS.</p>";
-    //}
+        $ret='';
+        #$ret= stream_get_contents($pipes[1]);  // read the answer
+        while (!feof($pipes[1]))   // read the answer
+          $ret.=fgets($pipes[1], 1024);
+
+        while (!feof($pipes[2]))   // read the answer
+          $ret.=fgets($pipes[2], 1024);
+
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $ret2=proc_close($fp);
+      } 
+
+      echo "<br>The answer is:<pre class='logtext'>$ret</pre>";
+      echo "<br>Process answer =$ret2 (0 is success)";
+      #echo "<p>Update completed</p>";
+    }
+
     echo "<hr><p>Go back to the <a href='{$this->calling_href}'>previous page</a></p>";
   }
 

@@ -123,6 +123,14 @@ class WebCommon extends Common
     }
   }
 
+  public function print_header1()
+  {
+    global $header1;
+    $ret= $header1 ."\n";
+    $ret.= $this->print_logo() ."\n";
+    return $ret;
+  }
+
 
   public function print_footer($print_links=true)
   {
