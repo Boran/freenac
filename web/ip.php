@@ -40,7 +40,7 @@ else if ($_SESSION['nac_rights']==1) {
 }
 else if ($_SESSION['nac_rights']==2) {
   // TBD: testingDA only:
-  $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
+  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
   //$action_menu=array('View','Edit');   // 'buttons' in action column
   $action_confirm=array('', '', 'Really DELETE the record for this IP?');  // Confirm Deletes
 
@@ -51,7 +51,8 @@ else if ($_SESSION['nac_rights']==4) {
 }
 else if ($_SESSION['nac_rights']==99) {
   $action_menu='';
-  $action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
+  //$action_menu=array('View', 'Edit', 'Delete', 'Add');   // 'buttons' in action column
+  $action_menu=array('View', 'Edit', 'Delete');   // 'buttons' in action column
   $action_confirm=array('', '', 'Really DELETE the record for this IP?');  // Confirm Deletes
 
 } else {
@@ -72,22 +73,29 @@ $action_fieldname="IP Idx";     $idx_fieldname="ip.id";
 $q=<<<TXT
 SELECT
   INET_NTOA(ip.address) AS 'IP Address',
-  ip.status, 
-  ip.dns_update AS 'Dns update', 
-  ip.source AS 'IP Source', 
-  ip.comment as 'IP Comment',
-  s.name AS 'Sys Name', s.r_ip AS 'Sys Last IP',
-  s.r_timestamp as 'Sys Timstamp',
-  ip.system AS 'Sys Idx', 
+  CASE ip.status WHEN 0 THEN 'free' WHEN 1 THEN 'active' WHEN 2 then 'reserved' END As Status,
+  s.name AS 'Sys Name', 
+  s.dns_alias AS 'Sys Aliases', 
+  s.r_ip AS 'Sys Last IP', s.r_timestamp as 'Sys Timstamp',
   subnets.ip_address AS 'Subnet',
   subnets.ip_netmask AS 'Mask',
-  ip.subnet AS 'Subnet Idx', 
+  ip.comment as 'IP Comment',
+  ip.source AS 'IP Source', 
+  ip.system AS 'Sys Idx', 
+  ip.lastchange,
+  ip.lastupdate,
+  ip.dns_update AS 'Dns update', 
+  ip.status AS 'Status Idx', 
   $idx_fieldname AS '$action_fieldname' 
   FROM ip
   LEFT JOIN systems s on ip.system=s.id
   LEFT JOIN subnets on ip.subnet=subnets.id
 TXT;
-#  WHERE ip.system != 0 
+/*
+  IF(ip.status='0','free', IF(ip.status=1,'fixed','')) AS Status,
+  ip.subnet AS 'Subnet Idx', 
+  WHERE ip.system != 0 
+*/
 
 
 // Actions handled by GuiEditDevice class
@@ -108,9 +116,27 @@ if (isset($_REQUEST['action']) && (
   $report->handle_request();
   $logger->debug("after new GuiEditIp", 3);
 
-// Default & Actions handled by GuiList1 class: execute query
+
+} else if (isset($_REQUEST['action']) && (
+       ($_REQUEST['action'] == 'UpdateDNS')
+  ) ) {
+  require_once "dnsupdate2.php";
+
+
 } else {
-  require_once "GuiList1_control.php";
+  // Default & Actions handled by GuiList1 class: execute query
+  #require_once "GuiList1_control.php";
+
+    $report=new GuiList1($title, true, 1);                //true=dynamic with filtering, debug level
+    $add="<form name='Add' action='ip.php' method='post'> <input class='bluebox' type='submit' name='action' value='Add' />";
+    $dns="<form name='UpdateDNS' action='ip.php' method='post'> <input class='bluebox' type='submit' name='action' value='UpdateDNS' />";
+    echo "<div align='center'>$add $dns<hr></div>";
+    echo $report->query($q, $sortlimit, $sortby,
+       $action_menu, $action_fieldname, $idx_fieldname,
+       $searchstring, $searchby, $action_confirm, $order_dir, $order_op);   // run query, generate report
+
+    echo $report->print_footer();
+
 }
 
 
