@@ -11,13 +11,15 @@
  * Inputs: ip.address, systems.name
  *   $conf->: ddns_server,  dns_domain, ddns_ttl
  * Options:  
- *   $ddns_level: 0 = all hosts, 1 = hosts with dns_update bit 1 is set
+ *   $generate_all: TRUE = all hosts, FALSE = hosts with dns_update bit 1 is set
  *  Status field
  *    -1 = special adress (network address, broadcast)
  *    0 = free
  *    1 = used, dynamic
  *    2 = fixed
  *    3 = reserved
+ *
+ *  DNS_update set top 1 if FreeNAC must update the dns
  *
  * PHP version 5
  *
@@ -35,8 +37,9 @@
  */
 
 // settings
+// TODO : put in config table
 $nsupdate="nsupdate -d ";    // -d = debug
-$ddns_level=0; /* DDNS level: 0 = all hosts, 1 = hosts with dns_update bit 1 is set */
+$generate_all=TRUE; /* Generate all => all hosts, false => only hoses with dns_update bit 1 is set */
 
 
 //  main ()
@@ -71,14 +74,14 @@ function sanitize_name($name) {
         return($name);
 };
 
-switch($ddns_level) {
-		case 1 :
-			$query = "SELECT ip.id as id, INET_NTOA(ip.address) as ip, systems.name as name, ip.dns_update as dns_update FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0 AND ((ip.dns_update & 1) = 1)";
-			break;
-		case 0 :
-			$query = "SELECT ip.id as id, INET_NTOA(ip.address) as ip, systems.name as name FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0";
-			break;
+if ($generate_all) {
+	$query = "SELECT ip.id as id, INET_NTOA(ip.address) as ip, systems.name as name, systems.dns_alias as cname FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0";
+
+} else {
+	 $query = "SELECT ip.id as id, INET_NTOA(ip.address) as ip, systems.name as name, ip.dns_update as dns_update, systems.dns_alias as cname FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0 AND ((ip.dns_update & 1) = 1)";
 };
+
+echo $query;
         $res = mysql_query($query) or die("Unable to query MySQL : $query; \n");
 
         $dns_ina='';
@@ -90,14 +93,26 @@ switch($ddns_level) {
 
 				$dns_ina .= 'update delete '.$dns_name."\t A\r\n";
 	                        $dns_ina .= 'update add '.$dns_name."\t".$conf->ddns_ttl.' A '.$dns_ip."\r\n";
+				if ($host['cname'] != '') {
+					$cnames = explode(',',$host['cname']);
+					foreach ($cnames as $cname) {
+						$dns_cname = sanitize_name($cname).".".$conf->dns_domain.".";
+						$dns_ina .= 'update delete '.$dns_cname."\t CNAME\r\n";
+						$dns_ina .= 'update add '.$dns_cname."\t".$conf->ddns_ttl.' CNAME '.$dns_name."\r\n";
+
+					};
+				};
 				// clear update flag
-				if ($ddns_level == 1) {
+				if (!$generate_all) {
 					$upd_clear = "UPDATE ip SET dns_update=".($host['dns_update'] & (~1))." WHERE id=".$host['id'];
 					mysql_query($upd_clear) or die("Unable to update MySQL : $query; \n");
 				};
                         };
                 };
         };	
+
+
+
 
 
 /* TODO : still missing :

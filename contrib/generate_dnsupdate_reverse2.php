@@ -19,12 +19,6 @@
  *
  */
 
-/*include_once('/opt/nac-2.2/nac-2.2/web1/config.inc');
-include_once('/opt/nac-2.2/nac-2.2/web1/functions.inc');
-include_once('/opt/nac-seclab/web3/objects.inc');
-include_once('/opt/nac-seclab/web3/defs.inc');
-*/
-//include_once('/opt/nac/bin/funcs.inc.php');
 include_once('/opt/nac/web/webfuncs.inc');
 include_once('/opt/nac/etc/config.inc');
 
@@ -51,14 +45,13 @@ function sanitize_name($name) {
         2 = hosts with static ip
 */
 
-$ddns_level = 0;
-switch($ddns_level) {
-		case 1 :
+$generate_all=FALSE;
+
+if ($generate_all) {
+			$query = "SELECT INET_NTOA(ip.address) as ip, systems.name AS name FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0";
+
+} else {
 			$query = "SELECT INET_NTOA(ip.address) as ip, systems.name AS name FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0 AND ((ip.dns_update & 2) = 2)";
-			break;
-		case 0 :
-			$query = "SELECT INET_NTOA(ip.address) as ip, systems.name AS name FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0"; 
-			break;
 };
 
 
@@ -85,7 +78,7 @@ function make_ptr($subnet) {
 				$dns_inptr .= 'update delete '.$dns_ipname."\t PTR\r\n";
 	                        $dns_inptr .= 'update add '.$dns_ipname."\t".$conf->ddns_ttl." PTR ".$dns_name.'.'.$conf->dns_domain.".\r\n";
                         };
-                        if ($ddns_level == 1) {
+                        if (!$generate_all) {
                               $upd_clear = "UPDATE ip SET dns_update=".($host['dns_update'] & (~2))." WHERE id=".$host['id'];
 			};
 
@@ -111,5 +104,10 @@ $dns_update .= "send\n";
 		$fp = fopen($outfile,'w');
 		fwrite($fp,$dns_update);
 		fclose($fp);
+
+
+// delete temporary file
+  unlink($tmp_file);
+
 
 ?>
