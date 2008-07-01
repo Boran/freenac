@@ -37,9 +37,30 @@ $dhcp_preamble = "
 #
 #\n";
 
+
+
+// Preamble, default configuration
 $dhcp_preamble .= $conf->dhcp_default."\n\n";
 
+// DHCP -> dynamic DNS Updates
 
+if ($conf->dhcp_ddns) {
+	$dhcp_ddns = "ddns-update-style interim;\n";
+	$dhcp_ddns .= "allow unknown-clients;\n";
+	$dhcp_ddns .= "allow client-updates;\n";
+	$dhcp_ddns .= "ddns-domainname \"".$conf->dns_domain."\";\n";
+	$dhcp_ddns .= "ddns-rev-domainname \"in-addr.arpa\";\n\n";
+
+	$dhcp_ddns .= "key DHCP_UPDATER {\n\talgorithm hmac-md5;\n";
+	$dhcp_ddns .= "\t secret \"".$conf->dhcp_ddns_secret."\";\n}\n";
+
+	$dhcp_ddns .= "zone $conf->dns_domain. {\n";
+	$dhcp_ddns .= "\tprimary\t".$conf->ddns_server.";\n";
+	$dhcp_ddns .= "\tkey\tDHCP_UPDATER;\n}\n";
+
+} else {
+	$dhcp_ddns = "\nddns-update-style ad-hoc;\n";
+};
 // 1. Options (per subnet)
 
 $sel = "select * from dhcp_options;";// where scope = 0;";
@@ -101,10 +122,16 @@ if (mysql_num_rows($res) > 0) {
 		$dhcp_subnets .= "\toption routers ".$subnet['dhcp_defaultrouter'].";\n";
 		$dhcp_subnets .= $options[$subnet['scope']];
 		$dhcp_subnets .= "}\n\n";
+
+		if ($conf->dhcp_ddns) {
+			$dhcp_ddns .= "zone ".get_arpaname($subnet['ip_address']).". {\n";
+		        $dhcp_ddns .= "\tprimary\t".$conf->ddns_server.";\n";
+			$dhcp_ddns .= "\tkey\tDHCP_UPDATER;\n}\n";
+		};
 	};
 };
 
-$dhcp_config = $dhcp_preamble. $options[0] . $dhcp_fixedips. $dhcp_subnets;
+$dhcp_config = $dhcp_preamble. $dhcp_ddns. $options[0] . $dhcp_fixedips. $dhcp_subnets;
 
 		$outfile = $conf->dhcp_configfile;
 		$fp = fopen($outfile,'w');
