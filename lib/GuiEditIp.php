@@ -146,6 +146,16 @@ class GuiEditIp extends WebCommon
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
 
+      // Update Aliases in the systems table, if needed.
+      if (isset($_REQUEST['aliases']) && (strlen($_REQUEST['aliases'])>0) && ($_REQUEST['system'] > 0) ) {
+        $q= "UPDATE systems set dns_alias='{$_REQUEST['aliases']}' WHERE id={$_REQUEST['system']} LIMIT 1 ";
+
+        $this->debug("InsertOrUpdate() Query=" .$q, 3);
+        $res = $conn->query($q);
+        if ($res === FALSE)
+          throw new DatabaseErrorException($conn->error);
+      }
+
       if ($update_mode==TRUE) {
         echo "<p class='UpdateMsgOK'>Update Successful</p>";
         $this->loggui("{$this->module} " .$_REQUEST['vendor'] ."/" .$_REQUEST['mac'] ." updated");
@@ -230,25 +240,28 @@ TXT;
         $output.= '<input name="address" type="text" value="' .stripslashes($row['address']) .'" onBlur="checkLen(this,7)"/>' ."\n";
         $output.= '</td><td>Index:' .$row['id'] .'</td>' ."</tr>\n";
 
+        $output.= '<tr><td width="87" title="Status? (1=update DNS, 2=reserved - document only)">Status:</td><td width="400">' ."\n";
+        $output.=  $this->get_dstatusdropdown($row['status']) . '</td></tr>'."\n";
+
         // Subnet
-        $output.=  '<tr><td title="Which Subnet does this below to?">Subnet:</td><td>'."\n";
+        $output.=  '<tr><td title="Which Subnet does this below to? Used for creating reverse DNS records.">Subnet:</td><td>'."\n";
         $output.=  $this->get_subnetdropdown($row['subnet']) . '</td></tr>'."\n";
 
         // System
         $output.=  '<tr><td title="What End-Device is this IP address linked to?">End-Device:</td><td>' ."\n";
         $output.=  $this->get_systemdropdown($row['system']) . '</td></tr>'."\n";
 
-        $output.= '<tr><td width="87" title="Update dns?">Dns update:</td><td width="400">' ."\n";
-        $output.= '<input name="dns_update" type="text" value="' .stripslashes($row['dns_update']) .'"/>' ."\n";
+        #$output.= '<tr><td width="87" title="Update dns?">Dns update:</td><td width="400">' ."\n";
+        #$output.= '<input name="dns_update" type="text" value="' .stripslashes($row['dns_update']) .'"/>' ."\n";
 
-        $output.= '<tr><td width="87" title="Status?">Status:</td><td width="400">' ."\n";
-        $output.= '<input name="system" type="text" value="' .stripslashes($row['system']) .'"/>' ."\n";
+        $output.= '<tr><td width="87" title="Optional: Aliases (space or comma separated). Changing this value means that the alias field of the above end-device is updated.">Aliases:</td><td width="400">' ."\n";
+        $output.= '<input name="aliases" type="text" value="' .$this->get_systemaliases($row['system']) .'"/>' ."\n";
 
-        $output.= '<tr><td width="87" title="Comment?">IP Comment:</td><td width="400">' ."\n";
+        $output.= '<tr><td width="87" title="Optional Comment?">Comment:</td><td width="400">' ."\n";
         $output.= '<input name="comment" type="text" value="' .stripslashes($row['comment']) .'"/>' ."\n";
 
-        $output.= '<tr><td width="87" title="Optional: source of imported data">IP Source:</td><td width="400">' ."\n";
-        $output.= '<input name="source" type="text" value="' .stripslashes($row['source']) .'"/>' ."\n";
+        //$output.= '<tr><td width="87" title="Optional: source of imported data">IP Source:</td><td width="400">' ."\n";
+        //$output.= '<input name="source" type="text" value="' .stripslashes($row['source']) .'"/>' ."\n";
 
         // Status
         //$output.=  '<tr><td>Status:</td><td>' ."\n";
@@ -295,12 +308,12 @@ TXT;
 
 
 
-function get_statusdropdown($s)
+function get_dstatusdropdown($s)
 {
    $conn=$this->getConnection();     //  make sure we have a DB connection
 
    if ($_SESSION['nac_rights'] == 1) {   // read-only
-     $q="select value from vstatus where id='$s';";
+     $q="select value from dstatus where id='$s'";
      $res = $conn->query($q);
      if ($res === FALSE)
        throw new DatabaseErrorException($q .'; ' .$conn->error);
@@ -311,7 +324,7 @@ function get_statusdropdown($s)
    else if ($_SESSION['nac_rights'] > 1) {   // edit/admin
      $ret='<select name="status">';
 
-     $q='SELECT id, value FROM vstatus ORDER BY value ASC;';
+     $q='SELECT id, value FROM dstatus ORDER BY value ASC';
      $res = $conn->query($q);
      if ($res === FALSE)
        throw new DatabaseErrorException($q .'; ' .$conn->error);
@@ -322,7 +335,23 @@ function get_statusdropdown($s)
      }
      $ret.="</select> \n";
    }
+   return $ret;
+}
 
+
+function get_systemaliases($s)       // Lookup current aliases
+{
+   $ret='';
+   $conn=$this->getConnection();     //  make sure we have a DB connection
+   $q="select dns_alias from systems where id='$s'";
+     $this->debug("Query=" .$q, 3);
+     $res = $conn->query($q);
+     if ($res === FALSE)
+       throw new DatabaseErrorException($q .'; ' .$conn->error);
+
+     while (($row = $res->fetch_assoc()) !== NULL) {
+         $ret=$row['dns_alias'];
+     }
    return $ret;
 }
 

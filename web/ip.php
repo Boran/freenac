@@ -73,9 +73,9 @@ $action_fieldname="IP Idx";     $idx_fieldname="ip.id";
 $q=<<<TXT
 SELECT
   INET_NTOA(ip.address) AS 'IP Address',
-  CASE ip.status WHEN 0 THEN 'free' WHEN 1 THEN 'active' WHEN 2 then 'reserved' END As Status,
-  s.name AS 'Sys Name', 
-  s.dns_alias AS 'Sys Aliases', 
+  dstatus.value as 'Status',
+  s.name AS 'Sys DNS Name', 
+  s.dns_alias AS 'DNS Aliases', 
   s.r_ip AS 'Sys Last IP', s.r_timestamp as 'Sys Timstamp',
   subnets.ip_address AS 'Subnet',
   subnets.ip_netmask AS 'Mask',
@@ -90,8 +90,10 @@ SELECT
   FROM ip
   LEFT JOIN systems s on ip.system=s.id
   LEFT JOIN subnets on ip.subnet=subnets.id
+  LEFT JOIN dstatus on ip.status=dstatus.id
 TXT;
 /*
+  CASE ip.status WHEN 0 THEN 'free' WHEN 1 THEN 'active' WHEN 2 then 'reserved' END As Status,
   IF(ip.status='0','free', IF(ip.status=1,'fixed','')) AS Status,
   ip.subnet AS 'Subnet Idx', 
   WHERE ip.system != 0 
@@ -120,7 +122,10 @@ if (isset($_REQUEST['action']) && (
 } else if (isset($_REQUEST['action']) && (
        ($_REQUEST['action'] == 'UpdateDNS')
   ) ) {
-  require_once "dnsupdate2.php";
+  $logger->debug("Ip > GuiUpdateDns action=". $_REQUEST['action'], 1);
+  $report=new GuiUpdateDns(3);  // last param=debug
+  $report->UpdateDns();
+  $logger->debug("after new GuiUpdateDns", 3);
 
 
 } else {
