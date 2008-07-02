@@ -78,6 +78,44 @@ class GuiUpdateDns extends WebCommon
   }
 
 
+  protected function  call_process($cmd, $input)
+  {
+      // send the file to nsupdate
+/*    $fp = popen($nsupdate,'w');
+      if( ! $fp ){
+        print "<h3>Error while sending to: $nsupdate</h3>\n";
+        return false;
+      }
+      fwrite($fp,$dns_update);
+      pclose($fp);
+*/
+      $des= array( 0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
+                   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+                   2 => array("pipe", "w")   // stderr
+      );
+      $fp = proc_open($cmd, $des, $pipes);
+      if (is_resource($fp) ) {
+        fwrite($pipes[0], $input);    // send dns updates
+        fclose($pipes[0]);
+
+        $retstdout= stream_get_contents($pipes[1]);  // read the answer
+        #while (!feof($pipes[1]))   // read the answer
+        #  $ret.=fgets($pipes[1], 1024);
+
+        $retstderr= stream_get_contents($pipes[2]);  // read the answer
+        #while (!feof($pipes[2]))   // read the answer
+        #  $ret.=fgets($pipes[2], 1024);
+
+        fclose($pipes[1]); fclose($pipes[2]);
+        $ret2=proc_close($fp);
+      }
+      #echo "<br>The stdout answer is:<pre class='logtext'>$retstdout</pre>";
+      #echo "<br>Process answer =$ret2 (0 is success)";
+      $this->debug("The stdout answer is: $retstdout", 3);
+      $this->debug("The process answer is: $ret2", 3);
+      echo "<br>The DNS server replied (look for 'status: NOERROR'):<pre class='logtext'>$retstderr</pre>";
+  }
+
   public function UpdateDns($ddns_update_all=FALSE)
   {
     // ddns_update_all: True= all hosts, false= hosts with lastchange>lastupdate
@@ -110,7 +148,7 @@ class GuiUpdateDns extends WebCommon
             next;
          }
          $host_count++;
-         echo "Analysing host={$host['name']}, ip={$host['ip']} <br>";
+         echo "<p class='text15'>Analysing host={$host['name']}, ip={$host['ip']}";
 
 	 $dns_name = $this->sanitize_name($host['name']) ."." .$this->conf->dns_domain .".";
 	    #$dns_ip = $host['ip'];
@@ -118,7 +156,19 @@ class GuiUpdateDns extends WebCommon
 	    $dns_ina .= 'update add ' .$dns_name ."\t" .$this->conf->ddns_ttl 
               .' A ' .$host['ip'] ."\r\n";
 
-         // clear update flag: TBD: we don't really know if the update will work..
+         $dns_ptr='';      // reverse PTR record for this IP
+         $list= explode(".", $host['ip']);    // CReate reverse PTR records
+         #$dns_ptr.= "zone " .$list[2] ."." .$list[1] ."." .$list[0] .".in-addr.arpa \r\n";
+         $ptr= $list[2] ."." .$list[1] ."." .$list[0] .".in-addr.arpa";
+         $dns_ptr.= "server {$this->conf->ddns_server}\r\n";
+         $dns_ptr.= "zone $ptr\r\n";
+         $dns_ptr.= "update delete {$list[3]}.$ptr PTR \r\n";
+         $dns_ptr.= "update add {$list[3]}.$ptr {$this->conf->ddns_ttl} PTR $dns_name\r\n";
+         $dns_ptr.= "answer\r\nsend \r\n";
+         echo "<br class='text15'>Create reverse PTR records:<pre class='logtext'>$dns_ptr</pre>";
+         $this->call_process($nsupdate, $dns_ptr);
+
+         // clear update flag: TBD: we don't really know yet if all updates will work..
          $upd_clear = "UPDATE ip SET lastupdate=NOW() WHERE id=".$host['id'];
             $this->debug($query, 3);
             $res2 = $conn->query($upd_clear);
@@ -133,52 +183,16 @@ class GuiUpdateDns extends WebCommon
       $dns_update = "server {$this->conf->ddns_server}\r\n";
       //$dns_update .= "zone $dns_domain\r\n"; Zone must be in name
       $dns_update .= $dns_ina;
-      #if ($logger->getDebugLevel()>1) {
         // request verbose answer, i.e. NOERROR below:
         # Outgoing update query:
         # ;; ->>HEADER<<- opcode: UPDATE, status: NOERROR, id:  29828
         # ;; flags: qr ra ; ZONE: 0, PREREQ: 0, UPDATE: 0, ADDITIONAL: 0
         $dns_update .= "answer\n";    
-      #}
       $dns_update .= "send\n";
-      echo "<br>The update request [$nsupdate] is:<pre class='text13'>$dns_update</pre>";
+      echo "<hr><p class='text15'>Updating the forward records, send request [$nsupdate]:<pre class='logtext'>$dns_update</pre>";
 
-/*    $fp = popen($nsupdate,'w');
-      if( ! $fp ){
-        print "<h3>Error while sending to: $nsupdate</h3>\n";
-        return false;
-      }
-      fwrite($fp,$dns_update);
-      pclose($fp);
-*/
- 
-      $des= array( 0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
-                   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
-                   2 => array("pipe", "w")   // stderr
-      );
-      $fp = proc_open($nsupdate, $des, $pipes);
-      if (is_resource($fp) ) {
-        fwrite($pipes[0], $dns_update);    // send dns updates
-        fclose($pipes[0]);
-        #fflush($pipes[0]);
-        #usleep(100);  // # wait till something happens
 
-        $ret='';
-        #$ret= stream_get_contents($pipes[1]);  // read the answer
-        while (!feof($pipes[1]))   // read the answer
-          $ret.=fgets($pipes[1], 1024);
-
-        while (!feof($pipes[2]))   // read the answer
-          $ret.=fgets($pipes[2], 1024);
-
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-        $ret2=proc_close($fp);
-      } 
-
-      echo "<br>The answer is:<pre class='logtext'>$ret</pre>";
-      echo "<br>Process answer =$ret2 (0 is success)";
-      #echo "<p>Update completed</p>";
+      $this->call_process($nsupdate, $dns_update);
     }
 
     echo "<hr><p>Go back to the <a href='{$this->calling_href}'>previous page</a></p>";
