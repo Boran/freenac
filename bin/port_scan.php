@@ -995,6 +995,7 @@ function parse_scanfile($scan_file,$list)
             }
             if ($flagscannow) //Lets set os=Unreachable to those devices which are present in the nac_hostscanned table
             {
+               $query=NULL;
                for ($i=0;$i<$list['counter'];$i++) //Grabs devices' ids
                {
                   if ($i==0)
@@ -1003,7 +1004,8 @@ function parse_scanfile($scan_file,$list)
                      $query.=" or ip='".$list['ip'][$i]."'";
                }
                ## Interested only in systems whose IP address has been assigned in the last 3 hours.
-               $query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
+               if (strlen($query)>0)
+                  $query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
                #$query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 24 HOUR);";
                $res=execute_query($query);
                if ($res)
