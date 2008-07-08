@@ -57,7 +57,7 @@ if (($conf->unknown_purge) && ($conf->unknown_purge>10)) {
 ## a) First list & log what we delete
 #$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name='unknown' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50"; 
 #$query="SELECT mac,vlan,description,port,switch,LastSeen from systems where name LIKE '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50"; 
-$query="select mac,vlan,description,lastport,lastseen from systems where name like '%unknown%' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50";
+$query="select mac,vlan,description,lastport,lastseen from systems where status='0' and TO_DAYS(Lastseen)<TO_DAYS(NOW())-".$conf->unknown_purge." LIMIT 50";
   $res = mysql_query($query, $connect);
   if (!$res) 
   { 
