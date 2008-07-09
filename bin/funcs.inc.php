@@ -867,6 +867,7 @@ function do_delete($table, $field, $identifier)
       }
       else
       {
+         $logger->logit("do_delete: Deleted from table $table. $field=$identifier");
          return true;
       }
    }
@@ -947,10 +948,26 @@ function cascade_delete($mac)
    global $logger;
    if (!$mac)
       return false;
+   $system_id = 0;
    # Get system id of this device
-   $query="SELECT id FROM systems where mac='$mac';";
+   $query="SELECT id,vlan,name,mac,uid FROM systems where mac='$mac';";
    $logger->debug($query,3);
-   $system_id = v_sql_1_select($query);
+   $res = mysql_query($query);
+   if ( ! $res ) 
+   {
+      return false;
+   }
+   else
+   {
+      $row = mysql_fetch_array($res, MYSQL_ASSOC);
+      if (is_array($row))
+      {
+         $system_id = $row['id'];
+         $logger->logit("cascade_delete sid: {$row['id']} {$row['name']}({$row['mac']}) vlan_id: {$row['vlan']} uid: {$row['uid']}"); 
+      }
+      else
+         return false;
+   }
    if (!$system_id)
       return false;
    # Tables which have an sid field.
