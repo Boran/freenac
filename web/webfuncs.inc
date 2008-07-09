@@ -792,8 +792,8 @@ EOF;
 //   if ($edit_mode)    // edit/admin
      $text.=<<<EOF
     <a href="deviceadd.php?action=Add"  title="Add a new End-Device/PC to the Database">Add new End-Device</a><br/>
-    <a href="search.php"  title="Search for a precise MAC address">Beta: Search for exact MAC address</a><br/>
-    <a href="mydevnow.php"  title="Search your IP address">Beta: Search for your current IP </a><br/>
+    <a href="search.php"  title="Search for a precise MAC address">Search for exact MAC address</a><br/>
+    <a href="mydevnow.php"  title="Search your IP address">Search for your current IP </a><br/>
 EOF;
 
    $text.=<<<EOF
@@ -813,7 +813,7 @@ EOF;
      <a href="graphswitch.php" title="Graphs cables/ports recently used for one switch">Switch port diagram: single switch</a><br/>
      <a href="graphswitchall.php" title="Graphs cables/ports recently used for all switches">Switch port diagram: all switches</a><br/>
 
-     <a href="report_listports22.php" title="List all systems scanned with port 22 open">Beta: Discovered SSH servers</a><br/>
+     <a href="report_listports22.php" title="List all systems scanned with port 22 open">Discovered SSH servers</a><br/>
   </div>
 </div></td>
 EOF;
