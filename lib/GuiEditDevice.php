@@ -49,7 +49,7 @@ class GuiEditDevice extends WebCommon
   }
 
 
-  protected function print_title($title)
+  public function print_title($title)
   {
     echo $this->print_header();
     echo "<div id='GuiList1Title'>{$title}</div>";
