@@ -73,7 +73,7 @@ SELECT
   TelephoneNumber AS Telephone, Mobile, 
   CONCAT(building.name, ', ', location.name) as Location,
   LastSeenDirectory, 
-  GivenName AS 'First Name', Surname AS 'Second Name', 
+  GivenName AS 'Forename', Surname AS 'Surname', 
   Department, rfc822mailbox, 
   manual_direx_sync, 
   $idx_fieldname AS '$action_fieldname' 
