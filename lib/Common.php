@@ -59,7 +59,8 @@ class Common {
    */
   public function htmlescape($in_string)
   {
-    return htmlentities($in_string, ENT_QUOTES, 'UTF-8');
+    #return htmlentities($in_string, ENT_QUOTES, 'UTF-8');
+    return htmlentities($in_string, ENT_QUOTES, 'ISO-8859-1');
   }
 
   /**
