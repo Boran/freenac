@@ -426,7 +426,8 @@ function mega_escape_string ($in_string, $in_markup = FALSE, $in_removePct = FAL
   if ($in_removePct)
     $str = ereg_replace('(%)', '\\\1', $str);       // escape %
   if ($in_markup == TRUE) {
-    $str = htmlspecialchars($str, ENT_NOQUOTES, 'UTF-8');
+    #$str = htmlspecialchars($str, ENT_NOQUOTES, 'UTF-8');
+    $str = htmlspecialchars($str, ENT_NOQUOTES, 'ISO-8859-1');
   }
 
   return $str;
