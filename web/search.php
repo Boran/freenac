@@ -39,8 +39,9 @@ $sortby='sys.LastSeen';
 $searchby='sys.mac';
 
 $_REQUEST=array_map('validate_webinput',$_REQUEST);
-$searchstring=$_REQUEST['searchstring'];
-$searchstring=normalise_mac($searchstring);
+$searchstring='';
+if (isset($_REQUEST['searchstring']) )
+  $searchstring=normalise_mac($_REQUEST['searchstring']);
 
 // 1. Check rights
 if ($_SESSION['nac_rights']<1) {
@@ -87,7 +88,7 @@ SELECT
   p.name as port, pcloc.name as PortLocation, p.comment as PortComment,
   swloc.name as SwitchLocation,
   usr.username as Username, 
-  usr.surname AS Firstname, usr.givenname AS FamilyName, usr.department, 
+  usr.surname AS Surname, usr.givenname AS Forename, usr.department as UserDept, 
   usr.telephonenumber as UserTelephone,
   sys.os4 as OS4,
   $idx_fieldname AS '$action_fieldname'
@@ -134,7 +135,10 @@ if (isset($_REQUEST['action']) && (
   $report->handle_request();
   $logger->debug("after new GuiEditDevice", 3);
 
-} else if (isset($_REQUEST['action']) && ($_REQUEST['action'] == 'Search') ) {
+} else if (isset($_REQUEST['action']) && ($_REQUEST['action'] == 'Find') ) {
+  require_once "GuiList1_control.php";
+
+} else if (isset($_REQUEST['action']) && ($_REQUEST['action'] == 'Change') ) {
   require_once "GuiList1_control.php";
 
 } else {

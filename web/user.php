@@ -74,7 +74,7 @@ SELECT
   CONCAT(building.name, ', ', location.name) as Location,
   LastSeenDirectory, 
   GivenName AS 'Forename', Surname AS 'Surname', 
-  Department, rfc822mailbox, 
+  Department AS UserDept, rfc822mailbox, 
   manual_direx_sync, 
   $idx_fieldname AS '$action_fieldname' 
   FROM users

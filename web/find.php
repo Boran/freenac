@@ -85,7 +85,7 @@ SELECT
   p.name as port, pcloc.name as PortLocation, p.comment as PortComment,
   swloc.name as SwitchLocation,
   usr.username as Username, 
-  usr.surname AS Firstname, usr.givenname AS FamilyName, usr.department, 
+  usr.surname AS Forename, usr.givenname AS Surname, usr.department AS UserDept, 
   usr.telephonenumber as UserTelephone,
   sys.os4 as OS4,
   $idx_fieldname AS '$action_fieldname'

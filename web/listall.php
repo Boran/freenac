@@ -86,7 +86,7 @@ SELECT
   pc.outlet as PatchCableOutlet, pc.comment as PatchCableComment,
   sys.history,
   usr.username as Username,
-  usr.surname, usr.givenname, usr.department, usr.rfc822mailbox as EMail,
+  usr.surname as Forename, usr.givenname as Surname, usr.department as UserDept, usr.rfc822mailbox as EMail,
   usrloc.name as UserLocation, usr.telephonenumber as UserTelephone, usr.mobile,
   usr.lastseendirectory as UserLastSeenDirectory,
   sos.value as OSName, sos1.value as OS1, sos2.value as OS2, sos3.value as OS3,
