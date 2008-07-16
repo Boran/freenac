@@ -86,7 +86,7 @@ SELECT
   swloc.name as 'Switch Location',
   pcloc.name as 'Port Location', p.comment as 'Port Comment',
   usr.username as Username, 
-  usr.surname AS 'Forename', usr.givenname AS 'Surname', usr.department AS 'UserDept', 
+  usr.surname AS 'Surname', usr.givenname AS 'Forename', usr.department AS 'UserDept', 
   usr.telephonenumber as Telephone,
   sys.inventory As Inventory, 
   $idx_fieldname AS '$action_fieldname'
