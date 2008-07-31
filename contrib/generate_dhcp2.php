@@ -76,7 +76,10 @@ if (mysql_num_rows($res) > 0) {
 
 // 2. Fixed IP Adressses
 $dhcp_fixedips = "\n\n";
-$sel = "SELECT systems.name as name, systems.mac as mac, INET_NTOA(ip.address) as ip, ip.status as status FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE (ip.status = 2) OR (ip.status=3);";
+#$sel = "SELECT systems.name as name, systems.mac as mac, INET_NTOA(ip.address) as ip, ip.status as status FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE (ip.status = 2) OR (ip.status=3);";
+# What about the empty fields? They will prevent dhcpd from running. 
+# This query below tests for such fields
+$sel = "SELECT systems.name as name, systems.mac as mac, INET_NTOA(ip.address) as ip, ip.status as status FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ( (ip.status = 2) OR (ip.status=3) ) and ( (name is not null) and (mac is not null) );";
 $res = mysql_query($sel) or die ("Cannot query MySQL");
 if (mysql_num_rows($res) > 0) {
         while ($host = mysql_fetch_array($res)) {
@@ -109,9 +112,11 @@ if (mysql_num_rows($res) > 0) {
 // 3. Subnets
 
 //$sel = "SELECT * FROM subnets";
-$sel = "SELECT subnets.id as scope, subnets.ip_address as ip_address, subnets.ip_netmask as ip_netmask,
+/*$sel = "SELECT subnets.id as scope, subnets.ip_address as ip_address, subnets.ip_netmask as ip_netmask,
 		dhcp_subnets.dhcp_from as dhcp_from, dhcp_subnets.dhcp_to as dhcp_to, dhcp_subnets.dhcp_defaultrouter as dhcp_defaultrouter
-	FROM subnets LEFT JOIN dhcp_subnets ON dhcp_subnets.subnet_id = subnets.id;";
+	FROM subnets LEFT JOIN dhcp_subnets ON dhcp_subnets.subnet_id = subnets.id;";*/
+// Same case here, you need to test for empty fields
+$sel = "SELECT subnets.id as scope, subnets.ip_address as ip_address, subnets.ip_netmask as ip_netmask,                 dhcp_subnets.dhcp_from as dhcp_from, dhcp_subnets.dhcp_to as dhcp_to, dhcp_subnets.dhcp_defaultrouter as dhcp_defaultrouter         FROM subnets LEFT JOIN dhcp_subnets ON dhcp_subnets.subnet_id = subnets.id where subnets.ip_address is not null and subnets.ip_netmask is not null and  dhcp_subnets.dhcp_from is not null and dhcp_subnets.dhcp_to is not null and dhcp_subnets.dhcp_defaultrouter is not null;"
 
 $res = mysql_query($sel) or die ("Cannot query MySQL");
 

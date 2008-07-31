@@ -69,15 +69,15 @@ function sanitize_name($name) {
 
         return($name);
 };
-
-function get_arpaname($subnet) {
+##Why having redundant functions? Moved this one to funcs.inc
+/*function get_arpaname($subnet) {
 	$parts = explode('.',$subnet);
 	$name = 'in-addr.arpa';
 	foreach ($parts as $i => $part) {
 		$name = $part.'.'.$name;
 	};
 	return($name) ;
-};
+};*/
 
 /*** Make IN PTR Records **********************************************/
 function make_ptr($subnet) {
