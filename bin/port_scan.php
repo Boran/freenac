@@ -37,7 +37,7 @@
 require_once "funcs.inc.php";
 $output=TRUE;
 
-$logger->setDebugLevel(0);
+$logger->setDebugLevel(3);
 $logger->setLogToStdOut(true);
 
 #Compatibility with old vars
@@ -1071,7 +1071,7 @@ function parse_scanfile($scan_file,$list)
                      if (@isset($temp2->product))
                         $product=(string)$temp2->product;
                      else $product="";
-                     if (isset($temp2->version))
+                     if (@isset($temp2->version))
                         $version=(string)$temp2->version;
                      else $version="";
                      $info[$i]['port'][$j]['description']=$name.":".$product." ".$version;
