@@ -24,7 +24,9 @@ class WebCommon extends Common
   {
     parent::__construct();
     $this->calling_script=basename($_SERVER['SCRIPT_FILENAME']);   // TBD: clean unneeded, trust apache?
-    $this->calling_href=$_SESSION['caller'];    // TBD: needed? same as calling_script?
+    if (isset($_SESSION['caller'])) {
+      $this->calling_href=$_SESSION['caller'];    // TBD: needed? same as calling_script?
+    }
     $this->module='WebCommon';
     $this->logger->setDebugLevel($debuglevel);  // 3 for max debugging
     $this->remote_host=validate_webinput($_SERVER['REMOTE_ADDR']);
