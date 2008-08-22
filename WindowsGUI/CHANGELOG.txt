@@ -191,4 +191,6 @@ v3.0.0.161/03.Jun.08/SB:
     (quSystems2 Query and Update SQL were fixed)
 v3.0.0.162/10.Jun.08/SB:     
   Switch > IP address could not be edited.
+v3.0.0.163/6.Aug.08/SB:     
+  Add hint with server name to secondary button  
   
