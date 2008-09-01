@@ -898,7 +898,7 @@ function walk_macs($switch,$vlanid,$snmp_ro)
    foreach ($macs as $oid => $macaddress) 
    {
       $oids = explode('.',$oid);
-      if ( isset($oids[12]) && isset($oids[13]) && isset($oids[14]) && $isset($oids[15]) && $isset($oids[16]) && $isset($oids[17]) )
+      if ( isset($oids[12]) && isset($oids[13]) && isset($oids[14]) && isset($oids[15]) && isset($oids[16]) && isset($oids[17]) )
       {
          $idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
          $mac[$idx]['mac'] = format_snmpmac($macaddress);
@@ -916,7 +916,7 @@ function walk_macs($switch,$vlanid,$snmp_ro)
    foreach($bridges as $oid => $bridgeid) 
    {
       $oids = explode('.',$oid);
-      if ( isset($oids[12]) && isset($oids[13]) && isset($oids[14]) && $isset($oids[15]) && $isset($oids[16]) && $isset($oids[17]) )
+      if ( isset($oids[12]) && isset($oids[13]) && isset($oids[14]) && isset($oids[15]) && isset($oids[16]) && isset($oids[17]) )
          $idx = $oids[12].'.'.$oids[13].'.'.$oids[14].'.'.$oids[15].'.'.$oids[16].'.'.$oids[17];
       if (isset($mac[$idx])) 
       {
