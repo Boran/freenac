@@ -81,7 +81,8 @@ EOF;
          if ($temp=mysql_fetch_one($query))
          {
             #Information found in DB.
-            $this->props=$temp;
+            if (is_array($temp))
+               $this->props=$temp;
             $location = new Location($this->location);
             $this->props['office_id'] = $location->getid();
             $this->props['office'] = $location->getname();
@@ -191,20 +192,27 @@ EOF;
    */
    protected function __get($key)							
    {
-      if (array_key_exists($key,$this->props))
+      if (is_array($this->props))
       {
-         if (is_numeric($this->props[$key]))
+         if (array_key_exists($key,$this->props))
          {
-            if (stristr($this->props[$key],'.'))
+            if (is_numeric($this->props[$key]))
+            {
+               if (stristr($this->props[$key],'.'))
+                  return $this->props[$key];
+               else if ( $this->props[$key] > 0 )
+                  return (int)$this->props[$key];
+               else return false;
+            }
+            else
+            {
                return $this->props[$key];
-            else if ( $this->props[$key] > 0 )
-               return (int)$this->props[$key];
-            else return false;
+            }
          }
-         else
-         {
-            return $this->props[$key];
-         }
+      }
+      else
+      {
+         return false;
       }
    }
 
@@ -216,14 +224,21 @@ EOF;
    */
    private function __set($key,$value)
    {
-      if (array_key_exists($key,$this->props))
+      if (is_array($this->props))
       {
-         $this->props[$key]=$value;
-         return true;
+         if (array_key_exists($key,$this->props))
+         {
+            $this->props[$key]=$value;
+            return true;
+         }
+         else
+         {
+            $this->logger->debug("Property $key not found",2);
+            return false;
+         }
       }
       else
       {
-         $this->logger->debug("Property $key not found",2);
          return false;
       }
    }
