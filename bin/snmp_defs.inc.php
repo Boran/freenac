@@ -641,10 +641,77 @@ function walk_ports($switch,$snmp_ro)
    global $snmp_ifaces; // query to get all interfaces
    global $snmp_if; // sub-queries with interfaces characteristics
    global $snmp_port;
+   global $logger;
 #	ob_start("callback"); 
    $iface = array();
+   $iface_from_db=array();
    debug2("snmprealwalk $switch $snmp_ro $snmp_ifaces");
+   
+   // Read the list of interfaces present on the switch
    $ifaces = @snmprealwalk($switch,$snmp_ro,$snmp_ifaces);
+
+   /* The following is to delete old ports present in the database but not on the switch.
+   *  Suppose you have the following situation:
+   *  You buy a new switch and replace an old one with this new one.
+   *  You give to this switch the same IP address the old one had.
+   *  The script should document the ports found on the new switch and delete all ports belonging to the old one. 
+   */
+   // Escape the switch ip for use in MySQL queries 
+   $switch = mysql_real_escape_string($switch);
+   // Retrieve the list of ports associated to this switch from the database
+   $query = "SELECT p.id, p.name FROM port p INNER JOIN switch s ON p.switch=s.id WHERE s.ip='$switch' OR s.name='$switch'";
+   $logger->debug($query, 3);
+
+   $res = mysql_query($query);
+   $counter = 0;
+
+   if ( ! $res )
+   {
+      $logger->logit(mysql_error());
+   }
+   else
+   {
+      while ($row = mysql_fetch_array($res))
+      {
+         $iface_from_db[$counter]['id'] = $row['id'];
+         $iface_from_db[$counter]['name'] = $row['name'];
+         $counter++;
+      }
+   }
+
+   // Have we retrieved any records from the database?
+   if ( $counter > 0 )
+   {
+      // Yes, then check if the ports defined in the database are on the switch
+      $ids_to_delete = array();
+
+      foreach ( $iface_from_db as $k => $array)
+      {
+         // Is this port on the switch?
+         if ( ! array_search($array['name'], $ifaces) )
+         {
+            // No, then mark it for deletion
+            $ids_to_delete[] = $array['id'];
+         }         
+      }
+
+      // Have we marked any ports to delete?
+      if ( count($ids_to_delete) > 0 )
+      {
+         foreach ( $ids_to_delete as $id )
+         {
+            // Build the query to delete the obsolete port from the port table 
+            $query = "DELETE FROM port WHERE id='$id';";
+            $logger->debug($query, 3);
+            // And actually delete it
+            $res = mysql_query($query);
+            if ( ! $res )
+               $logger->logit(mysql_error());
+         }
+      }
+   }
+
+   // Obsolete ports in the database belonging to this switch shouldn't exist anymore from this point on 
 
    if ((count($ifaces) == 0) || !(is_array($ifaces))) { return($iface); };
 
