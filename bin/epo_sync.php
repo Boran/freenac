@@ -287,7 +287,7 @@ function get_systems()
 		}
 		
 		// insert system into epo_systems
-		$query = sprintf("insert into epo_systems values('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');", $id, $hostname, validate($sys_row['domainname']), validate($sys_row['ipaddress']), $mac, validate($sys_row['agentversion']), convert_date($sys_row['lastupdate']), validate($sys_row['productversion']), validate($sys_row['enginever']), validate($sys_row['datver']), validate($sys_row['hotfix']), validate($sys_row['ostype']), validate($sys_row['osversion']), validate($sys_row['osservicepackver']), validate($sys_row['osbuildnum']), validate($sys_row['freediskspace']), validate($sys_row['username']), $timestamp);
+		$query = sprintf("insert into epo_systems values('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s') on duplicate key update lastsync=now();", $id, $hostname, validate($sys_row['domainname']), validate($sys_row['ipaddress']), $mac, validate($sys_row['agentversion']), convert_date($sys_row['lastupdate']), validate($sys_row['productversion']), validate($sys_row['enginever']), validate($sys_row['datver']), validate($sys_row['hotfix']), validate($sys_row['ostype']), validate($sys_row['osversion']), validate($sys_row['osservicepackver']), validate($sys_row['osbuildnum']), validate($sys_row['freediskspace']), validate($sys_row['username']), $timestamp);
 		
 		$logger->debug("Executing: $query", 3);
 		if( !mysql_query($query) )
@@ -324,7 +324,7 @@ function get_versions()
 	
 		while( $row = mssql_fetch_assoc($result) )
 		{
-			$query = sprintf("insert into epo_versions(product, version, hotfix, lastsync) values('%s', '%s', '%s', '%s');", validate($row['type']), validate($row['version']), '', $timestamp);
+			$query = sprintf("insert into epo_versions(product, version, hotfix, lastsync) values('%s', '%s', '%s', '%s') on duplicate key update lastsync=now();", validate($row['type']), validate($row['version']), '', $timestamp);
 		
 			$logger->debug("Executing: $query", 3);
 			if( !mysql_query($query) )
@@ -349,7 +349,7 @@ function get_versions()
 	
 		while( $row = mssql_fetch_assoc($result) )
 		{
-			$query = sprintf("insert into epo_versions(product, version, hotfix, lastsync) values('%s', '%s', '%s', '%s');", validate($row['productcode']), validate($row['productversion']), validate($row['hotfixversion']), $timestamp);
+			$query = sprintf("insert into epo_versions(product, version, hotfix, lastsync) values('%s', '%s', '%s', '%s') on duplicate key update lastsync=now();", validate($row['productcode']), validate($row['productversion']), validate($row['hotfixversion']), $timestamp);
 		
 			$logger->debug("Executing: $query", 3);
 			if( !mysql_query($query) )
