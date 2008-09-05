@@ -971,7 +971,7 @@ function cascade_delete($mac)
    if (!$system_id)
       return false;
    # Tables which have an sid field.
-   $tables_to_delete_from=array('EpoComputerProperties','nac_hostscanned','nac_openports','wsus_systems','wsus_systemToUpdates','epo_systems');
+   $tables_to_delete_from=array('nac_hostscanned','nac_openports','wsus_systems','wsus_systemToUpdates','epo_systems');
    foreach ($tables_to_delete_from as $table)
    {
       do_delete($table,'sid',$system_id);
