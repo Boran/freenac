@@ -856,7 +856,7 @@ function do_delete($table, $field, $identifier)
       global $logger;
       $table = mysql_escape_string($table);
       $field = mysql_escape_string($field);
-      $identifier = mysql_escape_string($field);
+      $identifier = mysql_escape_string($identifier);
       $query="DELETE FROM $table WHERE $field='$identifier';";
       $logger->debug($query,3);
       $res = mysql_query($query);
