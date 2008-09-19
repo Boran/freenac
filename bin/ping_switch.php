@@ -64,7 +64,7 @@ EOF;
 
 if ($argc!=1)
    $options=getopt("hsd");
-if ($options)
+if (isset($options))
 {
    if (array_key_exists('h',$options))
       print_usage(0);
