@@ -45,9 +45,13 @@ if ( $today_records == 0 )
 
    while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    {
-      if (!$row['health'])
+      if (! isset($row['health']))
          $row['health']=0;
+      if ( ! isset($systems['health'][$row['health']]) )
+         $systems['health'][$row['health']] = 0;
       $systems['health'][$row['health']]++;
+      if ( ! isset($systems['status'][$row['status']]) )
+         $systems['status'][$row['status']] = 0;
       $systems['status'][$row['status']]++;
    }
    $logger->debug(print_r($systems,true),3);
@@ -65,6 +69,8 @@ if ( $today_records == 0 )
    $switches=array();
    while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    {
+      if ( ! isset($switches[$row['ip']]) )
+         $switches[$row['ip']] = 0;
       $switches[$row['ip']]++;
    }
    $num_switches=count($switches);
@@ -138,6 +144,8 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
    }
    while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    {
+      if ( ! isset($month_stats[$row['code']]) )
+         $month_stats[$row['code']] = 0;
       $month_stats[$row['code']]+=$row['value'];
    }
    $logger->debug(print_r($month_stats,true),3); 
