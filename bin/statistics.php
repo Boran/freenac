@@ -211,7 +211,8 @@ if ($mysql_last_day && (strcmp($mysql_last_day,$today)==0))
    $average_switches = round ( $month_stats['switches'] / $days);
    $messages['ports'][] = "Average of ports used by day during this month: $average_ports\n";
    $messages['switches'][] = "Average of switches used by day during this month: $average_switches\n";
-   $logger->debug(print_r($messages,true),3);   
+   $logger->debug(print_r($messages,true),3);  
+   $body = NULL; 
    foreach($messages['status'] as $k => $v)
       $body.=$v;
    foreach($messages['health'] as $k => $v)
