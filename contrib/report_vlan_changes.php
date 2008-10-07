@@ -168,6 +168,7 @@ if ( is_array($systems_read) )
                $vlan_changed[$counter]['changedate'] = $system['changedate'];
                $vlan_changed[$counter]['lastseen'] = $system['lastseen'];
                $vlan_changed[$counter]['previous_vlan'] = $system_read['vlan'];
+               $vlan_changed[$counter]['status'] = $system['status'];
                $counter++;
             }
             break;
