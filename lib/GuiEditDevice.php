@@ -257,7 +257,7 @@ TXT;
 
 
   /**
-   * Update a record
+   * Update a record: read fields/data from the POST, generate SQL and execute
    */
   public function Update()
   {
@@ -286,7 +286,13 @@ TXT;
         $q.=', status='.$_REQUEST['status'];
         $q.=($_REQUEST['username']!='' ? ', uid='.$_REQUEST['username'].' ' : '');
         $q.=($_REQUEST['office']!='' ? ', office='.$_REQUEST['office'].'' : '');
-        $q.=($_REQUEST['comment']!='' ? ', comment=\''.$_REQUEST['comment'].'\'' : '');
+        $q.=($_REQUEST['sys_class']!='' ? ', class=\''.$_REQUEST['sys_class'].'\'' : '');
+        $q.=($_REQUEST['sys_class2']!='' ? ', class2=\''.$_REQUEST['sys_class2'].'\'' : '');
+        # allow empty values
+        $q.=(', expiry=\''.$_REQUEST['expiry'].'\'');   
+        $q.=(', email_on_connect=\''.$_REQUEST['email_on_connect'].'\'');   
+        $q.=(', inventory=\''.$_REQUEST['inventory'].'\'');   
+        $q.=(', comment=\''.$_REQUEST['comment'].'\'');   
 
         // TBD: DNS Alias & DHCP
         if ($this->conf->web_showdns) {
@@ -322,6 +328,7 @@ TXT;
         $q.=" WHERE id={$this->id} LIMIT 1";     // only this record
 
       $this->debug($q, 3);
+      #$this->logit($q);
       $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($conn->error);
@@ -336,7 +343,7 @@ TXT;
 
 
   /**
-   * Add a new device
+   * Add a new device: Query a record and display on the WebGUI
    */
   public function add()
   {
@@ -402,7 +409,7 @@ TXT;
     $output.="<table id='t3' width='760' border='0' class='text13'>";
 
 $q=<<<TXT
-SELECT sys.id, sys.name, sys.mac, sys.status, sys.vlan, lvlan.default_name as lastvlan, sys.uid as user, sys.office, port.name as port, sys.lastseen, swloc.name as location, swi.name as switch, sys.r_ip as lastip, sys.r_timestamp as lastipseen, sys.comment, eth.vendor, dns_alias, dhcp_fix, dhcp_ip
+SELECT sys.id, sys.name, sys.mac, sys.status, sys.vlan, lvlan.default_name as lastvlan, sys.uid as user, sys.office, port.name as port, sys.lastseen, swloc.name as location, swi.name as switch, sys.r_ip as lastip, sys.r_timestamp as lastipseen, sys.comment, eth.vendor, dns_alias, dhcp_fix, dhcp_ip, inventory, class, class2, email_on_connect, expiry
                         FROM systems as sys LEFT JOIN vlan as lvlan ON sys.lastvlan=lvlan.id LEFT JOIN port as port ON port.id=sys.lastport LEFT JOIN switch as swi ON port.switch=swi.id LEFT JOIN location as swloc ON swloc.id=swi.location LEFT JOIN ethernet as eth ON (SUBSTR(sys.mac,1,4)=SUBSTR(eth.mac,1,4) AND SUBSTR(sys.mac,6,2)=SUBSTR(eth.mac,5,2))
   WHERE sys.id=$this->id
   LIMIT 1
@@ -476,6 +483,23 @@ TXT;
           }
           $output. '<input name="dhcp_ip" type=text value="' .$row['dhcp_ip'] .'">';
         };
+
+
+        $output.= '<tr><td>Inventory:</td><td>'."\n"
+          . '<input name="inventory" type="text" size=40 value="' .stripslashes($row['inventory']) .'"/>' ."\n"
+          . '</td>' ."\n";
+        $output.= '<tr><td>Classification1:</td><td>' ."\n"
+          . $this->get_class1dropdown($row['class'], 'sys_class')
+          . '</td></tr>' ."\n";
+        $output.= '<tr><td>Classification2:</td><td>' ."\n"
+          . $this->get_class1dropdown($row['class2'], 'sys_class2')
+          . '</td></tr>' ."\n";
+        $output.= '<tr><td>On connect, send Email to:</td><td>'."\n"
+          . '<input name="email_on_connect" type="text" size=40 value="' .stripslashes($row['email_on_connect']) .'"/>' ."\n"
+          . '</td>' ."\n";
+        $output.= '<tr><td>Expiry (block access from this date):</td><td>'."\n"
+          . '<input name="expiry" type="text" size=40 value="' .stripslashes($row['expiry']) .'"/>' ."\n"
+          . '</td>' ."\n";
 
          // Submit
         $output.= '<tr><td>&nbsp;</td><td></td></tr>' ."\n";
@@ -640,7 +664,40 @@ function get_userdropdown($s)
    return $ret;
 }
 
+/**
+ * Generic Drop down list: for the table $table, find the entry $id.
+ *                 in read-only mode show just that entry, else show a list and
+ *                 allow it to be changed. Send the result back in a SUBMIT with the 
+ *                 name in  $table.
+ */
+function get_class1dropdown($s='1', $table="sys_class")
+{
+   $conn=$this->getConnection();     //  make sure we have a DB connection
 
+   if ($_SESSION['nac_rights'] == 1) {   // read-only
+     $q="SELECT id, value as displayname FROM $table WHERE id='$s'";
+     $res = $conn->query($q);  $this->debug($q ,3);
+     if ($res === FALSE)
+       throw new DatabaseErrorException($q .'; ' .$conn->error);
+     while (($row = $res->fetch_assoc()) !== NULL) {
+         $ret=$row['displayname'];
+     }
+   }
+   else if ($_SESSION['nac_rights'] > 1) {   // edit/admin
+     $ret="<select name='${table}'>";
+     $q="SELECT id, value as displayname FROM ${table} ORDER BY value"; // Get details for all rows
+     $res = $conn->query($q);  $this->debug($q ,3);
+     if ($res === FALSE)
+       throw new DatabaseErrorException($q .'; ' .$conn->error);
+     while (($row = $res->fetch_assoc()) !== NULL) {
+       $ret.='<option value="' .$row['id'].'" '
+            .($s==$row['id'] ? 'selected="selected"' : '')
+            .'>' .$row['displayname'] .'</option>' ."\n";
+     }
+     $ret.="</select> \n";
+   }
+   return $ret;
+}
 
 function get_statusdropdown($s)
 {
