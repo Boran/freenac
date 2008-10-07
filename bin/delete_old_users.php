@@ -123,7 +123,7 @@ if ( $to_delete > 0 )
    $message .= "Following users haven't been seen in the central directory for more than {$conf->delete_users_threshold} days and their systems will be deleted because they haven't been online during this time period. \n\n";
    for ( $i = 0; $i < $to_delete; $i++)
    {
-      $message .= "{$systems_to_delete[$i]['mac']}({$systems_to_delete[$i]['name']}), last seen on {$systems_to_delete[$i]['LastSeen']} and assigned to vlan {$systems_to_delete[$i]['vlan']} will be deleted\n";  
+      $message .= "{$systems_to_delete[$i]['mac']}({$systems_to_delete[$i]['name']}), last seen on {$systems_to_delete[$i]['LastSeen']} and assigned to vlan {$systems_to_delete[$i]['vlan']} and to user {$systems_to_delete[$i]['user']} will be deleted\n";  
       //cascade_delete($systems_to_delete[$i]['mac']);
    }
    $message .= "\n\n";
