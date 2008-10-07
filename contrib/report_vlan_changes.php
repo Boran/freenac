@@ -86,8 +86,8 @@ if ( count($systems_read) > 0 )
 ## Get data to compare from the db
 $query =<<<EOF
 SELECT s.id, s.mac, s.name, u.username as changeuser,
-       s.vlan,s.lastvlan,s.changedate,s.lastseen, p.last_auth_profile 
-       FROM systems s INNER JOIN port p ON s.lastport=p.id
+       s.vlan,s.lastvlan,s.changedate,s.lastseen, p.last_auth_profile, v.value as status 
+       FROM systems s INNER JOIN port p ON s.lastport=p.id INNER JOIN vstatus v ON s.status=v.id
        LEFT JOIN users u ON s.ChangeUser=u.id 
        WHERE s.lastseen IS NOT NULL AND (s.status='1' or s.status='3')
        AND DATE_SUB(CURDATE(), INTERVAL 1 DAY) <= s.LastSeen;
@@ -247,11 +247,11 @@ if ($counter > 0)
          else
             $vlan = $system['vlan'];
          ## Add to the report the changed system's information with vlan names
-         $report_vlan_changes .= "System {$system['name']} ({$system['mac']}), last seen on {$system['lastseen']} has changed from vlan $previous_vlan to vlan $vlan.\n";
+         $report_vlan_changes .= "System {$system['name']} ({$system['mac']}), status {$system['status']}, last seen on {$system['lastseen']} has changed from vlan $previous_vlan to vlan $vlan.\n";
       }
       else
          ##  Add to the report the changed system's information with vlan ids
-         $report_vlan_changes .= "System {$system['name']} ({$system['mac']}), last seen on {$system['lastseen']} has changed from vlan {$system['previous_vlan']} to vlan {$system['vlan']}.\n";
+         $report_vlan_changes .= "System {$system['name']} ({$system['mac']}), status {$system['status']}, last seen on {$system['lastseen']} has changed from vlan {$system['previous_vlan']} to vlan {$system['vlan']}.\n";
       
       ## If we have Change information, add it to the report
       if ( ! empty($system['changedate']) )
@@ -294,11 +294,11 @@ if ( count($lastvlan_differs_from_vlan) > 0 )
          else
             $vlan_name = $system['vlan'];   
           ## Add to the report the changed system's information with vlan names 
-         $report_vlan_changes .= "System {$system['name']} ({$system['mac']}), last seen on {$system['lastseen']} has been placed in vlan $lastvlan_name instead of $vlan_name.\n";
+         $report_vlan_changes .= "System {$system['name']} ({$system['mac']}), status {$system['status']}, last seen on {$system['lastseen']} has been placed in vlan $lastvlan_name instead of $vlan_name.\n";
       }
       else
           ## Add to the report the changed system's information with vlan ids
-         $report_vlan_changes .= "System {$system['name']} ({$system['mac']}), last seen on {$system['lastseen']} has been placed in vlan {$system['lastvlan']} instead of vlan {$system['vlan']}.\n";
+         $report_vlan_changes .= "System {$system['name']} ({$system['mac']}), status {$system['status']}, last seen on {$system['lastseen']} has been placed in vlan {$system['lastvlan']} instead of vlan {$system['vlan']}.\n";
 
       ## If we have Change information, add it to the report
       if ( ! empty($system['changedate']) )
