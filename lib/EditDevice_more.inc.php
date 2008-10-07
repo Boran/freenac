@@ -110,10 +110,11 @@ LEFT JOIN protocols ON protocols.protocol = services.protocol WHERE sid = '$sid'
 
 // 2.0 General properties
 	$out .= '<tr><td colspan=3 bgcolor="#DEDEDE"><b>Administrative information</b>';
+        #$out .= '<tr><td>Inventory:<td>'.$system['inventory']."\n";
+	#$out .= '<tr><td>Classification:'."\n";
+        #        $out .= '<td>'.(!is_null($system['class'])?$system['class']:'');
+        #        $out .= '<td>'.(!is_null($system['class2'])?$system['class2']:'')."\n";
         $out .= '<tr><td>Inventory:<td>'.$system['inventory']."\n";
-	$out .= '<tr><td>Classification:'."\n";
-                $out .= '<td>'.(!is_null($system['class'])?$system['class']:'');
-                $out .= '<td>'.(!is_null($system['class2'])?$system['class2']:'')."\n";
         $out .= '<tr><td>Operating System:'."\n";
                 $out .= '<td>'.(!is_null($system['os'])?$system['os']:'');
                 $out .= ' '.(!is_null($system['os1'])?$system['os1']:'')."\n";
