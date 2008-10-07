@@ -32,15 +32,18 @@ if ( mysql_num_rows($res) == 0)
 }
 #Array to hold the systems assigned to those users
 $assigned_systems = array();
+$systems_to_delete = array();
 $deleted_users = array();
 
 #Counter for assigned systems;
 $assigned = 0;
+$to_delete = 0;
+$timestamp=date('Y-m-d H:i:s');
 
 while ( $result = mysql_fetch_assoc($res) )
 {
    #Let's find out if they have systems assigned
-   $query = "SELECT mac, name, LastPort, LastSeen FROM systems WHERE uid = {$result['id']};";
+   $query = "SELECT s.id, s.mac, s.name, s.LastPort, s.LastSeen, v.default_name as vlan FROM systems s INNER JOIN vlan v ON s.vlan=v.id WHERE uid = {$result['id']};";
    $logger->debug($query, 3);
    $res_temp = mysql_query($query);
    if ( ! $res_temp )
@@ -52,9 +55,23 @@ while ( $result = mysql_fetch_assoc($res) )
    if ( mysql_num_rows($res_temp) >= 1 )
    {
       $row = mysql_fetch_assoc($res_temp);
-      $assigned_systems[$assigned] = $row;
-      $assigned_systems[$assigned]['user'] = $result['username'];
-      $assigned++;    
+      // Present only systems which have been online during $conf->delete_users_threshold and delete older systems
+      $days_diff = (int)((time_diff($row['LastSeen'],$timestamp)/3600)/24);
+      if ( $days_diff == false )
+         continue;
+      if ( $days_diff > $conf->delete_users_threshold )
+      {
+         $systems_to_delete[$to_delete] = $row;
+         $systems_to_delete[$to_delete]['user'] = $result['username'];
+         $systems_to_delete[$to_delete]['days_diff'] = $days_diff;
+         $to_delete++;
+      } 
+      else
+      {
+         $assigned_systems[$assigned] = $row;
+         $assigned_systems[$assigned]['user'] = $result['username'];
+         $assigned++;    
+      }
    }
    else
    {
@@ -101,6 +118,18 @@ if ( $assigned > 0 )
    $message .= "\n\n";
 }
 
+if ( $to_delete > 0 )
+{
+   $message .= "Following users haven't been seen in the central directory for more than {$conf->delete_users_threshold} days and their systems will be deleted because they haven't been online during this time period. \n\n";
+   for ( $i = 0; $i < $to_delete; $i++)
+   {
+      $message .= "{$systems_to_delete[$i]['mac']}({$systems_to_delete[$i]['name']}), last seen on {$systems_to_delete[$i]['LastSeen']} and assigned to vlan {$systems_to_delete[$i]['vlan']} will be deleted\n";  
+      //cascade_delete($systems_to_delete[$i]['mac']);
+   }
+   $message .= "\n\n";
+
+}
+
 #Report deleted users
 $message .= "Following users have been deleted from the central directory\n\n";
 for ($i = 0; $i < count($deleted_users); $i++)
@@ -113,6 +142,9 @@ for ($i = 0; $i < count($deleted_users); $i++)
 
 $logger->debug("Assigned systems", 1);
 $logger->debug(print_r($assigned_systems,true), 1);
+
+$logger->debug("Systems to delete", 1);
+$logger->debug(print_r($systems_to_delete, true), 1);
 
 $logger->debug("Deleted users",1);
 $logger->debug(print_r($deleted_users, true), 1);
