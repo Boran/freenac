@@ -137,7 +137,7 @@ while ($row = mysql_fetch_array($res,MYSQL_ASSOC))
    {
       $logger->logit("Could not communicate with switch $switch_ip");
       # Update switch's last_monitored: set=2, meaning "down" and note when we polled
-      $query = "UPDATE switch set up=2, last_monitored=NOW() where id='$switch_id';";
+      $query = "UPDATE switch set up=2, last_monitored=NOW(), scan=0 where id='$switch_id';";
       $logger->debug($query,2);
       $final = mysql_query($query);
       if (! $final)
