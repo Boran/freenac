@@ -469,7 +469,7 @@ EOF;
       if ($this->check_calling_method() && $this->inDB())
       {
          #Send an email alert on connect?
-         if ( $this->db_row['email_on_connect'] )
+         if ( ! empty($this->db_row['email_on_connect']) )
          {
             $this->logger->mailit("{$this->mac}($this->hostname) is connecting to the network",$this->alert_message.$this->alert_subject,$this->db_row['email_on_connect']);
             #log2db('info',"{$this->mac}($this->hostname) is connecting to the network");
