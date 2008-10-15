@@ -1,0 +1,31 @@
+#--
+#-- Table structure for SMS module
+#--
+
+DROP TABLE IF EXISTS `nac_sms_1`;
+CREATE TABLE `nac_sms_1` (
+  `id` int(11) not null auto_increment        COMMENT "end-device index into systems",
+  `MACAddress` varchar (18) NULL COMMENT "MAC address as seen by SMS",
+  `ComputerName` varchar(100) NULL,
+  `ComputerDomain` varchar(100) NULL,
+  `IPAddress` varchar(100) NULL,
+  `IPSubnet` varchar(100) NULL,
+  `Username` varchar(30) NOT NULL         COMMENT "Username defined in SMS",
+  `OS` varchar(100) default NULL COMMENT "Operating System",
+  `datetime` timestamp not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  PRIMARY KEY  (`id`),
+  UNIQUE KEY (`MACAddress`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+
+grant SELECT,INSERT,UPDATE,DELETE ON opennac.nac_sms_1 to inventwrite@'localhost';
+grant SELECT                      ON opennac.nac_sms_1 to inventwrite@'%';
+
+## Note: You must also insert appropriate settings into the config table:
+#use opennac;
+#insert into config set name='sms_enabled', type='boolean', value='1',    comment='SMS module: swicth it on?';
+#insert into config set name='sms_db',      type='string', value='[SMS]', comment='SMS module: DB name';
+#insert into config set name='sms_dbalias', type='string', value='sms',   comment='SMS module: FreeTDS alias';
+#insert into config set name='sms_view',    type='string', value='v_freenac',   comment='SMS module: Custom SQL view on the SMS SQL server';
+
+

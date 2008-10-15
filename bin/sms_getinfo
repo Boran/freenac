@@ -4,9 +4,9 @@
  * enterprise/sms_getinfo
  *
  * Long description for file:
- * Retrieves information from the SMS database and stored in local mysql
+ * Retrieves information from the Microsoft SMS end-device database and stores in local mysql
  * table.
- # See also sms_test.php and sms_tables
+ * See also sms_test.php and sms_tables
  *
  * PHP version 5
  *
@@ -78,14 +78,14 @@ function usage()
    exit(1);
 }
 
-function dbsms_connect() # Connect to the WSUS server
+function dbsms_connect() # Connect to the SMS server
 {
    global $conf,$sms_dbuser,$sms_dbpass;
    message("Connect to ".$conf->sms_dbalias." ".$conf->sms_db,1);
    $msconnect = mssql_connect($conf->sms_dbalias, $sms_dbuser, $sms_dbpass);
    if (! $msconnect ) 
    {
-     message("Cannot connect to WSUS server ".$conf->sms_dbalias.":" . mssql_get_last_message(),0);
+     message("Cannot connect to SMS server ".$conf->sms_dbalias.":" . mssql_get_last_message(),0);
      return false;
    }
    $d = mssql_select_db($conf->sms_db, $msconnect);
