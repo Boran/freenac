@@ -123,7 +123,8 @@ SELECT p.id,
    ON p.staticvlan=v.id
    INNER JOIN switch s 
    ON p.switch=s.id 
-   WHERE p.restart_now=1
+   WHERE p.restart_now='1'
+   AND (p.last_auth_profile='1' OR p.last_auth_profile='2') 
    ORDER BY s.ip ASC;
 EOF;
 $logger->debug($query, 3);
