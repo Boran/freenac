@@ -1,0 +1,201 @@
+#!/usr/bin/php
+<?php
+/**
+ * enterprise/sms_getinfo
+ *
+ * Long description for file:
+ * Retrieves information from the SMS database and stored in local mysql
+ * table.
+ # See also sms_test.php and sms_tables
+ *
+ * PHP version 5
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package                     FreeNAC
+ * @author                      FreeNAC Core Team
+ * @copyright                   2006 FreeNAC
+ * @license                     http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
+ * @version                     CVS: $Id:$
+ * @link                        http://www.freenac.net
+ *
+ */
+
+# Php weirdness: change to script dir, then look for includes
+chdir(dirname(__FILE__));
+set_include_path("../:./");
+require_once "bin/funcs.inc.php";               # Load settings & common functions
+
+
+set_time_limit(0);
+
+define_syslog_variables();
+openlog("sms_getinfo", LOG_PID , LOG_LOCAL5);
+
+$debug_flag1=false;
+$debug_flag2=false;
+$output=TRUE;
+$verbose=FALSE;
+
+#Simple parsing of command line parameters
+for ($i=1;$i<$argc;$i++)
+{
+   switch($argv[$i])
+   {
+      case '-v':
+         {
+            $debug_flag1 = TRUE;
+            $verbose = TRUE;
+         }
+         break;
+      case '-vv':
+         {
+            $debug_flag1 = TRUE;
+            $debug_flag2 = TRUE;
+            $verbose = TRUE;
+         }
+         break;
+      case '-s':$output = FALSE;
+         break;
+      case '-h':
+      default:usage();
+         break;
+   }
+}
+
+$timestamp=date('Y-m-d H:i:s');
+message("Program run on $timestamp",1);
+
+function usage()
+{
+   echo "Usage: sms_getinfo [-h][-v[v]][-s]\n";
+   echo "\t-h\tShow this help screen\n";
+   echo "\t-v\tDebug level 1 enabled (output goes to stdout & syslog)\n";
+   echo "\t-vv\tDebug level 1 & 2 enabled (output goes to stdout & syslog)\n";
+   echo "\t-s\tSupress messages to standard output and redirect them to syslog\n";
+   exit(1);
+}
+
+function dbsms_connect() # Connect to the WSUS server
+{
+   global $conf,$sms_dbuser,$sms_dbpass;
+   message("Connect to ".$conf->sms_dbalias." ".$conf->sms_db,1);
+   $msconnect = mssql_connect($conf->sms_dbalias, $sms_dbuser, $sms_dbpass);
+   if (! $msconnect ) 
+   {
+     message("Cannot connect to WSUS server ".$conf->sms_dbalias.":" . mssql_get_last_message(),0);
+     return false;
+   }
+   $d = mssql_select_db($conf->sms_db, $msconnect);
+   if (! $d)
+   {
+      message("Couldn't open database ".$conf->sms_db." ".mssql_get_last_message(),0);
+      return false;
+   }
+   return true;
+}
+
+function validate($string) # Ensures that $string is mysql safe
+{
+   rtrim($string,' ');
+   if (get_magic_quotes_gpc()) {
+      $value=stripslashes($string);
+   }
+   if (!is_numeric($string)) {
+      $string= mysql_real_escape_string($string);
+   }
+   return $string;
+}
+
+function execute_query($query) # Executes query and displays error message if any
+{
+   db_connect();
+   $res=mysql_query($query);
+   if (!$res)
+   { 
+      message("Cannot execute query $query because ".mysql_error(),2);
+      return false;
+   }
+   return $res;
+}
+
+function sms_dump() # Dumps the tbComputerTarget table into our computertarget table
+{
+   message("Function sms_dump",1);
+   db_connect();
+   if (dbsms_connect())
+   {
+      $query="select name0 as name, user_domain0 as domain, user_name0 as username, macaddress0 as mac, ipaddress0 as ip, ipsubnet0 as subnet, operating_system_name_and0 as os from vino_sms where datalength(ipaddress0) > 0 and ipaddress0 not like \"0.0.0.0\"";
+      message("Executing: ".$query,2);
+      $sms=mssql_fetch_all($query);
+      foreach ($sms as $row)
+      {
+         $row['mac']=strtolower(normalise_mac($row['mac']));
+         $query=sprintf("insert into nac_sms_1 (ComputerName, ComputerDomain, IPAddress, IPSubnet, OS, Username,MACAddress) values ('%s','%s','%s','%s','%s','%s','%s') on duplicate key update datetime=NOW();", validate($row['name']), validate($row['domain']), validate($row['ip']), validate($row['subnet']), validate($row['os']), validate($row['username']),validate($row['mac']));
+         message("Executing: ".$query,2);
+         execute_query($query);
+      }
+      return true;
+   }
+   else return false;
+}
+
+function message($string,$level) #Not very useful
+{
+   global $output,$debug_flag1,$debug_flag2;
+   
+   if ($level==0)
+   {
+      if ($output)
+         echo "$string\n";
+      else
+         logit($string);
+   }
+   if ($level==1)
+   {
+      if ($debug_flag1)
+      {
+         debug1($string);
+         if ($output)
+            echo "$string\n";
+      }
+   }
+   if ($level==2)
+   {
+      if ($debug_flag2)
+      {
+         debug2($string);
+         if ($output)
+            echo "$string\n";
+      }
+   }
+   return true;
+}
+
+db_connect();
+$enabled=v_sql_1_select("select value from config where name='sms_enabled'");
+if ($enabled)
+{
+   #message("Dumping remote view VINO_SMS into our nac_sms_1 table.",0);
+   logit("Dumping remote view VINO_SMS into our nac_sms_1 table.");
+   if (sms_dump())
+   {
+      #message("Done!",0);
+      logit("SMS synchronization was successful.");
+      log2db('info',"SMS synchronization was successful.");
+      exit(0);
+   }
+   else message("Function sms_dump failed.",0);
+   logit("SMS synchronization failed.");
+   log2db('err',"SMS synchronization failed.");
+   exit(1);
+}
+else
+{ 
+   message("This function is not enabled",0);
+   exit(1);
+}
+
+?>
