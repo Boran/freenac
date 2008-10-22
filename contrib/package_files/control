@@ -4,7 +4,7 @@ Section: net
 Priority: optional
 Installed-size: 26252
 Architecture: i386
-Depends: libwrap0, apache2, mysql-client-5.0, libapache2-mod-php5, apache2.2-common, apache2-utils, php5-common, ucf, libaprutil1, php5-mysql, libdbi-perl, libmysqlclient15off, libplrpc-perl, mysql-server, libdbd-mysql-perl, mysql-server-5.0, libnet-daemon-perl, libapr1, libexpat1, libxml2, libpcre3, libpq5, apache2-mpm-prefork, mysql-common, flex, python-dev, apt-file, libsnmp-base, libsnmp9-dev, mailx, nmap, openssh-server, zip, unzip, syslog-ng, ncurses-dev, libfreetype6-dev, libjpeg-dev, libpng12-dev, apache2-prefork-dev, php-pear, php5-snmp, libxml2-dev, freetds-dev, graphviz, subversion, php5-sybase, php5-gd, sharutils
+Depends: libwrap0, apache2, mysql-client-5.0, libapache2-mod-php5, apache2.2-common, apache2-utils, php5-common, ucf, libaprutil1, php5-mysql, libdbi-perl, libmysqlclient15off, libplrpc-perl, mysql-server, libdbd-mysql-perl, mysql-server-5.0, libnet-daemon-perl, libapr1, libexpat1, libxml2, libpcre3, libpq5, apache2-mpm-prefork, mysql-common, flex, python-dev, apt-file, libsnmp-base, libsnmp9-dev, mailx, nmap, openssh-server, zip, unzip, syslog-ng, ncurses-dev, libfreetype6-dev, libjpeg-dev, libpng12-dev, apache2-prefork-dev, php-pear, php5-snmp, libxml2-dev, freetds-dev, graphviz, subversion, php5-sybase, php5-gd, php5-ldap, sharutils
 Recommends: rcs, tcpdump, iptraf, whois, rsync, lynx, links, scanlogd, uudeview, ltrace, ntop, arpwatch,smartmontools, traceroute, screen
 Maintainer: The FreeNAC Team <freenac@vptt.ch>
 Description: Virtual LAN assignement and access control system
