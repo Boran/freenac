@@ -1,0 +1,86 @@
+#!/usr/bin/php -f
+<?php
+#
+# enterprise/report_old_users
+#
+# Report users not updated in direx in the last 7 days, but possibly deleted
+# before that. i.e. report a delta of users deleted on a week to week basis.
+# Normally run from cron
+#30  6    * * 1   /opt/vmps/swisscom.only/report_old_users
+#
+# 2006.06.02 SB: move to swisscom.only dir
+# 2006.01.31/sb Integrate withs funcs.inc
+# 2005.08.15/sb 
+#     Move days_back to $report_old_users_days_back in config.inc
+#      
+#  Copyright (C) 2006 Swisscom
+#  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
+####################################
+
+# Php weirdness: change to script dir, then look for includes
+chdir(dirname(__FILE__));
+set_include_path("../:./");
+require_once "bin/funcs.inc.php";               # Load settings & common functions
+
+$logger->setDebugLevel(0);
+$logger->setLogToStdOut(false);
+
+#echo "$0 report_old_users_days_from-${conf->report_old_users_days_from} report_old_users_days_back-${conf->report_old_users_days_back}\n";
+
+#$report_old_users_days_from $report_old_users_days_back from config.inc
+
+db_connect();
+
+  $text=NULL;
+  $now=date('Y-m-d H:i:s');
+  $query="select GivenName,Surname,username,LastSeenDirectory,Department,id "
+      . " FROM users WHERE (TO_DAYS(LastSeenDirectory) < TO_DAYS(NOW())-$conf->report_old_users_days_from) and (TO_DAYS(LastSeenDirectory) > TO_DAYS(NOW())-$conf->report_old_users_days_back) ";
+      $logger->debug($query,3);
+      $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
+      if (!$res) { die('Invalid query: ' . mysql_error()); }
+      #echo "$query\n";
+
+  while ($line = mysql_fetch_array($res, MYSQL_ASSOC)) {
+     $logger->logit(" ");
+     $string="\nUser deleted from Direx: {$line['GivenName']} {$line['Surname']}, {$line['username']}"
+        . "{$line['Department']}, Last Seen: {$line['LastSeenDirectory']}\n";
+     $logger->logit($string);
+     $text.=$string;
+     $query="SELECT id,mac,name,lastseen FROM systems WHERE uid='{$line['id']}'";
+     $logger->debug($query,3);
+     $result = mysql_query($query);
+     if ( ! $result )
+     {
+        $logger->logit(mysql_error());
+        continue;
+     }
+     else
+     {
+        ## This is a quick fix to the LastSeenDirectory field since its format is not 
+        ## as the rest of the date formats in the database
+        $diff_secs=time_diff("{$line['LastSeenDirectory']} 00:00:00", $now);
+        if ($diff_secs === false)
+           continue; 
+        $diff_hours=(int)($diff_secs / 3600);
+        $diff_days=(int)($diff_hours / 24);
+        while ($row=mysql_fetch_array($result, MYSQL_ASSOC))
+        {
+           if (( $conf->report_old_users_kill_days ) && ( $diff_days != 0 ) && ( $diff_days > $conf->report_old_users_kill_days ))
+           {
+              $string="\tSystem {$row['name']}({$row['mac']}) Last Seen: {$row['lastseen']} has been set to 'KILLED' status\n";
+              $logger->logit($string);
+              $text.=$string;
+              $query="UPDATE systems SET status='7' WHERE id='{$row['id']}'";
+              $logger->debug($query,3);
+              $result_1=mysql_query($query);
+              if ( ! $result_1 )
+              {
+                 $logger->logit(mysql_error());
+              }
+           }
+        }
+     }
+  }
+  $logger->mailit('report_old_users',$text);
+  mysql_close($connect);
+?>
