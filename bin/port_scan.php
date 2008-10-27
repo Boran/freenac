@@ -650,6 +650,11 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
       $hosts.=" ".$list['ip'][$i];
    }
    $logger->debug("Total number of hosts to scan: ".$list['counter']);
+   if ( $list['counter'] == 0 )
+   {
+      message("None of the systems scheduled for scan met the the requirements to be scanned");
+      exit(0); 
+   }
    $scan.=$hosts;		//Now our command line is complete
    $logger->debug("scan=" .$scan, 3);
    syscall($scan);		//Scan
