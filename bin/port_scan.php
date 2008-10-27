@@ -1001,7 +1001,7 @@ function parse_scanfile($scan_file,$list)
                   if ($i==0)
                      $query="select id, r_ip, name from systems where r_ip='{$list['ip'][$i]}'";
                   else
-                     $query.=" or ip='".$list['ip'][$i]."'";
+                     $query.=" or r_ip='".$list['ip'][$i]."'";
                }
                ## Interested only in systems whose IP address has been assigned in the last 3 hours.
                if (strlen($query)>0)
@@ -1110,7 +1110,7 @@ function parse_scanfile($scan_file,$list)
          /*if ($i==0)
             $query="select id, r_ip, name from systems where r_ip='".$list['ip'][$i]."'";
          else
-            $query.=" or ip='".$list['ip'][$i]."'";*/
+            $query.=" or r_ip='".$list['ip'][$i]."'";*/
          $query="update nac_hostscanned set os='Firewalled', timestamp=NOW(), ip='{$list['ip'][$i]}', hostname='{$list['hostname'][$i]}' where sid='{$list['sid'][$i]}';";
          execute_query($query);
       }
