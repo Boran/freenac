@@ -37,8 +37,8 @@
 require_once "funcs.inc.php";
 $output=TRUE;
 
-$logger->setDebugLevel(3);
-$logger->setLogToStdOut(true);
+$logger->setDebugLevel(0);
+$logger->setLogToStdOut(false);
 
 #Compatibility with old vars
 if (!$conf->scan_directory && $conf->nmap_scan_directory)
