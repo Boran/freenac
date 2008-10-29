@@ -105,6 +105,8 @@ else if ($flagscannow)
    $logger->debug("Running mode: Scannow");
 else $logger->debug("Running mode: Manual"); 
 $list=scan($scan_results,$conf->nmap_flags);		//Scan network with those flags	
+if ( ! is_array($list) || (count($list) == 0) )
+   check_and_abort("No info retrieved from the scan", 0);
 $var=parse_scanfile($scan_results,$list);		//Parse the xml file
 if ($var['equipments']>0)			
    do_inventory($var);				//Check against database	
@@ -212,13 +214,21 @@ function validate($string)
 function do_something($query)			//Let's do something with our structure
 {
    global $logger;
-   $queries=$query['number'];   		//How many queries we have?
-   $messages=$query['messages'];   		//How many messages?
+   if ( isset($query['number']) )
+      $queries=$query['number'];   		//How many queries we have?
+   else
+      $queries = 0;
+   if ( isset($query['messages']) )
+      $messages=$query['messages'];   		//How many messages?
+   else
+      $messages = 0;
    for ($i=0;$i<$queries;$i++)
    {
-      execute_query($query['query'][$i]);   	//Execute the queries
+      if ( isset($query['query'][$i]) )
+         execute_query($query['query'][$i]);   	//Execute the queries
    }
    for ($i=0;$i<$messages;$i++)
+      if ( isset($query['message'][$i]) )
         $logger->debug($query['message'][$i]);   	//And display the messages
 }
 
@@ -227,13 +237,17 @@ function update_queries($mesg,$what)
    global $queries; //Here we hold messages and queries
    if ($what=='q')
    {
-      $queries['query'][$queries['number']]=$mesg; //This is a query
-      $queries['number']++;	//Count queries
+      if ( isset($queries['query'][$queries['number']]) )
+         $queries['query'][$queries['number']]=$mesg; //This is a query
+      if ( isset($queries['number']) )
+         $queries['number']++;	//Count queries
    }
    else if ($what=='m')
    {
-      $queries['message'][$queries['messages']]=$mesg; //This is a message
-      $queries['messages']++;	//Count messages
+      if ( isset($queries['message'][$queries['messages']]) )
+         $queries['message'][$queries['messages']]=$mesg; //This is a message
+      if ( isset($queries['messages']) )
+         $queries['messages']++;	//Count messages
    }
 }
 
@@ -242,9 +256,15 @@ function do_inventory($data_from_xml)
    global $queries;
    for ($i=0;$i<$data_from_xml['equipments'];$i++)	//How many hosts scanned
    {
-       $ip=$data_from_xml[$i]['ip'];		//Get ip of one host
-       $id=$data_from_xml[$i]['sid'];
-       $query=sprintf("select * from nac_hostscanned where sid='%s';",$id);
+       if ( isset($data_from_xml[$i]['ip']) )
+          $ip=$data_from_xml[$i]['ip'];		//Get ip of one host
+       else
+          $ip = 0;
+       if ( isset($data_from_xml[$i]['sid']) )
+          $id=$data_from_xml[$i]['sid'];
+       else
+          $ip = 0;
+       $query=sprintf("select * from nac_hostscanned where sid='%s';",mysql_real_escape_string($id));
        $res=execute_query($query);
        if ($res)
        {
@@ -262,12 +282,27 @@ function check_existent($data) 	//This function will check info concerning one h
    $timestamp=date('Y-m-d H:i:s');
    if ((!isset($data))||(!is_array($data)))
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
-   $ip=$data['ip'];   
-   $ports=$data['ports'];  			//Number of open ports this time
-   $hostname=strtolower($data['hostname']);
-   $os=$data['os'];   				//OS system this time
-   $id=$data['sid'];
-   $query=sprintf("select * from nac_hostscanned where sid='%s';",$id);
+   if ( isset($data['ip']) )
+      $ip=$data['ip'];   
+   else
+      $ip = 0;
+   if ( isset($data['ports']) )
+      $ports=$data['ports'];  			//Number of open ports this time
+   else
+      $ports = 0;
+   if ( isset($data['hostname']) )
+      $hostname=strtolower($data['hostname']);
+   else
+      $hostname = '';
+   if ( isset($data['os']) )
+      $os=$data['os'];   				//OS system this time
+   else 
+      $os = '';
+   if ( isset($data['sid']) )
+      $id=$data['sid'];
+   else
+      $id = 0;
+   $query=sprintf("select * from nac_hostscanned where sid='%s';",mysql_real_escape_string($id));
    $res=execute_query($query);
    if ($res)
    {
@@ -321,7 +356,7 @@ function check_existent($data) 	//This function will check info concerning one h
          $query=sprintf("update nac_hostscanned set hostname='%s',os='%s',timestamp='%s' where sid='%d' and ip='%s';",$hostname,$os,$timestamp,$id,$ip);
          update_queries($query,'q');
       }
-      $query=sprintf("select o.banner as banner,o.timestamp as timestamp, p.name as protocol, s.port as port from nac_openports o inner join services s on o.service=s.id inner join protocols p on s.protocol=p.protocol and o.sid='%s';",$id);
+      $query=sprintf("select o.banner as banner,o.timestamp as timestamp, p.name as protocol, s.port as port from nac_openports o inner join services s on o.service=s.id inner join protocols p on s.protocol=p.protocol and o.sid='%s';",mysql_real_escape_string($id));
       $res1=execute_query($query);
       if ($res1)				//Let's check info about ports
       {
@@ -565,6 +600,8 @@ function check_existent($data) 	//This function will check info concerning one h
 
 function check_service($ip,$port,$protocol,$banner)  //With this function we check if a service is running on the port that it has been assigned to by IANA
 {
+   $port = mysql_real_escape_string($port);
+   $protocol = mysql_real_escape_string($protocol);
    $query="select s.name as service from services s inner join protocols p on s.protocol=p.protocol and p.name='$protocol' and s.port='$port';";
    $res=execute_query($query);
    if ($res)
@@ -599,49 +636,60 @@ function add_entry($data)	//A new host in our network that needs to be added to 
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
    $timestamp=date('Y-m-d H:i:s');
    ## Interested only in systems whose IP address has been assignated in the last 3 hours.
-   $res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);");
+   if ( isset($data['ip']) )
+      $res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);");
    #$res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 24 HOUR);");
-   $result=mysql_fetch_array($res,MYSQL_ASSOC);
-   $sid=$result['id'];
+   if ( $res )
+   {
+      $result=mysql_fetch_array($res,MYSQL_ASSOC);
+      $sid=$result['id'];
+   }
    
    #Let's check if it is really a new device, if not, do an update
-   $res=execute_query("select * from nac_hostscanned where sid='".$sid."'");
-   if (mysql_num_rows($res)==0)
+   if ( isset($sid) )
    {
-      $new=true;
-      $query=sprintf("insert into nac_hostscanned (sid,ip,hostname,os,timestamp) values('%s','%s','%s','%s','%s');",$sid,$data['ip'],strtolower($data['hostname']),$data['os'],$timestamp);
-   }
-   else
-   {
-      $query=sprintf("update nac_hostscanned set ip='%s', hostname='%s', os='%s', timestamp='%s' where sid='%s';",$data['ip'],strtolower($data['hostname']),$data['os'],$timestamp,$sid);
-      $new=false;
-   }
-
-   $res=execute_query($query);
-   if ($res)
-   {
-      if ($new)
-         update_queries("Host ".$data['ip']."(".$data['hostname'].") added to the database\n",'m');
+      $res=execute_query("select * from nac_hostscanned where sid='".$sid."'");
+      if (mysql_num_rows($res)==0)
+      {
+         $new=true;
+         $query=sprintf("insert into nac_hostscanned (sid,ip,hostname,os,timestamp) values('%s','%s','%s','%s','%s');",$sid,mysql_real_escape_string($data['ip']),mysql_real_escape_string(strtolower($data['hostname'])),mysql_real_escape_string($data['os']),mysql_real_escape_string($timestamp));
+      }
       else
-         update_queries("Host ".$data['ip']."(".$data['hostname'].") has been updated\n",'m');
-      $query=sprintf("select id from nac_hostscanned where ip='%s' and hostname='%s' and os='%s' and timestamp='%s' and sid='%s';",$data['ip'],$data['hostname'],$data['os'],$timestamp,$data['sid']);
+      {
+         $query=sprintf("update nac_hostscanned set ip='%s', hostname='%s', os='%s', timestamp='%s' where sid='%s';",mysql_real_escape_string($data['ip']),mysql_real_escape_string(strtolower($data['hostname'])),mysql_real_escape_string($data['os']),mysql_real_escape_string($timestamp),$sid);
+         $new=false;
+      }
+
       $res=execute_query($query);
       if ($res)
       {
-         $result=mysql_fetch_array($res, MYSQL_NUM);
-         $id=$result[0];
-         check_existent($data);
+         if ($new)
+            update_queries("Host ".$data['ip']."(".$data['hostname'].") added to the database\n",'m');
+         else
+            update_queries("Host ".$data['ip']."(".$data['hostname'].") has been updated\n",'m');
+         $query=sprintf("select id from nac_hostscanned where ip='%s' and hostname='%s' and os='%s' and timestamp='%s' and sid='%s';",$data['ip'],$data['hostname'],$data['os'],$timestamp,$data['sid']);
+         $res=execute_query($query);
+         if ($res)
+         {
+            $result=mysql_fetch_array($res, MYSQL_NUM);
+            $id=$result[0];
+            check_existent($data);
+         }
       }
+      return($queries);
    }
-   return($queries);
 }
 
 function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specified in the file "port_scan.inc" and the location for our XML file
 {
    global $which_nmap,$logger;
    syscall("touch ".$xml_file);	//Just to avoid an error while running from cron
+   if ( strlen($which_nmap) == 0 )
+      check_and_abort("Variable nmap_flags hasn't been defined",0);
    $scan=$which_nmap." ".$nmap_flags." -oX ".$xml_file." ";
    $list=get_ips();		//We need some IPs to scan
+   if ( ! is_array($list) || ( count($list) == 0 ) )
+      check_and_abort("No systems were found to scan", 0);
    $hosts='';
    for ($i=0;$i<$list['counter'];$i++) //Put those ips in a string
    {
@@ -655,6 +703,8 @@ function scan($xml_file,$nmap_flags)	//We perform the scan with the flags specif
       message("None of the systems scheduled for scan met the the requirements to be scanned");
       exit(0); 
    }
+   if (strlen($hosts) == 0 )
+      check_and_abort("No systems were found to scan", 0);
    $scan.=$hosts;		//Now our command line is complete
    $logger->debug("scan=" .$scan, 3);
    syscall($scan);		//Scan
