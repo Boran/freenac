@@ -80,7 +80,6 @@ message("Doing port_scan to sytems... Please wait...\n");
 $logger->debug("port_scan started");
 $file_timestamp=date('Y-m-d H:i:s');
 $file_timestamp=str_replace(' ','-',$file_timestamp);
-$file_timestamp = "test";
 
 $scan_results=$scan_directory."/scan-$file_timestamp.xml";   	//Scan file
 $logger->debug("Scan file: $scan_results");		//Parameters from port_scan.inc
