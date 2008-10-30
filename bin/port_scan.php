@@ -80,6 +80,7 @@ message("Doing port_scan to sytems... Please wait...\n");
 $logger->debug("port_scan started");
 $file_timestamp=date('Y-m-d H:i:s');
 $file_timestamp=str_replace(' ','-',$file_timestamp);
+$file_timestamp = "test";
 
 $scan_results=$scan_directory."/scan-$file_timestamp.xml";   	//Scan file
 $logger->debug("Scan file: $scan_results");		//Parameters from port_scan.inc
@@ -237,17 +238,19 @@ function update_queries($mesg,$what)
    global $queries; //Here we hold messages and queries
    if ($what=='q')
    {
-      if ( isset($queries['query'][$queries['number']]) )
+      if ( ! isset($queries['query'][$queries['number']]) )
          $queries['query'][$queries['number']]=$mesg; //This is a query
-      if ( isset($queries['number']) )
-         $queries['number']++;	//Count queries
+      if ( ! isset($queries['number']) )
+         $queries['number'] = 0;
+      $queries['number']++;	//Count queries
    }
    else if ($what=='m')
    {
-      if ( isset($queries['message'][$queries['messages']]) )
+      if ( ! isset($queries['message'][$queries['messages']]) )
          $queries['message'][$queries['messages']]=$mesg; //This is a message
-      if ( isset($queries['messages']) )
-         $queries['messages']++;	//Count messages
+      if ( ! isset($queries['messages']) )
+         $queries['messages'] = 0;
+      $queries['messages']++;	//Count messages
    }
 }
 
@@ -263,7 +266,7 @@ function do_inventory($data_from_xml)
        if ( isset($data_from_xml[$i]['sid']) )
           $id=$data_from_xml[$i]['sid'];
        else
-          $ip = 0;
+          $id = 0;
        $query=sprintf("select * from nac_hostscanned where sid='%s';",mysql_real_escape_string($id));
        $res=execute_query($query);
        if ($res)
@@ -279,6 +282,7 @@ function do_inventory($data_from_xml)
 
 function check_existent($data) 	//This function will check info concerning one host scanned against its info in the database
 {
+   global $logger, $queries;
    $timestamp=date('Y-m-d H:i:s');
    if ((!isset($data))||(!is_array($data)))
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
@@ -320,6 +324,11 @@ function check_existent($data) 	//This function will check info concerning one h
             update_queries("Host $ip has its hostname resolved now. $ip is $hostname\n",'m');
             $host_changed++;
          }
+         else  if ((strcasecmp($db_hostname,'unknown')==0)&&(strcasecmp($hostname,'NULL')!=0))
+         {
+            update_queries("Host $ip has its hostname resolved now. $ip is $hostname\n",'m');
+            $host_changed++;
+         }
          else if ((strcasecmp($db_hostname,'NULL')!=0)&&(strcasecmp($hostname,'NULL')==0))
          {
             update_queries("Unable to resolve $ip this time, old hostname $db_hostname preserved\n",'m');
@@ -334,6 +343,11 @@ function check_existent($data) 	//This function will check info concerning one h
       if (!empty($os)&&!empty($db_os)&&(strcasecmp($os,$db_os)!=0))		//Info about its OS
       {
          if ((strcasecmp($db_os,'NULL')==0)&&(strcasecmp($os,'NULL')!=0))
+         {
+            update_queries("OS from $ip now determined. $ip is using $os\n",'m');
+            $os_changed++;
+         }
+         else if ((strcasecmp($db_os, 'Firewalled')==0) && (strcasecmp($db_os, $os)!=0))
          {
             update_queries("OS from $ip now determined. $ip is using $os\n",'m');
             $os_changed++;
@@ -584,8 +598,11 @@ function check_existent($data) 	//This function will check info concerning one h
 	 for ($i=0;$i<$update_counter;$i++)
 	 {
             $res=execute_query("select s.id as id from services s inner join protocols p on s.protocol=p.protocol and p.name='".$update_prot[$i]."' and s.port='".$update_port[$i]."';");
-            $result=mysql_fetch_array($res,MYSQL_ASSOC);            
-            $query=sprintf("update nac_openports set banner='%s',timestamp=NOW() where sid='%d' and service='%s';",$update_banner[$i],$timestamp,$id,$result['id']);
+            $result=mysql_fetch_array($res,MYSQL_ASSOC);
+            $query = "UPDATE nac_openports SET banner='".mysql_real_escape_string($update_banner[$i])."', timestamp='$timestamp' where sid='$id' and service='{$result['id']}';"; 
+            // Is this a bug in PHP (some kind of overflow) or is it just sloppy code? Anyway, the result of the
+            // query using sprintf should be the same than the query above, but it is not. 
+            //$query=sprintf("update nac_openports set banner='%s',timestamp=NOW() where sid='%d' and service='%d';",$update_banner[$i],$timestamp,$id,$result['id']);
 	    update_queries($query,'q');
 	 }
          if ($add_counter)
@@ -1062,6 +1079,7 @@ function parse_scanfile($scan_file,$list)
                if (strlen($query)>0)
                   $query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
                #$query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 24 HOUR);";
+               $logger->debug($query, 3);
                $res=execute_query($query);
                if ($res)
                   while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
@@ -1076,12 +1094,17 @@ function parse_scanfile($scan_file,$list)
          {
             $ip_info=$host->address[0];
 	    $temp=$ip_info->attributes(); //Let's retrieve the attributes
-            $info[$i]['sid']=$list['sid'][$i];
             if (isset($temp->addr))
+            {
+               $k = array_search($temp->addr, $list['ip']);
+               if ( ! $k )
+                  continue;
+               $info[$i]['sid']=$list['sid'][$k];
                $info[$i]['ip']=(string)$temp->addr;         //IP address
+            }	
             else $info[$i]['ip']="NULL";
 	    $info[$i]['ip']=validate($info[$i]['ip']);
-            $index=0;	
+            $index=0;
 	    while (($info[$i]['ip']!=$list['ip'][$index])&&($index<$list['counter']))
 		$index++;
             if (isset($host->hostnames->hostname))	
@@ -1160,15 +1183,15 @@ function parse_scanfile($scan_file,$list)
          logit($down." is down\n");
          log2db('info',$down." is down");
       }
-      for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
-      {
+      //for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
+      //{
          /*if ($i==0)
             $query="select id, r_ip, name from systems where r_ip='".$list['ip'][$i]."'";
          else
             $query.=" or r_ip='".$list['ip'][$i]."'";*/
-         $query="update nac_hostscanned set os='Firewalled', timestamp=NOW(), ip='{$list['ip'][$i]}', hostname='{$list['hostname'][$i]}' where sid='{$list['sid'][$i]}';";
-         execute_query($query);
-      }
+         //$query="update nac_hostscanned set os='Firewalled', timestamp=NOW(), ip='{$list['ip'][$i]}', hostname='{$list['hostname'][$i]}' where sid='{$list['sid'][$i]}';";
+         //execute_query($query);
+      //}
       /*$query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);"; 
       $res=execute_query($query);
       while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
