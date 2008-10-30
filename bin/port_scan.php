@@ -1176,11 +1176,14 @@ function parse_scanfile($scan_file,$list)
       if (isset($temp)&&is_array($temp))
          if (isset($list)&&is_array($list))
             $hosts_down=array_diff($list['ip'],$temp);
-      foreach($hosts_down as $down)
+      if ( is_array($hosts_down) )
       {
-         $logger->debug($down." is down\n");
-         logit($down." is down\n");
-         log2db('info',$down." is down");
+         foreach($hosts_down as $down)
+         {
+            $logger->debug($down." is down\n");
+            logit($down." is down\n");
+            log2db('info',$down." is down");
+         }
       }
       //for ($i=0;$i<$list['counter'];$i++) //It's like déjà vu
       //{
