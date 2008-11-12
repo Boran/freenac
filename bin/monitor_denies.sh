@@ -2,12 +2,14 @@
 # /opt/nac/bin/monitor_denies.sh
 #
 # Monitor the VMPS logs and notify the Sysadmin via email of 
-# if there are more than XX "DENY" per time interval.
-# Called from Cron.
-# The time ionterval is typicall one hour, otherwise there may not be any reconfirms, and 
-# the network might be just quiet.
+# if there are more than $messagecount "DENY" per time interval. Called from Cron.
+# The time interval is typically ~15 mins.
 #
-# <1> 2008.11.11 Sean Boran
+# Example cron usage:
+#   */15 8-18 * * 1-5 /opt/nac/bin/monitor_denies.sh
+#
+# CHANGELOG:
+#    2008.11.11 Sean Boran
 #
 # @package             FreeNAC
 # @author              Sean Boran (FreeNAC Core Team)
@@ -16,7 +18,7 @@
 # @version             SVN: $Id$
 # @link                http://www.freenac.net
 # 
-# 
+# #################################3
 
 subject="FreeNAC warning: DENYs "
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
