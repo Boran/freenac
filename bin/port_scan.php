@@ -37,8 +37,8 @@
 require_once "funcs.inc.php";
 $output=TRUE;
 
-$logger->setDebugLevel(3);
-$logger->setLogToStdOut(true);
+$logger->setDebugLevel(0);
+$logger->setLogToStdOut(false);
 
 #Compatibility with old vars
 if (!$conf->scan_directory && $conf->nmap_scan_directory)
@@ -601,8 +601,7 @@ function check_existent($data) 	//This function will check info concerning one h
             $query = "UPDATE nac_openports SET banner='".mysql_real_escape_string($update_banner[$i])."', timestamp='$timestamp' where sid='$id' and service='{$result['id']}';"; 
             // Is this a bug in PHP (some kind of overflow) or is it just sloppy code? Anyway, the result of the
             // query using sprintf should be the same than the query above, but it is not. 
-            $query=sprintf("update nac_openports set banner='%s',timestamp='%s' where sid='%d' and service='%d';",$update_banner[$i],$timestamp,$id,$result['id']);
-            echo "$query";
+            //$query=sprintf("update nac_openports set banner='%s',timestamp=NOW() where sid='%d' and service='%d';",$update_banner[$i],$timestamp,$id,$result['id']);
 	    update_queries($query,'q');
 	 }
          if ($add_counter)
