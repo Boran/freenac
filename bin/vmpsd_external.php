@@ -194,6 +194,12 @@ while ($in && $out)
          fputs($out, "ALLOW ".$e->getDecidedVlan()."\n");
          reportException($e);
       }
+      catch (LostConnectionToMySQLException $e)
+      {
+         $logger->logit("LostConnectionToMySQLException received");
+         fputs($out, "DENY\n");
+         reportException($e);
+      }
       catch (Exception $e) 
       {
          fputs($out, "DENY\n");
@@ -241,6 +247,11 @@ function reportException(Exception $e)
          $t = $e->GetTrace();
          $msg = $e->getMessage();
       }
+   }
+   else
+   {
+      $t = $e->getTrace();
+      $msg = $e->getMessage();
    }
    #And report it as debug level 1
    $logger->debug($msg ." (at ".basename($t[0]['file']).":". $t[0]['line'].")\n");
