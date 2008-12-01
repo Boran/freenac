@@ -381,16 +381,15 @@ function db_connect()
 {
    global $connect, $dbhost, $dbuser, $dbpass, $dbname, $logger;
 
-   while ( ( $connect=@mysql_connect($dbhost, $dbuser, $dbpass)) == false )
+   if ( ! $connect=@mysql_connect($dbhost, $dbuser, $dbpass))
    {
       $logger->logit("Could not connect to mysql: " . mysql_error(), LOG_ERR);
-      #exit(1);
+      exit(1);
    }
-   echo "CONNECTED\n";
-   while ( mysql_select_db($dbname, $connect) == false )
+   if ( ! @mysql_select_db($dbname, $connect))
    {
       $logger->logit("Could not select database: ".mysql_error(), LOG_ERR);
-      #exit(1);
+      exit(1);
    }
 }
 
