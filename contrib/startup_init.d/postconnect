@@ -20,14 +20,14 @@
 mode=$1    # start or stop
 #CMD='tail -f /var/log/messages |/opt/vmps/bin/vmps_lastseen'
 #CMD='tail -f /var/log/messages |/opt/nac/bin/vmps_lastseen'
-CMD='tail -f /var/log/messages |/opt/nac/bin/postconnect.php'
+CMD='tail -f --follow=name /var/log/messages |/opt/nac/bin/postconnect.php'
 
 
 case "$mode" in
   'start')
     # Start daemon
     #nohup tail -f /var/log/messages | /opt/nac/bin/vmps_lastseen &
-    nohup tail -f /var/log/messages | /opt/nac/bin/postconnect.php &
+    nohup tail -f --follow=name /var/log/messages | /opt/nac/bin/postconnect.php &
     #echo $CMD
     #$CMD
     ;;
@@ -36,7 +36,7 @@ case "$mode" in
     #pkill ".*vmps_lastseen.**"
     #pkill -f "$CMD"
     #pkill -f "tail -f /var/log/messages | /opt/nac/bin/vmps_lastseen"
-    pkill -f "tail -f /var/log/messages | /opt/nac/bin/postconnect.php"
+    pkill -f "tail -f --follow=name /var/log/messages | /opt/nac/bin/postconnect.php"
     ;;
 
   'restart')
