@@ -194,12 +194,19 @@ while ($in && $out)
          fputs($out, "ALLOW ".$e->getDecidedVlan()."\n");
          reportException($e);
       }
+      catch (MySQLWentAwayException $e)
+      {
+         fputs($out, "DENY\n");
+         $logger->logit($e->getMessage());
+         // MySQL went away. Let the daemon die. In a well configured system, proctst
+         // should restart the daemon, restablishing thus a new connection to MySQL
+         exit(1);
+      }
       catch (Exception $e) 
       {
          fputs($out, "DENY\n");
          reportException($e);
       }
- 
       $logger->debug("----------------------------\n");
    }                # strlen >0
 }

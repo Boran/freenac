@@ -106,6 +106,13 @@ while ( ! feof($in) )
             $policy->postconnect($result);
          }
       }
+      catch (MySQLWentAwayException $e)
+      {
+         $logger->logit($e->getMessage());
+         // MySQL went away. Let the daemon die. In a well configured system, proctst
+         // should restart the daemon, restablishing thus a new connection to MySQL
+         exit(1);
+      }
       catch (Exception $e)
       {
          $logger->logit("Postconnect exception: ".$e->getMessage(),LOG_WARNING);
