@@ -653,7 +653,7 @@ function add_entry($data)	//A new host in our network that needs to be added to 
    $timestamp=date('Y-m-d H:i:s');
    ## Interested only in systems whose IP address has been assignated in the last 3 hours.
    if ( isset($data['ip']) )
-      $res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);");
+      $res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);");
    #$res=execute_query("select id from systems where r_ip='".$data['ip']."' and r_timestamp>=DATE_SUB(NOW(),INTERVAL 24 HOUR);");
    if ( $res )
    {
@@ -1076,7 +1076,7 @@ function parse_scanfile($scan_file,$list)
                }
                ## Interested only in systems whose IP address has been assigned in the last 3 hours.
                if (strlen($query)>0)
-                  $query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);";
+                  $query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);";
                #$query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 24 HOUR);";
                $logger->debug($query, 3);
                $res=execute_query($query);
@@ -1194,7 +1194,7 @@ function parse_scanfile($scan_file,$list)
          //$query="update nac_hostscanned set os='Firewalled', timestamp=NOW(), ip='{$list['ip'][$i]}', hostname='{$list['hostname'][$i]}' where sid='{$list['sid'][$i]}';";
          //execute_query($query);
       //}
-      /*$query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL 3 HOUR);"; 
+      /*$query.=" and r_timestamp>=DATE_SUB(NOW(),INTERVAL ".validate($conf->scan_hours_for_ip)." HOUR);"; 
       $res=execute_query($query);
       while ($result=mysql_fetch_array($res, MYSQL_ASSOC)) //And do it
       {
