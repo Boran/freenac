@@ -93,4 +93,18 @@ function ALLOW($vlan)
 {
    throw new AllowException($vlan);
 }
+
+class MySQLWentAwayException extends Exception
+{
+   function __construct()
+   {
+      parent::__construct("MySQL went away. Let daemon die. See you later");
+   }
+}  
+
+function MYSQLWENTAWAY()
+{
+   throw new MySQLWentAwayException();
+}
+
 ?>

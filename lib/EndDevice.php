@@ -83,6 +83,22 @@ EOF;
          #System found in database, fill up the properties
          if ($temp=mysql_fetch_one($sql_query))
          {
+            if ( ! is_array($temp))
+            {
+               # Check if there is a MySQL error
+               if ( mysql_errno() )
+               {
+                  # Yes, there was an error.
+                  # Got the connection lost?
+                  if ( ( $temp == 2006 ) || ( $temp == 2013 ) )
+                  {
+                     # Yep, MySQL went away. Throw the exception to indicate this
+                     MYSQLWENTAWAY();   
+                  }
+                  else
+                     DENY("There was a problem with the database. Error number $temp");
+               }
+            }
             $this->db_row=$temp;
             $this->db_row['in_db']=true;
             if (!$this->db_row['health'])
