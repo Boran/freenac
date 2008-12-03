@@ -646,7 +646,7 @@ function execute_query($query)
 
 function add_entry($data)	//A new host in our network that needs to be added to the database
 {
-   global $queries; 
+   global $queries, $conf; 
    $new=false;
    if ((!isset($data))||(!is_array($data)))
       check_and_abort("There was a problem parsing the XML file. Make sure you have the right version of PHP and libXML in your system",0);
@@ -1041,7 +1041,7 @@ function date_diff($date1, $date2,$what) //Time difference between the timestamp
 
 function parse_scanfile($scan_file,$list)
 {
-   global $flagscannow,$logger;
+   global $flagscannow,$logger, $conf;
    $timestamp=date('Y-m-d H:i:s');
    $info=array();
    if (is_readable($scan_file))
