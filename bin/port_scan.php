@@ -316,6 +316,10 @@ function check_existent($data) 	//This function will check info concerning one h
       $db_os=$result['os'];			//Same OS from last time?
       $db_timestamp=$result['timestamp'];  	//If it changed, since when?
       $host_changed=$os_changed=$mac_changed=0; //To control if we need to update its record in the database
+      if ( ! empty($ip) && ! empty($db_ip) && (strcasecmp($ip, $db_ip)!=0) )
+      {
+         $ip_changed = 1;
+      }
       if (!empty($hostname)&&!empty($db_hostname)&&(strcasecmp($hostname,$db_hostname)!=0))   	//Info about its hostname
       {
          if ((strcasecmp($db_hostname,'NULL')==0)&&(strcasecmp($hostname,'NULL')!=0))
@@ -363,10 +367,10 @@ function check_existent($data) 	//This function will check info concerning one h
             $os_changed++;
          }
       }
-      $changes=$host_changed+$os_changed+$mac_changed;
+      $changes=$host_changed+$os_changed+$mac_changed+$ip_changed;
       if($changes>0)
       {
-         $query=sprintf("update nac_hostscanned set hostname='%s',os='%s',timestamp='%s' where sid='%d' and ip='%s';",$hostname,$os,$timestamp,$id,$ip);
+         $query=sprintf("update nac_hostscanned set hostname='%s',os='%s',timestamp=NOW(),ip='%s' where sid='%d';",$hostname,$os,$ip,$id);
          update_queries($query,'q');
       }
       $query=sprintf("select o.banner as banner,o.timestamp as timestamp, p.name as protocol, s.port as port from nac_openports o inner join services s on o.service=s.id inner join protocols p on s.protocol=p.protocol and o.sid='%s';",mysql_real_escape_string($id));
