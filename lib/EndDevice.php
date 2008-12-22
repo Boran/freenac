@@ -779,6 +779,57 @@ EOF;
          return false;
       }
    }
+
+   /**
+   * Set 'scannow' flag in DB, if the machine has a valid IP and wasn't scanned the last 7 days
+   * @return boolean            True if flag was set, false otherwise
+   */
+   public function postScan()
+   {
+      #Only set flag if we got a valid IP
+      if (valid_ip($this->ip))
+      {
+         #Check if timestamp exists, else set flag
+         $d_query="SELECT n.timestamp FROM systems s LEFT JOIN nac_hostscanned n ON n.sid = s.id WHERE mac = '$this->mac'";
+         $this->logger->debug($d_query,3);
+         $lastScan=v_sql_1_select($d_query);
+         if ($lastScan)
+         {
+            #Check if machine was scanned the last 7 days
+            $lastWeekTime=time()-(7*24*60*60);
+            $lastScanTime=strtotime($lastScan);
+            if ($lastWeekTime > $lastScanTime)
+               $scan=1;
+            else
+            {
+               $this->logger->debug("$this->hostname $this->mac $this->ip - last scan date is recent, no scan scheduled",2);
+               return false;
+            }
+         }
+         else
+            $scan=1;
+
+         if ($scan==1)
+         {
+            #Set scannow flag in DB
+            $f_query="UPDATE systems SET scannow=1 WHERE mac = '$this->mac'";
+            $this->logger->logit("$this->hostname $this->mac $this->ip - will be scanned in the next few minutes");
+            $this->logger->debug($f_query,3);
+            mysql_query($f_query);
+            return true;
+         }
+         else
+         {
+            $this->logger->debug("$this->hostname $this->mac $this->ip - will be not scanned",2);
+	    return false;
+         }
+      }
+      else
+      {
+         $this->logger->debug("$this->hostname $this->mac - machine has no valid IP, no scan scheduled",2);
+	 return false;
+      }
+   }
 }
 
 ?>
