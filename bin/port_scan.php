@@ -1100,7 +1100,7 @@ function parse_scanfile($scan_file,$list)
             if (isset($temp->addr))
             {
                $k = array_search($temp->addr, $list['ip']);
-               if ( ! $k )
+               if ( $k === false )
                   continue;
                $info[$i]['sid']=$list['sid'][$k];
                $info[$i]['ip']=(string)$temp->addr;         //IP address
