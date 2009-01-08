@@ -1,0 +1,25 @@
+#
+# /etc/logrotate.d/freetds
+#
+# Sample freetds logrotate config file for FreeNAC
+# Keep logs 40 days
+# 
+# to test:
+# /usr/sbin/logrotate -d /etc/logrotate.d/freetds
+#
+
+/var/log/freetds_inv.log {
+   rotate 40
+   missingok
+   notifempty
+   daily
+   compress
+}
+/var/log/freetds_sms.log {
+   rotate 40
+   missingok
+   notifempty
+   daily
+   compress
+}
+
