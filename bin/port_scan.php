@@ -373,6 +373,11 @@ function check_existent($data) 	//This function will check info concerning one h
          $query=sprintf("update nac_hostscanned set hostname='%s',os='%s',timestamp=NOW(),ip='%s' where sid='%d';",$hostname,$os,$ip,$id);
          update_queries($query,'q');
       }
+      else
+      {
+         $query="UPDATE nac_hostscanned SET timestamp=NOW() WHERE sid='$id';";
+         update_queries($query, 'q');
+      }
       $query=sprintf("select o.banner as banner,o.timestamp as timestamp, p.name as protocol, s.port as port from nac_openports o inner join services s on o.service=s.id inner join protocols p on s.protocol=p.protocol and o.sid='%s';",mysql_real_escape_string($id));
       $res1=execute_query($query);
       if ($res1)				//Let's check info about ports
