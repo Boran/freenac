@@ -207,7 +207,7 @@ function react($cnt, $switch, $port)
         $best_vlan_num=v_sql_1_select("SELECT id FROM vlan WHERE default_name='$best_vlan'");
         if ( ! $best_vlan_num )
            $best_vlan_num = 0;
-        $query="UPDATE systems SET vlan='$best_vlan_num' WHERE mac='$mac2'";
+        $query="UPDATE systems SET vlan='$best_vlan_num' WHERE mac='$mac'";
           #$logger->logit($query ."\n");
           $res = mysql_query($query);
           if (!$res)
@@ -216,7 +216,7 @@ function react($cnt, $switch, $port)
              exit(1);
           } 
           if (mysql_affected_rows()!=1) {
-            $logger->logit("Query error: $query\n"); 
+            $logger->logit("Query error: $query. Affected rows: ".mysql_affected_rows()."\n"); 
             msg("Query error: $query\n"); 
           }
 
