@@ -19,7 +19,7 @@
  *    2 = fixed
  *    3 = reserved
  *
- *  DNS_update set top 1 if FreeNAC must update the dns
+ *  DNS_update set to 1 if FreeNAC must update the dns
  *
  * PHP version 5
  *
@@ -28,7 +28,7 @@
  * by the Free Software Foundation.
  *
  * @package			FreeNAC
- * @author			Thomas Dagonnier (FreeNAC Core Team)
+ * @author			Thomas Dagonnier/Sean Boran (FreeNAC Core Team)
  * @copyright			2008 FreeNAC
  * @license			http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 2
  * @version			SVN: $Id$
@@ -39,7 +39,7 @@
 // settings
 // TODO : put in config table
 $nsupdate="nsupdate -d ";    // -d = debug
-$generate_all=TRUE; /* Generate all => all hosts, false => only hoses with dns_update bit 1 is set */
+$generate_all=TRUE; /* Generate all => all hosts, false => only hoses with dns_update = 1 */
 
 
 //  main ()
@@ -59,8 +59,8 @@ db_connect($dbuser,$dbpass);
 
 #$tmp_dir = '/tmp';
 #$tmp_file = 'nsupdate'.date("ymdHi");
-$tmp_file = system('mktemp');
 #$outfile = $tmp_dir.'/'.$tmp_file;
+$tmp_file = system('mktemp');
 $outfile = $tmp_file;
 
 /*** A Records & aliases (CNAME)  ************************************************/
@@ -75,7 +75,7 @@ function sanitize_name($name) {
 };
 
 if ($generate_all) {
-	$query = "SELECT ip.id as id, INET_NTOA(ip.address) as ip, systems.name as name, systems.dns_alias as cname FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0";
+	$query = "SELECT ip.id as id, INET_NTOA(ip.address) as ip, systems.name as name, ip.dns_update as dns_update, systems.dns_alias as cname FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0";
 
 } else {
 	 $query = "SELECT ip.id as id, INET_NTOA(ip.address) as ip, systems.name as name, ip.dns_update as dns_update, systems.dns_alias as cname FROM ip LEFT JOIN systems ON ip.system = systems.id WHERE ip.system != 0 AND ((ip.dns_update & 1) = 1)";

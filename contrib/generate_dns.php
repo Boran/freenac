@@ -41,7 +41,7 @@ $dns_soa = "\$ORIGIN ".$conf->dns_domain.".
 
 $dns_preamble = "
 ;
-; DON'T EDIT - Generated automatically from FreeNAC 
+; DON'T EDIT - Generated automatically from FreeNAC by generate_dns.php
 ;\n";
 
 /*** Name & Mail servers (NS & MX) **i***********************************/
@@ -50,13 +50,15 @@ $dns_preamble = "
 $nameservers = explode(',',$conf->dns_ns);
 $dns_inns = "; Name servers (NS) \n";
 foreach ($nameservers as $i => $nameserver) {
-	$dns_inns .= "\t\t\tIN\tNS\t".$nameserver.'.'.$conf->dns_domain.".\n";
+	#$dns_inns .= "\t\t\tIN\tNS\t".$nameserver.'.'.$conf->dns_domain.".\n";
+	$dns_inns .= "\t\t\tIN\tNS\t".$nameserver.".\n";
 };
 
 $mxservers = explode(',',$conf->dns_mx);
 $dns_inmx = "; Mail servers (MX) \n";
 foreach ($mxservers as $prio => $mxserver) {
-	$dns_inmx .= "\t\t\tIN\tMX\t1$prio\t".$mxserver.'.'.$conf->dns_domain.".\n";
+	#$dns_inmx .= "\t\t\tIN\tMX\t1$prio\t".$mxserver.'.'.$conf->dns_domain.".\n";
+	$dns_inmx .= "\t\t\tIN\tMX\t1$prio\t".$mxserver.".\n";
 };
 
 
