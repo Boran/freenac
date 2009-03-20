@@ -561,10 +561,13 @@ function get_vlandropdown($s)
            }
            else {
              for ($i = 0; $i < $number_vlans; $i++) {
-               if ( $i < ($number_vlans - 1) )
-                 $q .= " WHERE id = '{$vlans_to_show[$i]}' OR ";
-               else
-                 $q .= " WHERE id = '{$vlans_to_show[$i]}'";
+                 if ( $i == 0 )
+                    $q .=" WHERE ";
+                 if ( $i < ($number_vlans - 1) )
+                    $q .= " id = '{$vlans_to_show[$i]}' OR ";
+                 else
+                    $q .= " id = '{$vlans_to_show[$i]}'";
+               }
              }
            }
 
