@@ -109,6 +109,44 @@ pcntl_signal(SIGINT, "delete_pid_file");
 if ($conf->restart_daemons)
    restart_daemons();
 
+ 
+if ( $conf->check_mac_enable )
+{
+   $query=<<<EOF
+SELECT sys.mac, sw.ip, sw.name FROM systems sys 
+   INNER JOIN port p ON sys.LastPort=p.id 
+   INNER JOIN switch sw ON p.switch=sw.id 
+   WHERE sys.clear_mac='1' AND sw.switch_type='1';   
+EOF;
+   $logger->debug($query, 3);
+   $res = mysql_query($query);
+   if ( ! $res )
+   {
+      $logger->logit(mysql_error(), LOG_ERR);
+      # Delete PID file
+      delete_pid_file();
+      exit(1);
+   }
+   while ( $row = mysql_fetch_array($res, MYSQL_ASSOC) )
+   {
+      if ( clear_mac($row['mac'], $row['ip']) )
+      {
+         $logger->logit("MAC address {$row['mac']} has been deleted from switch {$row['name']}({$row['ip']}) CAM table");
+      }
+      else
+      {
+         $logger->logit("Couldn't delete MAC {$row['mac']} from switch {$row['name']}({$row['ip']})");
+      }
+   }
+   $query = "UPDATE systems SET clear_mac='0';";
+   $res = mysql_query($query);
+   if ( ! $res )
+   {
+      $logger->logit(mysql_error(), LOG_ERR);      
+   }
+}
+
+# Continue with the normal flow
 $query=<<<EOF
 SELECT p.id, 
    p.name AS port, 

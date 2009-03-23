@@ -980,5 +980,94 @@ function cascade_delete($mac)
    # And now delete it from the systems table
    do_delete('systems','id',$system_id);
 }
+
+function clear_mac($mac, $switch)
+{
+   // Global variable that will be used by this function
+   global $logger, $sw_user, $sw_pass, $sw_en_pass, $conf;
+
+   // Sanity checks
+   if ( empty($mac) || empty($sw_user) || empty($sw_pass) || empty($sw_en_pass) )
+   {
+      $logger->logit("clear_mac: mac $mac, sw_user $sw_user, sw_pass $sw_pass or sw_en_pass $sw_en_pass not set");
+      return false;
+   }
+   
+   // MAC address has to be in Cisco format
+   if ( ! preg_match("/^[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4}$/", $mac) )
+   {
+      $logger->logit("clear_mac: MAC address is not valid");
+      return false;
+   }
+   
+   // Command to clear the mac address
+   $cmd = "clear mac address-table dynamic address $mac";
+
+   // Define the steps to perform the whole procedure
+   $procedure = array("$sw_user\r", "$sw_pass\r", "enable\r", "$sw_en_pass\r", "$cmd\r", "exit\r");
+  
+   // Connect to the switch
+   $fp = fsockopen($switch, 23);
+   if ( ! $fp )
+   {
+      $logger->logit("clear_mac: Couldn't open a connection to switch $switch");
+      return false;
+   }
+  
+   // Check if a timer has been set in the config table, if not, use 10ms
+   $timer = 0;
+   if ( $conf->clear_mac_timer > 0 )
+   {
+      $timer = $conf->clear_mac_timer;
+   }
+   else
+   {
+      $timer = 10000;
+   }
+   
+   // control vars
+   $procedure_completed = true;
+   $number_steps = count($procedure);
+   $counter = 0;
+
+   // perform every step of the whole procedure
+   foreach ($procedure as $step)
+   {
+      // Write to the socket
+      if ( fwrite($fp, $step, strlen($step)) )
+      {
+         $counter++;
+         if ( $counter < ($number_steps - 1) )
+         {
+            usleep($timer);
+         }
+      }
+      else
+      {
+         $procedure_completed = false;
+         break;
+      }
+
+   }
+   
+   // Procedure couldn't complete
+   if ( ! $procedure_completed )
+   {
+      $logger->logit("clear_mac: A communication error occurred while connecting to switch $switch");
+      return false;
+   }
+   else
+   {
+      $output = NULL;
+      while ( ! feof($fp) )
+      {
+         $output .= fgets($fp, 128);
+      }
+      // Procedure was successful, close the socket
+      fclose($fp);
+      return true;
+   }
+}
+
 ### EOF ###
 ?>
