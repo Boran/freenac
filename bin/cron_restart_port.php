@@ -139,6 +139,7 @@ EOF;
          }
       }
       $query = "UPDATE systems SET clear_mac='0';";
+      $logger->debug($query, 3);
       $res = mysql_query($query);
       if ( ! $res )
       {
