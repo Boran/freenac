@@ -110,39 +110,40 @@ if ($conf->restart_daemons)
    restart_daemons();
 
  
-if ( $conf->check_mac_enable )
+if ( $conf->clear_mac_enable )
 {
    $query=<<<EOF
 SELECT sys.mac, sw.ip, sw.name FROM systems sys 
    INNER JOIN port p ON sys.LastPort=p.id 
    INNER JOIN switch sw ON p.switch=sw.id 
-   WHERE sys.clear_mac='1' AND sw.switch_type='1';   
+   WHERE sys.clear_mac='1' AND sw.switch_type='1'
+   AND sys.lastseen>=DATE_SUB(NOW(),INTERVAL 3 HOUR);   
 EOF;
    $logger->debug($query, 3);
    $res = mysql_query($query);
    if ( ! $res )
    {
       $logger->logit(mysql_error(), LOG_ERR);
-      # Delete PID file
-      delete_pid_file();
-      exit(1);
    }
-   while ( $row = mysql_fetch_array($res, MYSQL_ASSOC) )
+   else
    {
-      if ( clear_mac($row['mac'], $row['ip']) )
+      while ( $row = mysql_fetch_array($res, MYSQL_ASSOC) )
       {
-         $logger->logit("MAC address {$row['mac']} has been deleted from switch {$row['name']}({$row['ip']}) CAM table");
+         if ( clear_mac($row['mac'], $row['ip']) )
+         {
+            $logger->logit("MAC address {$row['mac']} has been deleted from switch {$row['name']}({$row['ip']}) CAM table");
+         }
+         else
+         {
+            $logger->logit("Couldn't delete MAC {$row['mac']} from switch {$row['name']}({$row['ip']})");
+         }
       }
-      else
+      $query = "UPDATE systems SET clear_mac='0';";
+      $res = mysql_query($query);
+      if ( ! $res )
       {
-         $logger->logit("Couldn't delete MAC {$row['mac']} from switch {$row['name']}({$row['ip']})");
+         $logger->logit(mysql_error(), LOG_ERR);      
       }
-   }
-   $query = "UPDATE systems SET clear_mac='0';";
-   $res = mysql_query($query);
-   if ( ! $res )
-   {
-      $logger->logit(mysql_error(), LOG_ERR);      
    }
 }
 

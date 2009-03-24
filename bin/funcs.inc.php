@@ -1010,7 +1010,7 @@ function clear_mac($mac, $switch)
    $fp = fsockopen($switch, 23);
    if ( ! $fp )
    {
-      $logger->logit("clear_mac: Couldn't open a connection to switch $switch");
+      $logger->logit("clear_mac: Couldn't open a connection to switch $switch", LOG_ERR);
       return false;
    }
   
@@ -1028,19 +1028,14 @@ function clear_mac($mac, $switch)
    // control vars
    $procedure_completed = true;
    $number_steps = count($procedure);
-   $counter = 0;
 
    // perform every step of the whole procedure
    foreach ($procedure as $step)
    {
       // Write to the socket
-      if ( fwrite($fp, $step, strlen($step)) )
+      if ( fwrite($fp, $step, strlen($step)) !== false )
       {
-         $counter++;
-         if ( $counter < ($number_steps - 1) )
-         {
-            usleep($timer);
-         }
+         usleep($timer);
       }
       else
       {
@@ -1049,20 +1044,23 @@ function clear_mac($mac, $switch)
       }
 
    }
+
+   // Output of the procedure
+   $output = NULL;
+   while ( ! feof($fp) )
+   {
+      $output .= fgets($fp, 128);
+   }
    
    // Procedure couldn't complete
    if ( ! $procedure_completed )
    {
-      $logger->logit("clear_mac: A communication error occurred while connecting to switch $switch");
+      $logger->logit("clear_mac: A communication error occurred while connecting to switch $switch", LOG_ERR);
+      $logger->logit($output, LOG_ERR);
       return false;
    }
    else
    {
-      $output = NULL;
-      while ( ! feof($fp) )
-      {
-         $output .= fgets($fp, 128);
-      }
       // Procedure was successful, close the socket
       fclose($fp);
       return true;
