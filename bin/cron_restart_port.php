@@ -110,7 +110,7 @@ if ($conf->restart_daemons)
    restart_daemons();
 
  
-if ( $conf->clear_mac_enable )
+if ( $conf->check_clear_mac )
 {
    $query=<<<EOF
 SELECT sys.mac, sw.ip, sw.name FROM systems sys 
