@@ -580,7 +580,6 @@ function get_vlandropdown($s)
                     $q .= " id = '{$vlans_to_show[$i]}' OR ";
                  else
                     $q .= " id = '{$vlans_to_show[$i]}'";
-               }
              }
            }
 
