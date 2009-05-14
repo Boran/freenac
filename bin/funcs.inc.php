@@ -989,14 +989,14 @@ function clear_mac($mac, $switch)
    // Sanity checks
    if ( empty($mac) || empty($sw_user) || empty($sw_pass) || empty($sw_en_pass) )
    {
-      $logger->logit("mac $mac, sw_user $sw_user, sw_pass $sw_pass or sw_en_pass $sw_en_pass not set");
+      $logger->logit("[clear_mac] mac $mac, sw_user $sw_user, sw_pass $sw_pass or sw_en_pass $sw_en_pass not set");
       return false;
    }
    
    // MAC address has to be in Cisco format
    if ( ! preg_match("/^[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4}$/", $mac) )
    {
-      $logger->logit("MAC address is not valid");
+      $logger->logit("[clear_mac] MAC address is not valid");
       return false;
    }
    
@@ -1019,7 +1019,7 @@ function clear_mac($mac, $switch)
    $fp = fsockopen($switch, 23);
    if ( ! $fp )
    {
-      $logger->logit("Couldn't open a connection to switch $switch", LOG_ERR);
+      $logger->logit("[clear_mac] Couldn't open a connection to switch $switch", LOG_ERR);
       return false;
    }
    
@@ -1029,63 +1029,63 @@ function clear_mac($mac, $switch)
       // Send username
       if ( fwrite($fp, "$sw_user", strlen("$sw_user")) == false )
       {
-         $logger->logit("Couldn't send username to switch $switch", LOG_ERR);
+         $logger->logit("[clear_mac] Couldn't send username to switch $switch", LOG_ERR);
          fclose($fp);
          return false;
       }
       // Wait for the password prompt
       if ( ! telnet_wait_for($fp, "Password:") )
       {
-         $logger->logit("Switch $switch didn't send a password prompt", LOG_ERR);
+         $logger->logit("[clear_mac] Switch $switch didn't send a password prompt", LOG_ERR);
          fclose($fp);
          return false;
       }
       // Send password
       if ( fwrite($fp, "$sw_pass", strlen("$sw_pass")) == false )
       {
-         $logger->logit("Couldn't send password to switch $switch", LOG_ERR);
+         $logger->logit("[clear_mac] Couldn't send password to switch $switch", LOG_ERR);
          fclose($fp);
          return false;
       }
       // Wait for the prompt
       if ( ! telnet_wait_for($fp, ">") )
       {
-         $logger->logit("Login to switch $switch failed", LOG_ERR);
+         $logger->logit("[clear_mac] Login to switch $switch failed", LOG_ERR);
          fclose($fp);
          return false;
       }
       // Send enable command
       if ( fwrite($fp, "enable\r\n", strlen("enable\r\n")) == false )
       {
-         $logger->logit("Couldn't send enable command to switch $switch", LOG_ERR);
+         $logger->logit("[clear_mac] Couldn't send enable command to switch $switch", LOG_ERR);
          fclose($fp);
          return false;
       }
       // Wait for the password prompt
       if ( ! telnet_wait_for($fp, "assword:") )
       {
-         $logger->logit("Switch $switch didn't send a password prompt", LOG_ERR);
+         $logger->logit("[clear_mac] Switch $switch didn't send a password prompt", LOG_ERR);
          fclose($fp);
          return false;
       }
       // Send password
       if ( fwrite($fp, "$sw_en_pass", strlen("$sw_en_pass")) == false )
       {
-         $logger->logit("Couldn't send password to switch $switch", LOG_ERR);
+         $logger->logit("[clear_mac] Couldn't send password to switch $switch", LOG_ERR);
          fclose($fp);
          return false;
       }
       // Wait for the enable prompt
       if ( ! telnet_wait_for($fp, "#") )
       {
-         $logger->logit("Enable login on switch $switch failed", LOG_ERR);
+         $logger->logit("[clear_mac] Enable login on switch $switch failed", LOG_ERR);
          fclose($fp);
          return false;
       }
       // Send command
       if ( fwrite($fp, $cmd, strlen($cmd)) == false )
       {
-         $logger->logit("Couldn't send clear mac command to switch $switch", LOG_ERR);
+         $logger->logit("[clear_mac] Couldn't send clear mac command to switch $switch", LOG_ERR);
          fclose($fp);
          return false;
       }
@@ -1093,21 +1093,21 @@ function clear_mac($mac, $switch)
       // Wait for the enable prompt
       if ( ! telnet_wait_for($fp, "#") )
       {
-         $logger->logit("Clear mac command on switch $switch failed", LOG_ERR);
+         $logger->logit("[clear_mac] Clear mac command on switch $switch failed", LOG_ERR);
          fclose($fp);
          return false;
       }
       //Send exit command
       if ( fwrite($fp, "exit\r\n", strlen("exit\r\n")) == false )
       {
-         $logger->logit("Couldn't send exit command to switch $switch", LOG_ERR);
+         $logger->logit("[clear_mac] Couldn't send exit command to switch $switch", LOG_ERR);
          fclose($fp);
          return false;
       }
    }
    else
    {
-      $logger->logit("Login prompt wasn't received from switch $switch", LOG_ERR);
+      $logger->logit("[clear_mac] Login prompt wasn't received from switch $switch", LOG_ERR);
       fclose($fp);
       return false;
    }
