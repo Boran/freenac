@@ -1,0 +1,21 @@
+Delphi 7
+
+- Install GE Experts	 		F:\boran\job\comp\dev_environ
+- GE Experts config -> IDE
+	Enable IDE Enchancements-> Componnet Tabs -> multiline tabs
+	
+3. Install Mysql stuff [crlab.com]
+- MyDAC
+- sdac   MS-SQL
+- MyBuilder
+- DB Mon
+
+And probably mysql Server:
+- server
+- myobdc
+- query browser
+- administrator
+- mysqlcc
+
+Version Control
+- Tortoise SVN
