@@ -2,12 +2,390 @@
                                         Changelog for project 'FreeNAC 3'
 =====================================================================================================================
 
-This file is generated automatically from the Subversion repository commit message, so you may not find it easy to read. For a summary of changes please visit http://freenac.net/en/techguide/appendix/changelog.
-
+This file is generated automatically from the Subversion repository commit message, so you may not find it easy to read. 
+For a summary of changes please visit http://freenac.net/en/techguide/appendix/changelog.
+ 
 ---------------------------------------------------------------------------------------------------------------------
-Changelog for FreeNAC v3.02 (rev 1448)
+Changelog for FreeNAC v3.03 (rev 1580)
 ---------------------------------------------------------------------------------------------------------------------
 
+
+	 * v3.0.0.164/25.May.09/SB:     
+  Switches: add switch_type
+  Edit End-device > restart port: Add clear_mac fuunction for IOS switches
+    UPDATE systems set clear_mac=1 if config.check_clear_mac=true and switch_type=1 (boran)
+		
+
+	 * Preparing Delphi sources
+
+	 * Add delphi sources (boran)
+		
+
+	 * web/SB: typo. lib/GuiEditDevice.php (boran)
+		
+
+	 * webi/SB: Add clear_mac feature. lib/GuiEditDevice.php lib/WebCommon.php (boran)
+		
+
+	 * Prefix all messages coming from clear_mac (h_ortiz)
+		
+
+	 * Wrong variable name, now fixed (h_ortiz)
+		
+
+	 * Clear MAC seems to be working properly, please test (h_ortiz)
+		
+
+	 * clear_mac.php more tests (boran)
+		
+
+	 * Query (h_ortiz)
+		
+
+	 * Check for port lastseen and print output if errors (h_ortiz)
+		
+
+	 * Introducing clear_mac for IOS switches (h_ortiz)
+		
+
+	 * Query has been fixed (h_ortiz)
+		
+
+	 * Changes introduced to the database for enabling the new functionality of clear_mac (h_ortiz)
+		
+
+	 * New script, schedule port scans for systems which haven't been scanned recently (h_ortiz)
+		
+
+	 * Committing changes made by Sean (h_ortiz)
+		
+
+	 * Committing changes made by Sean (h_ortiz)
+		
+
+	 * bin/clear_mac.php: first version. /SB (boran)
+		
+
+	 * Added -P0 flag to scan (h_ortiz)
+		
+
+	 * Added -P0 flag to scan (h_ortiz)
+		
+
+	 * add contrib/etc/logrotate.d/freetds (boran)
+		
+
+	 * Update scan timestamp if no changes have been registered (h_ortiz)
+		
+
+	 * New policy showing how to use the postScan method (h_ortiz)
+		
+
+	 * Added method postScan to be used on the postconnect part (h_ortiz)
+		
+
+	 * Adding new class SMSEndDevice (h_ortiz)
+		
+
+	 * Careful, array_search may return zero, and for some tests this value is undesirable. Use false instead (h_ortiz)
+		
+
+	 * Update nac_hostscanned if there was a change of ip address (h_ortiz)
+		
+
+	 * Global variable conf now defined (bin/port_scan) (h_ortiz)
+		
+
+	 * Don't hardcode values (bin/port_scan) (h_ortiz)
+		
+
+	 * Modifications to handle when MySQL goes away (bin/[vmpsd_external, postconnect]) (h_ortiz)
+		
+
+	 * Modifications to handle when MySQL goes away (lib/[exceptions, Port, EndDevice]) (h_ortiz)
+		
+
+	 * Follow filename, useful when there is a logrotation. Suggested by atrusler (h_ortiz)
+		
+
+	 * Reverted to previous state (port_scan.php) (h_ortiz)
+		
+
+	 * Reverted to previous state (funcs.inc.php) (h_ortiz)
+		
+
+	 * Reverted to previous state (vmpsd_external.php) (h_ortiz)
+		
+
+	 * Renaming delete_not_seen to purge_not_seens.php
+
+	 * bin/monitor_allows_count.sh: Do not sort by count, time is better. Threshold: 10>15 (boran)
+		
+
+	 * bin/monitor_denies.sh:sb: comments (boran)
+		
+
+	 * bin/monitor_denies.sh: added first version. sb (boran)
+		
+
+	 * More fixes to port_scan (h_ortiz)
+		
+
+	 * Several fixes to port_scan (h_ortiz)
+		
+
+	 * Several fixes to port_scan (h_ortiz)
+		
+
+	 * Several fixes to port_scan (h_ortiz)
+		
+
+	 * Several fixes to port_scan (h_ortiz)
+		
+
+	 * Don't scan empty list of devices (bin/port_scan) (h_ortiz)
+		
+
+	 * Bad column name now fixed (bin/portscan) (h_ortiz)
+		
+
+	 * Delete old users and if they have systems assigned, kill those systems (bin/report_old_users) (h_ortiz)
+		
+
+	 * Delete old users and if they have systems assigned, kill those systems (bin/report_old_users) (h_ortiz)
+		
+
+	 * DB changes needed for report_old_users
+
+	 * SB: move sms_getinfo from enterprise: bin/sms_getinfo bin/sms_test.php contrib/sms_tables (boran)
+		
+
+	 * move sms_getinfo from enterprise (boran)
+		
+
+	 * Only do a restart on static and dynamic ports (bin/cron_restart_port) (h_ortiz)
+		
+
+	 * Set scan=0 if can't communicate with switch (h_ortiz)
+		
+
+	 * Check if email_on_connect is not empty (lib/EndDevice) (h_ortiz)
+		
+
+	 * Store the status in vlan_changes (contrib/report_vlan_changes) (h_ortiz)
+		
+
+	 * sb: delete debug print (boran)
+		
+
+	 * Web/SB: add more fields to end-device edit screen, expiry, email on connect, classification, inventory (boran)
+		
+
+	 * Display system's status (contrib/report_vlan_changes) (h_ortiz)
+		
+
+	 * Warn about systems to delete, deletion not yet enabled (bin/delete_old_users) (h_ortiz)
+		
+
+	 * Warn about systems to delete, deletion not yet enabled (bin/delete_old_users) (h_ortiz)
+		
+
+	 * Add variable body (bin/statistics.php) (h_ortiz)
+		
+
+	 * Check if variable exists before incrementing its value (h_ortiz)
+		
+
+	 * Buf reported by iceman80 (bin/funcs.inc.php) (h_ortiz)
+		
+
+	 * Modified cascade_delete. No more references to EpoComputerProperties (h_ortiz)
+		
+
+	 * Update on duplicate keys (bin/epo_sync) (h_ortiz)
+		
+
+	 * Delete obsolete ports from the database associated to a switch (bin/snmp_defs.inc) (h_ortiz)
+		
+
+	 * Added some checks to test for array (lib/Port.php) (h_ortiz)
+		
+
+	 * Fixed function names (bin/snmp_defs.inc) (h_ortiz)
+		
+
+	 * v3.0.0.163/6.Aug.08/SB:     
+  Add hint with server name to secondary button (boran)
+		
+
+	 * Added some array index checking (bin/snmp_defs.inc) (h_ortiz)
+		
+
+	 * web check if $_SESSION[caller] is set before using (boran)
+		
+
+	 * Don't use empty fields to generate the config file (dagonnier)
+		
+
+	 * Added error supression (boran)
+		
+
+	 * Match column names to those displayed in the Windows GUI (boran)
+		
+
+	 * Match column names to those displayed in the Windows GUI
+
+	 * Changed some column names to match those of the Windows GUI (h_ortiz)
+		
+
+	 * Use ISO-8859-1 to encode instead of UTF-8 (h_ortiz)
+		
+
+	 * Use ISO-8859-1 to encode instead of UTF-8 (h_ortiz)
+		
+
+	 * web: remove Beta tag from iMmenu items: End-device> Search by mac/IP and Reports>ssh server" (boran)
+		
+
+	 * Log to syslog when doing a cascade delete (boran)
+		
+
+	 * web: make print_tiele public (boran)
+		
+
+	 * Check if the query has been set before (bin/port_scan) (h_ortiz)
+		
+
+	 * Find unknown by status and not by name (h_ortiz)
+		
+
+	 * Web: add PTR records (boran)
+		
+
+	 * web: DNS beta
+
+	 * web: IP/DNS beta
+
+	 * Intermediate beta ip.php dnsupdate2.php (boran)
+		
+
+	 * Updated with CNAMEs based on systems.dns_alias.
+Changed flag to see if it's required to generate everything (bootstrap)
+TODO : command line option to generate everything/only updates (dagonnier)
+		
+
+	 * Match config->ddns_server (from generate_dnsupdate2) (dagonnier)
+		
+
+	 * SB: Add comments, dns updates, test. generate_dnsupdate2.php (boran)
+		
+
+	 * IP GUi now working. (boran)
+		
+
+	 * Populate the 'ip' tables based on 'subnet' and 'systems'.
+Note : final update of 'system.ip' is still commented out. (dagonnier)
+		
+
+	 * web: IP table edits: streamline code, move some parts to WebCommon.php (boran)
+		
+
+	 * web: Ethernet table edits: streamline code, move some parts to WebCommon.php (boran)
+		
+
+	 * web: editing of IP table GuiEditIp.php ip.php (boran)
+		
+
+	 * web: editing of IP table GuiEditIp.php ip.php (boran)
+		
+
+	 * web: initial editing of IP table GuiEditIp.php ../web/ip.php (boran)
+		
+
+	 * web: ethernet.php editing now working (boran)
+		
+
+	 * web: ethernet.php allow editing (boran)
+		
+
+	 * web: ethernet.php allow editing (boran)
+		
+
+	 * web1: old fixes to GuiSearch.php (boran)
+		
+
+	 * web: Show Ethernet vendor code table ethernet.php (boran)
+		
+
+	 * web: DNS IP managemnt ip.php (boran)
+		
+
+	 * web: DNS IP managemnt ip.php (boran)
+		
+
+	 * Web: add zend_auth=false to web1.config.inc (boran)
+		
+
+	 * Web: add beta entries to menu for SSH discovery and DNS IP Management (boran)
+		
+
+	 * web: DNS IP managemnt ip.php (boran)
+		
+
+	 * v3.0.0.162/10.Jun.08/SB:     
+  Switch > IP address could not be edited. (boran)
+		
+
+	 * Report only systems whose lastvlan!=vlan during the last hour (contrib/report_vlan_changes) (boran)
+		
+
+	 * Report only systems whose lastvlan!=vlan during the last hour (contrib/report_vlan_changes) (boran)
+		
+
+	 * v3.0.0.161/03.Jun.08/SB:  
+  Edit > Last Update: The user name and date was not being saved correctly.
+    Also, after changing the record, hit refresh to update the visual of this info.
+    (quSystems2 Query and Update SQL were fixed) (boran)
+		
+
+	 * change subject in email, monitor2.sh (boran)
+		
+
+	 * Debug information and some small fixes (bin/port_Scan) (boran)
+		
+
+	 * Don't set vlan for unknowns. Set lastvlan instead (bin/snmp_scan.php) (boran)
+		
+
+	 * Prototype of insertIfUnknown has been modified. Now it is possible to define a vlan_id to assign to unknown systems and set their status to active (lib/EndDevice) (h_ortiz)
+		
+
+	 * Take all systems regardless if port is dynamic, but only for those systems whose lastvlan!=vlan, report the ones which are on a dynamic port (contrib/report_vlan_changes.php) (boran)
+		
+
+	 * Save data in same directory where the script is located (contrib/report_vlan_changes.php) (boran)
+		
+
+	 * Report only systems which are on dynamic ports (contrib/report_vlan_changes.php) (boran)
+		
+
+	 * Allows execution from crontab (contrib/report_vlan_changes) (boran)
+		
+
+	 * Allows execution from crontab (contrib/report_vlan_changes) (boran)
+		
+
+	 * Improve debugging/comments, & SQL sorts (flap_detect.php) (boran)
+		
+
+	 * Duplicated field (migration3to3.02/db_changes) (h_ortiz)
+		
+
+	 * Script to report vlan changes first version using text file as secondary data source (contrib/report_vlan_changes) (boran)
+		
+
+	 * Changelogs for 3.02 (h_ortiz)
+		
 
 	 * SQL upgrade statements for 3.02 (h_ortiz)
 		
@@ -17,582 +395,3 @@ Changelog for FreeNAC v3.02 (rev 1448)
   Add Helpdesk query button to Users page
   ------------- Release FreeNAC v3.0.2 -------------- (boran)
 		
-
-	 * web: beta report to show all SSH ports open report_listports22.php (boran)
-		
-
-	 * contrib: querywinpc.php querywinpc.pl first drafts (boran)
-		
-
-	 * router_mac_ip.php: change priority of change_name_of messages from log to debug2 (boran)
-		
-
-	 * add contrib/querywinpc.pl (boran)
-		
-
-	 * web: new mydevnow.php (boran)
-		
-
-	 * web: Search for a precise MAC/Search your IP address (boran)
-		
-
-	 * web: Allow GuiList1::query() to have a LIKE or EQUAL comparison (boran)
-		
-
-	 * vmps.exe: layout is now user specific (boran)
-		
-
-	 * v3.0.0.159/13.May.08/SB:  
-  Add Customisation of the Grid layouts:
-  New Load/Save (grid) Layouts to the admin menu. If vmps.ini exists after connection,
-  load the grid layouts in it.
-  To use: delete vmps.ini if there is one in your vmps folder. Start vmps.exe. Customise the grids
-  the way you want (make columns visible, change width, orders etc.). Then do Admin > Save Layout.
-  This save the layouts to vmps.ini and this will be loaded automaticallly each time. (boran)
-		
-
-	 * web: start on search page search.php ../lib/GuiSearch.php" (boran)
-		
-
-	 * DB changes (h_ortiz)
-		
-
-	 * Database changes (h_ortiz)
-		_to_3.0/db_changes.sql
-
-	 * Changes to the demo db (nacdemo_db.tgz) (h_ortiz)
-		
-
-	 * Allow layer 3 scanning of switches (bin/router_mac_ip) (h_ortiz)
-		
-
-	 * Allow layer3 scanning of switches (bin/router_mac_ip) (h_ortiz)
-		
-
-	 * DB changes (h_ortiz)
-		
-		
-		_to_3.0/db_changes.sql
-
-	 * port.php: restrict port restrats for helpdesk (boran)
-		
-
-	 * v3.0.0.157/9.May.08/SB:
-  Add helpdesk rols to Admin > Users.
-  Improve detection of logged on Domain. (boran)
-		
-
-	 * web: add scan3 column if enable_layer3_switches flag. web/switch.php (boran)
-		
-
-	 * add Heldpesk role lib/GuiUserManager.php (boran)
-		
-
-	 * add Heldpesk role lib/GuiUserManager.php (boran)
-		
-
-	 * web: print_header() if nac_rights not set: ignore. ../lib/WebCommon.php (boran)
-		
-
-	 * web: Add helpdesk role, thrown exception if nac_rights not on a known number
-
-	 * web: make more rows visible
-
-	 * Logger: add facility to constructor (boran)
-		
-
-	 * web: ascape html output fields lib/GuiPrint.php (boran)
-		
-
-	 * It wasn't reporting the connections, now it should be fine (bin/statistics.php) (h_ortiz)
-		
-
-	 * web: escape output in GuiList1 report (boran)
-		
-
-	 * web: only show MyDevices menu when user loggin in (webfuncs.inc) (boran)
-		
-
-	 * sb: email to conf->mail_user, change subject (boran)
-		
-
-	 * web: if /opt/nac/web/mysite.html exists, show it in the Help Menu (boran)
-		
-
-	 * spelling (boran)
-		
-
-	 * web: do no allow port restart if gui_disable_ports_list matches the port comment (boran)
-		
-
-	 * web: correct SQL WHERE GuiEditDevice.php (boran)
-		
-
-	 * Changes to the db (h_ortiz)
-		_to_3.0/db_changes.sql
-
-	 * README.WinGUI.txt: add some doc links (boran)
-		
-
-	 * Insert switch query fixed (boran)
-		_to_3.0/DelphiQueryMigration.txt
-
-	 * Web: start a CHANGES file to summarize webGui mods (boran)
-		
-
-	 * Web: add lastHostname column (boran)
-		
-
-	 * v3.0.0.156/15.Mar.08/SB:  
-	Users: Seperate search fields - less confusion
-	Switch - locations lookup was limited to 22
-  Ports/Switches: show id	column
-	Switch: add new Switch: name was being forgotten.
-	Locations: sort by building, then name.
-	Check for gui_disable_ports_list config option.
-	  The idea is that the network admin does NOT want FreeNAC to control centrain ports.
-	  So, he/she sets a comment on a port, which is then discovered
-	  and written into the ports table via snmp_scan. If the port comments contains one of
-	  a special list of string, the port may not be edited or restarted by FreeNAC.
-	  So, lets say we want to block ports with either the words "reserved" or "blocked"
-	  in the port comment:
-		insert into config set name='gui_disable_ports_list', value='reserved,forbidden', type='string', comment='GUI: disable editing ports with a comment containing one of these comma seperated values';	
-	When checking for guidomain, log more details to the server log. (boran)
-		
-
-	 * web: add port restart feature to edit device, and list device screens
-
-	 * add mysqli function log2db to Common class (boran)
-		
-
-	 * web: move GuiEditDevice_control functions into the GuiEditDevice class and adapt calling scripts
-
-	 * Function call (bin/ping_switch) (h_ortiz)
-		
-
-	 * web: add last_monitored/up columns switch.php (boran)
-		
-
-	 * Definition of the systems table (contrib/opennac_db.tar.gz) (h_ortiz)
-		
-
-	 * Removed redundant lookup (bin/vmpsd_external) (h_ortiz)
-		
-
-	 * Some enhancemente to the v_sql_1_select and vlanId2Name functions (bin/funcs.inc.php) (h_ortiz)
-		
-
-	 * Removed kill exception and some enhancements to the AllowException class (lib/exceptions.php (h_ortiz)
-		
-
-	 * Fixed bug in policies (etc/pol9, etc/test_policy) (h_ortiz)
-		
-
-	 * web: reduce debug level web/GuiList1_control.php (boran)
-		
-
-	 * web: change default searhc field web/logserver.php (boran)
-		
-
-	 * web1: add port_restart_request($port) web/port.php (boran)
-		
-
-	 * web1: add port_restart_request($port) lib/WebCommon.php (boran)
-		
-
-	 * web: fix exception mydevs.php (boran)
-		
-
-	 * web: debug level in constructor GuiList1_control.php (boran)
-		
-
-	 * web: allow query to be sorted by clicking on column title ../lib/GuiList1.php (boran)
-		
-
-	 * web: improve columns unknowns.php mydevs.php (boran)
-		
-
-	 * web: fix sort order, nicer html GuiList1.php (boran)
-		
-
-	 * web: (boran)
-		
-
-	 * web: add new Menu option MyDevices (boran)
-		
-
-	 * web: adapt scripts in oldweb, so that the old gui will run from this sub directory.
-
-	 * Web: improve file order, naming web/user.php web/webfuncs.inc web/class2.php  web/class1.php web/nmapsubnet.php web/location.php web/GuiList1_control.php
-
-	 * web: add sort direction to be specified in $order_dir of GuiList1 class
-
-	 * web: must have nacrights>1 for add/delete lib/GuiEditDevice.php (boran)
-		
-
-	 * sess_time=3600 web/web1.config.inc (boran)
-		
-
-	 * web: reorder fields, improve titles switch.php (boran)
-		
-
-	 * web: add port restart button web/webfuncs.inc web/port.php (boran)
-		
-
-	 * web: move log after html header lib/WebCommon.php (boran)
-		
-
-	 * web: Read-only user does not see add device, or reports menu web/webfuncs.inc (boran)
-		
-
-	 * web: add device: javascript length checking lib/GuiEditDevice.php (boran)
-		
-
-	 * add web/wsus/epo filters (boran)
-		
-
-	 * SB: unknown alert: move port number to message body lib/Port.php (boran)
-		
-
-	 * SB: decrease logging level (boran)
-		
-
-	 * add comment ../bin/cron_restart_port.php (boran)
-		
-
-	 * Add token to the beginning of the string (bin/funcs.inc.php) (h_ortiz)
-		
-
-	 * Fix to monitor_allows.sh (h_ortiz)
-		
-
-	 * Fix to cron_restart_port to program ports (h_ortiz)
-		
-
-	 * Wrong function call (bin/cron_restart_port) (h_ortiz)
-		
-
-	 * Path to funcs.inc (contrib/import_systems_csv1) (h_ortiz)
-		
-
-	 * Path to funcs.inc (contrib/import_systems_csv1) (h_ortiz)
-		
-
-	 * web: followup on previous (boran)
-		
-
-	 * web: followup on previousGuiList1_control.php (boran)
-		
-
-	 * web: Add a confirmation dialog optiontially to Buttons in the GuiList1 class (via GuiList1_control.php), and concretly to the Delete button in listall.php,find.php,unknowns.php
-
-	 * WinGUI: demo config fixed vmps.xml (boran)
-		
-
-	 * Fix notices when starting postconnect (boran)
-		
-
-	 * Fixes to snmp_defs (bin/snmp_defs) (h_ortiz)
-		
-
-	 * Moved sharutils from recommended to required since it is used by logcheck (package_files/control) (h_ortiz)
-		
-
-	 * Full path to config_var script
-
-	 * Sending email to mail_user instead of root
-
-	 * Script to query a variable from the config table (bin/config_var.php)
-
-	 * Added two new methods (lib/Logger) (h_ortiz)
-		
-
-	 * Removed GWP and fixed the vlan field in the systems table (h_ortiz)
-		
-
-	 * sb: Add debug3 of Web graphics queries, make debug log tail a configuration variable
-
-	 * delete contrib/archive_vmps_here : out of date and no longer of use (boran)
-		
-
-	 * web: Add MAC Vendor column to unknowns.php (boran)
-		
-
-	 * Use array_find_value instead of array_find_key (bin/ping_switch) (h_ortiz)
-		
-
-	 * web: reference $userid not $uid (GuiUserManager.php) (boran)
-		
-
-	 * web: improve patchcable report (boran)
-		
-
-	 * web: fix doubled menu on login, add logout link
-
-	 * web: fix doubled menu on login, add logout link
-
-	 * clean css errors bw.css (boran)
-		
-
-	 * web: new feature: set anon_auth=true in web1.config.inc to allow anonymous webGUI usage (boran)
-		
-
-	 * web: new feature: set anon_auth=true in web1.config.inc to allow anonymous webGUI usage
-
-	 * use is_readable() and not file_exists()
-
-	 * web: insert/delete fixes, disable debugs (boran)
-		
-
-	 * web: insert/delete fixes, disable debugs (boran)
-		
-
-	 * web: insert/delete now working for end devices, new menus added to all screens
-
-	 * web: insert/delete now working for end devices, new menus added to all screens
-
-	 * Some fixes to router_mac_ip.php (h_ortiz)
-		
-
-	 * Some fixes to router_mac_ip.php (h_ortiz)
-		
-
-	 * Fixes to Settings.php (lib/Settings.php) (h_ortiz)
-		
-
-	 * Fixes to port_scan (bin/port_scan.php) (h_ortiz)
-		
-
-	 * Fixes to router_mac_ip.php (bin/router_mac_ip) (h_ortiz)
-		
-
-	 * Some fixes to snmp_scan and snmp_defs (bin/snmp_scan, bin/snmp_defs) (h_ortiz)
-		
-
-	 * Some fixes to snmp_scan and snmp_defs (bin/snmp_scan, bin/snmp_defs) (h_ortiz)
-		
-
-	 * Query has been fixed (bin/port_scan) (h_ortiz)
-		
-
-	 * Modifications to funcs.inc.php (bin/funcs.inc.php) (h_ortiz)
-		
-
-	 * Modifications to funcs.inc.php (bin/funcs.inc.php)
-
-	 * web: use _REQUEST not POST, start on GuiEditDevice:Add()
-
-	 * web: use _REQUEST not POST, start on GuiEditDevice:Add()
-
-	 * web: wipe webnew dir, no longer neededwq (boran)
-		
-
-	 * web: main menu redesign with dropdown mouseover menus (boran)
-		
-
-	 * web: main menu redesign with dropdown mouseover menus (boran)
-		
-
-	 * web: main menu redesign with dropdown mouseover menus
-
-	 * web: main menu redesign with dropdown mouseover menus (boran)
-		
-
-	 * web: main menu redesign with dropdown mouseover menus (boran)
-		
-
-	 * web main menu: move formatting to CSS & clean up (boran)
-		
-
-	 * web main menu: move formatting to CSS & clean up
-
-	 * config.inc.template has been updated (etc/config.inc.template) (h_ortiz)
-		
-
-	 * Add Vmware VC query script to contrib (vm_mac_ip.pl) (boran)
-		
-
-	 * Detect flapping but using MySQL queries (boran)
-		
-
-	 * new webgui commit to web folder (boran)
-		
-
-	 * new webgui commit to web folder
-
-	 * move old web sources into 'oldweb' sub directory
-
-	 * initialiase 'final' (funcs.inc.php) (boran)
-		
-
-	 * fix Undefined index:  uid (WebCommon.php) (boran)
-		
-
-	 * webnew: beta1 ready - stats and graphs working
-
-	 * webnew: beta1 of switch cabling graphics, not working yet (boran)
-		
-
-	 * webnew: beta1 of switch cabling graphics, not working yet
-
-	 * webnew: hubs Ok, start graph stats
-
-	 * webnew: stats first beta (boran)
-		
-
-	 * webnew: stats first beta
-
-	 * webnew: hubs Ok, start graph stats (boran)
-		
-
-	 * webnew: hubs Ok, start graph stats
-
-	 * Check that the name is not null (dagonnier)
-		
-
-	 * Generate DNS update files
-Should only give out the temporary file name that can be used afterward by 'nsupdate' (& deleted aftewards) (dagonnier)
-		
-
-	 * webnew: add hubs.php (boran)
-		
-
-	 * webnew: add hubs.php (boran)
-		
-
-	 * Generate ISC DHCP configuration based on the new "ip" table.
-- fixed IP are selected from the "ip" table instead of the "systems" table
-  (dhcp_ip, dhcp_fix field can be dropped)
-- possible to reserve ip adresses (= where ip.status == 3) (dagonnier)
-		
-
-	 * webnew: hide action column if not needed (boran)
-		
-
-	 * webnew: hide action column if not needed
-
-	 * fix InsufficientRightsException (boran)
-		
-
-	 * Write to STDOUT and STDERR when facility is not WEB (h_ortiz)
-		
-
-	 * Fixed bug reported by duongcoma http://freenac.net/phpBB2/viewtopic.php?t=318 (bin/snmp_scan.php) (h_ortiz)
-		
-
-	 * Added WEB facility (lib/Logger.php) (h_ortiz)
-		
-
-	 * Added WEB facility (lib/Logger.php) (h_ortiz)
-		
-
-	 * Added WEB facility (lib/Logger.php) (h_ortiz)
-		
-
-	 * WebGUI edit (boran)
-		
-
-	 * WebGUI: fix edit (boran)
-		
-
-	 * WebGUI: fix edit (boran)
-		
-
-	 * Add /webnew directory with a new (beta) web interface
-
-	 * first beta of nbew web gui
-
-	 * search fixed (GuiList1.php) (boran)
-		
-
-	 * Add new code for OO based web gui to /lib (session.inc.php EditDevice_more.inc.php GuiPrint.php  GuiList1.php GuiEditDevice.php GuiUserManager.php  WebCommon.php)
-
-	 * Add mysqli connectivity (Common.php) (boran)
-		
-
-	 * correct comment (Logger.php) (boran)
-		
-
-	 * Add ../lib to include path (funcs.inc.php) (boran)
-		
-
-	 * Added var to control the lookup of NMB names (bin/router_mac_ip) (h_ortiz)
-		
-
-	 * Added variable to control WINS lookup in router_mac_ip (contrib/opennac_db and migration_2.2_to_3.0/db_changes.sql (h_ortiz)
-		
-		_to_3.0/db_changes.sql
-
-	 * Added grants for delete_old_users to work (contrib/opennac_db and migration_2.2_to_3.0/db_changes.sql (h_ortiz)
-		
-		_to_3.0/db_changes.sql
-
-	 * Else now uncommented (bin/delete_old_users.php) (boran)
-		
-
-	 * Fixed memory exhaustion problem (lib/[SyslogRequest.php,VMPSRequest.php,EndDevice.php] (h_ortiz)
-		
-
-	 * Added destructors to manually clean the memory used by their childen (lib/*Request) (h_ortiz)
-		
-
-	 * remove un-needed options (vmps.xml) (boran)
-		
-
-	 * Update demo (boran)
-		
-
-	 * Show vlans if ad auth is not enabled (web/find.php) (boran)
-		
-
-	 * Require write users to have a list of vlans assigned to them (web) (boran)
-		
-
-	 * Use PHP_AUTH_USER instead, return an array containing the restricted vlans and use sAMAccountName (web) (boran)
-		
-
-	 * Use PHP_AUTH_USER instead, return an array containing the restricted vlans and use sAMAccountName (web)
-
-	 * Adapt the vlan lookup list based on the users rights. Lookup their rights in the users table (h_ortiz)
-		
-
-	 * Moved all snmp functions to snmp_defs and fixed the rest of the snmp scripts accordingly
-
-	 * Removed reference to valid_ip from portscan (bin/funcs.inc.php, port_scan) (h_ortiz)
-		
-
-	 * Removed reference to valid_ip from portscan (bin/funcs.inc.php, port_scan) (h_ortiz)
-		
-
-	 * Removed debug echo (bin/funcs.inc.php) (h_ortiz)
-		
-
-	 * Comparison operator was wrong (bin/router_mac_ip) (h_ortiz)
-		
-
-	 * Get hostname from wins (bin/funcs.inc.php, router_mac_ip) (h_ortiz)
-		
-
-	 * comments (check_disk) (boran)
-		
-
-	 * delete old website
-
-	 * New variables (h_ortiz)
-		_to_3.0/db_changes.sql
-
-	 * Fixes to activate/deactivate vmps (bin/funcs.inc.php, activate/deactivate vmps) (h_ortiz)
-		
-
-	 * Fixes to activate_vmps.php (bin/funcs.inc.php, bin/activate_vmps.php) (h_ortiz)
-		
-
-	 * New changelog for version 3.01 (h_ortiz)
-		
-
-	 * Changes required for delete_old_users (contrib/opennac_db, contrib/migration2.2to3/db_changes.sql) (h_ortiz)
-		
-		_to_3.0/db_changes.sql
-
-Changelog generated on 26-05-2008. It includes changes from revision 1233 up to revision 1448 of the FreeNAC SVN
-
