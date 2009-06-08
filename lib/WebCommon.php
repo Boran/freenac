@@ -467,6 +467,32 @@ public function port_restart_request($port)
 }
 
 /**
+ * Set the clear_mac flag for a system
+ */
+public function clear_mac_request($device)
+{
+  $conn=$this->getConnection();     //  make sure we have a DB connection
+
+  if (isset($device) && is_numeric($device) && $device>1 ) {
+
+    $this->debug("clear_mac_request system id=$device", 1);
+    $this->loggui("System index $device clear_mac requested");
+    // TBD: Do a query to lookup the system name too?
+    $q="UPDATE systems set clear_mac=1 WHERE id=$device LIMIT 1";
+      $this->debug($q, 3);
+      $res = $conn->query($q);
+    if ($res === FALSE)
+      throw new DatabaseErrorException($conn->error);
+
+    return true;
+
+  } else {
+    $this->logit("clear_mac__request invalid device index=<$device>");
+    return false;
+  }
+}
+
+/**
  * Delete a port
  */
 public function port_delete($port)

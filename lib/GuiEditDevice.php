@@ -107,37 +107,50 @@ class GuiEditDevice extends WebCommon
   public function RestartPort()
   {
     if ($_SESSION['nac_rights']<2)
-      throw new InsufficientRightsException($_SESSION['nac_rights']);
-    if ( $this->id===0 )              
+      throw new InsufficientRightsException($_SESSION['nac_rights']); if ( $this->id===0 )              
       throw new InvalidWebInputException("RestartPort() invalid index: zero");
 
-    $conn=$this->getConnection();     //  make sure we have a DB connection
+    $conn=$this->getConnection(); //  make sure we have a DB connection
     $device=$this->id;    // rely on the constructor to clean & ensure a valid id
     $port_index=0;
-    $this->debug("RestartPort() device index {$device}", 2);
+    $this->debug("RestartPort() sys device index {$device}", 2);
+    $txt='';
 
-    $q="SELECT LastPort FROM systems WHERE id={$device} LIMIT 1";     // only this record
+    // find the port for this System/mac
+      $q="SELECT LastPort, sw.switch_type  FROM systems s INNER JOIN port p ON s.LastPort=p.id INNER JOIN switch sw on p.switch=sw.id WHERE s.id={$device} LIMIT 1";     // only this record
       $this->debug($q, 3);
       $res = $conn->query($q);
       if ($res === FALSE)
         throw new DatabaseErrorException($q ." :: " .$conn->error);
       while (($row = $res->fetch_assoc()) !== NULL) {
         $port_index=$row['LastPort'];
+        $switch_type=$row['switch_type'];
+      }
+    
+    $this->debug("LastPort=" .$port_index .", switch_type=" .$switch_type .", check_clear_mac=" .$this->conf->check_clear_mac, 2);
+
+    if (($switch_type==="1") && ($this->conf->check_clear_mac)) { // use the clear_mac and not port restart function
+
+      if ( $this->clear_mac_request($device) ) {
+        $txt.=" <p class='UpdateMsgOK'>The MAC address will be be cleared from the IOS Switch.</p> ";
+      } else  {
+        $txt.=" <p class='UpdateMsg'>The MAC cannot be cleared since the device ID is invalid.</p> <p>Please go <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>,  ";
       }
 
 
+    }      // if clear_mac
+    //} else  {
+      // Lets do a port restart: 
+
     if ( $this->port_restart_request($port_index) ) {
-      $txt=<<<TXT
-      <p class='UpdateMsgOK'>The Switch Port ${port_index} will be restarted within one minute</p>
-      <p>To followup, <a href='logserver.php'>view the serverlog</a> for a confirmation, or go
-      <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>,  </div>
-TXT;
+      // Add later:<a href=/port.php?action=View&action_idxname=port.id&action_fieldname=PortIndex&action_idx=${port_index}>
+      $txt.=" <p class='UpdateMsgOK'>The Switch Port number ${port_index}</a> will be restarted within one minute</p> <p>To followup, <a href='logserver.php'>view the serverlog</a> for a confirmation, or go <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>,  ";
     } else {
-      $txt=<<<TXT
-      <p class='UpdateMsg'>The Switch Port  canot be restarted as it is invalid.</p>
-      <p>Please go <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>,  </div>
-TXT;
+      $txt.=" <p class='UpdateMsg'>The Switch Port cannot be restarted as it is invalid.</p> <p>Please go <a HREF='javascript:javascript:history.go(-1)'>back to the previous screen</a>, ";
     }
+    $txt.='</div>';
+
+    //}      // if clear_mac
     echo $txt;
   }
 
@@ -561,10 +574,12 @@ function get_vlandropdown($s)
            }
            else {
              for ($i = 0; $i < $number_vlans; $i++) {
-               if ( $i < ($number_vlans - 1) )
-                 $q .= " WHERE id = '{$vlans_to_show[$i]}' OR ";
-               else
-                 $q .= " WHERE id = '{$vlans_to_show[$i]}'";
+                 if ( $i == 0 )
+                    $q .=" WHERE ";
+                 if ( $i < ($number_vlans - 1) )
+                    $q .= " id = '{$vlans_to_show[$i]}' OR ";
+                 else
+                    $q .= " id = '{$vlans_to_show[$i]}'";
              }
            }
 

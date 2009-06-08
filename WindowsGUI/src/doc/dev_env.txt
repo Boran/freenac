@@ -1,0 +1,33 @@
+Notes on Setting up the Development environment for the FreeNAC WIndows GUI
+
+Last Update: Sean Boran, 28.May.09
+----------------------------------------------
+
+These sources were first published to SF for v3.0.2
+
+'''''' Components ''''''''''''''''
+Delphi 7 professional
+	
+Install Mysql stuff [crlab.com]
+- MyDAC
+- sdac   MS-SQL
+- MyBuilder
+- DB Mon
+
+TBD: DB Grid component
+
+Version Control
+- Tortoise SVN
+
+Editor
+- Install GE Experts	 		F:\boran\job\comp\dev_environ
+- GE Experts config -> IDE
+	Enable IDE Enchancements-> Componnet Tabs -> multiline tabs
+
+And optionally mysql Server:
+- server
+- myobdc
+- query browser
+- administrator
+- mysqlcc
+'''''''''''''''''''''''''''''

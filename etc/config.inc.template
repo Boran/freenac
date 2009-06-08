@@ -52,4 +52,10 @@
   $ad_user = 'cn=administrator,cn=users,dc=domain,dc=com';    # AD user with read privileges on AD
   $ad_password = 'password';                    # AD users's password
 
+# Variables to perform the clear_mac functionality. The username has to be defined on the switch as capable of manipulating MAC table 
+   $sw_user = "user";
+   $sw_pass = "password";
+   $sw_en_pass = "enable_password";
+
+
 ?>
