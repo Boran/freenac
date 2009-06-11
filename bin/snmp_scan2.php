@@ -203,7 +203,7 @@ if ($ips && is_array($ips))
    foreach($ips as $ip)
    {
       $switchid=v_sql_1_select("select id from switch where ip='$ip'");
-      if ( ! $switch_id)
+      if ( ! $switchid)
       {
          $query="insert into switch set ip='$ip'";
          $logger->debug($query,3);
