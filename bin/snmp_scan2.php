@@ -114,8 +114,13 @@ $do_mysql=true;
 $community=$snmp_ro;
 $connected_devices=false;
 
-if ($argc>1)
+if ($argc>1) {
    $options=getopt('hsred:c:');
+} else {
+   $options = FALSE;
+}
+
+
 if ($options)
 {
    if (array_key_exists('h',$options))
@@ -297,12 +302,12 @@ if ($ips && is_array($ips))
                $logger->debug("($switchid) $ip : HW = $hw / SW = $sw ");
                $query = "UPDATE switch SET hw='$hw',sw='$sw' WHERE id=$switchid;";
                $logger->debug($query,3);
-               if($domysql)
+               if($do_mysql)
                {
                   $res=mysql_query($query);
                   if (!$res)
                      $logger->logit("Unable to update switch info",LOG_ERR);
-               }; // if($domysql)
+               }; // if($do_mysql)
             }
             else
             {
