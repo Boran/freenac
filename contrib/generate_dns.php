@@ -79,6 +79,9 @@ function sanitize_name($name) {
 	$query = "SELECT * FROM systems WHERE name != 'unknown' AND r_ip <> '' ORDER by r_ip ASC";
         $res = mysql_query($query) or die("Unable to query MySQL : $query; \n");
 
+	$dns_ina = '';			// string that will contain all "A" records
+	$dns_incname = '';		//                              "CNAME" records
+
         if (mysql_num_rows($res) > 0) {
                 while ($host = mysql_fetch_array($res)) {
                         $dns_ina .= sanitize_name($host['name'])."\t\tIN\tA\t".$host['r_ip']."\n";
