@@ -194,8 +194,15 @@ v3.0.0.162/10.Jun.08/SB:
 v3.0.0.163/6.Aug.08/SB:     
   Add hint with server name to secondary button  
   
-    ------------- Release FreeNAC v3.0.3 --------------
 v3.0.0.164/25.May.09/SB:     
   Switches: add switch_type
   Edit End-device > restart port: Add clear_mac fuunction for IOS switches
     UPDATE systems set clear_mac=1 if config.check_clear_mac=true and switch_type=1     
+------------- Release FreeNAC v3.0.3 --------------
+
+v3.0.0.165/11.Jun.09/SB:
+  Switches could not be inserted (complaining about switch_type) not null.
+  Update Readme.
+
+
+
