@@ -1,3 +1,21 @@
+(**
+ * Long description for file:
+ * Windows GUI for Freenac - keygen dialog
+ *
+ * FUNCTION:
+ *
+ * LICENSE: This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation.
+ *
+ * @package		FreeNAC
+ * @author		Sean Boran (FreeNAC Core Team)
+ * @copyright		2009 FreeNAC
+ * @license		http://www.gnu.org/copyleft/gpl.html   GNU Public License Version 3
+ * @version		SVN: $Id$
+ * @link		http://www.freenac.net
+ *
+*)
 unit fmKeygen;
 
 interface
