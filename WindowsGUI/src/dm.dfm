@@ -157,13 +157,9 @@ object dm0: Tdm0
   object quSwitch: TMyQuery
     SQLInsert.Strings = (
       'INSERT INTO switch'
-      
-        '    (ip,name,location,comment,swgroup,notify,scan,scan3,vlan_id,' +
-        'switch_type)'
+      '    (ip,name,location,swgroup,notify,scan,scan3,vlan_id)'
       '  VALUES'
-      
-        '    (:ip,:name,:location,:comment,:swgroup,:notify,:scan,:scan3,' +
-        ':vlan_id,:switch_type)')
+      '    (:ip,:name,:location,:swgroup,:notify,:scan,:scan3,:vlan_id)')
     SQLDelete.Strings = (
       'DELETE FROM switch'
       '  WHERE id=:Old_id')
