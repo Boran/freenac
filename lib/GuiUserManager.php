@@ -328,6 +328,7 @@ EOQ;
     #echo "confirmUser <br>";
     $login_ok = FALSE;
     $userid=-1;     # invalid
+    $q='';
 
     // 1. make sure we have a database connection.
     if ($in_db_conn==NULL) $conn=$this->getConnection(); else $conn=$in_db_conn;
