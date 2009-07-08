@@ -31,6 +31,7 @@ vmpsd_external.php.*: Note
 
 postconnect.php.*: Updated User details
 postconnect.php.* has been updated
+postconnect.php.* will get scanned
 
 # Debug messages to allow when needed
 vmpsd_external.php.*: Debug(1|2)
@@ -59,3 +60,5 @@ Reply-Message = "(vmps) returns: MAC address allowed"
 wsus_sync.php
 epo_sync.php
 
+port_scan.php.* Nmap scan-now of
+scan_recent.php.* is going to be scanned
