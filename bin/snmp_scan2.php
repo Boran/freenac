@@ -210,18 +210,9 @@ if ($ips && is_array($ips))
       $switchid=v_sql_1_select("select id from switch where ip='$ip'");
       if ( ! $switchid)
       {
-         $query="insert into switch set ip='$ip'";
-         $logger->debug($query,3);
-         if ($do_mysql)
-         {
-            $res = mysql_query($query);
-            if (! $res)
-            {
-               $logger->logit(mysql_error(),LOG_ERR);
-               continue;
-            }
-            $switchid=v_sql_1_select("select id from switch where ip='$ip'");
-         }
+        $logger->debug($query,3);
+	$logger->logit('Critical error : inconsistency related to switch table (IP of a switch that cannot be identified',LOG_ERR);
+	exit();
       }
       $logger->logit("Start scanning $ip");
       $switches=new Switch_SNMP($ip);
@@ -351,8 +342,8 @@ if ($ips && is_array($ips))
                   $logger->debug($query,3);
                   $vlan_id=v_sql_1_select($query);
                   $query = 'INSERT INTO systems (name, mac, LastPort, vlan, status,LastSeen) VALUES ';
-                  $query .= "('unknown',$mac',$port_id,$vlan_id, 3, NOW());";
-                  $logger->debug($query,3);
+                  $query .= "('unknown','$mac',$port_id,$vlan_id, 3, NOW());";
+                  $logger->debug($query,2);
                   if ($do_mysql)
                   {
                      $res=mysql_query($query);
