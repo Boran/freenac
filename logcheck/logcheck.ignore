@@ -62,3 +62,9 @@ epo_sync.php
 
 port_scan.php.* Nmap scan-now of
 scan_recent.php.* is going to be scanned
+
+# VirtualCentre scanning: don't report warnings.
+vm_mac_ip.pl: WARNING: Unable to query 
+
+pix_mac_ip.pl: (Query PIX|Systems updated)
+

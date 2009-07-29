@@ -87,7 +87,7 @@ AAA_AUTHEN_STATUS_ERROR
 DOT11-7-AUTH_FAILED.*
 
 # FreeNAC: we seem to be ignoreing too much
- Warning:
+# Warning:
  Error:
 
 ## eof
