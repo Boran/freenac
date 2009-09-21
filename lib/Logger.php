@@ -277,7 +277,16 @@ final class Logger
          else
          {
             syslog((int)$criticality,$message); 		#Log it through syslog
-            ob_flush();
+            # This line conflicts with the WebGUI
+            # The WebGUI writes something to the buffer and calls this function
+            # which causes that output gets sent to the browser.
+            # Afterwards it tries to initialize a session, which causes
+            # a warning to appear in syslog saying that the session couldn't 
+            # be created.
+            # Reference: http://www.freenac.net/phpBB2/viewtopic.php?t=449
+            # The Web logging facility is not being used by the WebGUI, why?
+            # Are there any drawbacks on using this facility with the WebGUI?
+            # ob_flush();
          }
          if ($this->httpd_log)
          {
