@@ -203,6 +203,10 @@ v3.0.0.164/25.May.09/SB:
 v3.0.0.165/11.Jun.09/SB:
   Switches could not be inserted (complaining about switch_type) not null.
   Update Readme.
+v3.0.0.167/30.Oct.09/SB:  
+. Upgrade mysql mydac libraries
+. disconnect before close app 
+. Increase sizes of  Patchcable office/switch display. show the information from the table OS #1, in both the Admin | OperatingSystem tab and the End Device tab.  See http://freenac.net/phpBB2/viewtopic.php?p=1977
 
 
 
