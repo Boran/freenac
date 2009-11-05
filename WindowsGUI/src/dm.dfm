@@ -355,7 +355,6 @@ object dm0: Tdm0
     TableName = 'building'
     Connection = MyConnection1
     Active = True
-    FetchAll = True
     Left = 76
     Top = 120
   end
@@ -1176,6 +1175,7 @@ object dm0: Tdm0
       Origin = 'patchcable.expiry'
     end
     object quCableoffice: TIntegerField
+      DisplayWidth = 128
       FieldName = 'office'
       Origin = 'patchcable.office'
     end
@@ -1185,19 +1185,23 @@ object dm0: Tdm0
       Size = 64
     end
     object PatchOfficeLookupComp: TStringField
+      DisplayWidth = 128
       FieldKind = fkLookup
       FieldName = 'officeLookup'
       LookupDataSet = quLocation
       LookupKeyFields = 'id'
       LookupResultField = 'LocationAndBuilding'
       KeyFields = 'office'
+      Size = 128
       Lookup = True
     end
     object quCablemodifiedby: TIntegerField
+      DisplayWidth = 50
       FieldName = 'modifiedby'
       Origin = 'patchcable.modifiedby'
     end
     object PatchmodifiedbyLookup: TStringField
+      DisplayWidth = 50
       FieldKind = fkLookup
       FieldName = 'modifiedbyLookup'
       LookupDataSet = quUsers
@@ -1207,16 +1211,19 @@ object dm0: Tdm0
       Lookup = True
     end
     object quCableport: TIntegerField
+      DisplayWidth = 50
       FieldName = 'port'
       Origin = 'patchcable.port'
     end
     object PatchportlookupComp: TStringField
+      DisplayWidth = 50
       FieldKind = fkLookup
       FieldName = 'portlookup'
       LookupDataSet = quPorts
       LookupKeyFields = 'id'
       LookupResultField = 'switchport'
       KeyFields = 'port'
+      Size = 50
       Lookup = True
     end
     object quCablecable_name: TStringField
@@ -1304,6 +1311,7 @@ object dm0: Tdm0
       Origin = 'switch.name'
     end
     object quPortsswitchport: TStringField
+      DisplayWidth = 50
       FieldName = 'switchport'
       Origin = '.switchport'
       Size = 41
@@ -1391,7 +1399,6 @@ object dm0: Tdm0
     TableName = 'ethernet'
     Connection = MyConnection1
     Debug = True
-    FetchAll = True
     Left = 320
     Top = 8
     object taEthernetvendor: TStringField
@@ -1436,7 +1443,6 @@ object dm0: Tdm0
     Connection = MyConnection1
     Debug = True
     AfterPost = taSys_classAfterPost
-    FetchAll = True
     Left = 320
     Top = 128
     object taSys_classid: TLargeintField
@@ -1456,7 +1462,6 @@ object dm0: Tdm0
     Connection = MyConnection1
     Debug = True
     AfterPost = taSys_class2AfterPost
-    FetchAll = True
     Left = 384
     Top = 128
     object LargeintField2: TLargeintField
@@ -1491,7 +1496,6 @@ object dm0: Tdm0
     Connection = MyConnection1
     Debug = True
     AfterPost = taSys_osAfterPost
-    FetchAll = True
     Left = 592
     Top = 128
     object LargeintField1: TLargeintField
@@ -1511,7 +1515,6 @@ object dm0: Tdm0
     Connection = MyConnection1
     Debug = True
     AfterPost = taSys_os1AfterPost
-    FetchAll = True
     Left = 640
     Top = 128
     object LargeintField3: TLargeintField
@@ -1531,7 +1534,6 @@ object dm0: Tdm0
     Connection = MyConnection1
     Debug = True
     AfterPost = taSys_os2AfterPost
-    FetchAll = True
     Left = 704
     Top = 128
     object LargeintField4: TLargeintField
@@ -1571,7 +1573,6 @@ object dm0: Tdm0
     Connection = MyConnection1
     Debug = True
     AfterPost = taSys_os3AfterPost
-    FetchAll = True
     Left = 760
     Top = 128
     object LargeintField5: TLargeintField
@@ -1921,7 +1922,6 @@ object dm0: Tdm0
     Connection = MyConnection1
     Debug = True
     AfterPost = taSys_class2AfterPost
-    FetchAll = True
     Left = 520
     Top = 128
     object taCableTypeid: TIntegerField

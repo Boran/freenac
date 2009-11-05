@@ -115,7 +115,7 @@ AutoIncBuild=1
 MajorVer=3
 MinorVer=0
 Release=0
-Build=166
+Build=171
 Debug=0
 PreRelease=0
 Special=0
@@ -126,7 +126,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=Swisscom Innovations, Bern, Switzerland.
 FileDescription=see http://FreeNAC.net
-FileVersion=3.0.0.166
+FileVersion=3.0.0.171
 InternalName=
 LegalCopyright=Swisscom Innovations
 LegalTrademarks=

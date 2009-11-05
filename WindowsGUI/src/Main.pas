@@ -761,6 +761,7 @@ type
     procedure SaveGridLayout1Click(Sender: TObject);
     procedure LoadGridLayout1Click(Sender: TObject);
     procedure bbHelpdeskClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure DoColumnGetDisplayText1(Sender: TcxCustomGridTableItem;
        ARecordIndex: Integer; var AText: string);
@@ -1276,7 +1277,8 @@ begin
 
     end else begin   // Normal situations
 
-      if ( (ServerDomain<>MyDomain) and verify_domain and (Length(ServerDomain)>0) ) then begin
+      //if ( (ServerDomain<>MyDomain) and verify_domain and (Length(ServerDomain)>0) ) then begin
+      if ( (UpperCase(ServerDomain)<>UpperCase(MyDomain)) and verify_domain and (Length(ServerDomain)>0) ) then begin
         // a domain is configured on the server side, and it is not the same
         ShowMessage('Username ' +username +' on workstation ' +hostname
           +' is not authorised to use NAC, the Windows Domain is <' +MyDomain
@@ -2016,7 +2018,7 @@ with fmInventory do begin
   OpenMyTable(dm0.taSys_class);
   OpenMyTable(dm0.taSys_class2);
   OpenMyTable(dm0.taSys_os);
-  OpenMyTable(dm0.taSys_os);
+  OpenMyTable(dm0.taSys_os1);
   OpenMyTable(dm0.taSys_os2);
   OpenMyTable(dm0.taSys_os3);
   OpenMyTable(dm0.quLocation);
@@ -2776,8 +2778,8 @@ begin
     end;
 
   end else begin
-    ShowMessage('bbRestartPortClick: check_clear_mac=' +get_config1('check_clear_mac')
-      +', switch_type=' +dm0.quSystems.FieldbyName('switch_type').AsString);
+    //ShowMessage('bbRestartPortClick: check_clear_mac=' +get_config1('check_clear_mac')
+    //  +', switch_type=' +dm0.quSystems.FieldbyName('switch_type').AsString);
   end;
 
 
@@ -4284,6 +4286,12 @@ begin
     end;
     Close;
   end;
+end;
+
+procedure TfmInventory.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  Disconnect;
 end;
 
 end.
