@@ -209,8 +209,8 @@ v3.0.0.167/30.Oct.09/SB:
   disconnect before close app 
   Increase sizes of  Patchcable office/switch display. Show the information from the table OS #1 in both the Admin | OperatingSystem tab and the End Device tab.  See http://freenac.net/phpBB2/viewtopic.php?p=1977
   
-v3.0.0.170/3.Nov.09/SB: 
+v3.0.0.171/5.Nov.09/SB: 
   Compare Windows domain in uppercse only.
-  Increase sizes of  Patchcable office field width to 128 (quCable.OfficeLookup)
+  Increase sizes of Patchcable office field width to 128 (quCable.OfficeLookup)
 
 
