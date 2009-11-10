@@ -489,7 +489,6 @@ type
     gridSystems2: TcxGrid;
     gridSystemsView1: TcxGridDBTableView;
     gridSystems2Level1: TcxGridLevel;
-    gridSystemsView1vlanname: TcxGridDBColumn;
     gridSystemsView1statusname: TcxGridDBColumn;
     gridSystemsView1name: TcxGridDBColumn;
     gridSystemsView1comment: TcxGridDBColumn;
@@ -592,7 +591,8 @@ type
     LoadGridLayout1: TMenuItem;
     SaveGridLayout1: TMenuItem;
     bbHelpdesk: TButton;
-    cxGridDBTableView1switch_type: TcxGridDBColumn;  { &Contents }
+    cxGridDBTableView1switch_type: TcxGridDBColumn;
+    gridSystemsView1Vlanname: TcxGridDBColumn;  { &Contents }
     procedure LoadGridLayouts(file1: string);
     procedure FormCreate(Sender: TObject);
     procedure ShowHint(Sender: TObject);
