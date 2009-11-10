@@ -1689,7 +1689,7 @@ begin       (*
 end;
 
 
-function GetNTDomainName: string;      // from regitry, but in fact returns computer name
+function GetNTDomainName: string;      // from registry, but in fact returns computer name
 var 
   hReg: TRegistry;
 begin 
