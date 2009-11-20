@@ -633,6 +633,30 @@ function is_port_vmps($myiface)
       };
 };
 
+function is_switch_online($switch, $snmp_ro)
+{
+   global $logger;
+   ## This test is to avoid performing SNMP queries on hosts which are not responsive
+   $oid = '1.3.6.1.2.1.1.1';
+   ## Try to get the description. This OID should be available on all switches.
+   ## Try 3 times before declaring switch dead
+   for ($i = 0; $i < 3; $i++)
+   {
+      $temp=@snmprealwalk($switch,$snmp_ro,$oid);
+      if ($temp)
+         $i=4;
+   }
+   if ( ! $temp )
+   {
+      ## We have tried 3 times and we didn't receive a response
+      $logger->logit("No response from $switch. Host seems to be down. If it is up, check your SNMP community.");
+      ## so host is down
+      return false;
+   }
+   else
+      return true;
+}
+
 function walk_ports($switch,$snmp_ro)
 {
    snmp_set_oid_numeric_print(TRUE);
@@ -646,7 +670,12 @@ function walk_ports($switch,$snmp_ro)
    $iface = array();
    $iface_from_db=array();
    debug2("snmprealwalk $switch $snmp_ro $snmp_ifaces");
-   
+  
+   // Before doing anything check if the switch is available, thus we can avoid the following problem:
+   // http://freenac.net/phpBB2/viewtopic.php?t=489
+   if ( ! is_switch_online($switch,$snmp_ro) )
+     return false; 
+    
    // Read the list of interfaces present on the switch
    $ifaces = @snmprealwalk($switch,$snmp_ro,$snmp_ifaces);
 
