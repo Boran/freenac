@@ -592,7 +592,11 @@ type
     SaveGridLayout1: TMenuItem;
     bbHelpdesk: TButton;
     cxGridDBTableView1switch_type: TcxGridDBColumn;
-    gridSystemsView1Vlanname: TcxGridDBColumn;  { &Contents }
+    gridSystemsView1Vlanname: TcxGridDBColumn;
+    bbShowAll: TcxButton;
+    eRecords: TEdit;
+    lRecords: TLabel;
+    bbShow: TcxButton;  { &Contents }
     procedure LoadGridLayouts(file1: string);
     procedure FormCreate(Sender: TObject);
     procedure ShowHint(Sender: TObject);
@@ -762,6 +766,9 @@ type
     procedure LoadGridLayout1Click(Sender: TObject);
     procedure bbHelpdeskClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure bbShowAllClick(Sender: TObject);
+    procedure tsPatchCables2Show(Sender: TObject);
+    procedure bbShowClick(Sender: TObject);
   private
     procedure DoColumnGetDisplayText1(Sender: TcxCustomGridTableItem;
        ARecordIndex: Integer; var AText: string);
@@ -1479,6 +1486,8 @@ begin
   with cxTextItem1.Properties do
     ValidChars := ValidChars + ['*'];
 
+  // default cables to query
+  eRecords.Text:=IntToStr(gridPatchesDBTableView1.DataController.DataModeController.GridModeBufferCount);
 end;
 
 procedure TfmInventory.ShowHint(Sender: TObject);
@@ -4292,6 +4301,36 @@ procedure TfmInventory.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Disconnect;
+end;
+
+procedure TfmInventory.bbShowAllClick(Sender: TObject);
+begin
+  gridPatchesDBTableView1.DataController.DataModeController.GridMode:=false;
+  //bbShowAll.Enabled:=false;
+end;
+
+procedure TfmInventory.tsPatchCables2Show(Sender: TObject);
+begin
+  (*with dm0.quCable do begin
+    Close;
+    FetchRows:=StrToInt(eRecords.Text);
+    Open;
+  end; *)
+end;
+
+procedure TfmInventory.bbShowClick(Sender: TObject);
+begin
+
+  if eRecords.Modified then
+  with dm0.quCable do begin
+    gridPatchesDBTableView1.DataController.DataModeController.GridMode:=true;
+    gridPatchesDBTableView1.DataController.DataModeController.GridModeBUfferCount:=StrToInt(eRecords.Text);
+    (*If State<>dsInactive then begin  // if open
+      Close;
+      FetchRows:=StrToInt(eRecords.Text);
+      Open;
+    end; *)
+  end;
 end;
 
 end.
