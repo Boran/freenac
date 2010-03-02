@@ -53,7 +53,7 @@ require_once "$policy_file";
 $file_read=readlink($policy_file);
 
 ## Read hostname (to only see syslog messages from this server)
-$hostname = trim(syscall('hostname'));
+$hostname = trim(syscall('hostname -s'));
 if ( ! empty($hostname) )
    $string = "(.*) $hostname vmpsd: .*(ALLOW|DENY): (.*) -> (.*), switch (.*) port (.*)<<";
 else
