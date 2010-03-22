@@ -233,9 +233,9 @@ sub authorize()
    }
 
    #Vendor defined attribute. NOT STANDARD
-   if ($RAD_REQUEST{'Cisco-NAS-Port'})
+   if ($RAD_REQUEST{'NAS-Port-Id'})
    {
-      my $string=$RAD_REQUEST{'Cisco-NAS-Port'};
+      my $string=$RAD_REQUEST{'NAS-Port-Id'};
       my $ending=$string;
       my $beginning=substr($string,0,2);
       $ending =~ s/[a-zA-Z]//g;
@@ -284,7 +284,7 @@ sub authenticate() #MAC-Auth-Bypass
    else
    {
       #Create the VMPS request with the RADIUS parameters recollected in the authorize section
-      my $string=$RAD_REQUEST{'Cisco-NAS-Port'};
+      my $string=$RAD_REQUEST{'NAS-Port-Id'};
       my $ending=$string;
       my $beginning=substr($string,0,2);
       $ending =~ s/[a-zA-Z]//g;
