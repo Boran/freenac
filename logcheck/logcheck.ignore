@@ -18,6 +18,9 @@ SYS-4-P2_WARN: .* waiting for dynamic assignment
 DTP-5-TRUNKPORTON
 DTP-5-NONTRUNKPORTON
 
+# Ignore blade switch VM flapping
+192.168.245.4[3-6] .*SW_MATM-4-MACFLAP_NOTIF
+
 ## Notify on DENY?
 VQPCLIENT-2-DENY Host
 vmpsd: DENY:
