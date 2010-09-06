@@ -130,14 +130,22 @@ function sms_dump() # Dumps the tbComputerTarget table into our computertarget t
       $query="select name0 as name, user_domain0 as domain, user_name0 as username, macaddress0 as mac, ipaddress0 as ip, ipsubnet0 as subnet, operating_system_name_and0 as os from vino_sms where datalength(ipaddress0) > 0 and ipaddress0 not like \"0.0.0.0\"";
       message("Executing: ".$query,2);
       $sms=mssql_fetch_all($query);
-      foreach ($sms as $row)
+      if ( is_array($sms))
       {
-         $row['mac']=strtolower(normalise_mac($row['mac']));
-         $query=sprintf("insert into nac_sms_1 (ComputerName, ComputerDomain, IPAddress, IPSubnet, OS, Username,MACAddress) values ('%s','%s','%s','%s','%s','%s','%s') on duplicate key update datetime=NOW();", validate($row['name']), validate($row['domain']), validate($row['ip']), validate($row['subnet']), validate($row['os']), validate($row['username']),validate($row['mac']));
-         message("Executing: ".$query,2);
-         execute_query($query);
+         foreach ($sms as $row)
+         {
+            $row['mac']=strtolower(normalise_mac($row['mac']));
+            $query=sprintf("insert into nac_sms_1 (ComputerName, ComputerDomain, IPAddress, IPSubnet, OS, Username,MACAddress) values ('%s','%s','%s','%s','%s','%s','%s') on duplicate key update datetime=NOW();", validate($row['name']), validate($row['domain']), validate($row['ip']), validate($row['subnet']), validate($row['os']), validate($row['username']),validate($row['mac']));
+            message("Executing: ".$query,2);
+            execute_query($query);
+     
+         }
+         return true;
       }
-      return true;
+      else
+      {
+         return false;
+      }
    }
    else return false;
 }
