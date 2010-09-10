@@ -1,6 +1,6 @@
 Notes on Setting up the Development environment for the FreeNAC WIndows GUI
 
-Last Update: Sean Boran, 28.May.09
+Last Update: Sean Boran, 10.Sep.10
 ----------------------------------------------
 
 These sources were first published to SF for v3.0.2
@@ -8,18 +8,23 @@ These sources were first published to SF for v3.0.2
 '''''' Components ''''''''''''''''
 Delphi 7 professional
 	
-Install Mysql stuff [crlab.com]
-- MyDAC
-- sdac   MS-SQL
+Install Devart libraries for MS-SQL and MySQL [crlab.com, now www.devart.com]
+- MyDAC   v5.90.0.51
+- sdac   MS-SQL  v4.8.0.51
+  (sdac is only needed for connection to custom backends).
 - MyBuilder
-- DB Mon
+- DBMonitor 2.14
 
-TBD: DB Grid component
+DB editing and printing components from devexpress.com  
+ExpressQuantumGrid Suite with source, Dec.'06, cost $399.99
+ExpressPrinting System with source, Nov.07, cost $199.99
+Using a version from 27.11.2007, not updated since then.
 
-Version Control
+Version Control (to check out of source forge)
 - Tortoise SVN
+  https://opennac.svn.sourceforge.net/svnroot/opennac/branches/3.0/WindowsGUI/src
 
-Editor
+Editor (optional)
 - Install GE Experts	 		F:\boran\job\comp\dev_environ
 - GE Experts config -> IDE
 	Enable IDE Enchancements-> Componnet Tabs -> multiline tabs

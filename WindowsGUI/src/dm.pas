@@ -24,7 +24,7 @@ interface
 uses
   SysUtils, Classes, DB, MemDS, DBAccess, MyAccess, MSAccess, DASQLMonitor,
   MyDacMonitor, MySQLMonitor, MyCall, MemData,
-  Messages, Dialogs, Variants, StrUtils;
+  Messages, Dialogs, Variants, StrUtils, cxCheckBox ;
 
 type
   Tdm0 = class(TDataModule)
@@ -331,6 +331,12 @@ type
     quSwitchswitch_type: TWordField;
     quSystemsswitch_type: TWordField;
     quPortsswitch_type: TWordField;
+    MyConnection2: TMyConnection;
+    quSmschallenge: TMyQuery;
+    dsSmschallenge: TDataSource;
+    quSmschallengevpn_allowed: TLargeintField;
+    quSmschallengelast_login: TDateTimeField;
+    quSmschallengelast_change: TDateTimeField;
     procedure MyConnection1BeforeConnect(Sender: TObject);
     procedure MyConnection1Error(Sender: TObject; E: EDAError;
       var Fail: Boolean);
@@ -364,6 +370,9 @@ type
       Component: TComponent; ConnLostCause: TConnLostCause;
       var RetryMode: TRetryMode);
     procedure dsVlanDataChange(Sender: TObject; Field: TField);
+    procedure quSmschallengeBeforeUpdateExecute(Sender: TCustomMyDataSet;
+      StatementTypes: TStatementTypes; Params: TDAParams);
+    procedure quSmschallengeBeforeRefresh(DataSet: TDataSet);
   private
     { Private declarations }
   public
@@ -841,6 +850,37 @@ procedure Tdm0.dsVlanDataChange(Sender: TObject; Field: TField);
 begin
   // TBD: Refresh the EditDevices Query
   //dm0.quSystems.Refresh
+end;
+
+procedure Tdm0.quSmschallengeBeforeUpdateExecute(Sender: TCustomMyDataSet;
+  StatementTypes: TStatementTypes; Params: TDAParams);
+var vpn_allowed: integer;
+begin
+  //ShowMessage('quSmschallengeBeforeUpdateExecute ' +dm0.quUsers.FieldbyName('id').AsString
+  //  +', sql=' +(Sender as TMyQuery).SQL.Text);
+  Params.ParamByName('u_id').AsString := dm0.quUsers.FieldbyName('id').AsString;
+
+  if fmInventory.cxSmsChallenge.State =cbsChecked then begin
+     //ShowMessage('Enabled SmsChallenge');
+     vpn_allowed:=1;
+  end else if fmInventory.cxSmsChallenge.State =cbsUnChecked then begin
+     //ShowMessage('Disabled SmsChallenge');
+     vpn_allowed:=0;
+  end else begin
+     exit;  // quite this routine, do nothing
+  end;
+
+  if (StatementTypes = [stInsert]) or (StatementTypes = [stUpdate]) then begin
+    Params.ParamByName('vpn_allowed').AsInteger := vpn_allowed;
+    //ShowMessage('quSmschallengeBeforeUpdateExecute update uid=' +dm0.quUsers.FieldbyName('id').AsString
+    //   +', vpn=' +Params.ParamByName('vpn_allowed').AsString
+    //   +', sql=' +(Sender as TMyQuery).SQLUpdate.Text);
+  end;
+end;
+
+procedure Tdm0.quSmschallengeBeforeRefresh(DataSet: TDataSet);
+begin
+  //ShowMEssage('quSmschallengeBeforeRefresh');
 end;
 
 end.

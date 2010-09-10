@@ -1,7 +1,7 @@
 object dm0: Tdm0
   OldCreateOrder = False
-  Left = 629
-  Top = 420
+  Left = 698
+  Top = 430
   Height = 413
   Width = 920
   object quVlanList: TMyQuery
@@ -1950,5 +1950,59 @@ object dm0: Tdm0
     DataSet = taCableType
     Left = 520
     Top = 176
+  end
+  object MyConnection2: TMyConnection
+    Database = 'smschallenge'
+    Options.KeepDesignConnected = False
+    Username = 'inventwrite'
+    Password = 'ki54Fgr8d5'
+    Server = 'nacserver.your.domain'
+    Left = 752
+    Top = 264
+  end
+  object quSmschallenge: TMyQuery
+    SQLInsert.Strings = (
+      
+        'INSERT into vpn_users set u_id=:u_id,vpn_allowed=:vpn_allowed ON' +
+        ' DUPLICATE KEY UPDATE vpn_allowed=:vpn_allowed')
+    SQLUpdate.Strings = (
+      
+        'INSERT into vpn_users set u_id=:u_id,vpn_allowed=:vpn_allowed ON' +
+        ' DUPLICATE KEY UPDATE vpn_allowed=:vpn_allowed')
+    SQLRefresh.Strings = (
+      
+        'SELECT cast(vpn_allowed as unsigned) as vpn_allowed, last_login,' +
+        ' last_change from vpn_users WHERE u_id=:u_id')
+    Connection = MyConnection2
+    SQL.Strings = (
+      
+        'SELECT cast(vpn_allowed as unsigned) as vpn_allowed, last_login,' +
+        ' last_change from vpn_users WHERE u_id=:u_id')
+    CachedUpdates = True
+    BeforeUpdateExecute = quSmschallengeBeforeUpdateExecute
+    BeforeRefresh = quSmschallengeBeforeRefresh
+    Options.StrictUpdate = False
+    Left = 840
+    Top = 264
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'u_id'
+        ParamType = ptInput
+      end>
+    object quSmschallengevpn_allowed: TLargeintField
+      FieldName = 'vpn_allowed'
+    end
+    object quSmschallengelast_login: TDateTimeField
+      FieldName = 'last_login'
+    end
+    object quSmschallengelast_change: TDateTimeField
+      FieldName = 'last_change'
+    end
+  end
+  object dsSmschallenge: TDataSource
+    DataSet = quSmschallenge
+    Left = 840
+    Top = 312
   end
 end

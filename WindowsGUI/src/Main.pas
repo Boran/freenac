@@ -401,7 +401,6 @@ type
     gbUsers: TGroupBox;
     Label19: TLabel;
     Label21: TLabel;
-    Label20: TLabel;
     Label22: TLabel;
     Label23: TLabel;
     Label24: TLabel;
@@ -433,8 +432,8 @@ type
     Label34: TLabel;
     Label28: TLabel;
     DBEdit8: TDBEdit;
-    DBNavigator6: TDBNavigator;
-    DBNavigator7: TDBNavigator;
+    NavUsers: TDBNavigator;
+    NavPostUsers: TDBNavigator;
     p2Wsus: TTabSheet;
     lwsus: TLabel;
     llwsus: TLabel;
@@ -596,7 +595,17 @@ type
     bbShowAll: TcxButton;
     eRecords: TEdit;
     lRecords: TLabel;
-    bbShow: TcxButton;  { &Contents }
+    bbShow: TcxButton;
+    cxSmsChallenge: TcxDBCheckBox;
+    lsmsLastLogin: TLabel;
+    smsLastLogin: TDBText;
+    lsmsLastPwChange: TLabel;
+    smsLastPwChange: TDBText;
+    DBText3: TDBText;
+    Label57: TLabel;
+    deUIDSearch: TEdit;
+    bbUIDSearch: TButton;
+    Label20: TLabel;  { &Contents }
     procedure LoadGridLayouts(file1: string);
     procedure FormCreate(Sender: TObject);
     procedure ShowHint(Sender: TObject);
@@ -769,6 +778,10 @@ type
     procedure bbShowAllClick(Sender: TObject);
     procedure tsPatchCables2Show(Sender: TObject);
     procedure bbShowClick(Sender: TObject);
+    procedure tsUsers2Show(Sender: TObject);
+    procedure cxSmsChallengeClick(Sender: TObject);
+    procedure bbUIDSearchClick(Sender: TObject);
+
   private
     procedure DoColumnGetDisplayText1(Sender: TcxCustomGridTableItem;
        ARecordIndex: Integer; var AText: string);
@@ -776,6 +789,8 @@ type
        ARecordIndex: Integer; var AText: string);
     procedure PopulateColumnValues1(AColumn: TcxGridDBColumn);
     procedure PopulateColumnValues2(AColumn: TcxGridDBColumn);
+    procedure smschallenge_get();
+    procedure smschallenge_set();
   public
     procedure initialise;
     procedure Disconnect;
@@ -786,7 +801,8 @@ var
   fmInventory: TfmInventory;
   UserID: integer;
   Username, UserFullName, Hostname, MyDomain, Company: string;
-  StaticInvEnabled, NmapEnabled, AntiVirusEnabled, PatchCableEnabled: boolean;   // Boolean. Features enabled?
+  StaticInvEnabled, NmapEnabled, AntiVirusEnabled, PatchCableEnabled: boolean;   // Features in vmps.xml
+  SmsChallenge: boolean;  // Features in vmps.xml
   wsus_enabled, DemoMode, vlan_by_switch_location: boolean;
   promptforpassword, confirmpost, can_admin, can_readonly, can_edit, use_server2: boolean;
   rights, HistoryOffset: integer;
@@ -1842,6 +1858,12 @@ begin
             // Depending on the Company we customise the GUI
             Company:=cNode.GetAttribute('company');
             fmInventory.Caption:=Company +'- NAC Management System';
+
+            SmsChallenge:=false;
+            var1  :=cNode.GetAttribute('SmsChallenge');
+            if (not VarIsNull(var1)) and (var1='1') then begin  // is SmsChallenge=1 ?
+              SmsChallenge:=true;
+            end;
           end;
         end;
 
@@ -1911,6 +1933,16 @@ begin
           end;
         end;
 
+        if (SmsChallenge) then begin     // enable DB access to this feature
+             with dm0.MyConnection2 do begin
+                Server:=dm0.MyConnection1.Server;
+                Database:='smschallenge';  // only the db name is different
+                Username:=dm0.MyConnection1.Username;
+                Password:=dm0.MyConnection1.Password;
+                Connected:=true;
+             end;      
+        end;
+
 
         settings:=nil;   // xml structure no longer needed
       end;
@@ -1931,7 +1963,10 @@ begin
 end;
 
 
-
+procedure sl(msg: string);
+begin
+  fmInventory.StatusLine.SimpleText:=msg;
+end;
 
 procedure enable_modules;
 begin
@@ -2328,6 +2363,7 @@ begin
   UpdateMACLookup;
   tsEditUpdate;
   update_queries;
+  smschallenge_get();
 end;
 
 procedure TfmInventory.gridPortsDblClick(Sender: TObject);
@@ -2610,7 +2646,8 @@ begin
       +deUserSearch.Text);
   end else begin
     deUserSearch.Text:='';
-    deNameSearch.Text:='';    
+    deNameSearch.Text:='';
+    smschallenge_get();    
   end;
 end;
 
@@ -2622,6 +2659,7 @@ begin
   end else begin
     deUserSearch.Text:='';
     deNameSearch.Text:='';
+    smschallenge_get();
   end;
 end;
 
@@ -4333,5 +4371,74 @@ begin
   end;
 end;
 
+
+// Update the CheckBox based on the db field for that user
+procedure TfmInventory.smschallenge_get;
+begin
+  if SmsChallenge then begin
+    //PostMyTable(dm0.quSmschallenge);
+    //sl('smschallenge_get uid ' +dm0.quUsers.FieldbyName('id').AsString);
+
+    // In the dev-env all we need is:
+    //dm0.quSmschallenge.RefreshRecord;
+    // But for prod (sis) we need:
+    dm0.quSmschallenge.ParamByName('u_id').AsString := dm0.quUsers.FieldbyName('id').AsString;
+    dm0.quSmschallenge.Execute;
+  end;
+end;
+
+// Update the DB based on the checkbox
+procedure TfmInventory.smschallenge_set();
+begin
+  if SmsChallenge then begin
+    //sl('smschallenge_set ApplyUpdates for uid ' +dm0.quUsers.FieldbyName('id').AsString);
+    dm0.quSmschallenge.ApplyUpdates;
+  end;
+end;
+
+
+procedure TfmInventory.tsUsers2Show(Sender: TObject);
+begin
+  if SmsChallenge then begin
+    with dm0.quSmschallenge do begin
+      Close;
+      ParamByName('u_id').AsString := dm0.quUsers.FieldbyName('id').AsString;
+      //ShowMessage(SQL.Text);
+      Execute;
+    end;
+    cxSmsChallenge.Visible:=true;    cxSmsChallenge.Enabled:=true;
+    smsLastPwChange.Visible:=true;   lsmsLastPwChange.Visible:=true;
+    smsLastLogin.Visible:=true;      lsmsLastLogin.Visible:=true;
+    
+  end else begin
+    cxSmsChallenge.Visible:=false;   cxSmsChallenge.Enabled:=false;
+    smsLastPwChange.Visible:=false;  lsmsLastPwChange.Visible:=false;
+    smsLastLogin.Visible:=false;     lsmsLastLogin.Visible:=false;
+    //ShowMessage('Hide SmsChallenge');
+  end;
+
+end;
+
+
+procedure TfmInventory.cxSmsChallengeClick(Sender: TObject);
+begin
+   //ShowMessage('cxSmsChallengeClick');
+   smschallenge_set();
+end;
+
+procedure TfmInventory.bbUIDSearchClick(Sender: TObject);
+begin
+  if not dm0.quUsers.Locate('id',deUIDSearch.Text, [loPartialKey,loCaseInsensitive]) then begin
+    ShowMessage('Unable to find user with an id Name starting with '
+      +deUIDSearch.Text);
+  end else begin
+    deUIDSearch.Text:='';
+    smschallenge_get();
+  end;
+end;
+
 end.
+
+
+
 
