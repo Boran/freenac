@@ -195,10 +195,13 @@ if ($enabled)
       log2db('info',"SMS synchronization was successful.");
       exit(0);
    }
-   else message("Function sms_dump failed.",0);
-   logit("SMS synchronization failed.");
-   log2db('err',"SMS synchronization failed.");
-   exit(1);
+   else 
+   { 
+      #message("Function sms_dump failed.",0);
+      logit("SMS synchronization failed.");
+      log2db('err',"SMS synchronization failed.");
+      exit(1);
+   }
 }
 else
 { 
