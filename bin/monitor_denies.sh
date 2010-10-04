@@ -8,6 +8,8 @@
 # Example cron usage:
 #   */15 8-18 * * 1-5 /opt/nac/bin/monitor_denies.sh
 #
+# TO DO: which are linefeeds disappearing from the email? Its all on one line
+#
 # CHANGELOG:
 #    2008.11.11 Sean Boran
 #
@@ -26,8 +28,9 @@ tempfile1=/tmp/monitor_denies.1.$$
 tempfile2=/tmp/monitor_denies.$$
 
 messagecount=10;      # Nr. denies per interval called from cron. Tune per site.
+macstoignore="000d.b914.d220";    # Troublesome PCs to ignore when watching for DENYs
 
-/opt/nac/bin/logtail /var/log/messages /var/log/.messages.vmps_denies | egrep "DENY" > $tempfile1
+/opt/nac/bin/logtail /var/log/messages /var/log/.messages.vmps_denies | egrep "DENY" | egrep -v "$macstoignore" > $tempfile1
 cat $tempfile1| wc -l | awk '{if ($1 > limit) print "Warning, is Vmps working? " $1 " DENYs above threshold " limit ", since last check." }' limit=$messagecount > $tempfile2 2>&1
 
 #/opt/nac/bin/logtail /var/log/messages /var/log/.messages.vmps_denies | egrep "vmpsd: .*DENY" > $tempfile1
