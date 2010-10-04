@@ -406,7 +406,8 @@ function validate_webinput($value){
 			// prepends backslashes to: \x00, \n, \r, \, ', " and \x1a
                         #$value = @mysql_real_escape_string($value);
                         #$value = mysqli_real_escape_string($value);
-                       $value = ereg_replace('(\'|;)', '\\\1', $value);  // escape ',;
+                       #$value = ereg_replace('(\'|;)', '\\\1', $value);  // escape ',;
+                       $value = preg_replace('(\'|;)', '\\\1', $value);  // escape ',;
                 }
         }
         return trim($value);
@@ -422,9 +423,11 @@ function validate_webinput($value){
  */
 function mega_escape_string ($in_string, $in_markup = FALSE, $in_removePct = FALSE)
 {
-  $str = ereg_replace('(\')', '\\\1', $in_string);  // escape '
+  #$str = ereg_replace('(\')', '\\\1', $in_string);  // escape '
+  $str = preg_replace('(\')', '\\\1', $in_string);  // escape '
   if ($in_removePct)
-    $str = ereg_replace('(%)', '\\\1', $str);       // escape %
+    #$str = ereg_replace('(%)', '\\\1', $str);       // escape %
+    $str = preg_replace('(%)', '\\\1', $str);       // escape %
   if ($in_markup == TRUE) {
     #$str = htmlspecialchars($str, ENT_NOQUOTES, 'UTF-8');
     $str = htmlspecialchars($str, ENT_NOQUOTES, 'ISO-8859-1');
