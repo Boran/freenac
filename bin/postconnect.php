@@ -39,9 +39,10 @@ require_once("../lib/exceptions.php");
 
 /* include files */
 require_once("./funcs.inc.php");
+
 /* Open Syslog channel for logging */
 $logger=Logger::getInstance();
-$logger->setDebugLevel(0);
+$logger->setDebugLevel(0);         // Set 1-3 for more verbose logging
 $logger->setLogToStdErr(false);
 
 $policy_file='../etc/policy.inc.php';

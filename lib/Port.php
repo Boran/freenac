@@ -206,7 +206,7 @@ EOF;
    * @param mixed $key		Property to lookup
    * @return mixed		The value of the wanted property, or false if such a property doesn't exist
    */
-   protected function __get($key)							
+   public function __get($key)							
    {
       if (is_array($this->props))
       {
@@ -238,7 +238,7 @@ EOF;
    * @param mixed $value	Value to set the desired property to
    * @return boolean		True if successful, false otherwise
    */
-   private function __set($key,$value)
+   public function __set($key,$value)
    {
       if (is_array($this->props))
       {

@@ -375,7 +375,7 @@ EOF;
    * @param mixed $value        Value to set the desired property to
    * @throws 			Deny if there was an attempt to set an unknown property
    */
-   protected function __set($key,$value)                                                  //Set the value of one var
+   public function __set($key,$value)                                                  //Set the value of one var
    {
       if (array_key_exists($key,$this->db_row))
          $this->db_row[$key]=$value;
