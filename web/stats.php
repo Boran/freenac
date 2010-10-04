@@ -20,7 +20,7 @@
 ## Initialise (standard header for all modules)
   dir(dirname(__FILE__)); set_include_path("./:../lib:../");
   require_once('webfuncs.inc');
-  $logger=Logger::getInstance();
+  $logger=Logger::getInstance(WEB);
   $logger->setDebugLevel(3);
 
   ## Loggin in? User identified?
