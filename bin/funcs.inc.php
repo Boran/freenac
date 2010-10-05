@@ -667,7 +667,10 @@ function normalise_mac($old_mac) {
 
   // Add zero to fill to 2 digits where needed, e.g.
   // convert 0:0:c:7:ac:1 to 00:00:0c:07:ac:01
-  $digits=split(':',$old_mac);              # get one string per "part"
+  # The split function got deprecated in PHP 5.3
+  #$digits=split(':',$old_mac);              # get one string per "part"
+  $digits = preg_split('/:/',$old_mac);
+
   if ($digits === false)
      return false;
   #$logger->logit("Join= " . join('', $digits) . "\n");
