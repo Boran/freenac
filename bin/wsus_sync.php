@@ -211,15 +211,19 @@ function empty_tables()
 	global $logger;
 
 	$logger->debug("Emptying wsus tables", 1);
-	if( !mysql_query('truncate table wsus_systems;') ) {
+	# As of MySQL 5.1.6, truncate requires the DROP privilege
+	#if( !mysql_query('truncate table wsus_systems;') ) {
+	if( !mysql_query('delete from wsus_systems;') ) {
 		$logger->logit("Could not empty wsus_systems, " . mysql_error(), LOG_ERR);
 		return false;
 	}
-	if( !mysql_query('truncate table wsus_neededUpdates;') ) {
+	#if( !mysql_query('truncate table wsus_neededUpdates;') ) {
+	if( !mysql_query('delete from wsus_neededUpdates;') ) {
 		$logger->logit("Could not empty wsus_neededUpdates, " . mysql_error(), LOG_ERR);
 		return false;
 	}
-	if( !mysql_query('truncate table wsus_systemToUpdates;') ) {
+	#if( !mysql_query('truncate table wsus_systemToUpdates;') ) {
+	if( !mysql_query('delete from wsus_systemToUpdates;') ) {
 		$logger->logit("Could not empty wsus_systemToUpdate, " . mysql_error(), LOG_ERR);
 		return false;
 	}

@@ -244,11 +244,14 @@ function empty_tables()
 	global $logger;
 
 	$logger->debug("Emptying tables", 1);
-	if( !mysql_query('truncate table epo_systems;') ) {
+	# As of MySQL 5.1.6, TRUNCATE requires DROP privileges
+	#if( !mysql_query('truncate table epo_systems;') ) {
+	if( !mysql_query('delete from epo_systems;') ) {
 		$logger->logit("Could not empty epo_systems, " . mysql_error(), LOG_ERR);
 		return false;
 	}
-	if( !mysql_query('truncate table epo_versions;') ) {
+	#if( !mysql_query('truncate table epo_versions;') ) {
+	if( !mysql_query('delete from epo_versions;') ) {
 		$logger->logit("Could not empty epo_versions, " . mysql_error(), LOG_ERR);
 		return false;
 	}
