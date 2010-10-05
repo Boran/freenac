@@ -84,7 +84,7 @@ final class Logger
    */
    private function __construct($facility=LOG_DAEMON)  
    {
-      define_syslog_variables();
+      //define_syslog_variables();
       ob_start();
       $this->identifier=basename($_SERVER['SCRIPT_FILENAME']); #Get script's name as identifier
       $this->openFacility($facility);   		#Open logging facilities
