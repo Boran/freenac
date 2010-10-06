@@ -1,10 +1,14 @@
 #!/usr/bin/php
 <?php
+#
+# delete_old_users.php
+# PURPOSE: See "Explain usage" below and $conf->delete_users_threshold
+####
 
 require_once('funcs.inc.php');
 
 # configure logging
-$logger->setDebugLevel(0);
+$logger->setDebugLevel(0);          // level 0-3
 $logger->setLogToStdOut(false);
 
 if ( ! $conf->delete_users_threshold )
@@ -12,6 +16,7 @@ if ( ! $conf->delete_users_threshold )
    exit(1);
 
 db_connect();
+
 
 ## Find out what users haven't been seen during the time period defined
 $query = "SELECT * FROM users WHERE DATE_SUB(CURDATE(), INTERVAL {$conf->delete_users_threshold} DAY) "
@@ -39,6 +44,7 @@ $deleted_users = array();
 $assigned = 0;
 $to_delete = 0;
 $timestamp=date('Y-m-d H:i:s');
+
 
 while ( $result = mysql_fetch_assoc($res) )
 {
@@ -92,14 +98,17 @@ while ( $result = mysql_fetch_assoc($res) )
 
 # Create subject of email
 if ( $assigned > 0 )
-   $subject = "Old users with End-devices assigned to them";
+   $subject = "Expired users with End-devices assigned to them";
 else
-   $subject = "Old users deleted";
+   $subject = "Expired users deleted";
 
 # Create body of message
 if ( $assigned > 0 )
 {
-   $message = "Following users haven't been seen in the central directory for more than {$conf->delete_users_threshold} days and have systems assigned. ";
+## Explain usage
+   $message =  "delete_old_users.php: find users not seen for $conf->delete_users_threshold days and delete them. If they have systems assigned, report them and actually delete systems not online in that period\n\n\n\n";
+
+   $message .= "Some users haven't been seen in the central directory for more than {$conf->delete_users_threshold} days and have systems assigned. ";
    $message .= "These systems need to be reassigned to someone else: \n\n";
    for ($i = 0; $i < $assigned; $i++)
    {
@@ -113,25 +122,26 @@ if ( $assigned > 0 )
       }
       else
          $row = mysql_fetch_array($res, MYSQL_ASSOC);
-      $message .= "{$assigned_systems[$i]['mac']}({$assigned_systems[$i]['name']}), last seen {$assigned_systems[$i]['LastSeen']} on port {$row['port']} on switch {$row['switch_name']}({$row['switch_ip']}) is assigned to {$assigned_systems[$i]['user']}\n";
+      $message .= "{$assigned_systems[$i]['mac']}({$assigned_systems[$i]['name']}), last seen {$assigned_systems[$i]['LastSeen']} on port {$row['port']} on switch {$row['switch_name']}({$row['switch_ip']}) is assigned to {$assigned_systems[$i]['user']}\n\n";
    }
    $message .= "\n\n";
 }
 
 if ( $to_delete > 0 )
 {
-   $message .= "Following users haven't been seen in the central directory for more than {$conf->delete_users_threshold} days and their systems will be deleted because they haven't been online during this time period. \n\n";
+   $message .= "The following SYSTEMS HAVE BEEN DELETED because they haven't been online during this time period. \n\n";
    for ( $i = 0; $i < $to_delete; $i++)
    {
-      $message .= "{$systems_to_delete[$i]['mac']}({$systems_to_delete[$i]['name']}), last seen on {$systems_to_delete[$i]['LastSeen']} and assigned to vlan {$systems_to_delete[$i]['vlan']} and to user {$systems_to_delete[$i]['user']} will be deleted\n";  
-      //cascade_delete($systems_to_delete[$i]['mac']);
+      $message .= "{$systems_to_delete[$i]['mac']}({$systems_to_delete[$i]['name']}), last seen on {$systems_to_delete[$i]['LastSeen']} and assigned to vlan {$systems_to_delete[$i]['vlan']} and to user {$systems_to_delete[$i]['user']} will be deleted\n\n";  
+
+      cascade_delete($systems_to_delete[$i]['mac']);         // actually delete!
    }
    $message .= "\n\n";
 
 }
 
 #Report deleted users
-$message .= "Following users have been deleted from the central directory\n\n";
+$message .= "Following users have been DELETED from the central directory:\n\n";
 for ($i = 0; $i < count($deleted_users); $i++)
 {
    $message .= "Username: {$deleted_users[$i]['username']}\n";
