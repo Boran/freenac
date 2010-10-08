@@ -5,7 +5,7 @@
 #
 # PURPOSE: see $purpose below, see also /opt/nac/bin/delete_old_users.php
 # $report_old_users_days_from $report_old_users_days_back from the config table
-# Normally run from cron
+# Normally run from cron, results emailed to report_old_users@localhost
 #30  6    * * 1   report_old_users
 #
 # 2010.10.06/SB: review abnd rewrite for SIS-IT needs
@@ -28,7 +28,7 @@ require_once "bin/funcs.inc.php";               # Load settings & common functio
 
 $text=NULL;
 $now=date('Y-m-d H:i:s');
-$logger->setDebugLevel(1);
+$logger->setDebugLevel(0);
 $logger->setLogToStdOut(false);
 
 
@@ -37,12 +37,12 @@ db_connect();
 $purpose=<<<EOL
 1. Report users not updated in direx in the period from $conf->report_old_users_days_from to $conf->report_old_users_days_back days ago.
    i.e. report a delta of users deleted on a week to week basis.
-2. Report the systems attributed to them.
+2. Report the systems attributed to them, that were active on the network in the last 30 days.
 EOL;
 #3. Make a list of systems still sttributed to Users who have left more than $mac_threshold days ago,
 #   and disable (set status=KILLED). 
   $text.=$purpose;
-#  $text.="\n\n1. & 2. :";
+  $text.="\n\n1";
 
   // who has left recently?
   $query="select GivenName,Surname,username,LastSeenDirectory,Department,id "
@@ -59,7 +59,8 @@ EOL;
         . "{$line['Department']}, Last Seen: {$line['LastSeenDirectory']}\n";
      $logger->logit($string);
      $text.=$string;
-     $query="SELECT id,mac,name,lastseen FROM systems WHERE uid='{$line['id']}' AND (TO_DAYS(lastseen) < TO_DAYS(NOW())-30)  order by lastseen desc";
+
+     $query="SELECT id,mac,name,lastseen FROM systems WHERE uid='{$line['id']}' AND (TO_DAYS(lastseen) > TO_DAYS(NOW())-30)  order by lastseen desc";
      $logger->debug($query,3);
      $result = mysql_query($query);
      if ( ! $result )
@@ -75,11 +76,7 @@ EOL;
            $text.=$string;
         }
      }
-     #$logger->logit($str);
-     #log2db('info', $str); 
-     #echo "$str\n";
   }
-
 
 
   //  catch old users (LastSeenDirectory < NOW())-$mac_threshold) and active systems (status=1) and block
@@ -113,10 +110,10 @@ EOL;
   }
 
   // send report
-  if (! $logger->setLogToStdOut()) {
-    $logger->mailit('[freenac] users leaving', $text);
-  } else {
-    echo $text;
-  }
+  #if ($logger->setLogToStdOut() === FALSE) {
+    $logger->mailit('[freenac] users leaving', $text, 'report_old_users');
+  #} else {
+  #  echo $text;
+  #}
   mysql_close($connect);
 ?>

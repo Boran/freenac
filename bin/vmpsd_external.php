@@ -70,7 +70,7 @@ require_once("./funcs.inc.php");
 
 # Open Syslog channel for logging 
 $logger=Logger::getInstance();
-$logger->setDebugLevel(0);
+$logger->setDebugLevel(2);             // 0=production 1,2,3 levels for more infos in syslog
 $logger->setLogToStdErr(false);
 
 $policy_file='../etc/policy.inc.php';
