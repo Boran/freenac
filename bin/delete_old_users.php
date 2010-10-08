@@ -127,6 +127,9 @@ if ( $assigned > 0 )
    $message .= "\n\n";
 }
 
+if ( ! isset($message) )
+	$message = '';
+
 if ( $to_delete > 0 )
 {
    $message .= "The following SYSTEMS HAVE BEEN DELETED because they haven't been online during this time period. \n\n";
