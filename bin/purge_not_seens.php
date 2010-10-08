@@ -1,12 +1,12 @@
 #!/usr/bin/php
 <?php
 /**
- * bin/delete_not_seen.php
+ * bin/purge_not_seen.php
  *
  * Long description for file:
  *
  * This script deletes all references to systems not seen in the last $conf->delete_not_seen months
- * from the FreeNAC database.
+ * from the FreeNAC database. Usually run from cron. Output is sent to syslog.
  *
  * PHP version 5
  *
@@ -47,11 +47,12 @@ SELECT s.mac,
        s.name,
        s.r_ip,
        s.comment,
-       u.username
+       u.username, s.LastSeen
 FROM systems s 
 LEFT JOIN users u 
 ON s.uid=u.id 
-WHERE LastSeen < DATE_SUB(NOW(), INTERVAL $num_months MONTH); 
+WHERE LastSeen < DATE_SUB(NOW(), INTERVAL $num_months MONTH)
+ORDER BY LastSeen DESC; 
 EOF;
    $logger->debug($query,3);
    $res = mysql_query($query);
@@ -67,7 +68,7 @@ EOF;
       $result['username'] = mysql_real_escape_string($result['username']);
       $result['ip'] = mysql_real_escape_string($result['ip']);
       $result['comment'] = mysql_real_escape_string($result['comment']);
-      $string="System deleted. name={$result['name']}; mac={$result['mac']}; user={$result['username']}; ip={$result['ip']}; comment={$result['comment']}";
+      $string="System deleted. name={$result['name']}; mac={$result['mac']}; user={$result['username']}; ip={$result['ip']}; comment={$result['comment']}; LastSeen={$result['LastSeen']}";
       $logger->logit($string);
       cascade_delete($result['mac']); 
       log2db('info',$string);
