@@ -20,7 +20,7 @@ db_connect();
 
 ## Find out what users haven't been seen during the time period defined
 $query = "SELECT * FROM users WHERE DATE_SUB(CURDATE(), INTERVAL {$conf->delete_users_threshold} DAY) "
-       . " >= LastSeenDirectory AND LastSeenDirectory != '0000-00-00';";
+       . " >= LastSeenDirectory AND LastSeenDirectory != '0000-00-00' AND nac_rights != '99';";
 $logger->debug($query, 3);
 $res = mysql_query($query);
 ##Log and abort if there is an error in our query
