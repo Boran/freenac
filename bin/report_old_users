@@ -1,13 +1,14 @@
 #!/usr/bin/php -f
 <?php
 #
-# enterprise/report_old_users
+# ./enterprise/report_old_users
 #
-# Report users not updated in direx in the last 7 days, but possibly deleted
-# before that. i.e. report a delta of users deleted on a week to week basis.
+# PURPOSE: see $purpose below, see also /opt/nac/bin/delete_old_users.php
+# $report_old_users_days_from $report_old_users_days_back from the config table
 # Normally run from cron
-#30  6    * * 1   /opt/vmps/swisscom.only/report_old_users
+#30  6    * * 1   report_old_users
 #
+# 2010.10.06/SB: review abnd rewrite for SIS-IT needs
 # 2006.06.02 SB: move to swisscom.only dir
 # 2006.01.31/sb Integrate withs funcs.inc
 # 2005.08.15/sb 
@@ -17,24 +18,36 @@
 #  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
 ####################################
 
+#$mac_threshold=60;            # After X days of a user leaving, kill systems assigned. todo: move to config table
+$mac_threshold=0;            # After X days of a user leaving, kill systems assigned. todo: move to config table
+
 # Php weirdness: change to script dir, then look for includes
 chdir(dirname(__FILE__));
 set_include_path("../:./");
-require_once "./funcs.inc.php";               # Load settings & common functions
+require_once "bin/funcs.inc.php";               # Load settings & common functions
 
-$logger->setDebugLevel(0);
+$text=NULL;
+$now=date('Y-m-d H:i:s');
+$logger->setDebugLevel(1);
 $logger->setLogToStdOut(false);
 
-#echo "$0 report_old_users_days_from-${conf->report_old_users_days_from} report_old_users_days_back-${conf->report_old_users_days_back}\n";
-
-#$report_old_users_days_from $report_old_users_days_back from config.inc
 
 db_connect();
 
-  $text=NULL;
-  $now=date('Y-m-d H:i:s');
+$purpose=<<<EOL
+1. Report users not updated in direx in the period from $conf->report_old_users_days_from to $conf->report_old_users_days_back days ago.
+   i.e. report a delta of users deleted on a week to week basis.
+2. Report the systems attributed to them.
+EOL;
+#3. Make a list of systems still sttributed to Users who have left more than $mac_threshold days ago,
+#   and disable (set status=KILLED). 
+  $text.=$purpose;
+#  $text.="\n\n1. & 2. :";
+
+  // who has left recently?
   $query="select GivenName,Surname,username,LastSeenDirectory,Department,id "
       . " FROM users WHERE (TO_DAYS(LastSeenDirectory) < TO_DAYS(NOW())-$conf->report_old_users_days_from) and (TO_DAYS(LastSeenDirectory) > TO_DAYS(NOW())-$conf->report_old_users_days_back) ";
+
       $logger->debug($query,3);
       $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
       if (!$res) { die('Invalid query: ' . mysql_error()); }
@@ -42,11 +55,11 @@ db_connect();
 
   while ($line = mysql_fetch_array($res, MYSQL_ASSOC)) {
      $logger->logit(" ");
-     $string="\nUser deleted from Direx: {$line['GivenName']} {$line['Surname']}, {$line['username']}"
+     $string="\nUser: {$line['GivenName']} {$line['Surname']}, {$line['username']}"
         . "{$line['Department']}, Last Seen: {$line['LastSeenDirectory']}\n";
      $logger->logit($string);
      $text.=$string;
-     $query="SELECT id,mac,name,lastseen FROM systems WHERE uid='{$line['id']}'";
+     $query="SELECT id,mac,name,lastseen FROM systems WHERE uid='{$line['id']}' AND (TO_DAYS(lastseen) < TO_DAYS(NOW())-30)  order by lastseen desc";
      $logger->debug($query,3);
      $result = mysql_query($query);
      if ( ! $result )
@@ -56,31 +69,54 @@ db_connect();
      }
      else
      {
-        ## This is a quick fix to the LastSeenDirectory field since its format is not 
-        ## as the rest of the date formats in the database
-        $diff_secs=time_diff("{$line['LastSeenDirectory']} 00:00:00", $now);
-        if ($diff_secs === false)
-           continue; 
-        $diff_hours=(int)($diff_secs / 3600);
-        $diff_days=(int)($diff_hours / 24);
         while ($row=mysql_fetch_array($result, MYSQL_ASSOC))
         {
-           if (( $conf->report_old_users_kill_days ) && ( $diff_days != 0 ) && ( $diff_days > $conf->report_old_users_kill_days ))
-           {
-              $string="\tSystem {$row['name']}({$row['mac']}) Last Seen: {$row['lastseen']} has been set to 'KILLED' status\n";
-              $logger->logit($string);
-              $text.=$string;
-              $query="UPDATE systems SET status='7' WHERE id='{$row['id']}'";
-              $logger->debug($query,3);
-              $result_1=mysql_query($query);
-              if ( ! $result_1 )
-              {
-                 $logger->logit(mysql_error());
-              }
-           }
+           $string="         {$row['name']}({$row['mac']}) Last seen {$row['lastseen']} \n";
+           $text.=$string;
         }
      }
+     #$logger->logit($str);
+     #log2db('info', $str); 
+     #echo "$str\n";
   }
-  $logger->mailit('report_old_users',$text);
+
+
+
+  //  catch old users (LastSeenDirectory < NOW())-$mac_threshold) and active systems (status=1) and block
+  if ($mac_threshold > 0) {
+    $text.="\n\n3. Active systems to block, sorted by last seen date:\n\n";
+    $text.="Hostname|Lastseen_l2|Lastseen_l3|comment|Username|User_Departure|Department:\n\n";
+    $query=<<<EOL
+select mac, name as Hostname, lastseen as Lastseen_l2, r_timestamp as Lastseen_l3, systems.comment,
+  GivenName,Surname,username,LastSeenDirectory as User_Departure,Department
+  FROM users 
+  left join systems on systems.uid=users.id
+  WHERE (TO_DAYS(LastSeenDirectory) < TO_DAYS(NOW())-$mac_threshold) 
+    and systems.status=1
+   order by lastseen desc
+#limit 30;
+EOL;
+      $logger->debug($query,3);
+      $res = mysql_query($query) OR die("Error in DB-Query: " . mysql_error());
+      if (!$res) { die('Invalid query: ' . mysql_error()); }
+      #echo "$query\n";
+
+    while ($line = mysql_fetch_array($res, MYSQL_ASSOC)) {
+       #$string="\n {$line['GivenName']} {$line['Surname']}, {$line['username']}"
+       #   . "{$line['Department']}, {$line['User_Departure']}\n";
+       $string='';
+       foreach ($line as $f){
+         $string.= $f . '| ';
+       }
+     $text.=$string. "\n\n";
+    }
+  }
+
+  // send report
+  if (! $logger->setLogToStdOut()) {
+    $logger->mailit('[freenac] users leaving', $text);
+  } else {
+    echo $text;
+  }
   mysql_close($connect);
 ?>
