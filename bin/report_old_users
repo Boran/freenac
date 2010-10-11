@@ -3,12 +3,12 @@
 #
 # ./enterprise/report_old_users
 #
-# PURPOSE: see $purpose below, see also /opt/nac/bin/delete_old_users.php
+# PURPOSE: see $purpose below, and also /opt/nac/bin/delete_old_users.php
 # $report_old_users_days_from $report_old_users_days_back from the config table
 # Normally run from cron, results emailed to report_old_users@localhost
-#30  6    * * 1   report_old_users
+# 30  6    * * 1   report_old_users
 #
-# 2010.10.06/SB: review abnd rewrite for SIS-IT needs
+# 2010.10.06/SB: review and rewrite for SIS-IT needs
 # 2006.06.02 SB: move to swisscom.only dir
 # 2006.01.31/sb Integrate withs funcs.inc
 # 2005.08.15/sb 
@@ -42,7 +42,7 @@ EOL;
 #3. Make a list of systems still sttributed to Users who have left more than $mac_threshold days ago,
 #   and disable (set status=KILLED). 
   $text.=$purpose;
-  $text.="\n\n1";
+  $text.="\n\n";
 
   // who has left recently?
   $query="select GivenName,Surname,username,LastSeenDirectory,Department,id "
