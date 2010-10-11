@@ -39,7 +39,7 @@
 // settings
 // TODO : put in config table
 $nsupdate="nsupdate -d ";    // -d = debug
-$generate_all=TRUE; /* Generate all => all hosts, false => only hoses with dns_update = 1 */
+$generate_all=TRUE; /* Generate all => all hosts, false => only hosts with dns_update = 1  */
 
 
 //  main ()
