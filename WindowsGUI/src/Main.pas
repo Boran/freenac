@@ -605,7 +605,9 @@ type
     Label57: TLabel;
     deUIDSearch: TEdit;
     bbUIDSearch: TButton;
-    Label20: TLabel;  { &Contents }
+    Label20: TLabel;
+    cxVPNallowed: TcxDBRadioGroup;
+    Label58: TLabel;  { &Contents }
     procedure LoadGridLayouts(file1: string);
     procedure FormCreate(Sender: TObject);
     procedure ShowHint(Sender: TObject);
@@ -781,6 +783,7 @@ type
     procedure tsUsers2Show(Sender: TObject);
     procedure cxSmsChallengeClick(Sender: TObject);
     procedure bbUIDSearchClick(Sender: TObject);
+    procedure cxVPNallowedClick(Sender: TObject);
 
   private
     procedure DoColumnGetDisplayText1(Sender: TcxCustomGridTableItem;
@@ -4381,7 +4384,9 @@ begin
 
     // In the dev-env all we need is:
     //dm0.quSmschallenge.RefreshRecord;
+
     // But for prod (sis) we need:
+    dm0.quSmschallenge.Open;
     dm0.quSmschallenge.ParamByName('u_id').AsString := dm0.quUsers.FieldbyName('id').AsString;
     dm0.quSmschallenge.Execute;
   end;
@@ -4400,20 +4405,24 @@ end;
 procedure TfmInventory.tsUsers2Show(Sender: TObject);
 begin
   if SmsChallenge then begin
-    with dm0.quSmschallenge do begin
+    smschallenge_get();
+    (*with dm0.quSmschallenge do begin
       Close;
       ParamByName('u_id').AsString := dm0.quUsers.FieldbyName('id').AsString;
       //ShowMessage(SQL.Text);
       Execute;
-    end;
+    end;  *)
     cxSmsChallenge.Visible:=true;    cxSmsChallenge.Enabled:=true;
+    cxVPNallowed.Visible:=true;      cxVPNallowed.Enabled:=true;
     smsLastPwChange.Visible:=true;   lsmsLastPwChange.Visible:=true;
     smsLastLogin.Visible:=true;      lsmsLastLogin.Visible:=true;
     
   end else begin
     cxSmsChallenge.Visible:=false;   cxSmsChallenge.Enabled:=false;
+    cxVPNallowed.Visible:=false;     cxVPNallowed.Enabled:=false;
     smsLastPwChange.Visible:=false;  lsmsLastPwChange.Visible:=false;
     smsLastLogin.Visible:=false;     lsmsLastLogin.Visible:=false;
+
     //ShowMessage('Hide SmsChallenge');
   end;
 
@@ -4437,8 +4446,12 @@ begin
   end;
 end;
 
+procedure TfmInventory.cxVPNallowedClick(Sender: TObject);
+begin
+  //ShowMessage('cxVPNallowedClick');
+  smschallenge_set();
+end;
+
 end.
-
-
 
 

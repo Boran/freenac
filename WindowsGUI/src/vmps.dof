@@ -115,7 +115,7 @@ AutoIncBuild=1
 MajorVer=3
 MinorVer=0
 Release=0
-Build=177
+Build=178
 Debug=0
 PreRelease=0
 Special=0
@@ -125,8 +125,8 @@ Locale=2055
 CodePage=1252
 [Version Info Keys]
 CompanyName=Freenac Dev team
-FileDescription=see http://FreeNAC.net
-FileVersion=3.0.0.177
+FileDescription=see http://FreeNAC.net and sourceforge
+FileVersion=3.0.0.178
 InternalName=
 LegalCopyright=GPL v2. The Freenac Dev team & Sean Boran.
 LegalTrademarks=
@@ -135,8 +135,8 @@ ProductName=FreeNAC Managment System
 ProductVersion=3.0.0.0
 Comments=http://FreeNAC.net
 [Excluded Packages]
-c:\program files\borland\delphi7\Bin\dclib70.bpl=InterBase Data Access Components
 c:\program files\borland\delphi7\Bin\dcl31w70.bpl=Delphi 1.0 Compatibility Components
+c:\program files\borland\delphi7\Bin\dclib70.bpl=InterBase Data Access Components
 c:\program files\borland\delphi7\Projects\Bpl\dclIndySuperCore70.bpl=Internet Direct (Indy) 10.00.0.17-B - Super Core
 C:\Program Files\Borland\Delphi7\Bin\DataSetManager70.bpl=Devart DataSet Manager
 [HistoryLists\hlUnitAliases]
