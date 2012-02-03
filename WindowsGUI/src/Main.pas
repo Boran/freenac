@@ -607,7 +607,20 @@ type
     bbUIDSearch: TButton;
     Label20: TLabel;
     cxVPNallowed: TcxDBRadioGroup;
-    Label58: TLabel;  { &Contents }
+    Label58: TLabel;
+    tsMssms: TTabSheet;
+    cxMssms: TcxGrid;
+    cxGridDBTableView8: TcxGridDBTableView;
+    cxGridLevel1: TcxGridLevel;
+    cxGridDBTableView8MACAddress: TcxGridDBColumn;
+    cxGridDBTableView8ComputerName: TcxGridDBColumn;
+    cxGridDBTableView8ComputerDomain: TcxGridDBColumn;
+    cxGridDBTableView8IPAddress: TcxGridDBColumn;
+    cxGridDBTableView8IPSubnet: TcxGridDBColumn;
+    cxGridDBTableView8Username: TcxGridDBColumn;
+    cxGridDBTableView8OS: TcxGridDBColumn;
+    cxGridDBTableView8datetime: TcxGridDBColumn;
+    cxGridDBTableView8id: TcxGridDBColumn;  { &Contents }
     procedure LoadGridLayouts(file1: string);
     procedure FormCreate(Sender: TObject);
     procedure ShowHint(Sender: TObject);
@@ -784,6 +797,7 @@ type
     procedure cxSmsChallengeClick(Sender: TObject);
     procedure bbUIDSearchClick(Sender: TObject);
     procedure cxVPNallowedClick(Sender: TObject);
+    procedure tsMssmsResize(Sender: TObject);
 
   private
     procedure DoColumnGetDisplayText1(Sender: TcxCustomGridTableItem;
@@ -805,7 +819,7 @@ var
   UserID: integer;
   Username, UserFullName, Hostname, MyDomain, Company: string;
   StaticInvEnabled, NmapEnabled, AntiVirusEnabled, PatchCableEnabled: boolean;   // Features in vmps.xml
-  SmsChallenge: boolean;  // Features in vmps.xml
+  SmsChallenge, MsSMS: boolean;  // Features in vmps.xml
   wsus_enabled, DemoMode, vlan_by_switch_location: boolean;
   promptforpassword, confirmpost, can_admin, can_readonly, can_edit, use_server2: boolean;
   rights, HistoryOffset: integer;
@@ -1492,6 +1506,8 @@ begin
   use_server2:=false;
   bbConnect2.Visible:=false;
 
+
+
   // leave it visible for now
   //fmInventory.Encryptuser1.Visible:=false;
 
@@ -1866,6 +1882,12 @@ begin
             var1  :=cNode.GetAttribute('SmsChallenge');
             if (not VarIsNull(var1)) and (var1='1') then begin  // is SmsChallenge=1 ?
               SmsChallenge:=true;
+            end;
+
+            MsSMS:=false;      // there is a Microsoft SMS table with PC inventory data ?
+            var1  :=cNode.GetAttribute('MsSMS');
+            if (not VarIsNull(var1)) and (var1='1') then begin  // is MsSMS=1 ?
+              MsSMS:=true;
             end;
           end;
         end;
@@ -2332,6 +2354,14 @@ begin
     end;
   end;
 
+  // Only show the Admin > Ms-SMS tab, if that feature has been enabled.
+  if MsSMS=true then begin
+    tsMssms.TabVisible:=true;
+    tsMssms.Enabled:=true;
+  end else begin
+    tsMssms.TabVisible:=false;
+    tsMssms.Enabled:=false;
+  end;
 end;
 
 
@@ -4425,7 +4455,6 @@ begin
 
     //ShowMessage('Hide SmsChallenge');
   end;
-
 end;
 
 
@@ -4450,6 +4479,15 @@ procedure TfmInventory.cxVPNallowedClick(Sender: TObject);
 begin
   //ShowMessage('cxVPNallowedClick');
   smschallenge_set();
+end;
+
+procedure TfmInventory.tsMssmsResize(Sender: TObject);
+begin
+  if MsSMS then begin
+    with dm0.taSMS do begin
+      Open;
+    end;
+  end;
 end;
 
 end.

@@ -1,0 +1,3 @@
+2012.02.02/Sean : Added an MsSMS option to vmps.xml, if its is 1, then 
+  a nac_sms_table is looked for and shown in a ab Admin > MS-SMS.
+  This is one one specific site which has a Microsoft Inventory tool.

@@ -337,6 +337,17 @@ type
     quSmschallengevpn_allowed: TLargeintField;
     quSmschallengelast_login: TDateTimeField;
     quSmschallengelast_change: TDateTimeField;
+    taSMS: TMyTable;
+    taSMSid: TIntegerField;
+    taSMSMACAddress: TStringField;
+    taSMSComputerName: TStringField;
+    taSMSComputerDomain: TStringField;
+    taSMSIPAddress: TStringField;
+    taSMSIPSubnet: TStringField;
+    taSMSUsername: TStringField;
+    taSMSOS: TStringField;
+    taSMSdatetime: TDateTimeField;
+    dsSMS: TDataSource;
     procedure MyConnection1BeforeConnect(Sender: TObject);
     procedure MyConnection1Error(Sender: TObject; E: EDAError;
       var Fail: Boolean);

@@ -1,7 +1,7 @@
 object dm0: Tdm0
   OldCreateOrder = False
-  Left = 698
-  Top = 430
+  Left = 438
+  Top = 490
   Height = 413
   Width = 920
   object quVlanList: TMyQuery
@@ -2004,5 +2004,62 @@ object dm0: Tdm0
     DataSet = quSmschallenge
     Left = 840
     Top = 312
+  end
+  object taSMS: TMyTable
+    TableName = 'nac_sms_1'
+    OrderFields = 'datetime'
+    ReadOnly = True
+    Connection = MyConnection1
+    Left = 792
+    Top = 8
+    object taSMSMACAddress: TStringField
+      FieldName = 'MACAddress'
+      Origin = 'nac_sms_1.MACAddress'
+      Size = 18
+    end
+    object taSMSComputerName: TStringField
+      FieldName = 'ComputerName'
+      Origin = 'nac_sms_1.ComputerName'
+      Size = 100
+    end
+    object taSMSComputerDomain: TStringField
+      FieldName = 'ComputerDomain'
+      Origin = 'nac_sms_1.ComputerDomain'
+      Size = 100
+    end
+    object taSMSIPAddress: TStringField
+      FieldName = 'IPAddress'
+      Origin = 'nac_sms_1.IPAddress'
+      Size = 100
+    end
+    object taSMSIPSubnet: TStringField
+      FieldName = 'IPSubnet'
+      Origin = 'nac_sms_1.IPSubnet'
+      Size = 100
+    end
+    object taSMSUsername: TStringField
+      FieldName = 'Username'
+      Origin = 'nac_sms_1.Username'
+      Size = 30
+    end
+    object taSMSOS: TStringField
+      FieldName = 'OS'
+      Origin = 'nac_sms_1.OS'
+      Size = 100
+    end
+    object taSMSdatetime: TDateTimeField
+      FieldName = 'datetime'
+      Origin = 'nac_sms_1.datetime'
+    end
+    object taSMSid: TIntegerField
+      AutoGenerateValue = arAutoInc
+      FieldName = 'id'
+      Origin = 'nac_sms_1.id'
+    end
+  end
+  object dsSMS: TDataSource
+    DataSet = taSMS
+    Left = 792
+    Top = 56
   end
 end
