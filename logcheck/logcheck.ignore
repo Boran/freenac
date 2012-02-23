@@ -24,12 +24,13 @@ SYS-6-
 
 # Ignore blade switch VM flapping
 192.168.245.4[3-6] .*SW_MATM-4-MACFLAP_NOTIF
+(swu140stack1|swu140stack2|swu223stack1|swu223stack2).vptt.ch .*SW_MATM-4-MACFLAP_NOTIF
 
 ## Notify on DENY?
 VQPCLIENT-2-DENY Host
 vmpsd: DENY:
 
-# Enable these if debuggin on in vmpsd
+# Enable these if debugging on in vmpsd
 #vmpsd: External prog says
 #vmpsd: >>>>
 

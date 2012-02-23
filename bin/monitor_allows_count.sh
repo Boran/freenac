@@ -20,7 +20,7 @@
 #  Licensed under GPL, see LICENSE file or http://www.gnu.org/licenses/gpl.html
 #############
 
-subject="VMPS authentication statistics"
+subject="freenac authentication statistics"
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/bin
 tempfile2=/tmp/monitor_allows.$$
 

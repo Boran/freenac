@@ -34,8 +34,8 @@ set_time_limit(0);
 define_syslog_variables();
 openlog("sms_getinfo", LOG_PID , LOG_LOCAL5);
 
-$debug_flag1=false;
-$debug_flag2=false;
+$debug_flag1=true;
+$debug_flag2=true;
 $output=TRUE;
 $verbose=FALSE;
 
@@ -121,13 +121,16 @@ function execute_query($query) # Executes query and displays error message if an
    return $res;
 }
 
+// TODO: needs lots of memory!
 function sms_dump() # Dumps the tbComputerTarget table into our computertarget table
 {
-   message("Function sms_dump",1);
+   $timestamp=date('Y-m-d H:i:s');
+   message("Function sms_dump $timestamp",1);
    db_connect();
    if (dbsms_connect())
    {
-      $query="select name0 as name, user_domain0 as domain, user_name0 as username, macaddress0 as mac, ipaddress0 as ip, ipsubnet0 as subnet, operating_system_name_and0 as os from vino_sms where datalength(ipaddress0) > 0 and ipaddress0 not like \"0.0.0.0\"";
+      #$query="select name0 as name, user_domain0 as domain, user_name0 as username, macaddress0 as mac, ipaddress0 as ip, ipsubnet0 as subnet, operating_system_name_and0 as os from vino_sms where datalength(ipaddress0) > 0 and ipaddress0 not like \"0.0.0.0\"";
+      $query="select name0 as name, user_domain0 as domain, user_name0 as username, MACAddress0 as mac, ipaddress0 as ip, ipsubnet0 as subnet, operating_system_name_and0 as os,LastHWScan from vino_sms where datalength(ipaddress0) > 0 and ipaddress0 not like \"0.0.0.0\"";
       message("Executing: ".$query,2);
       $sms=mssql_fetch_all($query);
       if ( is_array($sms))
@@ -140,6 +143,8 @@ function sms_dump() # Dumps the tbComputerTarget table into our computertarget t
             execute_query($query);
      
          }
+         $timestamp=date('Y-m-d H:i:s');
+         message("Function sms_dump $timestamp",1);
          return true;
       }
       else
