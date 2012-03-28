@@ -4,6 +4,7 @@
 # Originally from OpenVMS distribution
 # 2006.01.11/Sean <1> :add performance measurements
 # 2006.09.10/Hector <2> :Adaptation to work with FreeRadius
+# 2012.03.28/Alois S: fix port name for 2940 802.1x MAB requests
 #-------------------------------
 #TO DO: Port translation function
 # This script transforms a RADIUS request into a VMPS request.
@@ -284,6 +285,18 @@ sub authenticate() #MAC-Auth-Bypass
    else
    {
       #Create the VMPS request with the RADIUS parameters recollected in the authorize section
+      
+      ## Some older switches (e.g. 2940) only set the port in Cisco-NAS-Port, so if that has data
+      ## copy it to NAS-Port-Id, which is empty on those switches.
+      if (exists($RAD_REQUEST{'Cisco-NAS-Port'})) {
+	 $RAD_REQUEST{'NAS-Port-Id'}=$RAD_REQUEST{'Cisco-NAS-Port'};
+      }
+
+      # Debug request to syslog:
+      #foreach $key (keys %RAD_REQUEST){
+      #        syslog('info', "$key, $RAD_REQUEST{$key}");
+      #}
+
       my $string=$RAD_REQUEST{'NAS-Port-Id'};
       my $ending=$string;
       my $beginning=substr($string,0,2);
@@ -297,12 +310,10 @@ sub authenticate() #MAC-Auth-Bypass
       $request{port_name}=$nas_port;                # TBD: add later
       $request{vlan}='--NONE--';
       $request{vtp_domain}='802.1x';                    # TBD: add later
-
       $buf = makeVQPrequest(%request);
       $buf = sendVQP($buf); #Send the request
       %response = parseVQPresp($buf);
       $last_count=$counter;
-
       if ( ! $response{vlan} ) #Here we have obtained the answer
       {
          $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac NOT allowed";

@@ -127,7 +127,12 @@ while ($in && $out)
          if (empty($splitted[0]) || empty($splitted[1]) || empty($splitted[2])
             || empty($splitted[3]) || empty($splitted[4]))
          {
-            $logger->logit("Invalid request\n");
+            $logger->logit("Invalid VMPS request, there must be exactly 5 arguments\n");
+            $logger->logit("0=" . $splitted[0]);
+            $logger->logit("1=" . $splitted[1]);
+            $logger->logit("2=" . $splitted[2]);
+            $logger->logit("3=" . $splitted[3]);
+            $logger->logit("4=" . $splitted[4]);
             DENY('Invalid request');
          }
 
