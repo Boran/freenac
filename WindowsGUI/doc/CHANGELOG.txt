@@ -214,6 +214,8 @@ v3.0.0.170/3.Nov.09/SB:
   Increase sizes of  Patchcable office field width to 128 (quCable.OfficeLookup)
   
 2012.02.02/Sean : Added an MsSMS option to vmps.xml, if its is 1, then 
-  a nac_sms_table is looked for and shown in a ab Admin > MS-SMS.
-  This is one one specific site which has a Microsoft Inventory tool.
+  the nac_sms_table is looked for and shown in a  the GUI: Admin > MS-SMS.
+  This is for one specific site which has a Microsoft Inventory tool.
 
+2012.05.04/Sean : Recompile vmps.exe with the latest mydac and sdac libraries.
+  Request by Plotnikov, Vladimir, who could not connect to very new mysql servers.
