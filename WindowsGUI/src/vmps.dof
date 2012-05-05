@@ -115,7 +115,7 @@ AutoIncBuild=1
 MajorVer=3
 MinorVer=0
 Release=0
-Build=178
+Build=181
 Debug=0
 PreRelease=0
 Special=0
@@ -126,7 +126,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=Freenac Dev team
 FileDescription=see http://FreeNAC.net and sourceforge
-FileVersion=3.0.0.178
+FileVersion=3.0.0.181
 InternalName=
 LegalCopyright=GPL v2. The Freenac Dev team & Sean Boran.
 LegalTrademarks=

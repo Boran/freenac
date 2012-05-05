@@ -1,7 +1,7 @@
 object dm0: Tdm0
   OldCreateOrder = False
-  Left = 438
-  Top = 490
+  Left = 261
+  Top = 453
   Height = 413
   Width = 920
   object quVlanList: TMyQuery
@@ -1611,6 +1611,7 @@ object dm0: Tdm0
     Top = 176
   end
   object MySQLMonitor1: TMySQLMonitor
+    Active = False
     TraceFlags = [tfQPrepare, tfQExecute, tfQFetch, tfError, tfConnect, tfTransact, tfMisc, tfParams]
     Left = 528
     Top = 264
