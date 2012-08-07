@@ -1,6 +1,7 @@
 _______________________ FreeNAC README _____________________________
 
-This is Version 3.0 of FreeNAC, Release 1090 2007.11.16
+This is Version 3.0 of FreeNAC
+Please use the latest code from the 3.0 branch on guthub https://github.com/Boran/freenac
 
 The main Project Website is online at FreeNAC.net .
 Product and support information is in English/french/Spanish and German.
@@ -22,11 +23,6 @@ For a list of changes, please see doc/CHANGES and doc/CHANGES.detailed
 
 
 
-Please do sign up to the website and discussion groups:
-- on the Website you can post comments/tips on each page of the documents
-	http://freenac.net
-- in the Forums, share your knowledge and benefit from that of others
-	http://freenac.net/phpBB
-
+There is no form or mailing list any more (too much spam), please use the issue queue on Github.
  
                                                       The FreeNAC Team
