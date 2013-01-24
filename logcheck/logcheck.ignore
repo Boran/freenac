@@ -21,6 +21,17 @@ PLATFORM-6-
 STACKMGR-5-
 SPANTREE-5
 SYS-6-
+AUTHMGR-5-START
+AUTHMGR-5-SUCCESS
+AUTHMGR-5-VLANASSIGN
+DOT1X-5-SUCCESS
+
+MAB-5-SUCCESS
+
+# MAB warnings (perhaps these should be enabled on some sites)
+RADIUS-4-RADIUS_DEAD
+RADIUS-4-RADIUS_ALIVE
+DOT1X-5-FAIL
 
 # Ignore blade switch VM flapping
 192.168.245.4[3-6] .*SW_MATM-4-MACFLAP_NOTIF
@@ -29,6 +40,10 @@ SYS-6-
 ## Notify on DENY?
 VQPCLIENT-2-DENY Host
 vmpsd: DENY:
+
+
+logrotate: (utility|Rather than invoking|Since the scrip|Upstart)
+
 
 # Enable these if debugging on in vmpsd
 #vmpsd: External prog says
@@ -73,11 +88,38 @@ scan_recent.php.* is going to be scanned
 snmp_scan.php.* Scanning all switches
 
 # VirtualCentre scanning: don't report warnings.
-vm_mac_ip.pl: WARNING: Unable to query 
-vm_mac_ip.pl: Vm details updated
+#vm_mac_ip.pl: WARNING: Unable to query 
+#vm_mac_ip.pl: Vm details updated
+#now ignore lla, not a big issue
+vm_mac_ip.pl:
 
 pix_mac_ip.pl.* (Query PIX|Systems updated)
-ino_inv_sync.* Static Inventory data downloaded
-smschallenge.* Successful login
+
+#ino_inv_sync.* Static Inventory data downloaded
 
 ntpd.* synchronized to 
+
+
+rad2vmps: .*allowed vlan
+
+rsyslogd was HUPed
+
+Rather than invoking init scripts 
+Since the script you are attempting to invoke 
+Upstart job, you may also 
+
+
+# smschallenge
+smschallenge.* Successful login
+#smschallenge.*: (sent via at-commands|base_login)
+smschallenge.*sent via at-commands
+smschallenge.*result: 1
+smschallenge.*Detected MAC-Address 
+smschallenge.*base_login() result: 0
+
+...done
+
+# "bad clients" that we know about
+MAB-5-FAIL .*(0015.c53b.82ce) 
+rad2vmps: .* MAC (0015C53B82CE) refused
+

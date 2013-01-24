@@ -293,9 +293,7 @@ sub authenticate() #MAC-Auth-Bypass
       }
 
       # Debug request to syslog:
-      #foreach $key (keys %RAD_REQUEST){
-      #        syslog('info', "$key, $RAD_REQUEST{$key}");
-      #}
+      #foreach $key (keys %RAD_REQUEST){ syslog('debug', "$key, $RAD_REQUEST{$key}");  }
 
       my $string=$RAD_REQUEST{'NAS-Port-Id'};
       my $ending=$string;
@@ -307,9 +305,9 @@ sub authenticate() #MAC-Auth-Bypass
       $switch_ip=$RAD_REQUEST{'NAS-IP-Address'};
       $request{macaddr}= $supplicant_mac;
       $request{client_ip}=$switch_ip;
-      $request{port_name}=$nas_port;                # TBD: add later
+      $request{port_name}=$nas_port;                # TBD: change later?
       $request{vlan}='--NONE--';
-      $request{vtp_domain}='802.1x';                    # TBD: add later
+      $request{vtp_domain}='802.1x';                # TBD: change later?
       $buf = makeVQPrequest(%request);
       $buf = sendVQP($buf); #Send the request
       %response = parseVQPresp($buf);
@@ -317,6 +315,7 @@ sub authenticate() #MAC-Auth-Bypass
       if ( ! $response{vlan} ) #Here we have obtained the answer
       {
          $RAD_REPLY{'Reply-Message'} = "$vmps_server(vmps) returns: MAC address $supplicant_mac NOT allowed";
+         syslog('info', "rad2vmps: switch $switch_ip, MAC $supplicant_mac refused");
          return RLM_MODULE_REJECT;
       }
       else
@@ -326,7 +325,7 @@ sub authenticate() #MAC-Auth-Bypass
          $RAD_REPLY{'Tunnel-Medium-Type'} = ':1:6';
          $RAD_REPLY{'Tunnel-Private-Group-ID'} = ":1:$response{vlan}"; #VLAN where the connecting device will be put in
          $RAD_REPLY{'cisco-avpair'} = 'ip:inacl#1=permit ip any any';   # Allow all traffic
-         syslog('info',"VMPS switch $switch_ip: MAC address $supplicant_mac allowed vlan $response{vlan}");
+         syslog('info', "rad2vmps: switch $switch_ip, MAC $supplicant_mac allowed vlan $response{vlan}");
          return RLM_MODULE_OK;
       }
    }
