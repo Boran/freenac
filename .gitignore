@@ -2,12 +2,18 @@
 
 .svn
 *,v
+*.tmp1
+*.tmp
 
 # ensure no live configs in git
 config.inc
 config.php
 web1.config.inc
 config_en.inc
+policy.inc.php
+ino_policy.inc.php
 
 vlan_changes.txt
+
+enterprise
 
