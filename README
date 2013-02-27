@@ -1,25 +1,44 @@
 _______________________ FreeNAC README _____________________________
 
-This is Version 3.0 of FreeNAC
-Please use the latest code from the 3.0 branch on guthub https://github.com/Boran/freenac
+FreeNAC provides Virtual LAN assignment and LAN access control for Cisco switches based on vmps.
+It can also live network end-device discovery via SNMP.
+802.1x can also be used for device authentication.
 
-Some Product and support information is in English/french/Spanish and German.
+The project has been in "maintenance mode" since 2009, meaning the core developers 
+fix issues for their installs, but don't have time/resources/lab for new features. 
+Co-maintainers are needed. If you wish to contribute fork on github and tell us!
+- The main Project Website is now Github, not sourceforge. 
+- There is no forum or mailing list any more (too much spam), please use the issue queue on Github (https://github.com/Boran/freenac/issues).
+- Legacy documentations is on FreeNAC.net.
+
+Please use the latest code from the master branch on guthub https://github.com/Boran/freenac
+
+Some support information is in English/french/Spanish and German.
     http://freenac.net/en
     http://freenac.net/fr
     http://freenac.net/de
     http://freenac.net/es
+
 Technical documentation is in english only:
-* Installation guide	http://freenac.net/en/installguide
+* Installation guide    http://freenac.net/en/installguide
 * Users guide		http://freenac.net/en/usersguide
 * Technical guide	http://freenac.net/en/techguide
 
-Refer to the Install Guide to get FreeNAC up and running.
+INSTALLING
+- See http://freenac.net/en/installguide
+- There is no install script, or install packages (sorry)
+- There is no longer a VirtualMachine available for download
 
-For a list of changes, please see doc/CHANGES and doc/CHANGES.detailed
+INSTALL OVERVIEW
+- Install a Linux box with the prerequisites http://freenac.net/en/installguide/linux 
+- Grab the Freenac sources into /opt/nac
+  git clone https://github.com/Boran/freenac.git 
+- Configure freenac http://freenac.net/en/installguide/server/daemons 
+- Configure a switch and point a port or two at freenac http://freenac.net/en/techguide/switches/catos
+- When plugging in PCs to the vmps ports, look at syslog messages carefully and read http://freenac.net/en/techguide/policytestset
+- Install the Main Windows GUI http://freenac.net/en/installguide/wingui and read its doc http://freenac.net/en/usersguide/win
+- Alternatively the WebGUI can be used for some operations http://freenac.net/en/installguide/server/web 
 
-The main Project Website is now Github, not FreeNAC.net.
+For a list of changes, please see the git log, doc/CHANGES and doc/CHANGES.detailed
 
 
-There is no form or mailing list any more (too much spam), please use the issue queue on Github.
- 
-                                                      The FreeNAC Team
