@@ -109,10 +109,15 @@ while ( ! feof($in) )
       }
       catch (MySQLWentAwayException $e)
       {
-         $logger->logit($e->getMessage());
-         // MySQL went away. Let the daemon die. In a well configured system, proctst
-         // should restart the daemon, restablishing thus a new connection to MySQL
-         exit(1);
+         $logger->logit('ERROR ' . $e->getMessage() . ' .  mysql_close(). Wait 20 secs, try to reconnect');
+         @mysql_close();  // make sure really closed
+         sleep(15);    // wait a bit
+         db_connect(); // try to connect once more
+	 // TODO: loop to reconnect three times, and then die.
+
+         // Let the daemon die. In a well configured system, proctst or zabbix
+         // should restart the daemon, restablishing a new connection to MySQL
+         //exit(1);
       }
       catch (Exception $e)
       {

@@ -383,12 +383,12 @@ function db_connect()
 
    if ( ! $connect=@mysql_connect($dbhost, $dbuser, $dbpass))
    {
-      $logger->logit("Could not connect to mysql: " . mysql_error(), LOG_ERR);
+      $logger->logit("db_connect() Could not connect to mysql: " . mysql_error(), LOG_ERR);
       exit(1);
    }
    if ( ! @mysql_select_db($dbname, $connect))
    {
-      $logger->logit("Could not select database: ".mysql_error(), LOG_ERR);
+      $logger->logit("db_connect() Could not select database $dbname: " . mysql_error(), LOG_ERR);
       exit(1);
    }
 }
