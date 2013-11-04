@@ -25,16 +25,18 @@ Technical documentation is in english only:
 * Technical guide	http://freenac.net/en/techguide
 
 INSTALLING
-- See http://freenac.net/en/installguide
+- There is no longer a VirtualMachine available for download (there used to be one when we were hosted on sourceforge, but it got out of date and was dropped)
 - There is no install script, or install packages (sorry)
-- There is no longer a VirtualMachine available for download
+- See below and http://freenac.net/en/installguide
+- You'll need to be a linux sysadmin, but also understand cisco switches well too.
 
 INSTALL OVERVIEW
 - Install a Linux box with the prerequisites http://freenac.net/en/installguide/linux 
+  (we typically use Ubuntu LTS)
 - Grab the Freenac sources into /opt/nac
   git clone https://github.com/Boran/freenac.git 
 - Configure freenac http://freenac.net/en/installguide/server/daemons 
-- Configure a switch and point a port or two at freenac http://freenac.net/en/techguide/switches/catos
+- Configure a Cisco switch and point a port or two at freenac http://freenac.net/en/techguide/switches/catos
 - When plugging in PCs to the vmps ports, look at syslog messages carefully and read http://freenac.net/en/techguide/policytestset
 - Install the Main Windows GUI http://freenac.net/en/installguide/wingui and read its doc http://freenac.net/en/usersguide/win
 - Alternatively the WebGUI can be used for some operations http://freenac.net/en/installguide/server/web 
